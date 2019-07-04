@@ -319,6 +319,13 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             self._test_export()
         dlg.loading_completed.emit()
 
+    def _store_skipped_attempt(self, id, description, type):
+        skipped_attempt = {
+            'calc_id': id,
+            'calc_description': description,
+            'output_type': type}
+        self.skipped_attempts.append(skipped_attempt)
+
     def load_output(self, calc, output):
         self.irmt.iface.newProject()
         calc_id = calc['id']
@@ -326,21 +333,15 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         # TODO: when ebrisk becomes loadable, let's not skip this
         if calc['calculation_mode'] == 'ebrisk':
             print('\tLoading output type %s...' % output_type)
-            skipped_attempt = {
-                'calc_id': calc_id,
-                'calc_description': calc['description'],
-                'output_type': output_type}
-            self.skipped_attempts.append(skipped_attempt)
+            self._store_skipped_attempt(
+                calc_id, calc['description'], output_type)
             print('\t\tSKIPPED')
             return
         # NOTE: loading zipped output only for multi_risk
         if output_type == 'input' and calc['calculation_mode'] != 'multi_risk':
             print('\tLoading output type %s...' % output_type)
-            skipped_attempt = {
-                'calc_id': calc_id,
-                'calc_description': calc['description'],
-                'output_type': output_type}
-            self.skipped_attempts.append(skipped_attempt)
+            self._store_skipped_attempt(
+                calc_id, calc['description'], output_type)
             print('\t\tSKIPPED')
             return
         if output_type in (OQ_CSV_TO_LAYER_TYPES |
@@ -380,11 +381,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             #       let's not skip this
             if (output_type == 'gmf_data'
                     and calc['calculation_mode'] == 'event_based'):
-                skipped_attempt = {
-                    'calc_id': calc_id,
-                    'calc_description': calc['description'],
-                    'output_type': output_type}
-                self.skipped_attempts.append(skipped_attempt)
+                self._store_skipped_attempt(
+                    calc_id, calc['description'], output_type)
                 print('\t\tSKIPPED')
                 return
             dlg = OUTPUT_TYPE_LOADERS[output_type](
