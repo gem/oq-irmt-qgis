@@ -70,13 +70,17 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         self.hostname = os.environ.get('OQ_ENGINE_HOST',
                                        'http://localhost:8800')
         self.irmt.drive_oq_engine_server(show=False, hostname=self.hostname)
+        self.calc_list = self.irmt.drive_oq_engine_server_dlg.calc_list
         self.irmt.iface.newProject()
 
+    @unittest.skip("TODO")
+    def test_run_calculation(self):
+        pass
+
     def test_all_output_types_found_in_demos(self):
-        calc_list = self.irmt.drive_oq_engine_server_dlg.calc_list
         for output_type in OQ_ALL_TYPES:
             output_found = False
-            for calc in calc_list:
+            for calc in self.calc_list:
                 output_list = \
                     self.irmt.drive_oq_engine_server_dlg.get_output_list(
                         calc['id'])
@@ -89,7 +93,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                     break
             if not output_found:
                 if output_type.endswith('_aggr'):
-                    print("%s not found, tested in test_load_outputs" %
+                    print("%s not found, tested in test_load_output" %
                           output_type)
                 else:
                     raise RuntimeError("%s not found" % output_type)
@@ -125,9 +129,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         if loading_time > LONG_LOADING_TIME:
             output_dict['loading_time'] = loading_time
             self.time_consuming_outputs.append(output_dict)
-        self.untested_otypes.discard(output_dict['output_type'])
 
-    def load_calc_outputs(self, calc):
+    def load_calc_outputs(self, calc, selected_output_type):
         calc_id = calc['id']
         output_list = self.irmt.drive_oq_engine_server_dlg.get_output_list(
             calc_id)
@@ -136,9 +139,10 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                            'calc_description': calc['description'],
                            'output_type': output['type']}
             start_time = time.time()
-            if (self.selected_otype is not None
-                    and output['type'] != self.selected_otype):
+            if (selected_output_type is not None
+                    and output['type'] != selected_output_type):
                 continue
+            print('\n\tCalculation %s: %s' % (calc['id'], calc['description']))
             try:
                 self.load_output(calc, output)
             except Exception:
@@ -354,21 +358,18 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         output_type = output['type']
         # TODO: when ebrisk becomes loadable, let's not skip this
         if calc['calculation_mode'] == 'ebrisk':
-            print('\tLoading output type %s...' % output_type)
             self._store_skipped_attempt(
                 calc_id, calc['description'], output_type)
             print('\t\tSKIPPED')
             return
         # NOTE: loading zipped output only for multi_risk
         if output_type == 'input' and calc['calculation_mode'] != 'multi_risk':
-            print('\tLoading output type %s...' % output_type)
             self._store_skipped_attempt(
                 calc_id, calc['description'], output_type)
             print('\t\tSKIPPED')
             return
         if output_type in (OQ_CSV_TO_LAYER_TYPES |
                            OQ_RST_TYPES | OQ_ZIPPED_TYPES):
-            print('\tLoading output type %s...' % output_type)
             if output_type in OQ_CSV_TO_LAYER_TYPES:
                 # TODO: we should test the actual downloader, asynchronously
                 filepath = self.download_output(output['id'], 'csv')
@@ -389,7 +390,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 print('\t\tok')
                 return
             dlg = OUTPUT_TYPE_LOADERS[output_type](
-                self.irmt.iface, self.irmt.viewer_dock, requests,
+                self.irmt.iface, self.irmt.viewer_dock,
+                self.irmt.drive_oq_engine_server_dlg.session,
                 self.hostname, calc_id, output_type, filepath)
             if dlg.ok_button.isEnabled():
                 dlg.accept()
@@ -398,7 +400,6 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             else:
                 raise RuntimeError('The ok button is disabled')
         elif output_type in OQ_EXTRACT_TO_LAYER_TYPES:
-            print('\tLoading output type %s...' % output_type)
             # TODO: when gmf_data for event_based becomes loadable,
             #       let's not skip this
             if (output_type == 'gmf_data'
@@ -408,7 +409,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 print('\t\tSKIPPED')
                 return
             dlg = OUTPUT_TYPE_LOADERS[output_type](
-                self.irmt.iface, self.irmt.viewer_dock, requests,
+                self.irmt.iface, self.irmt.viewer_dock,
+                self.irmt.drive_oq_engine_server_dlg.session,
                 self.hostname, calc_id, output_type)
             self.loading_completed = False
             self.loading_exception = None
@@ -429,9 +431,9 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             raise TimeoutError(
                 'Loading time exceeded %s seconds' % timeout)
         elif output_type in OQ_EXTRACT_TO_VIEW_TYPES:
-            print('\tLoading output type %s...' % output_type)
             self.irmt.viewer_dock.load_no_map_output(
-                calc_id, requests, self.hostname, output_type,
+                calc_id, self.irmt.drive_oq_engine_server_dlg.session,
+                self.hostname, output_type,
                 self.irmt.drive_oq_engine_server_dlg.engine_version)
             tmpfile_handler, tmpfile_name = tempfile.mkstemp()
             self.irmt.viewer_dock.write_export_file(tmpfile_name)
@@ -449,12 +451,14 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
     def on_loading_exception(self, exception):
         self.loading_exception = exception
 
-    def test_load_outputs(self):
+    def test_load_realizations(self):
+        self.load_output_type('realizations')
+
+    def load_output_type(self, selected_output_type):
         self.failed_attempts = []
         self.skipped_attempts = []
         self.time_consuming_outputs = []
         self.not_implemented_loaders = set()
-        self.untested_otypes = copy.copy(OQ_ALL_TYPES)  # it's a set
         calc_list = self.irmt.drive_oq_engine_server_dlg.calc_list
         try:
             selected_calc_id = int(os.environ.get('SELECTED_CALC_ID'))
@@ -469,18 +473,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         if selected_calc_id is not None:
             calc_list = [calc for calc in calc_list
                          if calc['id'] == selected_calc_id]
-        self.selected_otype = os.environ.get('SELECTED_OTYPE')
-        if (self.selected_otype not in OQ_ALL_TYPES):
-            print('\n\tSELECTED_OTYPE was not set or is not valid.'
-                  ' Running tests for all the available output types.')
-            self.selected_otype = None
-        else:
-            print('\n\tSELECTED_OTYPE is set.'
-                  ' Running tests only for %s' % self.selected_otype)
-            self.untested_otypes = set([self.selected_otype])
         for calc in calc_list:
-            print('\nCalculation %s: %s' % (calc['id'], calc['description']))
-            self.load_calc_outputs(calc)
+            self.load_calc_outputs(calc, selected_output_type)
         if self.skipped_attempts:
             print('\n\nSkipped:')
             for skipped_attempt in self.skipped_attempts:
@@ -489,14 +483,14 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                          skipped_attempt['calc_description']))
                 print('\t\tOutput type: %s' % skipped_attempt['output_type'])
         if not self.failed_attempts:
-            print('\n\nAll outputs were successfully loaded')
+            print('\n\n%s successfully loaded for all calculations' %
+                  selected_output_type)
         else:
             print('\n\nFailed attempts:')
             for failed_attempt in self.failed_attempts:
                 print('\tCalculation %s: %s'
                       % (failed_attempt['calc_id'],
                          failed_attempt['calc_description']))
-                print('\t\tOutput type: %s' % failed_attempt['output_type'])
             raise RuntimeError(
                 'At least one output was not successfully loaded')
         if self.time_consuming_outputs:
@@ -513,9 +507,6 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             print('\n\nLoaders for the following output types found in the'
                   ' available calculations have not been implemented yet:')
             print(", ".join(self.not_implemented_loaders))
-        if self.untested_otypes:
-            raise RuntimeError('Untested output types: %s'
-                               % self.untested_otypes)
 
     def load_hcurves(self):
         self._set_output_type('Hazard Curves')
@@ -599,3 +590,13 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         layer.removeSelection()
         # NOTE: in the past, we were also selecting all features, but it was
         # not necessary ant it made tests much slower in case of many features
+
+
+# For each loadable output type, create dinamically a test that loads it from
+# all available demo calculations
+for output_type in OQ_ALL_TYPES:
+    def test_func(output_type):
+        return lambda self: self.load_output_type(output_type)
+    setattr(LoadOqEngineOutputsTestCase,
+            "test_load_%s" % output_type,
+            test_func(output_type))
