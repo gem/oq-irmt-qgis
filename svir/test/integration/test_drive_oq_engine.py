@@ -64,14 +64,15 @@ def run_all():
 
 class LoadOqEngineOutputsTestCase(unittest.TestCase):
 
-    def setUp(self):
-        self.irmt = Irmt(iface)
-        self.irmt.initGui()
-        self.hostname = os.environ.get('OQ_ENGINE_HOST',
-                                       'http://localhost:8800')
-        self.irmt.drive_oq_engine_server(show=False, hostname=self.hostname)
-        self.calc_list = self.irmt.drive_oq_engine_server_dlg.calc_list
-        self.irmt.iface.newProject()
+    @classmethod
+    def setUpClass(cls):
+        cls.irmt = Irmt(iface)
+        cls.irmt.initGui()
+        cls.hostname = os.environ.get('OQ_ENGINE_HOST',
+                                      'http://localhost:8800')
+        cls.irmt.drive_oq_engine_server(show=False, hostname=cls.hostname)
+        cls.calc_list = cls.irmt.drive_oq_engine_server_dlg.calc_list
+        cls.irmt.iface.newProject()
 
     @unittest.skip("TODO")
     def test_run_calculation(self):
