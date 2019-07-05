@@ -125,10 +125,25 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                     break
             if not output_found:
                 if output_type.endswith('_aggr'):
-                    print("\t%s not found, tested in test_load_output" %
+                    print("\t%s not found, tested in load_calc_outputs" %
                           output_type)
                 else:
                     raise RuntimeError("%s not found" % output_type)
+
+    def test_all_loaders_are_implemented(self):
+        not_implemented_loaders = []
+        for calc in self.calc_list:
+            output_list = self.irmt.drive_oq_engine_server_dlg.get_output_list(
+                calc['id'])
+            for output in output_list:
+                if output['type'] not in OQ_ALL_TYPES:
+                    not_implemented_loaders.append(output)
+        if not_implemented_loaders:
+            print("Some loaders are still not implemented:")
+            print(not_implemented_loaders)
+        else:
+            print("All outputs in the demos have a corresponding loader")
+        # NOTE: We want green tests even when loaders are still missing
 
     def download_output(self, output_id, outtype):
         dest_folder = tempfile.gettempdir()
