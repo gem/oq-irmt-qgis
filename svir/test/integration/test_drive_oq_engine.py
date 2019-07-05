@@ -116,9 +116,10 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         pass
 
     def test_all_output_types_found_in_demos(self):
+        calc_list = self.irmt.drive_oq_engine_server_dlg.calc_list
         for output_type in OQ_ALL_TYPES:
             output_found = False
-            for calc in self.calc_list:
+            for calc in calc_list:
                 output_list = \
                     self.irmt.drive_oq_engine_server_dlg.get_output_list(
                         calc['id'])
@@ -137,8 +138,9 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                     raise RuntimeError("%s not found" % output_type)
 
     def test_all_loaders_are_implemented(self):
+        calc_list = self.irmt.drive_oq_engine_server_dlg.calc_list
         not_implemented_loaders = set()
-        for calc in self.calc_list:
+        for calc in calc_list:
             output_list = self.irmt.drive_oq_engine_server_dlg.get_output_list(
                 calc['id'])
             for output in output_list:
