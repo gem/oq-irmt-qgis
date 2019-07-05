@@ -92,7 +92,6 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         print("List of tested OQ-Engine demo calculations:")
         for calc in cls.calc_list:
             print('\tCalculation %s: %s' % (calc['id'], calc['description']))
-        cls.irmt.iface.newProject()
 
     @classmethod
     def tearDownClass(cls):
@@ -455,7 +454,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         self.global_skipped_attempts.append(skipped_attempt)
 
     def load_output(self, calc, output):
-        self.irmt.iface.newProject()
+        # NOTE: it is better to avoid resetting the project here, because some
+        # outputs might be skipped, therefore it would not be needed
         calc_id = calc['id']
         output_type = output['type']
         # TODO: when ebrisk becomes loadable, let's not skip this
@@ -481,6 +481,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             elif output_type in OQ_ZIPPED_TYPES:
                 filepath = self.download_output(output['id'], 'zip')
             assert filepath is not None
+            self.irmt.iface.newProject()
             if output_type == 'fullreport':
                 dlg = ShowFullReportDialog(filepath)
                 dlg.accept()
@@ -511,6 +512,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                     calc_id, calc['description'], output_type)
                 print('\t\tSKIPPED')
                 return 'skipped'
+            self.irmt.iface.newProject()
             dlg = OUTPUT_TYPE_LOADERS[output_type](
                 self.irmt.iface, self.irmt.viewer_dock,
                 self.irmt.drive_oq_engine_server_dlg.session,
@@ -536,6 +538,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 'Loading time exceeded %s seconds' % timeout)
             return 'ko'
         elif output_type in OQ_EXTRACT_TO_VIEW_TYPES:
+            self.irmt.iface.newProject()
             self.irmt.viewer_dock.load_no_map_output(
                 calc_id, self.irmt.drive_oq_engine_server_dlg.session,
                 self.hostname, output_type,
