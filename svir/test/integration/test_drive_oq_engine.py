@@ -79,7 +79,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        print("\n\nGLOBAL SUMMARY:")
+        print("\n\nGLOBAL SUMMARY")
+        print("==============\n")
         if cls.global_skipped_attempts:
             print('\nSkipped:')
             for skipped_attempt in cls.global_skipped_attempts:
@@ -107,6 +108,11 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
 
     @unittest.skip("TODO")
     def test_run_calculation(self):
+        # We should:
+        #   1) have input files available
+        #   2) start the calculation
+        #   3) in a loop, print the console log until finished
+        #   4) remove the calculation
         pass
 
     def test_all_output_types_found_in_demos(self):
