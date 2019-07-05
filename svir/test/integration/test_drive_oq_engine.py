@@ -76,6 +76,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         cls.irmt.drive_oq_engine_server(show=False, hostname=cls.hostname)
         # NOTE: calc_list must be retrieved BEFORE starting any test
         cls.calc_list = cls.irmt.drive_oq_engine_server_dlg.calc_list
+        cls.output_list = {}
         try:
             selected_calc_id = int(os.environ.get('SELECTED_CALC_ID'))
         except (ValueError, TypeError):
@@ -92,6 +93,10 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         print("List of tested OQ-Engine demo calculations:")
         for calc in cls.calc_list:
             print('\tCalculation %s: %s' % (calc['id'], calc['description']))
+            cls.output_list[calc['id']] = \
+                cls.irmt.drive_oq_engine_server_dlg.get_output_list(calc['id'])
+            print('\t\tOutput types: %s' % ', '.join(
+                [output['type'] for output in cls.output_list]))
 
     @classmethod
     def tearDownClass(cls):
@@ -137,10 +142,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         for loadable_output_type in OQ_ALL_TYPES:
             loadable_output_type_found = False
             for calc in self.calc_list:
-                output_list = \
-                    self.irmt.drive_oq_engine_server_dlg.get_output_list(
-                        calc['id'])
-                for output in output_list:
+                for output in self.output_list[calc['id']]:
                     if loadable_output_type == output['type']:
                         loadable_output_type_found = True
                         loadable_output_types_found.add(loadable_output_type)
@@ -181,9 +183,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
     def test_all_loaders_are_implemented(self):
         not_implemented_loaders = set()
         for calc in self.calc_list:
-            output_list = self.irmt.drive_oq_engine_server_dlg.get_output_list(
-                calc['id'])
-            for output in output_list:
+            for output in self.output_list[calc['id']]:
                 if output['type'] not in OQ_ALL_TYPES:
                     not_implemented_loaders.add(output['type'])
         if not_implemented_loaders:
@@ -230,9 +230,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
 
     def load_calc_outputs(self, calc, selected_output_type):
         calc_id = calc['id']
-        output_list = self.irmt.drive_oq_engine_server_dlg.get_output_list(
-            calc_id)
-        for output in output_list:
+        for output in self.output_list[calc_id]:
             output_dict = {'calc_id': calc_id,
                            'calc_description': calc['description'],
                            'output_type': output['type']}
