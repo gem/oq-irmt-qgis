@@ -243,11 +243,12 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 continue
             print('\n\tCalculation %s: %s' % (calc['id'], calc['description']))
             try:
-                self.load_output(calc, output)
+                loading_resp = self.load_output(calc, output)
             except Exception:
                 self._on_loading_ko(output_dict)
             else:
-                self._on_loading_ok(start_time, output_dict)
+                if loading_resp != 'skipped':
+                    self._on_loading_ok(start_time, output_dict, loading_resp)
             output_type_aggr = "%s_aggr" % output['type']
             if output_type_aggr in OQ_EXTRACT_TO_VIEW_TYPES:
                 aggr_output = copy.deepcopy(output)
@@ -256,11 +257,13 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 aggr_output_dict['output_type'] = aggr_output['type']
                 start_time = time.time()
                 try:
-                    self.load_output(calc, aggr_output)
+                    loading_resp = self.load_output(calc, aggr_output)
                 except Exception:
                     self._on_loading_ko(aggr_output_dict)
                 else:
-                    self._on_loading_ok(start_time, aggr_output_dict)
+                    if loading_resp != 'skipped':
+                        self._on_loading_ok(
+                            start_time, aggr_output_dict, loading_resp)
 
     def on_init_done(self, dlg):
         # set dialog options and accept
@@ -461,13 +464,13 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             self._store_skipped_attempt(
                 calc_id, calc['description'], output_type)
             print('\t\tSKIPPED')
-            return
+            return 'skipped'
         # NOTE: loading zipped output only for multi_risk
         if output_type == 'input' and calc['calculation_mode'] != 'multi_risk':
             self._store_skipped_attempt(
                 calc_id, calc['description'], output_type)
             print('\t\tSKIPPED')
-            return
+            return 'skipped'
         if output_type in (OQ_CSV_TO_LAYER_TYPES |
                            OQ_RST_TYPES | OQ_ZIPPED_TYPES):
             if output_type in OQ_CSV_TO_LAYER_TYPES:
@@ -483,12 +486,12 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 dlg = ShowFullReportDialog(filepath)
                 dlg.accept()
                 print('\t\tok')
-                return
+                return 'ok'
             if output_type in OQ_ZIPPED_TYPES:
                 dlg = LoadInputsDialog(filepath, self.irmt.iface)
                 dlg.accept()
                 print('\t\tok')
-                return
+                return 'ok'
             dlg = OUTPUT_TYPE_LOADERS[output_type](
                 self.irmt.iface, self.irmt.viewer_dock,
                 self.irmt.drive_oq_engine_server_dlg.session,
@@ -496,9 +499,10 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             if dlg.ok_button.isEnabled():
                 dlg.accept()
                 print('\t\tok')
-                return
+                return 'ok'
             else:
                 raise RuntimeError('The ok button is disabled')
+                return 'ko'
         elif output_type in OQ_EXTRACT_TO_LAYER_TYPES:
             # TODO: when gmf_data for event_based becomes loadable,
             #       let's not skip this
@@ -507,7 +511,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 self._store_skipped_attempt(
                     calc_id, calc['description'], output_type)
                 print('\t\tSKIPPED')
-                return
+                return 'skipped'
             dlg = OUTPUT_TYPE_LOADERS[output_type](
                 self.irmt.iface, self.irmt.viewer_dock,
                 self.irmt.drive_oq_engine_server_dlg.session,
@@ -524,12 +528,14 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 QGIS_APP.processEvents()
                 if self.loading_completed:
                     print('\t\tok')
-                    return
+                    return 'ok'
                 if self.loading_exception:
                     raise self.loading_exception
+                    return 'ok'
                 time.sleep(0.1)
             raise TimeoutError(
                 'Loading time exceeded %s seconds' % timeout)
+            return 'ko'
         elif output_type in OQ_EXTRACT_TO_VIEW_TYPES:
             self.irmt.viewer_dock.load_no_map_output(
                 calc_id, self.irmt.drive_oq_engine_server_dlg.session,
@@ -539,7 +545,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             self.irmt.viewer_dock.write_export_file(tmpfile_name)
             os.close(tmpfile_handler)
             print('\t\tok')
-            return
+            return 'ok'
 
     def on_loading_completed(self):
         self.loading_completed = True
