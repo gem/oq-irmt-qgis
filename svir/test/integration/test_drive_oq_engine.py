@@ -76,6 +76,9 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         cls.irmt.drive_oq_engine_server(show=False, hostname=cls.hostname)
         # NOTE: calc_list must be retrieved BEFORE starting any test
         cls.calc_list = cls.irmt.drive_oq_engine_server_dlg.calc_list
+        print("List of OQ-Engine demo calculations:")
+        for calc in cls.calc_list:
+            print('\tCalculation %s: %s' % (calc['id'], calc['description']))
         cls.irmt.iface.newProject()
 
     @classmethod
