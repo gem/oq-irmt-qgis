@@ -74,6 +74,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         cls.global_skipped_attempts = []
         cls.global_time_consuming_outputs = []
         cls.irmt.drive_oq_engine_server(show=False, hostname=cls.hostname)
+        time.sleep(1)
         cls.calc_list = cls.irmt.drive_oq_engine_server_dlg.calc_list
         cls.irmt.iface.newProject()
 
@@ -118,10 +119,9 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
     def test_all_loadable_output_types_found_in_demos(self):
         loadable_output_types_found = set()
         loadable_output_types_not_found = set()
-        calc_list = self.irmt.drive_oq_engine_server_dlg.calc_list
         for loadable_output_type in OQ_ALL_TYPES:
             loadable_output_type_found = False
-            for calc in calc_list:
+            for calc in self.calc_list:
                 output_list = \
                     self.irmt.drive_oq_engine_server_dlg.get_output_list(
                         calc['id'])
@@ -164,9 +164,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                         if not output_type.endswith('_aggr')]))
 
     def test_all_loaders_are_implemented(self):
-        calc_list = self.irmt.drive_oq_engine_server_dlg.calc_list
         not_implemented_loaders = set()
-        for calc in calc_list:
+        for calc in self.calc_list:
             output_list = self.irmt.drive_oq_engine_server_dlg.get_output_list(
                 calc['id'])
             for output in output_list:
@@ -536,7 +535,6 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         self.failed_attempts = []
         self.skipped_attempts = []
         self.time_consuming_outputs = []
-        calc_list = self.irmt.drive_oq_engine_server_dlg.calc_list
         try:
             selected_calc_id = int(os.environ.get('SELECTED_CALC_ID'))
         except (ValueError, TypeError):
@@ -548,7 +546,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                   ' Running tests only for calculation #%s'
                   % selected_calc_id)
         if selected_calc_id is not None:
-            calc_list = [calc for calc in calc_list
+            calc_list = [calc for calc in self.calc_list
                          if calc['id'] == selected_calc_id]
         for calc in calc_list:
             self.load_calc_outputs(calc, selected_output_type)
