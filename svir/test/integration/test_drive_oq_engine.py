@@ -504,9 +504,6 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
     def on_loading_exception(self, exception):
         self.loading_exception = exception
 
-    def test_load_realizations(self):
-        self.load_output_type('realizations')
-
     def load_output_type(self, selected_output_type):
         self.failed_attempts = []
         self.skipped_attempts = []
