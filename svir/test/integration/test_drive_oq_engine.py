@@ -79,11 +79,11 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         try:
             selected_calc_id = int(os.environ.get('SELECTED_CALC_ID'))
         except (ValueError, TypeError):
-            print('\n\n\tSELECTED_CALC_ID was not set or is not an integer'
+            print('SELECTED_CALC_ID was not set or is not an integer'
                   ' value. Running tests for all the available calculations')
             selected_calc_id = None
         else:
-            print('\n\n\tSELECTED_CALC_ID is set.'
+            print('SELECTED_CALC_ID is set.'
                   ' Running tests only for calculation #%s'
                   % selected_calc_id)
         if selected_calc_id is not None:
