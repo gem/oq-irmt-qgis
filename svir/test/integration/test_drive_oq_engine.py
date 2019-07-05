@@ -241,7 +241,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             if (selected_output_type is not None
                     and output['type'] != selected_output_type):
                 continue
-            print('\n\tCalculation %s: %s' % (calc['id'], calc['description']))
+            print('\tCalculation %s: %s' % (calc['id'], calc['description']))
             try:
                 loading_resp = self.load_output(calc, output)
             except Exception:
