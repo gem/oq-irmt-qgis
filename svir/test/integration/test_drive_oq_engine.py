@@ -115,27 +115,53 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         #   4) remove the calculation
         pass
 
-    def test_all_output_types_found_in_demos(self):
+    def test_all_loadable_output_types_found_in_demos(self):
+        loadable_output_types_found = set()
+        loadable_output_types_not_found = set()
         calc_list = self.irmt.drive_oq_engine_server_dlg.calc_list
-        for output_type in OQ_ALL_TYPES:
-            output_found = False
+        for loadable_output_type in OQ_ALL_TYPES:
+            loadable_output_type_found = False
             for calc in calc_list:
                 output_list = \
                     self.irmt.drive_oq_engine_server_dlg.get_output_list(
                         calc['id'])
                 for output in output_list:
-                    if output_type == output['type']:
-                        output_found = True
-                        print("\t%s found" % output_type)
+                    if loadable_output_type == output['type']:
+                        loadable_output_type_found = True
+                        loadable_output_types_found.add(loadable_output_type)
                         break
-                if output_found:
+                if loadable_output_type_found:
                     break
-            if not output_found:
-                if output_type.endswith('_aggr'):
-                    print("\t%s not found, tested in load_calc_outputs" %
-                          output_type)
                 else:
-                    raise RuntimeError("%s not found" % output_type)
+                    loadable_output_types_not_found.add(loadable_output_type)
+        if loadable_output_types_found:
+            print("Output_types found at least in one demo:\n%s" %
+                  ",".join(loadable_output_types_found))
+        else:
+            raise RuntimeError("No loadable output type was found in any demo")
+        if loadable_output_types_not_found:
+            print("Output_types not found in any demo:\n%s" %
+                  ",".join(loadable_output_types_not_found))
+            if all([output_type.endswith('_aggr')
+                    for output_type in loadable_output_types_not_found]):
+                print("The only missing output types are '_aggr', which are"
+                      " not actual outputs exposed by the engine, but"
+                      " derived outputs accessed through the extract API."
+                      " Therefore, is is ok.")
+            else:
+                print("Some missing output types are '_aggr', which are"
+                      " not actual outputs exposed by the engine, but"
+                      " derived outputs accessed through the extract API."
+                      " Therefore, is is ok: %s" % [
+                          output_type
+                          for output_type in loadable_output_types_not_found
+                          if output_type.endswith('_aggr')])
+                raise RuntimeError(
+                    "The following loadable output types were not found in"
+                    " any demo:\n%s" % [
+                        output_type
+                        for output_type in loadable_output_types_not_found
+                        if not output_type.endswith('_aggr')])
 
     def test_all_loaders_are_implemented(self):
         calc_list = self.irmt.drive_oq_engine_server_dlg.calc_list
