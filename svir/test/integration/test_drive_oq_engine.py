@@ -70,9 +70,40 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         cls.irmt.initGui()
         cls.hostname = os.environ.get('OQ_ENGINE_HOST',
                                       'http://localhost:8800')
+        cls.global_failed_attempts = []
+        cls.global_skipped_attempts = []
+        cls.global_time_consuming_outputs = []
         cls.irmt.drive_oq_engine_server(show=False, hostname=cls.hostname)
         cls.calc_list = cls.irmt.drive_oq_engine_server_dlg.calc_list
         cls.irmt.iface.newProject()
+
+    @classmethod
+    def tearDownClass(cls):
+        print("\n\nGLOBAL SUMMARY:")
+        if cls.global_skipped_attempts:
+            print('\nSkipped:')
+            for skipped_attempt in cls.global_skipped_attempts:
+                print('\tCalculation %s: %s'
+                      % (skipped_attempt['calc_id'],
+                         skipped_attempt['calc_description']))
+                print('\t\tOutput type: %s' % skipped_attempt['output_type'])
+        if not cls.global_failed_attempts:
+            print("All the outputs were loaded successfully")
+        else:
+            print('\nFailed attempts:')
+            for failed_attempt in cls.global_failed_attempts:
+                print('\tCalculation %s: %s'
+                      % (failed_attempt['calc_id'],
+                         failed_attempt['calc_description']))
+            raise RuntimeError(
+                'At least one output was not successfully loaded')
+        if cls.global_time_consuming_outputs:
+            print('\n\nSome loaders took longer than %s seconds:' %
+                  LONG_LOADING_TIME)
+            for output in sorted(cls.global_time_consuming_outputs,
+                                 key=operator.itemgetter('loading_time'),
+                                 reverse=True):
+                print('\t%s' % output)
 
     @unittest.skip("TODO")
     def test_run_calculation(self):
@@ -121,6 +152,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         failed_attempt = copy.deepcopy(output_dict)
         failed_attempt['traceback'] = tb
         self.failed_attempts.append(failed_attempt)
+        self.global_failed_attempts.append(failed_attempt)
         traceback.print_tb(failed_attempt['traceback'])
         print(ex)
 
@@ -130,6 +162,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         if loading_time > LONG_LOADING_TIME:
             output_dict['loading_time'] = loading_time
             self.time_consuming_outputs.append(output_dict)
+            self.global_time_consuming_outputs.append(output_dict)
 
     def load_calc_outputs(self, calc, selected_output_type):
         calc_id = calc['id']
@@ -352,6 +385,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             'calc_description': description,
             'output_type': type}
         self.skipped_attempts.append(skipped_attempt)
+        self.global_skipped_attempts.append(skipped_attempt)
 
     def load_output(self, calc, output):
         self.irmt.iface.newProject()
@@ -477,7 +511,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         for calc in calc_list:
             self.load_calc_outputs(calc, selected_output_type)
         if self.skipped_attempts:
-            print('\n\nSkipped:')
+            print('\nSkipped:')
             for skipped_attempt in self.skipped_attempts:
                 print('\tCalculation %s: %s'
                       % (skipped_attempt['calc_id'],
