@@ -93,10 +93,11 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         print("List of tested OQ-Engine demo calculations:")
         for calc in cls.calc_list:
             print('\tCalculation %s: %s' % (calc['id'], calc['description']))
-            cls.output_list[calc['id']] = \
+            calc_output_list = \
                 cls.irmt.drive_oq_engine_server_dlg.get_output_list(calc['id'])
+            cls.output_list[calc['id']] = calc_output_list
             print('\t\tOutput types: %s' % ', '.join(
-                [output['type'] for output in cls.output_list]))
+                [output['type'] for output in calc_output_list]))
 
     @classmethod
     def tearDownClass(cls):
