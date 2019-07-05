@@ -74,7 +74,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         cls.global_skipped_attempts = []
         cls.global_time_consuming_outputs = []
         cls.irmt.drive_oq_engine_server(show=False, hostname=cls.hostname)
-        time.sleep(1)
+        # NOTE: calc_list must be retrieved BEFORE starting any test
         cls.calc_list = cls.irmt.drive_oq_engine_server_dlg.calc_list
         cls.irmt.iface.newProject()
 
