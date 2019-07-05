@@ -131,16 +131,17 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                     raise RuntimeError("%s not found" % output_type)
 
     def test_all_loaders_are_implemented(self):
-        not_implemented_loaders = []
+        not_implemented_loaders = set()
         for calc in self.calc_list:
             output_list = self.irmt.drive_oq_engine_server_dlg.get_output_list(
                 calc['id'])
             for output in output_list:
                 if output['type'] not in OQ_ALL_TYPES:
-                    not_implemented_loaders.append(output)
+                    not_implemented_loaders.add(output)
         if not_implemented_loaders:
-            print("Some loaders are still not implemented:")
-            print(not_implemented_loaders)
+            print('\n\nLoaders for the following output types found in the'
+                  ' available calculations have not been implemented yet:')
+            print(", ".join(not_implemented_loaders))
         else:
             print("All outputs in the demos have a corresponding loader")
         # NOTE: We want green tests even when loaders are still missing
@@ -490,10 +491,6 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             os.close(tmpfile_handler)
             print('\t\tok')
             return
-        else:
-            self.not_implemented_loaders.add(output_type)
-            print('\tLoader for output type %s is not implemented'
-                  % output_type)
 
     def on_loading_completed(self):
         self.loading_completed = True
@@ -508,7 +505,6 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         self.failed_attempts = []
         self.skipped_attempts = []
         self.time_consuming_outputs = []
-        self.not_implemented_loaders = set()
         calc_list = self.irmt.drive_oq_engine_server_dlg.calc_list
         try:
             selected_calc_id = int(os.environ.get('SELECTED_CALC_ID'))
@@ -550,13 +546,6 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                                  key=operator.itemgetter('loading_time'),
                                  reverse=True):
                 print('\t%s' % output)
-        if self.not_implemented_loaders:
-            # sanity check
-            for not_implemented_loader in self.not_implemented_loaders:
-                assert not_implemented_loader not in OQ_ALL_TYPES
-            print('\n\nLoaders for the following output types found in the'
-                  ' available calculations have not been implemented yet:')
-            print(", ".join(self.not_implemented_loaders))
 
     def load_hcurves(self):
         self._set_output_type('Hazard Curves')
