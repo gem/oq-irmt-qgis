@@ -248,7 +248,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 self._on_loading_ko(output_dict)
             else:
                 if loading_resp != 'skipped':
-                    self._on_loading_ok(start_time, output_dict, loading_resp)
+                    self._on_loading_ok(start_time, output_dict)
             output_type_aggr = "%s_aggr" % output['type']
             if output_type_aggr in OQ_EXTRACT_TO_VIEW_TYPES:
                 aggr_output = copy.deepcopy(output)
@@ -262,8 +262,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                     self._on_loading_ko(aggr_output_dict)
                 else:
                     if loading_resp != 'skipped':
-                        self._on_loading_ok(
-                            start_time, aggr_output_dict, loading_resp)
+                        self._on_loading_ok(start_time, aggr_output_dict)
 
     def on_init_done(self, dlg):
         # set dialog options and accept
