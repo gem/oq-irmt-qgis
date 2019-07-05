@@ -548,6 +548,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         if selected_calc_id is not None:
             calc_list = [calc for calc in self.calc_list
                          if calc['id'] == selected_calc_id]
+        else:
+            calc_list = self.calc_list
         for calc in calc_list:
             self.load_calc_outputs(calc, selected_output_type)
         if self.skipped_attempts:
