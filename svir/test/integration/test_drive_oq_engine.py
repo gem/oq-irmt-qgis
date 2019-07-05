@@ -143,7 +143,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 calc['id'])
             for output in output_list:
                 if output['type'] not in OQ_ALL_TYPES:
-                    not_implemented_loaders.add(output)
+                    not_implemented_loaders.add(output['type'])
         if not_implemented_loaders:
             print('\n\nLoaders for the following output types found in the'
                   ' available calculations have not been implemented yet:')
