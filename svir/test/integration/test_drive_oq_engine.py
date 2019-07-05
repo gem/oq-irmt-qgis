@@ -135,8 +135,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                         break
                 if loadable_output_type_found:
                     break
-                else:
-                    loadable_output_types_not_found.add(loadable_output_type)
+            if not loadable_output_type_found:
+                loadable_output_types_not_found.add(loadable_output_type)
         if loadable_output_types_found:
             print("\nOutput_types found at least in one demo:\n\t%s" %
                   "\n\t".join(loadable_output_types_found))
