@@ -457,9 +457,11 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         calc_id = calc['id']
         output_type = output['type']
         # TODO: when ebrisk becomes loadable, let's not skip this
-        if calc['calculation_mode'] == 'ebrisk':
+        if (output['type'] in OQ_EXTRACT_TO_VIEW_TYPES and
+                calc['calculation_mode'] == 'ebrisk'):
             self._store_skipped_attempt(
-                calc_id, calc['description'], output_type)
+                calc_id, calc['calculation_mode'],
+                calc['description'], output_type)
             print('\t\tSKIPPED')
             return 'skipped'
         # NOTE: loading zipped output only for multi_risk
