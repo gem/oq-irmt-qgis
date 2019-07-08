@@ -125,6 +125,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                       % (failed_attempt['calc_id'],
                          failed_attempt['calc_mode'],
                          failed_attempt['calc_description']))
+                print('\t\tOutput type: %s' % failed_attempt['output_type'])
         if cls.global_time_consuming_outputs:
             print('\n\nSome loaders took longer than %s seconds:' %
                   LONG_LOADING_TIME)
