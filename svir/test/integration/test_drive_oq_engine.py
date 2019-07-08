@@ -232,34 +232,25 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
     def load_calc_output(self, calc, selected_output_type):
         calc_id = calc['id']
         for output in self.output_list[calc_id]:
-            if output['type'] != selected_output_type:
+            if (output['type'] != selected_output_type and
+                    "%s_aggr" % output['type'] != selected_output_type):
                 continue
             output_dict = {'calc_id': calc_id,
                            'calc_description': calc['description'],
-                           'output_type': output['type']}
+                           'output_type': selected_output_type}
             start_time = time.time()
             print('\n\tCalculation %s: %s' % (calc['id'], calc['description']))
+            # NOTE: aggregated outputs use an existing OQ-Engine output and
+            #       virtually transforms it postfixing its type with '_aggr'
+            output_copy = copy.deepcopy(output)
+            output_copy['type'] = selected_output_type
             try:
-                loading_resp = self.load_output(calc, output)
+                loading_resp = self.load_output(calc, output_copy)
             except Exception:
                 self._on_loading_ko(output_dict)
             else:
                 if loading_resp != 'skipped':
                     self._on_loading_ok(start_time, output_dict)
-            output_type_aggr = "%s_aggr" % output['type']
-            if output_type_aggr in OQ_EXTRACT_TO_VIEW_TYPES:
-                aggr_output = copy.deepcopy(output)
-                aggr_output['type'] = output_type_aggr
-                aggr_output_dict = copy.deepcopy(output_dict)
-                aggr_output_dict['output_type'] = aggr_output['type']
-                start_time = time.time()
-                try:
-                    loading_resp = self.load_output(calc, aggr_output)
-                except Exception:
-                    self._on_loading_ko(aggr_output_dict)
-                else:
-                    if loading_resp != 'skipped':
-                        self._on_loading_ok(start_time, aggr_output_dict)
 
     def on_init_done(self, dlg):
         # set dialog options and accept
