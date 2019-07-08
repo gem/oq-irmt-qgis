@@ -496,14 +496,6 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 raise RuntimeError('The ok button is disabled')
                 return 'ko'
         elif output_type in OQ_EXTRACT_TO_LAYER_TYPES:
-            # TODO: when gmf_data for event_based becomes loadable,
-            #       let's not skip this
-            if (output_type == 'gmf_data'
-                    and calc['calculation_mode'] == 'event_based'):
-                self._store_skipped_attempt(
-                    calc_id, calc['description'], output_type)
-                print('\t\tSKIPPED')
-                return 'skipped'
             self.irmt.iface.newProject()
             dlg = OUTPUT_TYPE_LOADERS[output_type](
                 self.irmt.iface, self.irmt.viewer_dock,
