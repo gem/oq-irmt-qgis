@@ -229,16 +229,15 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             self.time_consuming_outputs.append(output_dict)
             self.global_time_consuming_outputs.append(output_dict)
 
-    def load_calc_outputs(self, calc, selected_output_type):
+    def load_calc_output(self, calc, selected_output_type):
         calc_id = calc['id']
         for output in self.output_list[calc_id]:
+            if output['type'] != selected_output_type:
+                continue
             output_dict = {'calc_id': calc_id,
                            'calc_description': calc['description'],
                            'output_type': output['type']}
             start_time = time.time()
-            if (selected_output_type is not None
-                    and output['type'] != selected_output_type):
-                continue
             print('\n\tCalculation %s: %s' % (calc['id'], calc['description']))
             try:
                 loading_resp = self.load_output(calc, output)
@@ -472,13 +471,13 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         if output_type in (OQ_CSV_TO_LAYER_TYPES |
                            OQ_RST_TYPES | OQ_ZIPPED_TYPES):
             if output_type in OQ_CSV_TO_LAYER_TYPES:
-                # TODO: we should test the actual downloader, asynchronously
-                filepath = self.download_output(output['id'], 'csv')
+                filetype = 'csv'
             elif output_type in OQ_RST_TYPES:
-                # TODO: we should test the actual downloader, asynchronously
-                filepath = self.download_output(output['id'], 'rst')
-            elif output_type in OQ_ZIPPED_TYPES:
-                filepath = self.download_output(output['id'], 'zip')
+                filetype = 'rst'
+            else:  # OQ_ZIPPED_TYPES
+                filetype = 'zip'
+            # TODO: we should test the actual downloader, asynchronously
+            filepath = self.download_output(output['id'], filetype)
             assert filepath is not None
             self.irmt.iface.newProject()
             if output_type == 'fullreport':
@@ -559,7 +558,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         self.skipped_attempts = []
         self.time_consuming_outputs = []
         for calc in self.calc_list:
-            self.load_calc_outputs(calc, selected_output_type)
+            self.load_calc_output(calc, selected_output_type)
         if self.skipped_attempts:
             print('\nSkipped:')
             for skipped_attempt in self.skipped_attempts:
