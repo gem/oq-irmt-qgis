@@ -62,6 +62,10 @@ def run_all():
     unittest.TextTestRunner(verbosity=3, stream=sys.stdout).run(suite)
 
 
+class FailedAttempts(Exception):
+    pass
+
+
 class LoadOqEngineOutputsTestCase(unittest.TestCase):
 
     @classmethod
@@ -92,7 +96,9 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                              if calc['id'] == selected_calc_id]
         print("List of tested OQ-Engine demo calculations:")
         for calc in cls.calc_list:
-            print('\tCalculation %s: %s' % (calc['id'], calc['description']))
+            print('\tCalculation %s (%s): %s' % (calc['id'],
+                                                 calc['calculation_mode'],
+                                                 calc['description']))
             calc_output_list = \
                 cls.irmt.drive_oq_engine_server_dlg.get_output_list(calc['id'])
             cls.output_list[calc['id']] = calc_output_list
@@ -115,11 +121,10 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         else:
             print('\nFailed attempts:')
             for failed_attempt in cls.global_failed_attempts:
-                print('\tCalculation %s: %s'
+                print('\tCalculation %s (%s): %s'
                       % (failed_attempt['calc_id'],
+                         failed_attempt['calc_mode'],
                          failed_attempt['calc_description']))
-            raise RuntimeError(
-                'At least one output was not successfully loaded')
         if cls.global_time_consuming_outputs:
             print('\n\nSome loaders took longer than %s seconds:' %
                   LONG_LOADING_TIME)
@@ -236,10 +241,12 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                     "%s_aggr" % output['type'] != selected_output_type):
                 continue
             output_dict = {'calc_id': calc_id,
+                           'calc_mode': calc['calculation_mode'],
                            'calc_description': calc['description'],
                            'output_type': selected_output_type}
             start_time = time.time()
-            print('\n\tCalculation %s: %s' % (calc['id'], calc['description']))
+            print('\n\tCalculation %s (%s): %s' % (
+                calc['id'], calc['calculation_mode'], calc['description']))
             # NOTE: aggregated outputs use an existing OQ-Engine output and
             #       virtually transforms it postfixing its type with '_aggr'
             output_copy = copy.deepcopy(output)
@@ -434,9 +441,10 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             self._test_export()
         dlg.loading_completed.emit()
 
-    def _store_skipped_attempt(self, id, description, type):
+    def _store_skipped_attempt(self, id, calculation_mode, description, type):
         skipped_attempt = {
             'calc_id': id,
+            'calc_mode': calculation_mode,
             'calc_description': description,
             'output_type': type}
         self.skipped_attempts.append(skipped_attempt)
@@ -450,7 +458,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         # NOTE: loading zipped output only for multi_risk
         if output_type == 'input' and calc['calculation_mode'] != 'multi_risk':
             self._store_skipped_attempt(
-                calc_id, calc['description'], output_type)
+                calc_id, calc['calculation_mode'],
+                calc['description'], output_type)
             print('\t\tSKIPPED')
             return 'skipped'
         if output_type in (OQ_CSV_TO_LAYER_TYPES |
@@ -547,13 +556,14 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             print('\n%s successfully loaded for all calculations' %
                   selected_output_type)
         else:
-            print('\nFailed attempts:')
+            failing_summary = ''
             for failed_attempt in self.failed_attempts:
-                print('\tCalculation %s: %s'
-                      % (failed_attempt['calc_id'],
-                         failed_attempt['calc_description']))
-            raise RuntimeError(
-                'At least one output was not successfully loaded')
+                failing_summary += '\n\tCalculation %s (%s): %s\n%s' % (
+                    failed_attempt['calc_id'],
+                    failed_attempt['calc_mode'],
+                    failed_attempt['calc_description'],
+                    ''.join(traceback.format_tb(failed_attempt['traceback'])))
+            raise FailedAttempts(failing_summary)
         if self.time_consuming_outputs:
             print('\n\nSome loaders took longer than %s seconds:' %
                   LONG_LOADING_TIME)
