@@ -770,8 +770,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                                           OQ_EXTRACT_TO_VIEW_TYPES):
                         # FIXME: enable button for ebrisk as soon as the output
                         # will be loadable
-                        if (calculation_mode == 'ebrisk'
-                                and output['type'] not in OQ_RST_TYPES):
+                        if (output['type'] in OQ_EXTRACT_TO_VIEW_TYPES and
+                                calculation_mode == 'ebrisk'):
                             continue
                         action = 'Show'
                     elif output['type'] in OQ_ZIPPED_TYPES:
