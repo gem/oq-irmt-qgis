@@ -1135,8 +1135,8 @@ def extract_npz(
             print_to_stderr=True)
     resp = session.get(url, params=params)
     if not resp.ok:
-        msg = "Unable to extract %s with parameters %s: %s" % (
-            url, params, resp.reason)
+        msg = "Unable to extract %s with parameters %s (%s):\n%s" % (
+            url, params, resp.reason, resp.content)
         log_msg(msg, level='C', message_bar=message_bar, print_to_stderr=True)
         return
     resp_content = resp.content
