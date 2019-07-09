@@ -567,11 +567,13 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         else:
             failing_summary = ''
             for failed_attempt in self.failed_attempts:
+                # NOTE: we avoid printing the error also at the end, because:
+                #       1) it would be a duplicate
+                #       2) it would not contain the traceback from the engine
                 failing_summary += '\n\tCalculation %s (%s): %s\n%s' % (
                     failed_attempt['calc_id'],
                     failed_attempt['calc_mode'],
-                    failed_attempt['calc_description'],
-                    ''.join(traceback.format_tb(failed_attempt['traceback'])))
+                    failed_attempt['calc_description'])
             raise FailedAttempts(failing_summary)
         if self.time_consuming_outputs:
             print('\n\nSome loaders took longer than %s seconds:' %
