@@ -570,7 +570,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 # NOTE: we avoid printing the error also at the end, because:
                 #       1) it would be a duplicate
                 #       2) it would not contain the traceback from the engine
-                failing_summary += '\n\tCalculation %s (%s): %s' % (
+                failing_summary += ('\n\tCalculation %s (%s): %s'
+                                    '\n\t\t(please check traceback ahead)') % (
                     failed_attempt['calc_id'],
                     failed_attempt['calc_mode'],
                     failed_attempt['calc_description'])
