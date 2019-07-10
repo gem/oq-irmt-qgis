@@ -607,6 +607,9 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 data = {}
             files = {'archive': open(zipped_file_name, 'rb')}
             try:
+                log_msg('POST: %s, with files: %s, with data: %s' % (
+                            run_calc_url, files, data),
+                        level='I', print_to_stderr=True)
                 resp = self.session.post(
                     run_calc_url, files=files, data=data, timeout=20,
                     stream=True)
