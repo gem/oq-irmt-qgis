@@ -11,6 +11,10 @@ docker run -d --name qgis -v /tmp/.X11-unix:/tmp/.X11-unix \
 
 docker exec -it qgis sh -c "apt update; DEBIAN_FRONTEND=noninteractive apt install -y python3-scipy python3-matplotlib python3-pyqt5.qtwebkit"
 
+# FIXME: use a specific branch on the oq-engine
+# docker exec -it qgis sh -c "git clone -q -b ${BRANCH} --depth=1 https://github.com/gem/oq-engine.git && echo "Running against oq-engine/${BRANCH}"
+docker exec -it qgis sh -c "git clone -q -b master --depth=1 https://github.com/gem/oq-engine.git"
+
 docker exec -it qgis sh -c "qgis_setup.sh svir"
 
 docker exec -it qgis sh -c "cd /tests_directory && qgis_testrunner.sh svir.test.integration.test_drive_oq_engine"

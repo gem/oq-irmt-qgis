@@ -24,6 +24,7 @@
 
 # import qgis libs so that we set the correct sip api version
 import os
+import glob
 import sys
 import traceback
 import tempfile
@@ -165,10 +166,14 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         return calc_id
 
     def test_run_calculation(self):
-        # FIXME: currently using oq-irmt-qgis/classical_damage.zip
-        hazard_calc_id = self.run_calc(['classical_damage.zip'], 'hazard')
-        risk_calc_id = self.run_calc(
-            ['classical_damage.zip'], 'risk', hazard_calc_id)
+        risk_demos_path = os.path.join(
+            os.pardir, 'oq-engine', 'demos', 'risk')
+        risk_demos_dirs = glob.glob(os.path.join(risk_demos_path, "*", ""))
+        # NOTE: using the first risk demo found
+        demo_dir = risk_demos_dirs[0]
+        filepaths = glob.glob(os.path.join(demo_dir, '*'))
+        hazard_calc_id = self.run_calc(filepaths, 'hazard')
+        risk_calc_id = self.run_calc(filepaths, 'risk', hazard_calc_id)
         self.irmt.drive_oq_engine_server_dlg.remove_calc(risk_calc_id)
         self.irmt.drive_oq_engine_server_dlg.remove_calc(hazard_calc_id)
 
