@@ -1,14 +1,17 @@
 #!/usr/bin/env bash
 
 set -e
-set -x
 
 if [ "$TRAVIS_PULL_REQUEST_BRANCH" != "" ]; then
     BRANCH=$TRAVIS_PULL_REQUEST_BRANCH
 else
     BRANCH=$TRAVIS_BRANCH
 fi
+if [ "$(git ls-remote --heads https://github.com/gem/oq-engine.git ${BRANCH})" == "" ]; then
+    BRANCH='master'
+fi
 export BRANCH
+
 docker rm -f qgis || true
 docker run -d --name qgis -v /tmp/.X11-unix:/tmp/.X11-unix \
  -v `pwd`/../.:/tests_directory \
