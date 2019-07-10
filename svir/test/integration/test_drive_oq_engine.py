@@ -713,11 +713,11 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         # not necessary ant it made tests much slower in case of many features
 
 
-# For each loadable output type, create dinamically a test that loads it from
-# all available demo calculations
-for output_type in OQ_ALL_TYPES:
-    def test_func(output_type):
-        return lambda self: self.load_output_type(output_type)
-    setattr(LoadOqEngineOutputsTestCase,
-            "test_load_%s" % output_type,
-            test_func(output_type))
+# # For each loadable output type, create dinamically a test that loads it from
+# # all available demo calculations
+# for output_type in OQ_ALL_TYPES:
+#     def test_func(output_type):
+#         return lambda self: self.load_output_type(output_type)
+#     setattr(LoadOqEngineOutputsTestCase,
+#             "test_load_%s" % output_type,
+#             test_func(output_type))
