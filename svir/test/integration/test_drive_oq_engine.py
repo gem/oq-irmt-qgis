@@ -109,8 +109,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        print("\n\nGLOBAL SUMMARY")
-        print("==============\n")
+        print("\n\nGLOBAL SUMMARY OF TESTING OQ-ENGINE OUTPUT LOADERS")
+        print("==================================================\n")
         if cls.global_skipped_attempts:
             print('\nSkipped:')
             for skipped_attempt in cls.global_skipped_attempts:
