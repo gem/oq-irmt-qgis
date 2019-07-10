@@ -24,6 +24,7 @@
 
 # import qgis libs so that we set the correct sip api version
 import os
+import glob
 import sys
 import traceback
 import tempfile
@@ -35,6 +36,7 @@ import requests
 from qgis.core import QgsApplication
 from qgis.utils import iface
 from qgis.testing import unittest
+from qgis.PyQt.QtCore import QTimer
 from svir.irmt import Irmt
 from svir.utilities.shared import (
                                    OQ_CSV_TO_LAYER_TYPES,
@@ -107,8 +109,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        print("\n\nGLOBAL SUMMARY")
-        print("==============\n")
+        print("\n\nGLOBAL SUMMARY OF TESTING OQ-ENGINE OUTPUT LOADERS")
+        print("==================================================\n")
         if cls.global_skipped_attempts:
             print('\nSkipped:')
             for skipped_attempt in cls.global_skipped_attempts:
@@ -134,14 +136,57 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                                  reverse=True):
                 print('\t%s' % output)
 
-    @unittest.skip("TODO")
+    def run_calc(self, input_files, job_type='hazard', calc_id=None):
+        resp = self.irmt.drive_oq_engine_server_dlg.run_calc(
+            calc_id=calc_id, file_names=input_files)
+        calc_id = resp['job_id']
+        print("Running %s calculation #%s" % (job_type, calc_id))
+        self.timer = QTimer()
+        self.timer.timeout.connect(
+            lambda: self.refresh_calc_log(calc_id))
+        self.timer.start(3000)  # refresh time in milliseconds
+        # show the log before the first iteration of the timer
+        self.refresh_calc_log(calc_id)
+        timeout = 180
+        start_time = time.time()
+        while time.time() - start_time < timeout:
+            QGIS_APP.processEvents()
+            if not self.timer.isActive():
+                self.timer.timeout.disconnect()
+                break
+            time.sleep(0.1)
+        calc_status = self.get_calc_status(calc_id)
+        if not calc_status['status'] == 'complete':
+            resp = self.irmt.drive_oq_engine_server_dlg.remove_calc(
+                calc_id)
+            raise TimeoutError(
+                'After reaching the timeout of %s seconds, the %s'
+                ' calculation was in the state "%s", and it was deleted'
+                % (timeout, job_type, calc_status))
+        return calc_id
+
     def test_run_calculation(self):
-        # We should:
-        #   1) have input files available
-        #   2) start the calculation
-        #   3) in a loop, print the console log until finished
-        #   4) remove the calculation
-        pass
+        risk_demos_path = os.path.join(
+            os.pardir, 'oq-engine', 'demos', 'risk')
+        risk_demos_dirs = glob.glob(os.path.join(risk_demos_path, "*", ""))
+        # NOTE: using the first risk demo found
+        demo_dir = risk_demos_dirs[0]
+        filepaths = glob.glob(os.path.join(demo_dir, '*'))
+        hazard_calc_id = self.run_calc(filepaths, 'hazard')
+        risk_calc_id = self.run_calc(filepaths, 'risk', hazard_calc_id)
+        self.irmt.drive_oq_engine_server_dlg.remove_calc(risk_calc_id)
+        self.irmt.drive_oq_engine_server_dlg.remove_calc(hazard_calc_id)
+
+    def get_calc_status(self, calc_id):
+        return self.irmt.drive_oq_engine_server_dlg.get_calc_status(calc_id)
+
+    def refresh_calc_log(self, calc_id):
+        calc_status = self.get_calc_status(calc_id)
+        if calc_status['status'] in ('complete', 'failed'):
+            self.timer.stop()
+        calc_log = self.irmt.drive_oq_engine_server_dlg.get_calc_log(calc_id)
+        if calc_log:
+            print(calc_log)
 
     def test_all_loadable_output_types_found_in_demos(self):
         loadable_output_types_found = set()
