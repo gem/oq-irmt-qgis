@@ -136,7 +136,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                                  reverse=True):
                 print('\t%s' % output)
 
-    def run_calc(self, input_files, job_type, calc_id=None):
+    def run_calc(self, input_files, job_type='hazard', calc_id=None):
         resp = self.irmt.drive_oq_engine_server_dlg.run_calc(
             calc_id=calc_id, file_names=input_files)
         calc_id = resp['job_id']
