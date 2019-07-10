@@ -4,8 +4,10 @@ set -e
 
 if [ "$TRAVIS_PULL_REQUEST_BRANCH" != "" ]; then
     BRANCH=$TRAVIS_PULL_REQUEST_BRANCH
-else
+elif [ "$TRAVIS_BRANCH" != "" ]; then
     BRANCH=$TRAVIS_BRANCH
+else
+    BRANCH='master'
 fi
 if [ "$(git ls-remote --heads https://github.com/gem/oq-engine.git ${BRANCH})" == "" ]; then
     BRANCH='master'
