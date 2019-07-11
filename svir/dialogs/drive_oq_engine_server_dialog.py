@@ -752,6 +752,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 item = QTableWidgetItem()
                 value = output_list[row][key]
                 item.setData(Qt.DisplayRole, value)
+                item.setData(Qt.ToolTipRole, output_list[row]['type'])
                 self.output_list_tbl.setItem(row, col, item)
             outtypes = output_list[row]['outtypes']
             for col, outtype in enumerate(outtypes, len(selected_keys)):
