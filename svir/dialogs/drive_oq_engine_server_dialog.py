@@ -58,6 +58,7 @@ from requests.packages.urllib3.exceptions import (
     LocationParseError)
 from svir.utilities.shared import (OQ_TO_LAYER_TYPES,
                                    OQ_RST_TYPES,
+                                   OQ_EXTRACT_TO_LAYER_TYPES,
                                    OQ_EXTRACT_TO_VIEW_TYPES,
                                    OQ_ZIPPED_TYPES,
                                    OQ_BASIC_CSV_TO_LAYER_TYPES,
@@ -861,7 +862,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             # NOTE: even when only a csv output is available, we might have to
             # ignore the csv and use the extract api instead, as in the case of
             # the asset_risk output type
-            if outtype == 'npz' or output_type == 'asset_risk':
+            if outtype == 'npz' or output_type in (
+                    OQ_EXTRACT_TO_LAYER_TYPES | OQ_EXTRACT_TO_VIEW_TYPES):
                 self.open_output(output_id, output_type)
             elif outtype == 'csv':
                 dest_folder = tempfile.gettempdir()
