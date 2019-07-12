@@ -607,6 +607,9 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 data = {}
             files = {'archive': open(zipped_file_name, 'rb')}
             try:
+                log_msg('POST: %s, with files: %s, with data: %s' % (
+                            run_calc_url, files, data),
+                        level='I', print_to_stderr=True)
                 resp = self.session.post(
                     run_calc_url, files=files, data=data, timeout=20,
                     stream=True)
@@ -777,8 +780,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                                           OQ_EXTRACT_TO_VIEW_TYPES):
                         # FIXME: enable button for ebrisk as soon as the output
                         # will be loadable
-                        if (calculation_mode == 'ebrisk'
-                                and output['type'] not in OQ_RST_TYPES):
+                        if (output['type'] in OQ_EXTRACT_TO_VIEW_TYPES and
+                                calculation_mode == 'ebrisk'):
                             continue
                         action = 'Show'
                     elif output['type'] in OQ_ZIPPED_TYPES:

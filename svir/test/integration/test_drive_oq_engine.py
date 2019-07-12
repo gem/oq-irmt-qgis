@@ -24,6 +24,7 @@
 
 # import qgis libs so that we set the correct sip api version
 import os
+import glob
 import sys
 import traceback
 import tempfile
@@ -32,10 +33,10 @@ import csv
 import time
 import operator
 import requests
-from mock import Mock
 from qgis.core import QgsApplication
 from qgis.utils import iface
 from qgis.testing import unittest
+from qgis.PyQt.QtCore import QTimer
 from svir.irmt import Irmt
 from svir.utilities.shared import (
                                    OQ_CSV_TO_LAYER_TYPES,
@@ -63,18 +64,187 @@ def run_all():
     unittest.TextTestRunner(verbosity=3, stream=sys.stdout).run(suite)
 
 
+class FailedAttempts(Exception):
+    pass
+
+
 class LoadOqEngineOutputsTestCase(unittest.TestCase):
 
-    def setUp(self):
-        self.irmt = Irmt(iface)
-        self.irmt.initGui()
-        self.hostname = os.environ.get('OQ_ENGINE_HOST',
-                                       'http://localhost:8800')
-        self.irmt.drive_oq_engine_server(show=False, hostname=self.hostname)
-        self.reset_gui()
+    @classmethod
+    def setUpClass(cls):
+        cls.irmt = Irmt(iface)
+        cls.irmt.initGui()
+        cls.hostname = os.environ.get('OQ_ENGINE_HOST',
+                                      'http://localhost:8800')
+        cls.global_failed_attempts = []
+        cls.global_skipped_attempts = []
+        cls.global_time_consuming_outputs = []
+        cls.irmt.drive_oq_engine_server(show=False, hostname=cls.hostname)
+        # NOTE: calc_list must be retrieved BEFORE starting any test
+        cls.calc_list = cls.irmt.drive_oq_engine_server_dlg.calc_list
+        cls.output_list = {}
+        try:
+            selected_calc_id = int(os.environ.get('SELECTED_CALC_ID'))
+        except (ValueError, TypeError):
+            print('SELECTED_CALC_ID was not set or is not an integer'
+                  ' value. Running tests for all the available calculations')
+            selected_calc_id = None
+        else:
+            print('SELECTED_CALC_ID is set.'
+                  ' Running tests only for calculation #%s'
+                  % selected_calc_id)
+        if selected_calc_id is not None:
+            cls.calc_list = [calc for calc in cls.calc_list
+                             if calc['id'] == selected_calc_id]
+        print("List of tested OQ-Engine demo calculations:")
+        for calc in cls.calc_list:
+            print('\tCalculation %s (%s): %s' % (calc['id'],
+                                                 calc['calculation_mode'],
+                                                 calc['description']))
+            calc_output_list = \
+                cls.irmt.drive_oq_engine_server_dlg.get_output_list(calc['id'])
+            cls.output_list[calc['id']] = calc_output_list
+            print('\t\tOutput types: %s' % ', '.join(
+                [output['type'] for output in calc_output_list]))
 
-    def reset_gui(self):
-        self.irmt.iface.newProject()
+    @classmethod
+    def tearDownClass(cls):
+        print("\n\nGLOBAL SUMMARY OF TESTING OQ-ENGINE OUTPUT LOADERS")
+        print("==================================================\n")
+        if cls.global_skipped_attempts:
+            print('\nSkipped:')
+            for skipped_attempt in cls.global_skipped_attempts:
+                print('\tCalculation %s: %s'
+                      % (skipped_attempt['calc_id'],
+                         skipped_attempt['calc_description']))
+                print('\t\tOutput type: %s' % skipped_attempt['output_type'])
+        if not cls.global_failed_attempts:
+            print("All the outputs were loaded successfully")
+        else:
+            print('\nFailed attempts:')
+            for failed_attempt in cls.global_failed_attempts:
+                print('\tCalculation %s (%s): %s'
+                      % (failed_attempt['calc_id'],
+                         failed_attempt['calc_mode'],
+                         failed_attempt['calc_description']))
+                print('\t\tOutput type: %s' % failed_attempt['output_type'])
+        if cls.global_time_consuming_outputs:
+            print('\n\nSome loaders took longer than %s seconds:' %
+                  LONG_LOADING_TIME)
+            for output in sorted(cls.global_time_consuming_outputs,
+                                 key=operator.itemgetter('loading_time'),
+                                 reverse=True):
+                print('\t%s' % output)
+
+    def run_calc(self, input_files, job_type='hazard', calc_id=None):
+        resp = self.irmt.drive_oq_engine_server_dlg.run_calc(
+            calc_id=calc_id, file_names=input_files)
+        calc_id = resp['job_id']
+        print("Running %s calculation #%s" % (job_type, calc_id))
+        self.timer = QTimer()
+        self.timer.timeout.connect(
+            lambda: self.refresh_calc_log(calc_id))
+        self.timer.start(3000)  # refresh time in milliseconds
+        # show the log before the first iteration of the timer
+        self.refresh_calc_log(calc_id)
+        timeout = 180
+        start_time = time.time()
+        while time.time() - start_time < timeout:
+            QGIS_APP.processEvents()
+            if not self.timer.isActive():
+                self.timer.timeout.disconnect()
+                break
+            time.sleep(0.1)
+        calc_status = self.get_calc_status(calc_id)
+        if not calc_status['status'] == 'complete':
+            resp = self.irmt.drive_oq_engine_server_dlg.remove_calc(
+                calc_id)
+            raise TimeoutError(
+                'After reaching the timeout of %s seconds, the %s'
+                ' calculation was in the state "%s", and it was deleted'
+                % (timeout, job_type, calc_status))
+        return calc_id
+
+    def test_run_calculation(self):
+        risk_demos_path = os.path.join(
+            os.pardir, 'oq-engine', 'demos', 'risk')
+        risk_demos_dirs = glob.glob(os.path.join(risk_demos_path, "*", ""))
+        # NOTE: using the first risk demo found
+        demo_dir = risk_demos_dirs[0]
+        filepaths = glob.glob(os.path.join(demo_dir, '*'))
+        hazard_calc_id = self.run_calc(filepaths, 'hazard')
+        risk_calc_id = self.run_calc(filepaths, 'risk', hazard_calc_id)
+        self.irmt.drive_oq_engine_server_dlg.remove_calc(risk_calc_id)
+        self.irmt.drive_oq_engine_server_dlg.remove_calc(hazard_calc_id)
+
+    def get_calc_status(self, calc_id):
+        return self.irmt.drive_oq_engine_server_dlg.get_calc_status(calc_id)
+
+    def refresh_calc_log(self, calc_id):
+        calc_status = self.get_calc_status(calc_id)
+        if calc_status['status'] in ('complete', 'failed'):
+            self.timer.stop()
+        calc_log = self.irmt.drive_oq_engine_server_dlg.get_calc_log(calc_id)
+        if calc_log:
+            print(calc_log)
+
+    def test_all_loadable_output_types_found_in_demos(self):
+        loadable_output_types_found = set()
+        loadable_output_types_not_found = set()
+        for loadable_output_type in OQ_ALL_TYPES:
+            loadable_output_type_found = False
+            for calc in self.calc_list:
+                for output in self.output_list[calc['id']]:
+                    if loadable_output_type == output['type']:
+                        loadable_output_type_found = True
+                        loadable_output_types_found.add(loadable_output_type)
+                        break
+                if loadable_output_type_found:
+                    break
+            if not loadable_output_type_found:
+                loadable_output_types_not_found.add(loadable_output_type)
+        if loadable_output_types_found:
+            print("\nOutput_types found at least in one demo:\n\t%s" %
+                  "\n\t".join(loadable_output_types_found))
+        else:
+            raise RuntimeError("No loadable output type was found in any demo")
+        if loadable_output_types_not_found:
+            print("\nOutput_types not found in any demo:\n\t%s" %
+                  "\n\t".join(loadable_output_types_not_found))
+            if all([output_type.endswith('_aggr')
+                    for output_type in loadable_output_types_not_found]):
+                print("\nThe only missing output types are '_aggr', which are"
+                      " not actual outputs exposed by the engine, but"
+                      " derived outputs accessed through the extract API."
+                      " Therefore, is is ok.")
+            else:
+                print("\nSome missing output types are '_aggr', which are"
+                      " not actual outputs exposed by the engine, but"
+                      " derived outputs accessed through the extract API."
+                      " Therefore, is is ok:\n\t%s" % "\n\t".join([
+                          output_type
+                          for output_type in loadable_output_types_not_found
+                          if output_type.endswith('_aggr')]))
+                raise RuntimeError(
+                    "\nThe following loadable output types were not found in"
+                    " any demo:\n%s" % "\n\t".join([
+                        output_type
+                        for output_type in loadable_output_types_not_found
+                        if not output_type.endswith('_aggr')]))
+
+    def test_all_loaders_are_implemented(self):
+        not_implemented_loaders = set()
+        for calc in self.calc_list:
+            for output in self.output_list[calc['id']]:
+                if output['type'] not in OQ_ALL_TYPES:
+                    not_implemented_loaders.add(output['type'])
+        if not_implemented_loaders:
+            print('\n\nLoaders for the following output types found in the'
+                  ' available calculations have not been implemented yet:')
+            print(", ".join(not_implemented_loaders))
+        else:
+            print("All outputs in the demos have a corresponding loader")
+        # NOTE: We want green tests even when loaders are still missing
 
     def download_output(self, output_id, outtype):
         dest_folder = tempfile.gettempdir()
@@ -87,63 +257,53 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         resp = requests.get(output_download_url, verify=False)
         if not resp.ok:
             raise Exception(resp.text)
-        filename = resp.headers['content-disposition'].split(
-            'filename=')[1]
+        filename = resp.headers['content-disposition'].split('filename=')[1]
         filepath = os.path.join(dest_folder, filename)
         with open(filepath, "wb") as f:
             f.write(resp.content)
         return filepath
 
-    def load_calc_outputs(self, calc):
+    def _on_loading_ko(self, output_dict):
+        ex_type, ex, tb = sys.exc_info()
+        failed_attempt = copy.deepcopy(output_dict)
+        failed_attempt['traceback'] = tb
+        self.failed_attempts.append(failed_attempt)
+        self.global_failed_attempts.append(failed_attempt)
+        traceback.print_tb(failed_attempt['traceback'])
+        print(ex)
+
+    def _on_loading_ok(self, start_time, output_dict):
+        loading_time = time.time() - start_time
+        print('\t\t(loading time: %.4f sec)' % loading_time)
+        if loading_time > LONG_LOADING_TIME:
+            output_dict['loading_time'] = loading_time
+            self.time_consuming_outputs.append(output_dict)
+            self.global_time_consuming_outputs.append(output_dict)
+
+    def load_calc_output(self, calc, selected_output_type):
         calc_id = calc['id']
-        output_list = self.irmt.drive_oq_engine_server_dlg.get_output_list(
-            calc_id)
-        for output in output_list:
-            output_dict = {'calc_id': calc_id,
-                           'calc_description': calc['description'],
-                           'output_type': output['type']}
-            start_time = time.time()
-            if (self.selected_otype is not None
-                    and output['type'] != self.selected_otype):
+        for output in self.output_list[calc_id]:
+            if (output['type'] != selected_output_type and
+                    "%s_aggr" % output['type'] != selected_output_type):
                 continue
+            output_dict = {'calc_id': calc_id,
+                           'calc_mode': calc['calculation_mode'],
+                           'calc_description': calc['description'],
+                           'output_type': selected_output_type}
+            start_time = time.time()
+            print('\n\tCalculation %s (%s): %s' % (
+                calc['id'], calc['calculation_mode'], calc['description']))
+            # NOTE: aggregated outputs use an existing OQ-Engine output and
+            #       virtually transforms it postfixing its type with '_aggr'
+            output_copy = copy.deepcopy(output)
+            output_copy['type'] = selected_output_type
             try:
-                self.load_output(calc, output)
+                loading_resp = self.load_output(calc, output_copy)
             except Exception:
-                ex_type, ex, tb = sys.exc_info()
-                failed_attempt = copy.deepcopy(output_dict)
-                failed_attempt['traceback'] = tb
-                self.failed_attempts.append(failed_attempt)
-                traceback.print_tb(failed_attempt['traceback'])
-                print(ex)
+                self._on_loading_ko(output_dict)
             else:
-                loading_time = time.time() - start_time
-                print('\t\t(loading time: %.4f sec)' % loading_time)
-                if loading_time > LONG_LOADING_TIME:
-                    output_dict['loading_time'] = loading_time
-                    self.time_consuming_outputs.append(output_dict)
-                self.untested_otypes.discard(output['type'])
-            output_type_aggr = "%s_aggr" % output['type']
-            if output_type_aggr in OQ_EXTRACT_TO_VIEW_TYPES:
-                aggr_output = copy.deepcopy(output)
-                aggr_output['type'] = output_type_aggr
-                aggr_output_dict = copy.deepcopy(output_dict)
-                aggr_output_dict['output_type'] = aggr_output['type']
-                try:
-                    self.load_output(calc, aggr_output)
-                except Exception:
-                    ex_type, ex, tb = sys.exc_info()
-                    failed_attempt = copy.deepcopy(output_dict)
-                    failed_attempt['traceback'] = tb
-                    self.failed_attempts.append(failed_attempt)
-                    traceback.print_tb(failed_attempt['traceback'])
-                    print(ex)
-                else:
-                    loading_time = time.time() - start_time
-                    print('\t\t(loading time: %.4f sec)' % loading_time)
-                    if loading_time > LONG_LOADING_TIME:
-                        aggr_output_dict['loading_time'] = loading_time
-                        self.time_consuming_outputs.append(aggr_output_dict)
-                    self.untested_otypes.discard(output_type_aggr)
+                if loading_resp != 'skipped':
+                    self._on_loading_ok(start_time, output_dict)
 
     def on_init_done(self, dlg):
         # set dialog options and accept
@@ -327,82 +487,74 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             self._test_export()
         dlg.loading_completed.emit()
 
+    def _store_skipped_attempt(self, id, calculation_mode, description, type):
+        skipped_attempt = {
+            'calc_id': id,
+            'calc_mode': calculation_mode,
+            'calc_description': description,
+            'output_type': type}
+        self.skipped_attempts.append(skipped_attempt)
+        self.global_skipped_attempts.append(skipped_attempt)
+
     def load_output(self, calc, output):
-        # NOTE: resetting the Data Viewer before loading each output, prevents
-        #       a segfault. For some reason, while running the actual
-        #       application, the GUI is properly re-designed while opening a
-        #       new output, but not in the testing environment (so widgets
-        #       corresponding to previous outputs are not removed from the GUI)
-        self.reset_gui()
+        # NOTE: it is better to avoid resetting the project here, because some
+        # outputs might be skipped, therefore it would not be needed
         calc_id = calc['id']
         output_type = output['type']
         # TODO: when ebrisk becomes loadable, let's not skip this
-        if calc['calculation_mode'] == 'ebrisk':
-            print('\tLoading output type %s...' % output_type)
-            skipped_attempt = {
-                'calc_id': calc_id,
-                'calc_description': calc['description'],
-                'output_type': output_type}
-            self.skipped_attempts.append(skipped_attempt)
+        if (output['type'] in OQ_EXTRACT_TO_VIEW_TYPES and
+                calc['calculation_mode'] == 'ebrisk'):
+            self._store_skipped_attempt(
+                calc_id, calc['calculation_mode'],
+                calc['description'], output_type)
             print('\t\tSKIPPED')
-            return
+            return 'skipped'
         # NOTE: loading zipped output only for multi_risk
         if output_type == 'input' and calc['calculation_mode'] != 'multi_risk':
-            print('\tLoading output type %s...' % output_type)
-            skipped_attempt = {
-                'calc_id': calc_id,
-                'calc_description': calc['description'],
-                'output_type': output_type}
-            self.skipped_attempts.append(skipped_attempt)
+            self._store_skipped_attempt(
+                calc_id, calc['calculation_mode'],
+                calc['description'], output_type)
             print('\t\tSKIPPED')
-            return
+            return 'skipped'
         if output_type in (OQ_CSV_TO_LAYER_TYPES |
                            OQ_RST_TYPES | OQ_ZIPPED_TYPES):
-            print('\tLoading output type %s...' % output_type)
             if output_type in OQ_CSV_TO_LAYER_TYPES:
-                # TODO: we should test the actual downloader, asynchronously
-                filepath = self.download_output(output['id'], 'csv')
+                filetype = 'csv'
             elif output_type in OQ_RST_TYPES:
-                # TODO: we should test the actual downloader, asynchronously
-                filepath = self.download_output(output['id'], 'rst')
-            elif output_type in OQ_ZIPPED_TYPES:
-                filepath = self.download_output(output['id'], 'zip')
+                filetype = 'rst'
+            else:  # OQ_ZIPPED_TYPES
+                filetype = 'zip'
+            # TODO: we should test the actual downloader, asynchronously
+            filepath = self.download_output(output['id'], filetype)
             assert filepath is not None
+            self.irmt.iface.newProject()
             if output_type == 'fullreport':
                 dlg = ShowFullReportDialog(filepath)
                 dlg.accept()
                 print('\t\tok')
-                return
+                return 'ok'
             if output_type in OQ_ZIPPED_TYPES:
                 dlg = LoadInputsDialog(filepath, self.irmt.iface)
                 dlg.accept()
                 print('\t\tok')
-                return
+                return 'ok'
             dlg = OUTPUT_TYPE_LOADERS[output_type](
-                self.irmt.iface, Mock(), requests, self.hostname, calc_id,
-                output_type, filepath)
+                self.irmt.iface, self.irmt.viewer_dock,
+                self.irmt.drive_oq_engine_server_dlg.session,
+                self.hostname, calc_id, output_type, filepath)
             if dlg.ok_button.isEnabled():
                 dlg.accept()
                 print('\t\tok')
-                return
+                return 'ok'
             else:
                 raise RuntimeError('The ok button is disabled')
+                return 'ko'
         elif output_type in OQ_EXTRACT_TO_LAYER_TYPES:
-            print('\tLoading output type %s...' % output_type)
-            # TODO: when gmf_data for event_based becomes loadable,
-            #       let's not skip this
-            if (output_type == 'gmf_data'
-                    and calc['calculation_mode'] == 'event_based'):
-                skipped_attempt = {
-                    'calc_id': calc_id,
-                    'calc_description': calc['description'],
-                    'output_type': output_type}
-                self.skipped_attempts.append(skipped_attempt)
-                print('\t\tSKIPPED')
-                return
+            self.irmt.iface.newProject()
             dlg = OUTPUT_TYPE_LOADERS[output_type](
-                self.irmt.iface, Mock(), requests, self.hostname, calc_id,
-                output_type)
+                self.irmt.iface, self.irmt.viewer_dock,
+                self.irmt.drive_oq_engine_server_dlg.session,
+                self.hostname, calc_id, output_type)
             self.loading_completed = False
             self.loading_exception = None
             dlg.loading_completed.connect(self.on_loading_completed)
@@ -415,26 +567,25 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 QGIS_APP.processEvents()
                 if self.loading_completed:
                     print('\t\tok')
-                    return
+                    return 'ok'
                 if self.loading_exception:
                     raise self.loading_exception
+                    return 'ok'
                 time.sleep(0.1)
             raise TimeoutError(
                 'Loading time exceeded %s seconds' % timeout)
+            return 'ko'
         elif output_type in OQ_EXTRACT_TO_VIEW_TYPES:
-            print('\tLoading output type %s...' % output_type)
+            self.irmt.iface.newProject()
             self.irmt.viewer_dock.load_no_map_output(
-                calc_id, requests, self.hostname, output_type,
+                calc_id, self.irmt.drive_oq_engine_server_dlg.session,
+                self.hostname, output_type,
                 self.irmt.drive_oq_engine_server_dlg.engine_version)
             tmpfile_handler, tmpfile_name = tempfile.mkstemp()
             self.irmt.viewer_dock.write_export_file(tmpfile_name)
             os.close(tmpfile_handler)
             print('\t\tok')
-            return
-        else:
-            self.not_implemented_loaders.add(output_type)
-            print('\tLoader for output type %s is not implemented'
-                  % output_type)
+            return 'ok'
 
     def on_loading_completed(self):
         self.loading_completed = True
@@ -442,56 +593,34 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
     def on_loading_exception(self, exception):
         self.loading_exception = exception
 
-    def test_load_outputs(self):
+    def load_output_type(self, selected_output_type):
         self.failed_attempts = []
         self.skipped_attempts = []
         self.time_consuming_outputs = []
-        self.not_implemented_loaders = set()
-        self.untested_otypes = copy.copy(OQ_ALL_TYPES)  # it's a set
-        calc_list = self.irmt.drive_oq_engine_server_dlg.calc_list
-        try:
-            selected_calc_id = int(os.environ.get('SELECTED_CALC_ID'))
-        except (ValueError, TypeError):
-            print('\n\n\tSELECTED_CALC_ID was not set or is not an integer'
-                  ' value. Running tests for all the available calculations')
-            selected_calc_id = None
-        else:
-            print('\n\n\tSELECTED_CALC_ID is set.'
-                  ' Running tests only for calculation #%s'
-                  % selected_calc_id)
-        if selected_calc_id is not None:
-            calc_list = [calc for calc in calc_list
-                         if calc['id'] == selected_calc_id]
-        self.selected_otype = os.environ.get('SELECTED_OTYPE')
-        if (self.selected_otype not in OQ_ALL_TYPES):
-            print('\n\tSELECTED_OTYPE was not set or is not valid.'
-                  ' Running tests for all the available output types.')
-            self.selected_otype = None
-        else:
-            print('\n\tSELECTED_OTYPE is set.'
-                  ' Running tests only for %s' % self.selected_otype)
-            self.untested_otypes = set([self.selected_otype])
-        for calc in calc_list:
-            print('\nCalculation %s: %s' % (calc['id'], calc['description']))
-            self.load_calc_outputs(calc)
+        for calc in self.calc_list:
+            self.load_calc_output(calc, selected_output_type)
         if self.skipped_attempts:
-            print('\n\nSkipped:')
+            print('\nSkipped:')
             for skipped_attempt in self.skipped_attempts:
                 print('\tCalculation %s: %s'
                       % (skipped_attempt['calc_id'],
                          skipped_attempt['calc_description']))
                 print('\t\tOutput type: %s' % skipped_attempt['output_type'])
         if not self.failed_attempts:
-            print('\n\nAll outputs were successfully loaded')
+            print('\n%s successfully loaded for all calculations' %
+                  selected_output_type)
         else:
-            print('\n\nFailed attempts:')
+            failing_summary = ''
             for failed_attempt in self.failed_attempts:
-                print('\tCalculation %s: %s'
-                      % (failed_attempt['calc_id'],
-                         failed_attempt['calc_description']))
-                print('\t\tOutput type: %s' % failed_attempt['output_type'])
-            raise RuntimeError(
-                'At least one output was not successfully loaded')
+                # NOTE: we avoid printing the error also at the end, because:
+                #       1) it would be a duplicate
+                #       2) it would not contain the traceback from the engine
+                failing_summary += ('\n\tCalculation %s (%s): %s'
+                                    '\n\t\t(please check traceback ahead)') % (
+                    failed_attempt['calc_id'],
+                    failed_attempt['calc_mode'],
+                    failed_attempt['calc_description'])
+            raise FailedAttempts(failing_summary)
         if self.time_consuming_outputs:
             print('\n\nSome loaders took longer than %s seconds:' %
                   LONG_LOADING_TIME)
@@ -499,16 +628,6 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                                  key=operator.itemgetter('loading_time'),
                                  reverse=True):
                 print('\t%s' % output)
-        if self.not_implemented_loaders:
-            # sanity check
-            for not_implemented_loader in self.not_implemented_loaders:
-                assert not_implemented_loader not in OQ_ALL_TYPES
-            print('\n\nLoaders for the following output types found in the'
-                  ' available calculations have not been implemented yet:')
-            print(", ".join(self.not_implemented_loaders))
-        if self.untested_otypes:
-            raise RuntimeError('Untested output types: %s'
-                               % self.untested_otypes)
 
     def load_hcurves(self):
         self._set_output_type('Hazard Curves')
@@ -584,9 +703,21 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         num_feats = layer.featureCount()
         self.assertGreater(
             num_feats, 0, 'The layer does not contain any feature!')
+        # select first feature only
         layer.select(1)
         layer.removeSelection()
-        if num_feats > 1:
-            layer.select(2)
-        layer.selectAll()
+        # select first and last features (just one if there is only one)
+        layer.select([1, num_feats])
         layer.removeSelection()
+        # NOTE: in the past, we were also selecting all features, but it was
+        # not necessary ant it made tests much slower in case of many features
+
+
+# For each loadable output type, create dinamically a test that loads it from
+# all available demo calculations
+for output_type in OQ_ALL_TYPES:
+    def test_func(output_type):
+        return lambda self: self.load_output_type(output_type)
+    setattr(LoadOqEngineOutputsTestCase,
+            "test_load_%s" % output_type,
+            test_func(output_type))

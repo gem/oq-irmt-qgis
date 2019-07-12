@@ -198,7 +198,7 @@ class LoadLossesByAssetAsLayerDialog(LoadOutputAsLayerDialog):
         F32 = numpy.float32
         loss_by_site = collections.defaultdict(float)  # lon, lat -> loss
         for rec in npz[rlz_or_stat]:
-            if taxonomy == 'All' or taxonomy == rec['taxonomy']:
+            if taxonomy == 'All' or taxonomy.encode('utf8') == rec['taxonomy']:
                 loss_by_site[rec['lon'], rec['lat']] += rec[loss_type]
         data = numpy.zeros(len(loss_by_site),
                            [('lon', F32), ('lat', F32), (loss_type, F32)])
