@@ -58,6 +58,7 @@ from requests.packages.urllib3.exceptions import (
     LocationParseError)
 from svir.utilities.shared import (OQ_TO_LAYER_TYPES,
                                    OQ_RST_TYPES,
+                                   OQ_EXTRACT_TO_LAYER_TYPES,
                                    OQ_EXTRACT_TO_VIEW_TYPES,
                                    OQ_ZIPPED_TYPES,
                                    OQ_BASIC_CSV_TO_LAYER_TYPES,
@@ -755,6 +756,13 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 item = QTableWidgetItem()
                 value = output_list[row][key]
                 item.setData(Qt.DisplayRole, value)
+                size_mb = output_list[row]['size_mb']
+                if size_mb is None:
+                    size_str = ' (size: n.a.)'
+                else:
+                    size_str = ' (size: ~%.2f MB)' % size_mb
+                tooltip = "%s" % output_list[row]['type'] + size_str
+                item.setData(Qt.ToolTipRole, tooltip)
                 self.output_list_tbl.setItem(row, col, item)
             outtypes = output_list[row]['outtypes']
             for col, outtype in enumerate(outtypes, len(selected_keys)):
@@ -864,7 +872,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             # NOTE: even when only a csv output is available, we might have to
             # ignore the csv and use the extract api instead, as in the case of
             # the asset_risk output type
-            if outtype == 'npz' or output_type == 'asset_risk':
+            if outtype == 'npz' or output_type in (
+                    OQ_EXTRACT_TO_LAYER_TYPES | OQ_EXTRACT_TO_VIEW_TYPES):
                 self.open_output(output_id, output_type)
             elif outtype == 'csv':
                 dest_folder = tempfile.gettempdir()
