@@ -756,6 +756,13 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 item = QTableWidgetItem()
                 value = output_list[row][key]
                 item.setData(Qt.DisplayRole, value)
+                size_mb = output_list[row]['size_mb']
+                if size_mb is None:
+                    size_str = ' (size: n.a.)'
+                else:
+                    size_str = ' (size: ~%.2f MB)' % size_mb
+                tooltip = "%s" % output_list[row]['type'] + size_str
+                item.setData(Qt.ToolTipRole, tooltip)
                 self.output_list_tbl.setItem(row, col, item)
             outtypes = output_list[row]['outtypes']
             for col, outtype in enumerate(outtypes, len(selected_keys)):
