@@ -281,7 +281,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             self.global_time_consuming_outputs.append(output_dict)
         if output_dict['output_type'] in OQ_EXTRACT_TO_LAYER_TYPES:
             loaded_layer = self.irmt.iface.activeLayer()
-            self.assertNotNone(loaded_layer, 'No layer was loaded')
+            self.assertIsNotNone(loaded_layer, 'No layer was loaded')
             num_feats = loaded_layer.featureCount()
             self.assertGreater(
                 num_feats, 0, 'The loaded layer does not contain any feature!')
