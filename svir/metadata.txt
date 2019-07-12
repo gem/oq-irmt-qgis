@@ -26,8 +26,11 @@ changelog=
     3.6.1
     * Calls to QgsVectorLayer.getFeatures() are optimized, reading only the necessary fields and ignoring geometries if unneeded
     * Multi-peril input files containing geometries as WKT can be loaded as layers
-    * Integration tests use an instance of Irmt instead of instantiating Irmt sub-dialogs
-    * When the mouse points to the name of a OQ-Engine output, a tooltip displays the output type code (e.g. Aggregate Asset Losses -> agg_losses-rlzs)
+    * Improvements to the integration tests: an instance of Irmt is used instead of instantiating Irmt sub-dialogs, and no mocked object is used anymore;
+      OQ-Engine outputs that are loaded as QGIS layers are checked to contain at least one feature; an additional integration test runs a OQ-Engine hazard calculation,
+      displays its progress log, then runs a risk calculation based on its outputs, showing again the progress, then deletes both calculations;
+      instead of running one single big integration test, a single test is run for each OQ-Engine output type that the IRMT is able to load.
+    * When the mouse points to the name of a OQ-Engine output, a tooltip displays the output type code and its approximate size (if available)
     * Fixed a useless downloading of unneeded files while loading OQ-Engine outputs using the "extract" API
     * Fixed the possibility to load data corresponding to specific taxonomies, for dmg_by_asset and losses_by_asset OQ-Engine output types
     3.6.0
