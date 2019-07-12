@@ -147,7 +147,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         self.timer.start(3000)  # refresh time in milliseconds
         # show the log before the first iteration of the timer
         self.refresh_calc_log(calc_id)
-        timeout = 180
+        timeout = 240
         start_time = time.time()
         while time.time() - start_time < timeout:
             QGIS_APP.processEvents()
