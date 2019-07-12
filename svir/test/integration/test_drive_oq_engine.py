@@ -279,6 +279,12 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             output_dict['loading_time'] = loading_time
             self.time_consuming_outputs.append(output_dict)
             self.global_time_consuming_outputs.append(output_dict)
+        if output_dict['output_type'] in OQ_EXTRACT_TO_LAYER_TYPES:
+            loaded_layer = self.irmt.iface.activeLayer()
+            self.assertNotNone(loaded_layer, 'No layer was loaded')
+            num_feats = loaded_layer.featureCount()
+            self.assertGreater(
+                num_feats, 0, 'The loaded layer does not contain any feature!')
 
     def load_calc_output(self, calc, selected_output_type, taxonomy_idx=None):
         calc_id = calc['id']
@@ -703,7 +709,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         # depending on the amount of features selected
         num_feats = layer.featureCount()
         self.assertGreater(
-            num_feats, 0, 'The layer does not contain any feature!')
+            num_feats, 0, 'The loaded layer does not contain any feature!')
         # select first feature only
         layer.select(1)
         layer.removeSelection()
