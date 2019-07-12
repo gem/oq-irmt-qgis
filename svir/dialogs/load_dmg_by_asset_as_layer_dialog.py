@@ -180,7 +180,7 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
         F32 = numpy.float32
         dmg_by_site = collections.defaultdict(float)  # lon, lat -> dmg
         for rec in npz[rlz_or_stat]:
-            if taxonomy == 'All' or taxonomy == rec['taxonomy']:
+            if taxonomy == 'All' or taxonomy.encode('utf8') == rec['taxonomy']:
                 value = rec[loss_type]['%s_mean' % dmg_state]
                 dmg_by_site[rec['lon'], rec['lat']] += value
         data = numpy.zeros(
