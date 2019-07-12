@@ -146,7 +146,8 @@ class ExtractThread(QThread):
 
         if not resp.ok:
             self.exception_sig.emit(ExtractFailed(
-                "%s (%s): %s" % (err_msg, resp.reason, resp.content)))
+                "%s (%s):\n%s" % (err_msg, resp.reason,
+                                  resp.content.decode('utf8'))))
             return
 
         # FIXME: use stream=True
