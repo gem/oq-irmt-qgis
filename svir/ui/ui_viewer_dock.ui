@@ -36,7 +36,7 @@
          <x>0</x>
          <y>0</y>
          <width>402</width>
-         <height>612</height>
+         <height>618</height>
         </rect>
        </property>
        <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -45,13 +45,6 @@
           <property name="sizeConstraint">
            <enum>QLayout::SetDefaultConstraint</enum>
           </property>
-          <item>
-           <widget class="QCheckBox" name="bw_chk">
-            <property name="text">
-             <string>Optimize line style for black and white printing</string>
-            </property>
-           </widget>
-          </item>
           <item>
            <layout class="QFormLayout" name="formLayout">
             <property name="sizeConstraint">
@@ -71,7 +64,11 @@
              </widget>
             </item>
             <item row="0" column="1">
-             <widget class="QComboBox" name="output_type_cbx"/>
+             <widget class="QComboBox" name="output_type_cbx">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
+             </widget>
             </item>
            </layout>
           </item>
@@ -130,6 +127,13 @@
            </widget>
           </item>
          </layout>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="bw_chk">
+          <property name="text">
+           <string>Optimize line style for black and white printing</string>
+          </property>
+         </widget>
         </item>
        </layout>
       </widget>
