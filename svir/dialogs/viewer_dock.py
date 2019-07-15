@@ -167,7 +167,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
 
         if QSettings().value('/irmt/experimental_enabled', False, type=bool):
             self.output_types_names.update(
-                {'recovery_curves': 'Recovery Curves'})
+                {'dmg_by_asset': 'Recovery Curves'})
         self.output_type_cbx.addItems(list(self.output_types_names.values()))
 
         self.plot_figure = Figure()
