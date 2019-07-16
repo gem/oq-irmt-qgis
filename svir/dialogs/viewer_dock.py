@@ -553,7 +553,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.create_stats_multiselect()
             self.stats_multiselect.selection_changed.connect(
                 self.refresh_feature_selection)
-        elif new_output_type == 'recovery_curves':
+        elif new_output_type == 'dmg_by_asset':  # recovery curves
             if not IS_SCIPY_INSTALLED:
                 warn_missing_package('scipy', self.iface.messageBar())
                 self.output_type = None
@@ -942,7 +942,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                     self.current_selection[rlz_or_stat].items()):
                 # NOTE: we associated the same cumulative curve to all the
                 # selected points (ugly), and here we need to get only one
-                if self.output_type == 'recovery_curves' and i > 0:
+                if self.output_type == 'dmg_by_asset' and i > 0:  # recovery
                     break
                 feature = next(self.iface.activeLayer().getFeatures(
                     QgsFeatureRequest().setFilterFid(site)))
@@ -984,7 +984,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 title = 'Uniform hazard spectrum'
             else:
                 title = 'Uniform hazard spectra'
-        elif self.output_type == 'recovery_curves':
+        elif self.output_type == 'dmg_by_asset':  # recovery curves
             self.plot.set_xscale('linear')
             self.plot.set_yscale('linear')
             self.plot.set_xlabel('Time [days]')
@@ -1021,7 +1021,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 title += ' (%s years)' % investigation_time
         self.plot.set_title(title)
         self.plot.grid(which='both')
-        if self.output_type != 'recovery_curves' and 1 <= count_lines <= 20:
+        # dmg_by_asset is used for recovery curves
+        if self.output_type != 'dmg_by_asset' and 1 <= count_lines <= 20:
             if self.output_type == 'uhs':
                 location = 'upper right'
             else:
@@ -1086,7 +1087,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                     self.current_selection[rlz_or_stat] = {}
             else:  # recovery curves
                 self.current_selection[None] = {}
-        if self.output_type == 'recovery_curves':
+        if self.output_type == 'dmg_by_asset':  # recovery curves
             if len(selected) > 0:
                 self.redraw_recovery_curve(selected)
             return
@@ -1284,7 +1285,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 # Select all stats by default
                 self.stats_multiselect.add_selected_items(self.rlzs_or_stats)
                 self.stats_multiselect.setEnabled(len(self.rlzs_or_stats) > 1)
-            elif self.output_type == 'recovery_curves':
+            elif self.output_type == 'dmg_by_asset':  # recovery curves
                 fill_fields_multiselect(
                     self.fields_multiselect, self.iface.activeLayer())
             else:  # no plots for this layer
@@ -1447,7 +1448,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 os.path.expanduser(
                     '~/%s_%s.csv' % (self.output_type, self.calc_id)),
                 '*.csv')
-        elif self.output_type == 'recovery_curves':
+        elif self.output_type == 'dmg_by_asset':  # recovery curves
             filename, _ = QFileDialog.getSaveFileName(
                 self,
                 self.tr('Export data'),
@@ -1474,7 +1475,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         with open(filename, 'w', newline='') as csv_file:
             csv_file.write(csv_headline)
             writer = csv.writer(csv_file)
-            if self.output_type == 'recovery_curves':
+            if self.output_type == 'dmg_by_asset':  # recovery curves
                 headers = ['lon', 'lat']
                 headers.extend(self.current_abscissa)
                 writer.writerow(headers)
@@ -1621,7 +1622,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
 
     @pyqtSlot()
     def on_bw_chk_clicked(self):
-        if self.output_type in OQ_TO_LAYER_TYPES | set('recovery_curves'):
+        if self.output_type in OQ_TO_LAYER_TYPES:
             self.layer_changed()
         if self.output_type == 'agg_curves-rlzs':
             self.draw_agg_curves(self.output_type)
