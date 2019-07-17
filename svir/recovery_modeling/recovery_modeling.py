@@ -111,7 +111,7 @@ class RecoveryModeling(object):
                     except Exception:
                         zone_id = str(zone_id)
                     # FIXME: same hack as above
-                    asset_ref = dmg_by_asset_feat['asset_ref']
+                    asset_ref = dmg_by_asset_feat['id']
                     try:
                         asset_ref = str(int(asset_ref))
                     except Exception:
@@ -128,7 +128,7 @@ class RecoveryModeling(object):
                         self.dmg_by_asset_features, start=1):
                     dmg_by_asset_probs = [dmg_by_asset_feat.attributes()[idx]
                                           for idx in probs_fields_idxs]
-                    asset_ref = dmg_by_asset_feat['asset_ref']
+                    asset_ref = dmg_by_asset_feat['id']
                     zonal_dmg_by_asset_probs['ALL'].append(dmg_by_asset_probs)
                     zonal_asset_refs['ALL'].append(asset_ref)
         return zonal_dmg_by_asset_probs, zonal_asset_refs

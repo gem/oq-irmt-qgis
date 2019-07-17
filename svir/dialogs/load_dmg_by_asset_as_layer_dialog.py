@@ -135,12 +135,14 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
         return layer_name
 
     def get_field_names(self, **kwargs):
-        # field_names = list(self.dataset.dtype.names)
         loss_type = kwargs['loss_type']
         dmg_state = kwargs['dmg_state']
         ltds = "%s_%s_mean" % (loss_type, dmg_state)
-
-        field_names = ['lon', 'lat', ltds]
+        field_names = list(self.dataset.dtype.names)
+        field_names.remove(loss_type)
+        field_names.extend([
+            '%s_%s' % (loss_type, name)
+            for name in self.dataset[loss_type].dtype.names])
         self.default_field_name = ltds
         return field_names
 
@@ -150,23 +152,92 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
             field_name, self.layer)
         return added_field_name
 
+    # def read_npz_into_layer(self, field_names, **kwargs):
+    #     rlz_or_stat = kwargs['rlz_or_stat']
+    #     loss_type = kwargs['loss_type']
+    #     taxonomy = kwargs['taxonomy']
+    #     dmg_state = kwargs['dmg_state']
+    #     dmg_states = list(self.npz_file[rlz_or_stat][loss_type].dtype.names)
+    #     with edit(self.layer):
+    #         feats = []
+    #         grouped_by_site = self.group_by_site(
+    #             self.npz_file, rlz_or_stat, loss_type,
+    #             dmg_states, taxonomy)
+    #         import pdb
+    #         from qgis.PyQt.QtCore import (pyqtRemoveInputHook, pyqtRestoreInputHook)
+    #         pyqtRemoveInputHook(); pdb.set_trace()
+    #         # pyqtRestoreInputHook()
+    #         for row_idx, _ in enumerate(grouped_by_site[dmg_state]):
+    #             for dmg_state in grouped_by_site:
+    #                 # add a feature
+    #                 feat = QgsFeature(self.layer.fields())
+    #                 for field_name_idx, field_name in enumerate(field_names):
+    #                     if field_name in ['lon', 'lat']:
+    #                         continue
+    #                     value = float(row[field_name_idx])
+    #                     feat.setAttribute(field_names[field_name_idx], value)
+    #                 feat.setGeometry(QgsGeometry.fromPointXY(
+    #                     QgsPointXY(row['lon'], row['lat'])))
+    #                 feats.append(feat)
+    #             added_ok = self.layer.addFeatures(feats)
+    #             if not added_ok:
+    #                 msg = 'There was a problem adding features to the layer.'
+    #                 log_msg(msg, level='C', message_bar=self.iface.messageBar())
+
+    # def group_by_site(self, npz, rlz_or_stat, loss_type, dmg_states,
+    #                   taxonomy='All'):
+    #     F32 = numpy.float32
+    #     dmg_by_site = {}
+    #     for rec in npz[rlz_or_stat]:
+    #         dmg_by_site[rec['lon'], rec['lat']] = {}
+    #         for dmg_state in dmg_states:
+    #             dmg_by_site[rec['lon'], rec['lat']][dmg_state] = 0.0
+    #     for dmg_state in dmg_states:
+    #         for rec in npz[rlz_or_stat]:
+    #             if (taxonomy == 'All'
+    #                     or taxonomy.encode('utf8') == rec['taxonomy']):
+    #                 value = rec[loss_type][dmg_state]
+    #                 dmg_by_site[rec['lon'], rec['lat']][dmg_state] += value
+    #     data = {}
+    #     for dmg_state in dmg_states:
+    #         data[dmg_state] = numpy.zeros(
+    #             len(dmg_by_site),
+    #             [('lon', F32), ('lat', F32), (loss_type, F32)])
+    #         for i, (lon, lat) in enumerate(sorted(dmg_by_site)):
+    #             data[dmg_state][i] = (
+    #                 lon, lat, dmg_by_site[lon, lat][dmg_state])
+    #     return data
+
     def read_npz_into_layer(self, field_names, **kwargs):
         rlz_or_stat = kwargs['rlz_or_stat']
         loss_type = kwargs['loss_type']
         taxonomy = kwargs['taxonomy']
-        dmg_state = kwargs['dmg_state']
+        # dmg_state = kwargs['dmg_state']
+        dmg_states = list(self.npz_file[rlz_or_stat][loss_type].dtype.names)
         with edit(self.layer):
             feats = []
             grouped_by_site = self.group_by_site(
-                self.npz_file, rlz_or_stat, loss_type, dmg_state, taxonomy)
-            for row in grouped_by_site:
+                self.npz_file, rlz_or_stat, loss_type, dmg_states, taxonomy)
+            # NOTE: row contains data only for the first dmg_state
+            for row_idx, row in enumerate(grouped_by_site[dmg_states[0]]):
                 # add a feature
                 feat = QgsFeature(self.layer.fields())
-                for field_name_idx, field_name in enumerate(field_names):
-                    if field_name in ['lon', 'lat']:
+                # FIXME: we are not saving tags!
+                for dmg_state in dmg_states:
+                    value = float(
+                        grouped_by_site[dmg_state][row_idx][loss_type])
+                    feat.setAttribute("%s_%s" % (loss_type, dmg_state), value)
+                for field_name in field_names:
+                    if field_name in ['lon', 'lat', 'taxonomy']:
                         continue
-                    value = float(row[field_name_idx])
-                    feat.setAttribute(field_names[field_name_idx], value)
+                    elif field_name in ["%s_%s" % (loss_type, dmg_state)
+                                        for dmg_state in dmg_states]:
+                        continue
+                    else:
+                        # FIXME
+                        # value = 
+                        # feat.setAttribute(field_name, value)
+                        pass
                 feat.setGeometry(QgsGeometry.fromPointXY(
                     QgsPointXY(row['lon'], row['lat'])))
                 feats.append(feat)
@@ -175,19 +246,25 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
                 msg = 'There was a problem adding features to the layer.'
                 log_msg(msg, level='C', message_bar=self.iface.messageBar())
 
-    def group_by_site(self, npz, rlz_or_stat, loss_type, dmg_state,
+    def group_by_site(self, npz, rlz_or_stat, loss_type, dmg_states,
                       taxonomy='All'):
         F32 = numpy.float32
-        dmg_by_site = collections.defaultdict(float)  # lon, lat -> dmg
-        for rec in npz[rlz_or_stat]:
-            if taxonomy == 'All' or taxonomy.encode('utf8') == rec['taxonomy']:
-                value = rec[loss_type]['%s_mean' % dmg_state]
-                dmg_by_site[rec['lon'], rec['lat']] += value
-        data = numpy.zeros(
-            len(dmg_by_site),
-            [('lon', F32), ('lat', F32), (loss_type, F32)])
-        for i, (lon, lat) in enumerate(sorted(dmg_by_site)):
-            data[i] = (lon, lat, dmg_by_site[lon, lat])
+        dmg_by_site = {}
+        data = {}
+        for dmg_state in dmg_states:
+            # lon, lat -> dmg
+            dmg_by_site[dmg_state] = collections.defaultdict(float)
+            for rec in npz[rlz_or_stat]:
+                if (taxonomy == 'All' or
+                        taxonomy.encode('utf8') == rec['taxonomy']):
+                    value = rec[loss_type][dmg_state]
+                    dmg_by_site[dmg_state][rec['lon'], rec['lat']] += value
+            data[dmg_state] = numpy.zeros(
+                len(dmg_by_site[dmg_state]),
+                [('lon', F32), ('lat', F32), (loss_type, F32)])
+            for i, (lon, lat) in enumerate(sorted(dmg_by_site[dmg_state])):
+                data[dmg_state][i] = (
+                    lon, lat, dmg_by_site[dmg_state][lon, lat])
         return data
 
     def load_from_npz(self):
