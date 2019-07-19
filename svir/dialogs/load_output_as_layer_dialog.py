@@ -296,6 +296,11 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.save_as_shp_ckb.setChecked(False)
         self.vlayout.addWidget(self.save_as_shp_ckb)
 
+    def create_aggregate_by_site_ckb(self):
+        self.aggregate_by_site_ckb = QCheckBox("Aggregate by site")
+        self.aggregate_by_site_ckb.setChecked(False)
+        self.vlayout.addWidget(self.aggregate_by_site_ckb)
+
     def create_zonal_layer_selector(self, discard_nonmatching=True):
         self.added_zonal_layer = None
         self.zonal_layer_gbx = QGroupBox()

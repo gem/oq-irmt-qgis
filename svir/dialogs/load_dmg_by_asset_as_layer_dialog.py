@@ -52,13 +52,22 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
 
         self.setWindowTitle('Load scenario damage by asset as layer')
         self.create_load_selected_only_ckb()
+
+        # FIXME: it should be enabled
         self.load_selected_only_ckb.setEnabled(False)
+
         self.create_num_sites_indicator()
         self.create_rlz_or_stat_selector()
         self.create_taxonomy_selector()
         self.create_loss_type_selector()
         self.create_dmg_state_selector()
+        self.create_aggregate_by_site_ckb()
         self.create_zonal_layer_selector()
+
+        self.aggregate_by_site_ckb.toggled[bool].connect(
+            self.on_aggregate_by_site_ckb_toggled)
+        self.zonal_layer_gbx.toggled[bool].connect(
+            self.on_zonal_layer_gbx_toggled)
 
         self.extract_npz_task = ExtractNpzTask(
             'Extract damage by asset', QgsTask.CanCancel, self.session,
@@ -91,6 +100,14 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
     def set_ok_button(self):
         self.ok_button.setEnabled(self.dmg_state_cbx.currentIndex() != -1
                                   and self.loss_type_cbx.currentIndex() != -1)
+
+    def on_aggregate_by_site_ckb_toggled(self, on):
+        if on:
+            self.zonal_layer_gbx.setChecked(False)
+
+    def on_zonal_layer_gbx_toggled(self, on):
+        if on:
+            self.aggregate_by_site_ckb.setChecked(False)
 
     def on_rlz_or_stat_changed(self):
         self.dataset = self.npz_file[self.rlz_or_stat_cbx.currentText()]
@@ -135,13 +152,18 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
         return layer_name
 
     def get_field_names(self, **kwargs):
-        # field_names = list(self.dataset.dtype.names)
         loss_type = kwargs['loss_type']
         dmg_state = kwargs['dmg_state']
-        ltds = "%s_%s_mean" % (loss_type, dmg_state)
-
-        field_names = ['lon', 'lat', ltds]
-        self.default_field_name = ltds
+        if self.aggregate_by_site_ckb.isChecked():
+            ltds = "%s_%s_mean" % (loss_type, dmg_state)
+            field_names = ['lon', 'lat', ltds]
+            self.default_field_name = ltds
+        else:
+            field_names = list(self.dataset.dtype.names)
+            field_names.remove(loss_type)
+            field_names.extend([
+                '%s_%s' % (loss_type, name)
+                for name in self.dataset[loss_type].dtype.names])
         return field_names
 
     def add_field_to_layer(self, field_name):
@@ -151,6 +173,47 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
         return added_field_name
 
     def read_npz_into_layer(self, field_names, **kwargs):
+        if self.aggregate_by_site_ckb.isChecked():
+            self.read_npz_into_layer_by_site(field_names, **kwargs)
+        else:
+            # do not aggregate by site, then aggregate by zone afterwards if
+            # required
+            self.read_npz_into_layer_no_aggr(field_names, **kwargs)
+
+    def read_npz_into_layer_no_aggr(self, field_names, **kwargs):
+        rlz_or_stat = kwargs['rlz_or_stat']
+        loss_type = kwargs['loss_type']
+        # taxonomy = kwargs['taxonomy']
+        # dmg_state = kwargs['dmg_state']
+        # dmg_states = list(self.npz_file[rlz_or_stat][loss_type].dtype.names)
+        with edit(self.layer):
+            feats = []
+            data = self.npz_file[rlz_or_stat]
+            for row in data:
+                # add a feature
+                feat = QgsFeature(self.layer.fields())
+                for field_name_idx, field_name in enumerate(field_names):
+                    if field_name in ['lon', 'lat']:
+                        continue
+                    elif field_name in data.dtype.names:
+                        value = row[field_name]
+                        try:
+                            value = float(value)
+                        except ValueError:
+                            value = str(value, encoding='utf8').strip('"')
+                    else:
+                        value = float(
+                            row[loss_type][field_name[len(loss_type)+1:]])
+                    feat.setAttribute(field_names[field_name_idx], value)
+                feat.setGeometry(QgsGeometry.fromPointXY(
+                    QgsPointXY(row['lon'], row['lat'])))
+                feats.append(feat)
+            added_ok = self.layer.addFeatures(feats)
+            if not added_ok:
+                msg = 'There was a problem adding features to the layer.'
+                log_msg(msg, level='C', message_bar=self.iface.messageBar())
+
+    def read_npz_into_layer_by_site(self, field_names, **kwargs):
         rlz_or_stat = kwargs['rlz_or_stat']
         loss_type = kwargs['loss_type']
         taxonomy = kwargs['taxonomy']
