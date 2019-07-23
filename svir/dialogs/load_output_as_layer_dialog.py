@@ -513,7 +513,11 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.read_npz_into_layer(
             field_names, rlz_or_stat=rlz_or_stat, taxonomy=taxonomy, poe=poe,
             loss_type=loss_type, dmg_state=dmg_state, imt=imt)
-        self.layer.setCustomProperty('output_type', self.output_type)
+        if (self.output_type == 'dmg_by_asset' and
+                not self.aggregate_by_site_ckb.isChecked()):
+            self.layer.setCustomProperty('output_type', 'recovery_curves')
+        else:
+            self.layer.setCustomProperty('output_type', self.output_type)
         investigation_time = self.get_investigation_time()
         if investigation_time is not None:
             self.layer.setCustomProperty('investigation_time',
