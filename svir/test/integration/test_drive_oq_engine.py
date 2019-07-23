@@ -398,7 +398,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             # test exporting the current selection to csv
             self._test_export()
         elif (dlg.output_type == 'dmg_by_asset' and
-              not dlg.aggregate_by_site.isChecked()):
+              not dlg.aggregate_by_site_ckb.isChecked()):
             self.load_recovery_curves()
         dlg.loading_completed.emit()
 
