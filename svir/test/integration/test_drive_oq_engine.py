@@ -286,7 +286,9 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             self.assertGreater(
                 num_feats, 0, 'The loaded layer does not contain any feature!')
 
-    def load_calc_output(self, calc, selected_output_type, taxonomy_idx=None):
+    def load_calc_output(
+            self, calc, selected_output_type,
+            taxonomy_idx=None, aggregate_by_site=None):
         calc_id = calc['id']
         for output in self.output_list[calc_id]:
             if (output['type'] != selected_output_type and
@@ -305,14 +307,15 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             output_copy['type'] = selected_output_type
             try:
                 loading_resp = self.load_output(
-                    calc, output_copy, taxonomy_idx=taxonomy_idx)
+                    calc, output_copy, taxonomy_idx=taxonomy_idx,
+                    aggregate_by_site=aggregate_by_site)
             except Exception:
                 self._on_loading_ko(output_dict)
             else:
                 if loading_resp != 'skipped':
                     self._on_loading_ok(start_time, output_dict)
 
-    def on_init_done(self, dlg, taxonomy_idx=None):
+    def on_init_done(self, dlg, taxonomy_idx=None, aggregate_by_site=None):
         if taxonomy_idx is not None:
             print("\t\tTaxonomy: %s" % dlg.taxonomy_cbx.itemText(taxonomy_idx))
         # set dialog options and accept
@@ -341,7 +344,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             dlg.loss_type_cbx.setCurrentIndex(0)
             # FIXME: we need to do dlg.accept() also for the case
             #        performing the aggregation by zone
-        elif dlg.output_type == 'dmg_by_asset':
+        elif dlg.output_type == 'dmg_by_asset' and aggregate_by_site:
             # FIXME: testing only for selected taxonomy
             dlg.load_selected_only_ckb.setChecked(True)
             assert_and_emit(
@@ -394,6 +397,9 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             self._change_selection()
             # test exporting the current selection to csv
             self._test_export()
+        elif (dlg.output_type == 'dmg_by_asset' and
+              not dlg.aggregate_by_site.isChecked()):
+            self.load_recovery_curves()
         dlg.loading_completed.emit()
 
     def _store_skipped_attempt(self, id, calculation_mode, description, type):
@@ -405,7 +411,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         self.skipped_attempts.append(skipped_attempt)
         self.global_skipped_attempts.append(skipped_attempt)
 
-    def load_output(self, calc, output, taxonomy_idx=None):
+    def load_output(
+            self, calc, output, taxonomy_idx=None, aggregate_by_site=None):
         # NOTE: it is better to avoid resetting the project here, because some
         # outputs might be skipped, therefore it would not be needed
         calc_id = calc['id']
@@ -469,7 +476,10 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             dlg.loading_completed.connect(self.on_loading_completed)
             dlg.loading_exception[Exception].connect(self.on_loading_exception)
             dlg.init_done.connect(
-                lambda: self.on_init_done(dlg, taxonomy_idx=taxonomy_idx))
+                lambda: self.on_init_done(
+                    dlg,
+                    taxonomy_idx=taxonomy_idx,
+                    aggregate_by_site=aggregate_by_site))
             timeout = 10
             start_time = time.time()
             while time.time() - start_time < timeout:
@@ -512,6 +522,10 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 for taxonomy_idx in [0, 1]:
                     self.load_calc_output(
                         calc, selected_output_type, taxonomy_idx=taxonomy_idx)
+                # for dmg_by_asset also test recovery modeling
+                if selected_output_type == 'dmg_by_asset':
+                    self.load_calc_output(
+                        calc, selected_output_type, aggregate_by_site=False)
             else:
                 self.load_calc_output(calc, selected_output_type)
         if self.skipped_attempts:
@@ -543,6 +557,21 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                                  key=operator.itemgetter('loading_time'),
                                  reverse=True):
                 print('\t%s' % output)
+
+    def load_recovery_curves(self):
+        self._set_output_type('Recovery Curves')
+        self._change_selection()
+        layer = self.irmt.iface.activeLayer()
+        num_feats = layer.featureCount()
+        self.assertGreater(
+            num_feats, 0, 'The layer does not contain any feature!')
+        if num_feats > 1:
+            layer.select([1, 2])
+        else:
+            layer.select([1])
+        # test exporting the current selection to csv
+        _, exported_file_path = tempfile.mkstemp(suffix=".csv")
+        self._test_export()
 
     def load_hcurves(self):
         self._set_output_type('Hazard Curves')
