@@ -174,7 +174,7 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
 
     def read_npz_into_layer(self, field_names, **kwargs):
         if self.aggregate_by_site_ckb.isChecked():
-            self.read_npz_into_layer_by_site(field_names, **kwargs)
+            self.read_npz_into_layer_aggr_by_site(field_names, **kwargs)
         else:
             # do not aggregate by site, then aggregate by zone afterwards if
             # required
@@ -213,7 +213,7 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
                 msg = 'There was a problem adding features to the layer.'
                 log_msg(msg, level='C', message_bar=self.iface.messageBar())
 
-    def read_npz_into_layer_by_site(self, field_names, **kwargs):
+    def read_npz_into_layer_aggr_by_site(self, field_names, **kwargs):
         rlz_or_stat = kwargs['rlz_or_stat']
         loss_type = kwargs['loss_type']
         taxonomy = kwargs['taxonomy']
@@ -280,8 +280,11 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
                             self.build_layer(
                                 rlz_or_stat, taxonomy=taxonomy,
                                 loss_type=loss_type, dmg_state=dmg_state)
-                            self.style_maps(self.layer,
-                                            self.default_field_name,
-                                            self.iface, self.output_type)
+                            if self.aggregate_by_site_ckb.isChecked():
+                                self.style_maps(self.layer,
+                                                self.default_field_name,
+                                                self.iface, self.output_type)
+                            else:
+                                self.style_curves()
         if self.npz_file is not None:
             self.npz_file.close()
