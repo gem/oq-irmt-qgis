@@ -117,8 +117,10 @@ class RecoveryModeling(object):
                         asset_ref = str(asset_ref)
                     dmg_by_asset_probs = [dmg_by_asset_feat.attributes()[idx]
                                           for idx in probs_fields_idxs]
-                    zonal_dmg_by_asset_probs[zone_id].append(
+                    norm_dmg_by_asset_probs = self.normalize_probabilities(
                         dmg_by_asset_probs)
+                    zonal_dmg_by_asset_probs[zone_id].append(
+                        norm_dmg_by_asset_probs)
                     zonal_asset_refs[zone_id].append(asset_ref)
         else:  # ignore svi
             msg = 'Reading damage state probabilities...'
@@ -127,10 +129,18 @@ class RecoveryModeling(object):
                         self.dmg_by_asset_features, start=1):
                     dmg_by_asset_probs = [dmg_by_asset_feat.attributes()[idx]
                                           for idx in probs_fields_idxs]
+                    norm_dmg_by_asset_probs = self.normalize_probabilities(
+                        dmg_by_asset_probs)
                     asset_ref = dmg_by_asset_feat['id']
-                    zonal_dmg_by_asset_probs['ALL'].append(dmg_by_asset_probs)
+                    zonal_dmg_by_asset_probs['ALL'].append(
+                        norm_dmg_by_asset_probs)
                     zonal_asset_refs['ALL'].append(asset_ref)
         return zonal_dmg_by_asset_probs, zonal_asset_refs
+
+    def normalize_probabilities(self, probabilities):
+        sum_probs = sum(probabilities)
+        norm_probs = [prob / sum_probs for prob in probabilities]
+        return norm_probs
 
     def get_times(self, times_type):
         times = get_layer_setting(self.iface.activeLayer(), times_type)
