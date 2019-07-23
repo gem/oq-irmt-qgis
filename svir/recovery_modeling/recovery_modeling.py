@@ -45,7 +45,6 @@ except ImportError:
 matplotlib.use('Qt5Agg')
 import matplotlib.pyplot as plt  # NOQA
 
-HEADING_FIELDS_TO_DISCARD = 4
 DAYS_BEFORE_EVENT = 0
 MARGIN_DAYS_AFTER = 400
 MIN_SAMPLES = 250
@@ -460,18 +459,16 @@ def fill_fields_multiselect(fields_multiselect, layer):
     transfer_probabilities = get_transfer_probabilities(layer)
     n_loss_based_dmg_states = len(transfer_probabilities)
     # select fields that contain probabilities
-    # i.e., ignore asset id, taxonomy, lon and lat (first
-    # HEADING_FIELDS_TO_DISCARD items)
+    # i.e., ignore tags, asset id, taxonomy, lon and lat
     # and get only columns containing means, discarding
-    # those containing stddevs, therefore getting one item
-    # out of two for the remaining columns
+    # those containing stddevs
+    # NOTE: for the sake of simplicity, getting fields that end with _mean
     # Other fields can be safely added to the tail of the layer,
     # without affecting this calculation
-    probs_slice = slice(
-        HEADING_FIELDS_TO_DISCARD,
-        HEADING_FIELDS_TO_DISCARD + 2*n_loss_based_dmg_states, 2)
     try:
-        default_field_names = field_names[probs_slice]
+        default_field_names = [
+            field_name for field_name in field_names
+            if field_name.endswith('_mean')][:n_loss_based_dmg_states]
     except Exception:
         default_field_names = []
     other_fields = [field for field in fields
