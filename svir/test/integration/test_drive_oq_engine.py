@@ -318,6 +318,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
     def on_init_done(self, dlg, taxonomy_idx=None, aggregate_by_site=None):
         if taxonomy_idx is not None:
             print("\t\tTaxonomy: %s" % dlg.taxonomy_cbx.itemText(taxonomy_idx))
+        if aggregate_by_site is not None:
+            print("\t\taggregate_by_site: %s" % aggregate_by_site)
         # set dialog options and accept
         if dlg.output_type == 'uhs':
             dlg.load_selected_only_ckb.setChecked(True)
