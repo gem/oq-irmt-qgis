@@ -272,6 +272,13 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.warning_n_simulations_lbl.setWordWrap(True)
         self.typeDepVLayout.addWidget(self.warning_n_simulations_lbl)
 
+    def create_recalculate_on_the_fly_chk(self):
+        self.recalculate_on_the_fly_chk = QCheckBox('Recalculate on-the-fly')
+        self.recalculate_on_the_fly_chk.setChecked(True)
+        self.typeDepVLayout.addWidget(self.recalculate_on_the_fly_chk)
+        self.recalculate_on_the_fly_chk.toggled.connect(
+            self.on_recalculate_on_the_fly_chk_toggled)
+
     def create_recalculate_curve_btn(self):
         self.recalculate_curve_btn = QPushButton('Calculate recovery curve')
         self.typeDepVLayout.addWidget(self.recalculate_curve_btn)
@@ -561,6 +568,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.create_approach_selector()
             self.create_n_simulations_spinbox()
             self.create_fields_multiselect()
+            self.create_recalculate_on_the_fly_chk()
             self.create_recalculate_curve_btn()
         # NOTE: the window's size is automatically adjusted even without
         # calling self.adjustSize(). If that method is called, it might cause
@@ -1395,6 +1403,14 @@ class ViewerDock(QDockWidget, FORM_CLASS):
     def on_approach_changed(self):
         self.current_approach = self.approach_cbx.currentText()
         self.redraw_current_selection()
+
+    def on_recalculate_on_the_fly_chk_toggled(self, checked):
+        if checked:
+            self.iface.activeLayer().selectionChanged.connect(
+                self.redraw_current_selection)
+        else:
+            self.iface.activeLayer().selectionChanged.disconnect(
+                self.redraw_current_selection)
 
     def on_recalculate_curve_btn_clicked(self):
         self.redraw_current_selection()
