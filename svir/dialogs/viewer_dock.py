@@ -988,8 +988,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.plot.set_xscale('linear')
             self.plot.set_yscale('linear')
             self.plot.set_xlabel('Time [days]')
-            self.plot.set_ylabel('Normalized recovery level')
-            self.plot.set_ylim((0.0, 1.2))
+            self.plot.set_ylabel('Normalized recovery level [%]')
+            self.plot.set_ylim((0.0, 105.0))
             if count_lines == 0:
                 title = ''
             elif count_lines == 1:
@@ -1234,7 +1234,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.current_selection[None] = {}
             self.current_selection[None][features[0].id()] = {
                 'abscissa': self.current_abscissa,
-                'ordinates': recovery_function,
+                'ordinates': [value * 100 for value in recovery_function],
                 'color': color_hex,
                 'line_style': "-",  # solid
                 'marker': "None",
