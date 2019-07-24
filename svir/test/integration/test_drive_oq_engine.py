@@ -323,14 +323,6 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             print("\t\tTaxonomy: %s" % dlg.taxonomy_cbx.itemText(taxonomy_idx))
         if aggregate_by_site is not None:
             print("\t\taggregate_by_site: %s" % aggregate_by_site)
-        if approach is not None:
-            print("\t\tApproach: %s" % approach)
-            approach_idx = self.irmt.viewer_dock.approach_cbx.findText(
-                approach)
-            self.irmt.viewer_dock.approach_cbx.setCurrentIndex(approach_idx)
-        if n_simulations is not None:
-            print("\t\tn_simulations: %s" % n_simulations)
-            self.irmt.viewer_dock.n_simulations_sbx.setValue(n_simulations)
         # set dialog options and accept
         if dlg.output_type == 'uhs':
             dlg.load_selected_only_ckb.setChecked(True)
@@ -579,6 +571,12 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 print('\t%s' % output)
 
     def load_recovery_curves(self, approach, n_simulations):
+        print("\t\tApproach: %s" % approach)
+        approach_idx = self.irmt.viewer_dock.approach_cbx.findText(
+            approach)
+        self.irmt.viewer_dock.approach_cbx.setCurrentIndex(approach_idx)
+        print("\t\tn_simulations: %s" % n_simulations)
+        self.irmt.viewer_dock.n_simulations_sbx.setValue(n_simulations)
         self._set_output_type('Recovery Curves')
         self.irmt.viewer_dock.approach_cbx.setCurrentIndex(
             self.irmt.viewer_dock.approach_cbx.findText(approach))
