@@ -288,7 +288,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
 
     def load_calc_output(
             self, calc, selected_output_type,
-            taxonomy_idx=None, aggregate_by_site=None):
+            taxonomy_idx=None, aggregate_by_site=None, approach=None,
+            n_simulations=None):
         calc_id = calc['id']
         for output in self.output_list[calc_id]:
             if (output['type'] != selected_output_type and
@@ -308,18 +309,28 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             try:
                 loading_resp = self.load_output(
                     calc, output_copy, taxonomy_idx=taxonomy_idx,
-                    aggregate_by_site=aggregate_by_site)
+                    aggregate_by_site=aggregate_by_site, approach=approach,
+                    n_simulations=n_simulations)
             except Exception:
                 self._on_loading_ko(output_dict)
             else:
                 if loading_resp != 'skipped':
                     self._on_loading_ok(start_time, output_dict)
 
-    def on_init_done(self, dlg, taxonomy_idx=None, aggregate_by_site=None):
+    def on_init_done(self, dlg, taxonomy_idx=None, aggregate_by_site=None,
+            approach=None, n_simulations=None):
         if taxonomy_idx is not None:
             print("\t\tTaxonomy: %s" % dlg.taxonomy_cbx.itemText(taxonomy_idx))
         if aggregate_by_site is not None:
             print("\t\taggregate_by_site: %s" % aggregate_by_site)
+        if approach is not None:
+            print("\t\tApproach: %s" % approach)
+            approach_idx = self.irmt.viewer_dock.approach_cbx.findText(
+                approach)
+            self.irmt.viewer_dock.approach_cbx.setCurrentIndex(approach_idx)
+        if n_simulations is not None:
+            print("\t\tn_simulations: %s" % n_simulations)
+            self.irmt.viewer_dock.n_simulations_sbx.setValue(n_simulations)
         # set dialog options and accept
         if dlg.output_type == 'uhs':
             dlg.load_selected_only_ckb.setChecked(True)
@@ -401,7 +412,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             self._test_export()
         elif (dlg.output_type == 'dmg_by_asset' and
               not dlg.aggregate_by_site_ckb.isChecked()):
-            self.load_recovery_curves()
+            self.load_recovery_curves(approach, n_simulations)
         dlg.loading_completed.emit()
 
     def _store_skipped_attempt(self, id, calculation_mode, description, type):
@@ -414,7 +425,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         self.global_skipped_attempts.append(skipped_attempt)
 
     def load_output(
-            self, calc, output, taxonomy_idx=None, aggregate_by_site=None):
+            self, calc, output, taxonomy_idx=None, aggregate_by_site=None,
+            approach=None, n_simulations=None):
         # NOTE: it is better to avoid resetting the project here, because some
         # outputs might be skipped, therefore it would not be needed
         calc_id = calc['id']
@@ -481,7 +493,9 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 lambda: self.on_init_done(
                     dlg,
                     taxonomy_idx=taxonomy_idx,
-                    aggregate_by_site=aggregate_by_site))
+                    aggregate_by_site=aggregate_by_site,
+                    approach=approach,
+                    n_simulations=n_simulations))
             timeout = 10
             start_time = time.time()
             while time.time() - start_time < timeout:
@@ -526,8 +540,12 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                         calc, selected_output_type, taxonomy_idx=taxonomy_idx)
                 # for dmg_by_asset also test recovery modeling
                 if selected_output_type == 'dmg_by_asset':
-                    self.load_calc_output(
-                        calc, selected_output_type, aggregate_by_site=False)
+                    for approach in ['Disaggregate', 'Aggregate']:
+                        self.load_calc_output(
+                            calc, selected_output_type,
+                            aggregate_by_site=False,
+                            approach=approach,
+                            n_simulations=2)
             else:
                 self.load_calc_output(calc, selected_output_type)
         if self.skipped_attempts:
@@ -560,8 +578,11 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                                  reverse=True):
                 print('\t%s' % output)
 
-    def load_recovery_curves(self):
+    def load_recovery_curves(self, approach, n_simulations):
         self._set_output_type('Recovery Curves')
+        self.irmt.viewer_dock.approach_cbx.setCurrentIndex(
+            self.irmt.viewer_dock.approach_cbx.findText(approach))
+        self.irmt.viewer_dock.n_simulations_sbx.setValue(n_simulations)
         self._change_selection()
         layer = self.irmt.iface.activeLayer()
         num_feats = layer.featureCount()
