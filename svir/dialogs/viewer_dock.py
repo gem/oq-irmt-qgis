@@ -34,6 +34,7 @@ from qgis.PyQt.QtCore import pyqtSlot, QSettings, Qt
 from qgis.PyQt.QtGui import QColor
 from qgis.PyQt.QtWidgets import (
                                  QLabel,
+                                 QMessageBox,
                                  QPlainTextEdit,
                                  QComboBox,
                                  QSizePolicy,
@@ -1313,6 +1314,25 @@ class ViewerDock(QDockWidget, FORM_CLASS):
 
     def redraw_current_selection(self):
         selected = self.iface.activeLayer().selectedFeatureIds()
+        if len(selected) == 1:
+            feat = self.iface.activeLayer().getFeature(selected[0])
+            point = feat.geometry().asPoint()
+            x, y = point.x(), point.y()
+            expression = '$x = %s AND $y = %s' % (x, y)
+            request = QgsFeatureRequest().setFilterExpression(expression)
+            feats = list(self.iface.activeLayer().getFeatures(request))
+            if len(feats) > 1:
+                # TODO: ask if you want to select all
+                reply = QMessageBox.question(
+                    self, "Selection",
+                    "Select all points at the same coordinates?",
+                    QMessageBox.Yes | QMessageBox.No)
+                if reply == QMessageBox.Yes:
+                    self.iface.activeLayer().selectByExpression(
+                        '$x = %s AND $y = %s' % (x, y))
+                else:
+                    self.redraw(selected, [], None)
+                return
         self.redraw(selected, [], None)
 
     def clear_plot(self):
@@ -1364,6 +1384,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 # matplotlib needs a string when exporting to svg, so here we
                 # must cast back to long
                 fid = int(line.get_gid())
+                # FIXME: use getFeature(QgsFeatureId fid) instead?
                 feature = next(self.iface.activeLayer().getFeatures(
                         QgsFeatureRequest().setFilterFid(fid)))
 
