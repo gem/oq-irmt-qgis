@@ -36,7 +36,7 @@ import requests
 from qgis.core import QgsApplication
 from qgis.utils import iface
 from qgis.testing import unittest
-from qgis.PyQt.QtCore import QTimer
+from qgis.PyQt.QtCore import QTimer, QSettings
 from svir.irmt import Irmt
 from svir.utilities.shared import (
                                    OQ_CSV_TO_LAYER_TYPES,
@@ -45,6 +45,7 @@ from svir.utilities.shared import (
                                    OQ_EXTRACT_TO_VIEW_TYPES,
                                    OQ_ZIPPED_TYPES,
                                    OQ_ALL_TYPES,
+                                   DEFAULT_SETTINGS,
                                    )
 from svir.test.utilities import assert_and_emit
 from svir.dialogs.drive_oq_engine_server_dialog import OUTPUT_TYPE_LOADERS
@@ -72,6 +73,12 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        # NOTE: recovery modeling is an exprimental feature
+        cls.initial_experimental_enabled = QSettings().value(
+            '/irmt/experimental_enabled',
+            DEFAULT_SETTINGS['experimental_enabled'],
+            type=bool)
+        QSettings().setValue('irmt/experimental_enabled', True)
         cls.irmt = Irmt(iface)
         cls.irmt.initGui()
         cls.hostname = os.environ.get('OQ_ENGINE_HOST',
@@ -109,6 +116,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
+        QSettings().setValue(
+            'irmt/experimental_enabled', cls.initial_experimental_enabled)
         print("\n\nGLOBAL SUMMARY OF TESTING OQ-ENGINE OUTPUT LOADERS")
         print("==================================================\n")
         if cls.global_skipped_attempts:
@@ -318,11 +327,18 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                     self._on_loading_ok(start_time, output_dict)
 
     def on_init_done(self, dlg, taxonomy_idx=None, aggregate_by_site=None,
-            approach=None, n_simulations=None):
+                     approach=None, n_simulations=None):
         if taxonomy_idx is not None:
             print("\t\tTaxonomy: %s" % dlg.taxonomy_cbx.itemText(taxonomy_idx))
+            dlg.taxonomy_cbx.setCurrentIndex(taxonomy_idx)
         if aggregate_by_site is not None:
             print("\t\taggregate_by_site: %s" % aggregate_by_site)
+            dlg.aggregate_by_site_ckb.setChecked(aggregate_by_site)
+        # NOTE: approach and n_simulations have to be set in the viewer_dock
+        if approach is not None:
+            print("\t\tApproach: %s" % approach)
+        if n_simulations is not None:
+            print("\t\tn_simulations: %s" % n_simulations)
         # set dialog options and accept
         if dlg.output_type == 'uhs':
             dlg.load_selected_only_ckb.setChecked(True)
@@ -398,12 +414,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         if dlg.output_type == 'hcurves':
             self.load_hcurves()
         elif dlg.output_type == 'uhs':
-            self._set_output_type('Uniform Hazard Spectra')
-            self._change_selection()
-            # test exporting the current selection to csv
-            self._test_export()
-        elif (dlg.output_type == 'dmg_by_asset' and
-              not dlg.aggregate_by_site_ckb.isChecked()):
+            self.load_uhs()
+        elif dlg.output_type == 'dmg_by_asset' and not aggregate_by_site:
             self.load_recovery_curves(approach, n_simulations)
         dlg.loading_completed.emit()
 
@@ -527,9 +539,13 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         for calc in self.calc_list:
             if selected_output_type in ['losses_by_asset', 'dmg_by_asset']:
                 # TODO: keep track of taxonomy in test summary
+                aggregate_by_site = (
+                    None if selected_output_type == 'losses_by_asset'
+                    else True)
                 for taxonomy_idx in [0, 1]:
                     self.load_calc_output(
-                        calc, selected_output_type, taxonomy_idx=taxonomy_idx)
+                        calc, selected_output_type, taxonomy_idx=taxonomy_idx,
+                        aggregate_by_site=aggregate_by_site)
                 # for dmg_by_asset also test recovery modeling
                 if selected_output_type == 'dmg_by_asset':
                     for approach in ['Disaggregate', 'Aggregate']:
@@ -571,63 +587,28 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 print('\t%s' % output)
 
     def load_recovery_curves(self, approach, n_simulations):
-        print("\t\tApproach: %s" % approach)
-        approach_idx = self.irmt.viewer_dock.approach_cbx.findText(
-            approach)
-        self.irmt.viewer_dock.approach_cbx.setCurrentIndex(approach_idx)
-        print("\t\tn_simulations: %s" % n_simulations)
-        self.irmt.viewer_dock.n_simulations_sbx.setValue(n_simulations)
         self._set_output_type('Recovery Curves')
         self.irmt.viewer_dock.approach_cbx.setCurrentIndex(
             self.irmt.viewer_dock.approach_cbx.findText(approach))
         self.irmt.viewer_dock.n_simulations_sbx.setValue(n_simulations)
         self._change_selection()
-        layer = self.irmt.iface.activeLayer()
-        num_feats = layer.featureCount()
-        self.assertGreater(
-            num_feats, 0, 'The layer does not contain any feature!')
-        if num_feats > 1:
-            layer.select([1, 2])
-        else:
-            layer.select([1])
-        # test exporting the current selection to csv
-        _, exported_file_path = tempfile.mkstemp(suffix=".csv")
+        self._test_export()
+
+    def load_uhs(self):
+        self._set_output_type('Uniform Hazard Spectra')
+        self._change_selection()
         self._test_export()
 
     def load_hcurves(self):
         self._set_output_type('Hazard Curves')
-        self._change_selection()
-        # test changing intensity measure type
-        layer = self.irmt.iface.activeLayer()
-        # select the first 2 features (the same used to produce the reference
-        # csv)
-        num_feats = layer.featureCount()
-        self.assertGreater(
-            num_feats, 0, 'The layer does not contain any feature!')
-        if num_feats > 1:
-            layer.select([1, 2])
-        else:
-            layer.select([1])
         self.assertGreater(
             self.irmt.viewer_dock.imt_cbx.count(), 0, 'No IMT was found!')
         self.irmt.viewer_dock.imt_cbx.setCurrentIndex(0)
-        # test exporting the current selection to csv
-        _, exported_file_path = tempfile.mkstemp(suffix=".csv")
+        self._change_selection()
         self._test_export()
 
     def _test_export(self):
         _, exported_file_path = tempfile.mkstemp(suffix=".csv")
-        layer = self.irmt.iface.activeLayer()
-        # select the first 2 features (the same used to produce the reference
-        # csv)
-        num_feats = layer.featureCount()
-        self.assertGreater(
-            num_feats, 0, 'The layer does not contain any feature!')
-        if num_feats > 1:
-            layer.select([1, 2])
-        else:
-            layer.select([1])
-        # probably we have the wrong layer selected (uhs produce many layers)
         self.irmt.viewer_dock.write_export_file(exported_file_path)
         # NOTE: we are only checking that the exported CSV has at least 2 rows
         # and 3 columns per row. We are avoiding more precise checks, because
@@ -673,7 +654,6 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         layer.removeSelection()
         # select first and last features (just one if there is only one)
         layer.select([1, num_feats])
-        layer.removeSelection()
         # NOTE: in the past, we were also selecting all features, but it was
         # not necessary ant it made tests much slower in case of many features
 
