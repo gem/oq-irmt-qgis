@@ -34,7 +34,6 @@ from qgis.PyQt.QtCore import pyqtSlot, QSettings, Qt
 from qgis.PyQt.QtGui import QColor
 from qgis.PyQt.QtWidgets import (
                                  QLabel,
-                                 QMessageBox,
                                  QPlainTextEdit,
                                  QComboBox,
                                  QSizePolicy,
@@ -272,6 +271,12 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             ' the application might become irresponsive or run out of memory')
         self.warning_n_simulations_lbl.setWordWrap(True)
         self.typeDepVLayout.addWidget(self.warning_n_simulations_lbl)
+
+    def create_select_assets_at_same_site_chk(self):
+        self.select_assets_at_same_site_chk = QCheckBox(
+            'Select all assets at the same site')
+        self.select_assets_at_same_site_chk.setChecked(True)
+        self.typeDepVLayout.addWidget(self.select_assets_at_same_site_chk)
 
     def create_recalculate_on_the_fly_chk(self):
         self.recalculate_on_the_fly_chk = QCheckBox('Recalculate on-the-fly')
@@ -569,6 +574,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.create_approach_selector()
             self.create_n_simulations_spinbox()
             self.create_fields_multiselect()
+            self.create_select_assets_at_same_site_chk()
             self.create_recalculate_on_the_fly_chk()
             self.create_recalculate_curve_btn()
         # NOTE: the window's size is automatically adjusted even without
@@ -1322,12 +1328,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             request = QgsFeatureRequest().setFilterExpression(expression)
             feats = list(self.iface.activeLayer().getFeatures(request))
             if len(feats) > 1:
-                # TODO: ask if you want to select all
-                reply = QMessageBox.question(
-                    self, "Selection",
-                    "Select all points at the same coordinates?",
-                    QMessageBox.Yes | QMessageBox.No)
-                if reply == QMessageBox.Yes:
+                if self.select_assets_at_same_site_chk.isChecked():
                     self.iface.activeLayer().selectByExpression(
                         '$x = %s AND $y = %s' % (x, y))
                 else:
