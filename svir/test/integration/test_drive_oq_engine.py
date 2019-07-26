@@ -416,7 +416,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         elif dlg.output_type == 'uhs':
             self.load_uhs()
         elif dlg.output_type == 'dmg_by_asset' and not aggregate_by_site:
-            self.load_recovery_curves(approach, n_simulations)
+            self.load_recovery_curves(dlg, approach, n_simulations)
+            return
         dlg.loading_completed.emit()
 
     def _store_skipped_attempt(self, id, calculation_mode, description, type):
@@ -586,13 +587,14 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                                  reverse=True):
                 print('\t%s' % output)
 
-    def load_recovery_curves(self, approach, n_simulations):
+    def load_recovery_curves(self, dlg, approach, n_simulations):
         self._set_output_type('Recovery Curves')
         self.irmt.viewer_dock.approach_cbx.setCurrentIndex(
             self.irmt.viewer_dock.approach_cbx.findText(approach))
         self.irmt.viewer_dock.n_simulations_sbx.setValue(n_simulations)
         self._change_selection()
         self._test_export()
+        dlg.loading_completed.emit()
 
     def load_uhs(self):
         self._set_output_type('Uniform Hazard Spectra')
