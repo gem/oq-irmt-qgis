@@ -1320,9 +1320,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
 
     def redraw_current_selection(self):
         selected = self.iface.activeLayer().selectedFeatureIds()
-        if (hasattr(self, 'select_assets_at_same_site_chk') and
-                self.select_assets_at_same_site_chk.isChecked() and
-                len(selected) == 1):
+        if len(selected) == 1:
             feat = self.iface.activeLayer().getFeature(selected[0])
             point = feat.geometry().asPoint()
             x, y = point.x(), point.y()
@@ -1330,8 +1328,11 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             request = QgsFeatureRequest().setFilterExpression(expression)
             feats = list(self.iface.activeLayer().getFeatures(request))
             if len(feats) > 1:
-                self.iface.activeLayer().selectByExpression(
-                    '$x = %s AND $y = %s' % (x, y))
+                if self.select_assets_at_same_site_chk.isChecked():
+                    self.iface.activeLayer().selectByExpression(
+                        '$x = %s AND $y = %s' % (x, y))
+                else:
+                    self.redraw(selected, [], None)
                 return
         self.redraw(selected, [], None)
 
