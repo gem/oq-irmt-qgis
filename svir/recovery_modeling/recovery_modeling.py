@@ -140,6 +140,9 @@ class RecoveryModeling(object):
     def normalize_probabilities(self, probabilities):
         sum_probs = sum(probabilities)
         norm_probs = [prob / sum_probs for prob in probabilities]
+        assert all([0 <= norm_prob <= 1 for norm_prob in norm_probs]), (
+            "Normalized probabilities should be in the range 0-1. Got %s"
+            % norm_probs)
         return norm_probs
 
     def get_times(self, times_type):
@@ -292,6 +295,10 @@ class RecoveryModeling(object):
             f3 = open(filestem + '.txt', "w")
             f3.write(str(New_communityRecoveryFunction))
             f3.close()
+        assert all([0 <= value <= 1
+                    for value in New_communityRecoveryFunction]), (
+            "Values of recovery functions should be in the range 0-1. Got %s"
+            % New_communityRecoveryFunction)
         return New_communityRecoveryFunction
 
     def generate_simulation_recovery_curve(
