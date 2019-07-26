@@ -336,9 +336,10 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             dlg.aggregate_by_site_ckb.setChecked(aggregate_by_site)
         # NOTE: approach and n_simulations have to be set in the viewer_dock
         if approach is not None:
-            print("\t\tApproach: %s" % approach)
+            print("\t\tRecovery modeling with parameters:")
+            print("\t\t\tApproach: %s" % approach)
         if n_simulations is not None:
-            print("\t\tn_simulations: %s" % n_simulations)
+            print("\t\t\tn_simulations: %s" % n_simulations)
         # set dialog options and accept
         if dlg.output_type == 'uhs':
             dlg.load_selected_only_ckb.setChecked(True)
