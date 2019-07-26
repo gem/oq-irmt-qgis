@@ -1384,10 +1384,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 # matplotlib needs a string when exporting to svg, so here we
                 # must cast back to long
                 fid = int(line.get_gid())
-                # FIXME: use getFeature(QgsFeatureId fid) instead?
-                feature = next(self.iface.activeLayer().getFeatures(
-                        QgsFeatureRequest().setFilterFid(fid)))
-
+                feature = self.iface.activeLayer().getFeature(fid)
                 self.vertex_marker.setCenter(feature.geometry().asPoint())
                 self.vertex_marker.show()
                 return True
