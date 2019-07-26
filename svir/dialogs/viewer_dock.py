@@ -1328,12 +1328,11 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             request = QgsFeatureRequest().setFilterExpression(expression)
             feats = list(self.iface.activeLayer().getFeatures(request))
             if len(feats) > 1:
-                if self.select_assets_at_same_site_chk.isChecked():
+                if (hasattr(self, 'select_assets_at_same_site_chk') and
+                        self.select_assets_at_same_site_chk.isChecked()):
                     self.iface.activeLayer().selectByExpression(
                         '$x = %s AND $y = %s' % (x, y))
-                else:
-                    self.redraw(selected, [], None)
-                return
+                    return
         self.redraw(selected, [], None)
 
     def clear_plot(self):
