@@ -31,11 +31,6 @@ jobs:
             - cd $TRAVIS_BUILD_DIR/scripts
             - ./run_unit_tests.sh
         - stage: test
-          name: "ƒ Run functional tests"
-          script:
-            - cd $TRAVIS_BUILD_DIR/scripts
-            - ./run_functional_tests.sh
-        - stage: test
           name: "⨕ Run integration tests"
           script:
             - cd $TRAVIS_BUILD_DIR/scripts

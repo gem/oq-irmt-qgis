@@ -45,7 +45,6 @@ except ImportError:
 matplotlib.use('Qt5Agg')
 import matplotlib.pyplot as plt  # NOQA
 
-HEADING_FIELDS_TO_DISCARD = 4
 DAYS_BEFORE_EVENT = 0
 MARGIN_DAYS_AFTER = 400
 MIN_SAMPLES = 250
@@ -111,15 +110,17 @@ class RecoveryModeling(object):
                     except Exception:
                         zone_id = str(zone_id)
                     # FIXME: same hack as above
-                    asset_ref = dmg_by_asset_feat['asset_ref']
+                    asset_ref = dmg_by_asset_feat['id']
                     try:
                         asset_ref = str(int(asset_ref))
                     except Exception:
                         asset_ref = str(asset_ref)
                     dmg_by_asset_probs = [dmg_by_asset_feat.attributes()[idx]
                                           for idx in probs_fields_idxs]
-                    zonal_dmg_by_asset_probs[zone_id].append(
+                    norm_dmg_by_asset_probs = self.normalize_probabilities(
                         dmg_by_asset_probs)
+                    zonal_dmg_by_asset_probs[zone_id].append(
+                        norm_dmg_by_asset_probs)
                     zonal_asset_refs[zone_id].append(asset_ref)
         else:  # ignore svi
             msg = 'Reading damage state probabilities...'
@@ -128,10 +129,21 @@ class RecoveryModeling(object):
                         self.dmg_by_asset_features, start=1):
                     dmg_by_asset_probs = [dmg_by_asset_feat.attributes()[idx]
                                           for idx in probs_fields_idxs]
-                    asset_ref = dmg_by_asset_feat['asset_ref']
-                    zonal_dmg_by_asset_probs['ALL'].append(dmg_by_asset_probs)
+                    norm_dmg_by_asset_probs = self.normalize_probabilities(
+                        dmg_by_asset_probs)
+                    asset_ref = dmg_by_asset_feat['id']
+                    zonal_dmg_by_asset_probs['ALL'].append(
+                        norm_dmg_by_asset_probs)
                     zonal_asset_refs['ALL'].append(asset_ref)
         return zonal_dmg_by_asset_probs, zonal_asset_refs
+
+    def normalize_probabilities(self, probabilities):
+        sum_probs = sum(probabilities)
+        norm_probs = [prob / sum_probs for prob in probabilities]
+        assert all([0 <= norm_prob <= 1 for norm_prob in norm_probs]), (
+            "Normalized probabilities should be in the range 0-1. Got %s"
+            % norm_probs)
+        return norm_probs
 
     def get_times(self, times_type):
         times = get_layer_setting(self.iface.activeLayer(), times_type)
@@ -283,6 +295,10 @@ class RecoveryModeling(object):
             f3 = open(filestem + '.txt', "w")
             f3.write(str(New_communityRecoveryFunction))
             f3.close()
+        assert all([0 <= value <= 1
+                    for value in New_communityRecoveryFunction]), (
+            "Values of recovery functions should be in the range 0-1. Got %s"
+            % New_communityRecoveryFunction)
         return New_communityRecoveryFunction
 
     def generate_simulation_recovery_curve(
@@ -460,18 +476,16 @@ def fill_fields_multiselect(fields_multiselect, layer):
     transfer_probabilities = get_transfer_probabilities(layer)
     n_loss_based_dmg_states = len(transfer_probabilities)
     # select fields that contain probabilities
-    # i.e., ignore asset id, taxonomy, lon and lat (first
-    # HEADING_FIELDS_TO_DISCARD items)
+    # i.e., ignore tags, asset id, taxonomy, lon and lat
     # and get only columns containing means, discarding
-    # those containing stddevs, therefore getting one item
-    # out of two for the remaining columns
+    # those containing stddevs
+    # NOTE: for the sake of simplicity, getting fields that end with _mean
     # Other fields can be safely added to the tail of the layer,
     # without affecting this calculation
-    probs_slice = slice(
-        HEADING_FIELDS_TO_DISCARD,
-        HEADING_FIELDS_TO_DISCARD + 2*n_loss_based_dmg_states, 2)
     try:
-        default_field_names = field_names[probs_slice]
+        default_field_names = [
+            field_name for field_name in field_names
+            if field_name.endswith('_mean')][:n_loss_based_dmg_states]
     except Exception:
         default_field_names = []
     other_fields = [field for field in fields

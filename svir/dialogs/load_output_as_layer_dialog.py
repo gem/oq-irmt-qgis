@@ -296,6 +296,11 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.save_as_shp_ckb.setChecked(False)
         self.vlayout.addWidget(self.save_as_shp_ckb)
 
+    def create_aggregate_by_site_ckb(self):
+        self.aggregate_by_site_ckb = QCheckBox("Aggregate by site")
+        self.aggregate_by_site_ckb.setChecked(True)
+        self.vlayout.addWidget(self.aggregate_by_site_ckb)
+
     def create_zonal_layer_selector(self, discard_nonmatching=True):
         self.added_zonal_layer = None
         self.zonal_layer_gbx = QGroupBox()
@@ -508,7 +513,11 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.read_npz_into_layer(
             field_names, rlz_or_stat=rlz_or_stat, taxonomy=taxonomy, poe=poe,
             loss_type=loss_type, dmg_state=dmg_state, imt=imt)
-        self.layer.setCustomProperty('output_type', self.output_type)
+        if (self.output_type == 'dmg_by_asset' and
+                not self.aggregate_by_site_ckb.isChecked()):
+            self.layer.setCustomProperty('output_type', 'recovery_curves')
+        else:
+            self.layer.setCustomProperty('output_type', self.output_type)
         investigation_time = self.get_investigation_time()
         if investigation_time is not None:
             self.layer.setCustomProperty('investigation_time',
