@@ -52,10 +52,6 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
 
         self.setWindowTitle('Load scenario damage by asset as layer')
         self.create_load_selected_only_ckb()
-
-        # FIXME: it should be enabled
-        self.load_selected_only_ckb.setEnabled(False)
-
         self.create_num_sites_indicator()
         self.create_rlz_or_stat_selector()
         self.create_taxonomy_selector()
@@ -147,8 +143,11 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
         taxonomy = kwargs['taxonomy']
         loss_type = kwargs['loss_type']
         dmg_state = kwargs['dmg_state']
-        layer_name = "dmg_by_asset_%s_%s_%s_%s" % (
-            rlz_or_stat, taxonomy, loss_type, dmg_state)
+        if self.aggregate_by_site_ckb.isChecked():
+            layer_name = "dmg_by_asset_%s_%s_%s_%s" % (
+                rlz_or_stat, taxonomy, loss_type, dmg_state)
+        else:  # recovery modeling
+            layer_name = "dmg_by_asset_%s_%s" % (rlz_or_stat, loss_type)
         return layer_name
 
     def get_field_names(self, **kwargs):
@@ -183,9 +182,6 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
     def read_npz_into_layer_no_aggr(self, field_names, **kwargs):
         rlz_or_stat = kwargs['rlz_or_stat']
         loss_type = kwargs['loss_type']
-        # taxonomy = kwargs['taxonomy']
-        # dmg_state = kwargs['dmg_state']
-        # dmg_states = list(self.npz_file[rlz_or_stat][loss_type].dtype.names)
         with edit(self.layer):
             feats = []
             data = self.npz_file[rlz_or_stat]
@@ -258,33 +254,40 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
             if (self.load_selected_only_ckb.isChecked()
                     and rlz_or_stat != self.rlz_or_stat_cbx.currentText()):
                 continue
-            for taxonomy in self.taxonomies:
-                if (self.load_selected_only_ckb.isChecked()
-                        and taxonomy != self.taxonomy_cbx.currentText()):
-                    continue
+            if self.aggregate_by_site_ckb.isChecked():
+                for taxonomy in self.taxonomies:
+                    if (self.load_selected_only_ckb.isChecked()
+                            and taxonomy != self.taxonomy_cbx.currentText()):
+                        continue
+                    for loss_type in self.loss_types:
+                        if (self.load_selected_only_ckb.isChecked() and
+                                loss_type != self.loss_type_cbx.currentText()):
+                            continue
+                        for dmg_state in self.dmg_states:
+                            if (self.load_selected_only_ckb.isChecked() and
+                                    dmg_state != self.dmg_state_cbx.currentText()):  # NOQA
+                                continue
+                            with WaitCursorManager(
+                                    'Creating layer for "%s",'
+                                    ' taxonomy "%s", loss type "%s" and'
+                                    ' damage state "%s"...' % (
+                                    rlz_or_stat, taxonomy, loss_type,
+                                    dmg_state), self.iface.messageBar()):
+                                self.build_layer(
+                                    rlz_or_stat, taxonomy=taxonomy,
+                                    loss_type=loss_type, dmg_state=dmg_state)
+                                self.style_maps(self.layer,
+                                                self.default_field_name,
+                                                self.iface, self.output_type)
+            else:  # recovery modeling
                 for loss_type in self.loss_types:
                     if (self.load_selected_only_ckb.isChecked()
                             and loss_type != self.loss_type_cbx.currentText()):
                         continue
-                    for dmg_state in self.dmg_states:
-                        if (self.load_selected_only_ckb.isChecked()
-                                and
-                                dmg_state != self.dmg_state_cbx.currentText()):
-                            continue
-                        with WaitCursorManager(
-                                'Creating layer for "%s",'
-                                ' taxonomy "%s", loss type "%s" and'
-                                ' damage state "%s"...' % (
-                                rlz_or_stat, taxonomy, loss_type,
-                                dmg_state), self.iface.messageBar()):
-                            self.build_layer(
-                                rlz_or_stat, taxonomy=taxonomy,
-                                loss_type=loss_type, dmg_state=dmg_state)
-                            if self.aggregate_by_site_ckb.isChecked():
-                                self.style_maps(self.layer,
-                                                self.default_field_name,
-                                                self.iface, self.output_type)
-                            else:
-                                self.style_curves()
+                    with WaitCursorManager(
+                            'Creating layer for "%s"' % rlz_or_stat,
+                            self.iface.messageBar()):
+                        self.build_layer(rlz_or_stat, loss_type=loss_type)
+                        self.style_curves()
         if self.npz_file is not None:
             self.npz_file.close()
