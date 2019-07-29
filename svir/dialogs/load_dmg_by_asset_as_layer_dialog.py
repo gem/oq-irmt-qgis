@@ -159,7 +159,8 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
             self.default_field_name = ltds
         else:
             field_names = list(self.dataset.dtype.names)
-            field_names.remove(loss_type)
+            for lt in self.loss_types:
+                field_names.remove(lt)
             field_names.extend([
                 '%s_%s' % (loss_type, name)
                 for name in self.dataset[loss_type].dtype.names])
@@ -285,7 +286,8 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
                             and loss_type != self.loss_type_cbx.currentText()):
                         continue
                     with WaitCursorManager(
-                            'Creating layer for "%s"' % rlz_or_stat,
+                            'Creating layer for "%s" and loss_type "%s"' % (
+                                rlz_or_stat, loss_type),
                             self.iface.messageBar()):
                         self.build_layer(rlz_or_stat, loss_type=loss_type)
                         self.style_curves()
