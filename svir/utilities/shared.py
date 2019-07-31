@@ -245,11 +245,9 @@ OQ_TO_LAYER_TYPES = (OQ_CSV_TO_LAYER_TYPES |
                      OQ_ZIPPED_TYPES)
 OQ_RST_TYPES = set([
     'fullreport'])
-# FIXME: agg_curves-stats calls extract/agg_curves/loss_type, that was removed
-#        engine side
 OQ_EXTRACT_TO_VIEW_TYPES = set([
      'agg_curves-rlzs',
-     # 'agg_curves-stats',
+     'agg_curves-stats',
      'dmg_by_asset_aggr',
      'losses_by_asset_aggr',
      'avg_losses-stats_aggr'])

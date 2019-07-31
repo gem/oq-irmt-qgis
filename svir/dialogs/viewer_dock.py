@@ -416,18 +416,19 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         #      }
         #  },
         # }
-        for tag_name in self.tags:
-            if self.tags[tag_name]['selected']:
-                for value in self.tags[tag_name]['values']:
-                    if self.tags[tag_name]['values'][value]:
-                        # NOTE: this would not work for multiple values per tag
-                        params[tag_name] = value
-        to_extract = 'agg_curves/%s' % self.loss_type_cbx.currentText()
-        with WaitCursorManager(
-                'Extracting...', message_bar=self.iface.messageBar()):
-            self.agg_curves = extract_npz(
-                self.session, self.hostname, self.calc_id, to_extract,
-                message_bar=self.iface.messageBar(), params=params)
+
+        # for tag_name in self.tags:
+        #     if self.tags[tag_name]['selected']:
+        #         for value in self.tags[tag_name]['values']:
+        #             if self.tags[tag_name]['values'][value]:
+        #                 # NOTE: this would not work for multiple values per tag
+        #                 params[tag_name] = value
+        # to_extract = 'agg_curves/%s' % self.loss_type_cbx.currentText()
+        # with WaitCursorManager(
+        #         'Extracting...', message_bar=self.iface.messageBar()):
+        #     self.agg_curves = extract_npz(
+        #         self.session, self.hostname, self.calc_id, to_extract,
+        #         message_bar=self.iface.messageBar(), params=params)
         self.draw_agg_curves(self.output_type)
 
     def filter_losses_by_asset_aggr(self):
@@ -647,6 +648,19 @@ class ViewerDock(QDockWidget, FORM_CLASS):
 
         self.filter_dmg_by_asset_aggr()
 
+    def _build_tags(self):
+        # NOTE: shape_descr is like:
+        # array([b'return_periods', b'stats', b'loss_types', b'NAME_1'],
+        # dtype='|S14')
+        tag_names = [str(tag_name, encoding='utf8')
+                     for tag_name in self.agg_curves['shape_descr'][3:]]
+        self.tags = {}
+        for tag_name in tag_names:
+            self.tags[tag_name] = {
+                'selected': False,
+                'values': {value.decode('utf8'): False
+                           for value in self.agg_curves[tag_name]}}
+
     def _get_tags(self, session, hostname, calc_id, message_bar, with_star):
         with WaitCursorManager(
                 'Extracting...', message_bar=self.iface.messageBar()):
@@ -728,8 +742,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 message_bar=self.iface.messageBar())
         if self.agg_curves is None:
             return
-        loss_types = get_loss_types(
-            session, hostname, calc_id, self.iface.messageBar())
+        loss_types = str(
+            self.agg_curves['loss_types'], encoding='utf8').split(" ")
         self.loss_type_cbx.blockSignals(True)
         self.loss_type_cbx.clear()
         self.loss_type_cbx.addItems(loss_types)
@@ -738,15 +752,13 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.stats = [stat.decode('utf8')
                           for stat in self.agg_curves['stats']]
             self.stats_multiselect.set_selected_items(self.stats)
-            self._get_tags(session, hostname, calc_id, self.iface.messageBar(),
-                           with_star=False)
+            self._build_tags()
             self.update_list_selected_edt()
             self.tag_names_multiselect.set_unselected_items(
                 list(self.tags.keys()))
             self.tag_names_multiselect.set_selected_items([])
             self.tag_values_multiselect.set_unselected_items([])
             self.tag_values_multiselect.set_selected_items([])
-
             self.filter_agg_curves()
         elif output_type == 'agg_curves-rlzs':
             rlzs = ["Rlz %3d" % rlz
@@ -782,8 +794,29 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             ordinates = self.agg_curves['array'][:, loss_type_idx]
             unit = self.agg_curves['units'][loss_type_idx]
         else:  # agg_curves-stats
-            ordinates = self.agg_curves['array']
-            unit = self.agg_curves['units'][0]
+            loss_type_idx = self.loss_type_cbx.currentIndex()
+            stats_idxs = []
+            for stat_idx, stat in enumerate(self.agg_curves['stats']):
+                if stat.decode('utf8') in rlzs_or_stats:
+                    stats_idxs.append(stat_idx)
+            # FIXME: assuming only 1 tag, otherwise it would have more
+            # dimensions
+            if not self.tags['NAME_1']['selected']:
+                # select all
+                ordinates = self.agg_curves['array'][
+                    :, :, loss_type_idx, :]  # filtering by stat_idx later
+            else:
+                selected_tag_values = [
+                    tag_value
+                    for tag_value in self.tags['NAME_1']['values']
+                    if self.tags['NAME_1']['values'][tag_value]]
+                tag_idxs = [
+                    list(self.agg_curves['NAME_1']).index(
+                        tag_value.encode('utf8'))
+                    for tag_value in selected_tag_values]
+                ordinates = self.agg_curves['array'][
+                    :, :, loss_type_idx, tag_idxs]  # filtering by stat_idx later
+            unit = self.agg_curves['units'][loss_type_idx]
         self.plot.clear()
         if not ordinates.any():  # too much filtering
             self.plot_canvas.draw()
@@ -791,40 +824,41 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         marker = dict()
         line_style = dict()
         color_hex = dict()
-        for idx, rlz_or_stat in enumerate(rlzs_or_stats):
-            marker[idx] = self.markers[idx % len(self.markers)]
+        for rlz_or_stat_idx, rlz_or_stat in enumerate(rlzs_or_stats):
+            marker[rlz_or_stat_idx] = self.markers[
+                rlz_or_stat_idx % len(self.markers)]
             if self.bw_chk.isChecked():
-                line_styles_whole_cycles = idx // len(self.line_styles)
+                line_styles_whole_cycles = (
+                    rlz_or_stat_idx // len(self.line_styles))
                 # NOTE: 85 is approximately 256 / 3
                 r = g = b = format(
                     (85 * line_styles_whole_cycles) % 256, '02x')
                 color_hex_str = "#%s%s%s" % (r, g, b)
                 color = QColor(color_hex_str)
-                color_hex[idx] = color.darker(120).name()
+                color_hex[rlz_or_stat_idx] = color.darker(120).name()
                 # here I am using i in order to cycle through all the
                 # line styles, regardless from the feature id
                 # (otherwise I might easily repeat styles, that are a
                 # small set of 4 items)
-                line_style[idx] = self.line_styles[
-                    idx % len(self.line_styles)]
+                line_style[rlz_or_stat_idx] = self.line_styles[
+                    rlz_or_stat_idx % len(self.line_styles)]
             else:
                 # here I am using the feature id in order to keep a
                 # matching between a curve and the corresponding point
                 # in the map
-                color_name = self.color_names[idx % len(self.color_names)]
+                color_name = self.color_names[
+                    rlz_or_stat_idx % len(self.color_names)]
                 color = QColor(color_name)
-                color_hex[idx] = color.darker(120).name()
-                line_style[idx] = "-"  # solid
-            if output_type == 'agg_curves-rlzs':
-                ords = ordinates[:, idx]
-            else:  # output_type == 'agg_curves-stats'
-                ords = ordinates[idx, :]
+                color_hex[rlz_or_stat_idx] = color.darker(120).name()
+                line_style[rlz_or_stat_idx] = "-"  # solid
+            if output_type in ['agg_curves-rlzs', 'agg_curves-stats']:
+                ords = ordinates[:, rlz_or_stat_idx]
             self.plot.plot(
                 abscissa,
                 ords,
-                color=color_hex[idx],
-                linestyle=line_style[idx],
-                marker=marker[idx],
+                color=color_hex[rlz_or_stat_idx],
+                linestyle=line_style[rlz_or_stat_idx],
+                marker=marker[rlz_or_stat_idx],
                 label=rlz_or_stat,
             )
         self.plot.set_xscale('log')
