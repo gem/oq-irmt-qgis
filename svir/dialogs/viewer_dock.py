@@ -797,7 +797,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             # FIXME: currently forcing the selection of 2 tags and 1 value
             # per tag. I have to understand how to flatten the following:
             # tuple([value for value in tag_idxs.values()])]
-            tup = (slice(None), slice(None), loss_type_idx) + tuple(
+            tup = (slice(None), stats_idxs, loss_type_idx) + tuple(
                 tag_value_idxs)
             ordinates = self.agg_curves['array'][tup]
             unit = self.agg_curves['units'][loss_type_idx]
@@ -805,54 +805,56 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         if not ordinates.any():  # too much filtering
             self.plot_canvas.draw()
             return
-        marker = dict()
-        line_style = dict()
-        color_hex = dict()
-        for rlz_or_stat_idx, rlz_or_stat in enumerate(rlzs_or_stats):
-            marker[rlz_or_stat_idx] = self.markers[
-                rlz_or_stat_idx % len(self.markers)]
-            if self.bw_chk.isChecked():
-                line_styles_whole_cycles = (
-                    rlz_or_stat_idx // len(self.line_styles))
-                # NOTE: 85 is approximately 256 / 3
-                r = g = b = format(
-                    (85 * line_styles_whole_cycles) % 256, '02x')
-                color_hex_str = "#%s%s%s" % (r, g, b)
-                color = QColor(color_hex_str)
-                color_hex[rlz_or_stat_idx] = color.darker(120).name()
-                # here I am using i in order to cycle through all the
-                # line styles, regardless from the feature id
-                # (otherwise I might easily repeat styles, that are a
-                # small set of 4 items)
-                line_style[rlz_or_stat_idx] = self.line_styles[
-                    rlz_or_stat_idx % len(self.line_styles)]
-            else:
-                # here I am using the feature id in order to keep a
-                # matching between a curve and the corresponding point
-                # in the map
-                color_name = self.color_names[
-                    rlz_or_stat_idx % len(self.color_names)]
-                color = QColor(color_name)
-                color_hex[rlz_or_stat_idx] = color.darker(120).name()
-                line_style[rlz_or_stat_idx] = "-"  # solid
-            if output_type in ['agg_curves-rlzs', 'agg_curves-stats']:
-                ords = ordinates[:, rlz_or_stat_idx]
-            self.plot.plot(
-                abscissa,
-                ords,
-                color=color_hex[rlz_or_stat_idx],
-                linestyle=line_style[rlz_or_stat_idx],
-                marker=marker[rlz_or_stat_idx],
-                label=rlz_or_stat,
-            )
-        # self.plot.plot(
+        # marker = dict()
+        # line_style = dict()
+        # color_hex = dict()
+        # for rlz_or_stat_idx, rlz_or_stat in enumerate(rlzs_or_stats):
+        #     marker[rlz_or_stat_idx] = self.markers[
+        #         rlz_or_stat_idx % len(self.markers)]
+        #     if self.bw_chk.isChecked():
+        #         line_styles_whole_cycles = (
+        #             rlz_or_stat_idx // len(self.line_styles))
+        #         # NOTE: 85 is approximately 256 / 3
+        #         r = g = b = format(
+        #             (85 * line_styles_whole_cycles) % 256, '02x')
+        #         color_hex_str = "#%s%s%s" % (r, g, b)
+        #         color = QColor(color_hex_str)
+        #         color_hex[rlz_or_stat_idx] = color.darker(120).name()
+        #         # here I am using i in order to cycle through all the
+        #         # line styles, regardless from the feature id
+        #         # (otherwise I might easily repeat styles, that are a
+        #         # small set of 4 items)
+        #         line_style[rlz_or_stat_idx] = self.line_styles[
+        #             rlz_or_stat_idx % len(self.line_styles)]
+        #     else:
+        #         # here I am using the feature id in order to keep a
+        #         # matching between a curve and the corresponding point
+        #         # in the map
+        #         color_name = self.color_names[
+        #             rlz_or_stat_idx % len(self.color_names)]
+        #         color = QColor(color_name)
+        #         color_hex[rlz_or_stat_idx] = color.darker(120).name()
+        #         line_style[rlz_or_stat_idx] = "-"  # solid
+        #     if output_type in ['agg_curves-rlzs', 'agg_curves-stats']:
+        #         ords = ordinates[:, rlz_or_stat_idx]
+        #     self.plot.plot(
         #         abscissa,
-        #         ordinates,
+        #         ords,
         #         color=color_hex[rlz_or_stat_idx],
         #         linestyle=line_style[rlz_or_stat_idx],
         #         marker=marker[rlz_or_stat_idx],
         #         label=rlz_or_stat,
-        # )
+        #     )
+        for ys, lab in zip(ordinates.T, rlzs_or_stats):
+            self.plot.plot(
+                    abscissa,
+                    ys,
+                    # color=color_hex[rlz_or_stat_idx],
+                    # linestyle=line_style[rlz_or_stat_idx],
+                    # marker=marker[rlz_or_stat_idx],
+                    # label=rlz_or_stat,
+                    label=lab
+            )
         self.plot.set_xscale('log')
         self.plot.set_yscale('linear')
         self.plot.set_xlabel('Return period (years)')
