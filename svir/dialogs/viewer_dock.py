@@ -65,7 +65,6 @@ from svir.utilities.utils import (get_ui_class,
 from svir.recovery_modeling.recovery_modeling import (
     RecoveryModeling, fill_fields_multiselect)
 from svir.ui.list_multiselect_widget import ListMultiSelectWidget
-from svir.ui.list_multiselect_mono_widget import ListMultiSelectMonoWidget
 
 from svir import IS_SCIPY_INSTALLED, IS_MATPLOTLIB_INSTALLED
 
@@ -340,8 +339,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
 
     def create_tag_values_multiselect(self):
         title = 'Select tag values'
-        self.tag_values_multiselect = ListMultiSelectMonoWidget(
-            message_bar=self.iface.messageBar(), title=title)
+        self.tag_values_multiselect = ListMultiSelectWidget(title=title)
         self.tag_values_multiselect.setSizePolicy(
             QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
         self.tag_values_multiselect.select_all_btn.hide()
