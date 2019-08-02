@@ -193,6 +193,19 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.typeDepHLayout2.addWidget(self.loss_type_lbl)
         self.typeDepHLayout2.addWidget(self.loss_type_cbx)
 
+    def create_tag_selector(
+            self, tag_name, tag_values=None, on_currentIndexChanged=None):
+        setattr(self, "%s_lbl" % tag_name, QLabel(tag_name))
+        setattr(self, "%s_cbx" % tag_name, QComboBox())
+        lbl = getattr(self, "%s_lbl" % tag_name)
+        cbx = getattr(self, "%s_cbx" % tag_name)
+        if tag_values is not None:
+            cbx.addItems(tag_values)
+        self.typeDepVLayout.addWidget(lbl)
+        self.typeDepVLayout.addWidget(cbx)
+        if on_currentIndexChanged is not None:
+            cbx.currentIndexChanged.connect(on_currentIndexChanged)
+
     def create_imt_selector(self):
         self.imt_lbl = QLabel('Intensity Measure Type')
         self.imt_lbl.setSizePolicy(
@@ -393,42 +406,6 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.draw_dmg_by_asset_aggr()
 
     def filter_agg_curves(self):
-        params = {}
-        # NOTE: self.tags is structured like:
-        # {'taxonomy': {
-        #     'selected': True,
-        #     'values': {
-        #         'Wood': False,
-        #         'Adobe': False,
-        #         'Stone-Masonry': False,
-        #         'Unreinforced-Brick-Masonry': False,
-        #         'Concrete': True
-        #     }
-        #  },
-        #  'NAME_1': {
-        #      'selected': False,
-        #      'values': {
-        #          'Mid-Western': False,
-        #          'Far-Western': False,
-        #          'West': False,
-        #          'East': False,
-        #          'Central': False
-        #      }
-        #  },
-        # }
-
-        # for tag_name in self.tags:
-        #     if self.tags[tag_name]['selected']:
-        #         for value in self.tags[tag_name]['values']:
-        #             if self.tags[tag_name]['values'][value]:
-        #                 # NOTE: this would not work for multiple values per tag
-        #                 params[tag_name] = value
-        # to_extract = 'agg_curves/%s' % self.loss_type_cbx.currentText()
-        # with WaitCursorManager(
-        #         'Extracting...', message_bar=self.iface.messageBar()):
-        #     self.agg_curves = extract_npz(
-        #         self.session, self.hostname, self.calc_id, to_extract,
-        #         message_bar=self.iface.messageBar(), params=params)
         self.draw_agg_curves(self.output_type)
 
     def filter_losses_by_asset_aggr(self):
@@ -545,9 +522,6 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         elif new_output_type == 'agg_curves-stats':
             self.create_loss_type_selector()
             self.create_stats_multiselect()
-            self.create_tag_names_multiselect()
-            self.create_tag_values_multiselect()
-            self.create_list_selected_edt()
             self.stats_multiselect.selection_changed.connect(
                 self.filter_agg_curves)
         elif new_output_type == 'dmg_by_asset_aggr':
@@ -648,20 +622,20 @@ class ViewerDock(QDockWidget, FORM_CLASS):
 
         self.filter_dmg_by_asset_aggr()
 
-    def _build_tags(self):
-        # NOTE: shape_descr is like:
-        # array([b'return_periods', b'stats', b'loss_types', b'NAME_1'],
-        # dtype='|S14')
-        tag_names = [str(tag_name, encoding='utf8')
-                     for tag_name in self.agg_curves['shape_descr'][3:]]
-        self.tags = {}
-        for tag_name in tag_names:
-            self.tags[tag_name] = {
-                'selected': True,
-                'values': {
-                    value.decode('utf8'): True if value_idx == 0 else False
-                    for value_idx, value in enumerate(
-                        self.agg_curves[tag_name])}}
+    # def _build_tags(self):
+    #     # NOTE: shape_descr is like:
+    #     # array([b'return_periods', b'stats', b'loss_types', b'NAME_1'],
+    #     # dtype='|S14')
+    #     tag_names = [str(tag_name, encoding='utf8')
+    #                  for tag_name in self.agg_curves['shape_descr'][3:]]
+    #     self.tags = {}
+    #     for tag_name in tag_names:
+    #         self.tags[tag_name] = {
+    #             'selected': True,
+    #             'values': {
+    #                 value.decode('utf8'): True if value_idx == 0 else False
+    #                 for value_idx, value in enumerate(
+    #                     self.agg_curves[tag_name])}}
 
     def _get_tags(self, session, hostname, calc_id, message_bar, with_star):
         with WaitCursorManager(
@@ -751,15 +725,16 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.loss_type_cbx.addItems(loss_types)
         self.loss_type_cbx.blockSignals(False)
         if output_type == 'agg_curves-stats':
+            for tag in self.agg_curves['aggregate_by']:
+                tag_name = tag.decode('utf8')
+                tag_values = [tag_value.decode('utf8')
+                              for tag_value in self.agg_curves[tag_name]]
+                self.create_tag_selector(
+                    tag_name, tag_values, self.filter_agg_curves)
             self.stats = [stat.decode('utf8')
                           for stat in self.agg_curves['stats']]
             self.stats_multiselect.set_selected_items(self.stats)
-            self._build_tags()
-            self.update_list_selected_edt()
-            # by default, 1 value per tag is selected
-            self.tag_names_multiselect.set_unselected_items([])
-            self.tag_names_multiselect.set_selected_items(
-                list(self.tags.keys()))
+            # self._build_tags()
             self.filter_agg_curves()
         elif output_type == 'agg_curves-rlzs':
             rlzs = ["Rlz %3d" % rlz
@@ -800,23 +775,31 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             for stat_idx, stat in enumerate(self.agg_curves['stats']):
                 if stat.decode('utf8') in rlzs_or_stats:
                     stats_idxs.append(stat_idx)
-            # FIXME: assuming only 1 tag, otherwise it would have more
-            # dimensions
-            if not self.tags['NAME_1']['selected']:
-                # select all
-                ordinates = self.agg_curves['array'][
-                    :, :, loss_type_idx, :]  # filtering by stat_idx later
-            else:
-                selected_tag_values = [
-                    tag_value
-                    for tag_value in self.tags['NAME_1']['values']
-                    if self.tags['NAME_1']['values'][tag_value]]
-                tag_idxs = [
-                    list(self.agg_curves['NAME_1']).index(
-                        tag_value.encode('utf8'))
-                    for tag_value in selected_tag_values]
-                ordinates = self.agg_curves['array'][
-                    :, :, loss_type_idx, tag_idxs]  # filtering by stat_idx later
+            tag_value_idxs = []
+            for tag in self.agg_curves['aggregate_by']:
+                tag_name = tag.decode('utf8')
+                tag_value_idx = getattr(
+                    self, "%s_cbx" % tag_name).currentIndex()
+                tag_value_idxs.append(tag_value_idx)
+            # tag_idxs = {}
+            # for tag in self.tags:
+            #     selected_tag_values = [
+            #         tag_value
+            #         for tag_value in self.tags[tag]['values']
+            #         if self.tags[tag]['values'][tag_value]]
+            #     tag_idxs[tag] = [
+            #         list(self.agg_curves[tag]).index(
+            #             tag_value.encode('utf8'))
+            #         for tag_value in selected_tag_values]
+            # NOTE: dimensions are:
+            #       return_period, rlz_or_stat, loss_type, tag1, ..., tagN
+            # filtering by stat_idx is done later while plotting
+            # FIXME: currently forcing the selection of 2 tags and 1 value
+            # per tag. I have to understand how to flatten the following:
+            # tuple([value for value in tag_idxs.values()])]
+            tup = (slice(None), slice(None), loss_type_idx) + tuple(
+                tag_value_idxs)
+            ordinates = self.agg_curves['array'][tup]
             unit = self.agg_curves['units'][loss_type_idx]
         self.plot.clear()
         if not ordinates.any():  # too much filtering
@@ -862,6 +845,14 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 marker=marker[rlz_or_stat_idx],
                 label=rlz_or_stat,
             )
+        # self.plot.plot(
+        #         abscissa,
+        #         ordinates,
+        #         color=color_hex[rlz_or_stat_idx],
+        #         linestyle=line_style[rlz_or_stat_idx],
+        #         marker=marker[rlz_or_stat_idx],
+        #         label=rlz_or_stat,
+        # )
         self.plot.set_xscale('log')
         self.plot.set_yscale('linear')
         self.plot.set_xlabel('Return period (years)')
