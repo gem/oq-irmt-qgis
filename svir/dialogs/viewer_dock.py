@@ -657,9 +657,11 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.tags = {}
         for tag_name in tag_names:
             self.tags[tag_name] = {
-                'selected': False,
-                'values': {value.decode('utf8'): False
-                           for value in self.agg_curves[tag_name]}}
+                'selected': True,
+                'values': {
+                    value.decode('utf8'): True if value_idx == 0 else False
+                    for value_idx, value in enumerate(
+                        self.agg_curves[tag_name])}}
 
     def _get_tags(self, session, hostname, calc_id, message_bar, with_star):
         with WaitCursorManager(
@@ -754,11 +756,10 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.stats_multiselect.set_selected_items(self.stats)
             self._build_tags()
             self.update_list_selected_edt()
-            self.tag_names_multiselect.set_unselected_items(
+            # by default, 1 value per tag is selected
+            self.tag_names_multiselect.set_unselected_items([])
+            self.tag_names_multiselect.set_selected_items(
                 list(self.tags.keys()))
-            self.tag_names_multiselect.set_selected_items([])
-            self.tag_values_multiselect.set_unselected_items([])
-            self.tag_values_multiselect.set_selected_items([])
             self.filter_agg_curves()
         elif output_type == 'agg_curves-rlzs':
             rlzs = ["Rlz %3d" % rlz
