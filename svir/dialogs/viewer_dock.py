@@ -832,16 +832,22 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         #         marker=marker[rlz_or_stat_idx],
         #         label=rlz_or_stat,
         #     )
-        for ys, lab in zip(ordinates.T, rlzs_or_stats):
-            self.plot.plot(
-                    abscissa,
-                    ys,
-                    # color=color_hex[rlz_or_stat_idx],
-                    # linestyle=line_style[rlz_or_stat_idx],
-                    # marker=marker[rlz_or_stat_idx],
-                    # label=rlz_or_stat,
-                    label=lab
-            )
+        for taxonomy_idx in range(5):
+            for name1_idx in range(5):
+                tup = (slice(None), stats_idxs, loss_type_idx, taxonomy_idx,
+                       name1_idx)
+                ordinates = self.agg_curves['array'][tup]
+                for ys, lab in zip(ordinates.T, rlzs_or_stats):
+                    self.plot.plot(
+                            abscissa,
+                            ys,
+                            # color=color_hex[rlz_or_stat_idx],
+                            # linestyle=line_style[rlz_or_stat_idx],
+                            # marker=marker[rlz_or_stat_idx],
+                            # label=rlz_or_stat,
+                            label="%s (t: %s; n: %s)" % (
+                                lab, taxonomy_idx, name1_idx)
+                    )
         self.plot.set_xscale('log')
         self.plot.set_yscale('linear')
         self.plot.set_xlabel('Return period (years)')
