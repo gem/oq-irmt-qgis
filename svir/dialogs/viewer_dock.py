@@ -518,7 +518,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.create_loss_type_selector()
             self.create_rlzs_multiselect()
             self.rlzs_multiselect.selection_changed.connect(
-                lambda: self.draw_agg_curves(new_output_type))
+                self.filter_agg_curves)
         elif new_output_type == 'agg_curves-stats':
             self.create_loss_type_selector()
             self.create_stats_multiselect()
@@ -724,51 +724,55 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.loss_type_cbx.clear()
         self.loss_type_cbx.addItems(loss_types)
         self.loss_type_cbx.blockSignals(False)
+        for tag in self.agg_curves['aggregate_by']:
+            tag_name = tag.decode('utf8')
+            tag_values = [tag_value.decode('utf8')
+                          for tag_value in self.agg_curves[tag_name]]
+            self.create_tag_selector(
+                tag_name, tag_values, self.filter_agg_curves)
         if output_type == 'agg_curves-stats':
-            for tag in self.agg_curves['aggregate_by']:
-                tag_name = tag.decode('utf8')
-                tag_values = [tag_value.decode('utf8')
-                              for tag_value in self.agg_curves[tag_name]]
-                self.create_tag_selector(
-                    tag_name, tag_values, self.filter_agg_curves)
             self.stats = [stat.decode('utf8')
                           for stat in self.agg_curves['stats']]
             self.stats_multiselect.set_selected_items(self.stats)
-            # self._build_tags()
-            self.filter_agg_curves()
         elif output_type == 'agg_curves-rlzs':
             rlzs = ["Rlz %3d" % rlz
                     for rlz in range(self.agg_curves['array'].shape[1])]
             self.rlzs_multiselect.set_selected_items(rlzs)
-            self.draw_agg_curves(output_type)
         else:
             raise NotImplementedError(
                 'Can not draw outputs of type %s' % output_type)
-            return
+        self.filter_agg_curves()
+        return
 
     def _get_idxs(self):
-        rlzs_or_stats = list(
-            self.stats_multiselect.get_selected_items())
+        if self.output_type == 'agg_curves-rlzs':
+            rlzs_or_stats = list(
+                self.rlzs_multiselect.get_selected_items())
+        else:  # stas
+            rlzs_or_stats = list(
+                self.stats_multiselect.get_selected_items())
         loss_type_idx = self.loss_type_cbx.currentIndex()
-        stats_idxs = []
-        for stat_idx, stat in enumerate(self.agg_curves['stats']):
-            if stat.decode('utf8') in rlzs_or_stats:
-                stats_idxs.append(stat_idx)
+        rlzs_or_stats_idxs = []
+        if self.output_type == 'agg_curves-rlzs':
+            for rlz_idx in range(self.agg_curves['array'].shape[1]):
+                if "Rlz %3d" % rlz_idx in rlzs_or_stats:
+                    rlzs_or_stats_idxs.append(rlz_idx)
+        else:
+            for stat_idx, stat in enumerate(self.agg_curves['stats']):
+                if stat.decode('utf8') in rlzs_or_stats:
+                    rlzs_or_stats_idxs.append(stat_idx)
         tag_value_idxs = []
         for tag in self.agg_curves['aggregate_by']:
             tag_name = tag.decode('utf8')
             tag_value_idx = getattr(
                 self, "%s_cbx" % tag_name).currentIndex()
             tag_value_idxs.append(tag_value_idx)
-        return stats_idxs, loss_type_idx, tag_value_idxs
+        return rlzs_or_stats_idxs, loss_type_idx, tag_value_idxs
 
     def draw_agg_curves(self, output_type):
         if output_type == 'agg_curves-rlzs':
-            if self.rlzs_multiselect is None:
-                rlzs_or_stats = []
-            else:
-                rlzs_or_stats = list(
-                    self.rlzs_multiselect.get_selected_items())
+            rlzs_or_stats = list(
+                self.rlzs_multiselect.get_selected_items())
         elif output_type == 'agg_curves-stats':
             rlzs_or_stats = list(
                 self.stats_multiselect.get_selected_items())
@@ -778,13 +782,10 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             return
         loss_type = self.loss_type_cbx.currentText()
         abscissa = self.agg_curves['return_periods']
-        if output_type == 'agg_curves-rlzs':
-            loss_type_idx = self.loss_type_cbx.currentIndex()
-            ordinates = self.agg_curves['array'][:, loss_type_idx]
-            unit = self.agg_curves['units'][loss_type_idx]
-        else:  # agg_curves-stats
-            stats_idxs, loss_type_idx, tag_value_idxs = self._get_idxs()
-            tup = (slice(None), stats_idxs, loss_type_idx) + tuple(
+        if output_type in ['agg_curves-rlzs', 'agg_curves-stats']:
+            rlzs_or_stats_idxs, loss_type_idx, tag_value_idxs = \
+                self._get_idxs()
+            tup = (slice(None), rlzs_or_stats_idxs, loss_type_idx) + tuple(
                 tag_value_idxs)
             ordinates = self.agg_curves['array'][tup]
             unit = self.agg_curves['units'][loss_type_idx]
@@ -1581,22 +1582,14 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                     if values:
                         row.extend(values)
                     writer.writerow(row)
-            elif self.output_type == 'agg_curves-rlzs':
-                # the expected shape is (P, R), where P is the number of return
-                # periods and R is the number of realizations
-                num_rlzs = self.agg_curves['array'].shape[1]
-                headers = ['return_period']
-                headers.extend(['rlz-%s' % rlz for rlz in range(num_rlzs)])
-                writer.writerow(headers)
-                loss_type_idx = self.loss_type_cbx.currentIndex()
-                for i, return_period in enumerate(
-                        self.agg_curves['return_periods']):
-                    values = self.agg_curves['array'][:, loss_type_idx]
-                    row = [return_period]
-                    row.extend([value for value in values[i]])
-                    writer.writerow(row)
-            elif self.output_type == 'agg_curves-stats':
-                stats = list(self.stats_multiselect.get_selected_items())
+            elif self.output_type in ['agg_curves-rlzs', 'agg_curves-stats']:
+                if self.output_type == 'agg_curves-rlzs':
+                    # num_rlzs = self.agg_curves['array'].shape[1]
+                    # rlzs_or_stats = ['rlz-%s' % rlz for rlz in range(num_rlzs)]
+                    rlzs_or_stats = self.rlzs_multiselect.get_selected_items()
+                else:
+                    rlzs_or_stats = list(
+                        self.stats_multiselect.get_selected_items())
                 csv_file.write(
                     "# Loss type: %s\r\n" % self.loss_type_cbx.currentText())
                 tags = {}
@@ -1610,14 +1603,14 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 csv_file.write(
                     "# Tags: %s\r\n" % tags_str)
                 headers = ['return_period']
-                headers.extend(stats)
+                headers.extend(rlzs_or_stats)
                 writer.writerow(headers)
                 for return_period_idx, return_period in enumerate(
                         self.agg_curves['return_periods']):
                     row = [return_period]
-                    (stats_idxs, loss_type_idx,
+                    (rlzs_or_stats_idxs, loss_type_idx,
                         tag_value_idxs) = self._get_idxs()
-                    tup = (return_period_idx, stats_idxs,
+                    tup = (return_period_idx, rlzs_or_stats_idxs,
                            loss_type_idx) + tuple(tag_value_idxs)
                     values = self.agg_curves['array'][tup]
                     row.extend(values)
