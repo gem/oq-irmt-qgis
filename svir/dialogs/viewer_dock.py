@@ -746,6 +746,22 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 'Can not draw outputs of type %s' % output_type)
             return
 
+    def _get_idxs(self):
+        rlzs_or_stats = list(
+            self.stats_multiselect.get_selected_items())
+        loss_type_idx = self.loss_type_cbx.currentIndex()
+        stats_idxs = []
+        for stat_idx, stat in enumerate(self.agg_curves['stats']):
+            if stat.decode('utf8') in rlzs_or_stats:
+                stats_idxs.append(stat_idx)
+        tag_value_idxs = []
+        for tag in self.agg_curves['aggregate_by']:
+            tag_name = tag.decode('utf8')
+            tag_value_idx = getattr(
+                self, "%s_cbx" % tag_name).currentIndex()
+            tag_value_idxs.append(tag_value_idx)
+        return stats_idxs, loss_type_idx, tag_value_idxs
+
     def draw_agg_curves(self, output_type):
         if output_type == 'agg_curves-rlzs':
             if self.rlzs_multiselect is None:
@@ -754,11 +770,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 rlzs_or_stats = list(
                     self.rlzs_multiselect.get_selected_items())
         elif output_type == 'agg_curves-stats':
-            if self.stats_multiselect is None:
-                rlzs_or_stats = []
-            else:
-                rlzs_or_stats = list(
-                    self.stats_multiselect.get_selected_items())
+            rlzs_or_stats = list(
+                self.stats_multiselect.get_selected_items())
         else:
             raise NotImplementedError(
                 'Can not draw outputs of type %s' % output_type)
@@ -770,33 +783,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             ordinates = self.agg_curves['array'][:, loss_type_idx]
             unit = self.agg_curves['units'][loss_type_idx]
         else:  # agg_curves-stats
-            loss_type_idx = self.loss_type_cbx.currentIndex()
-            stats_idxs = []
-            for stat_idx, stat in enumerate(self.agg_curves['stats']):
-                if stat.decode('utf8') in rlzs_or_stats:
-                    stats_idxs.append(stat_idx)
-            tag_value_idxs = []
-            for tag in self.agg_curves['aggregate_by']:
-                tag_name = tag.decode('utf8')
-                tag_value_idx = getattr(
-                    self, "%s_cbx" % tag_name).currentIndex()
-                tag_value_idxs.append(tag_value_idx)
-            # tag_idxs = {}
-            # for tag in self.tags:
-            #     selected_tag_values = [
-            #         tag_value
-            #         for tag_value in self.tags[tag]['values']
-            #         if self.tags[tag]['values'][tag_value]]
-            #     tag_idxs[tag] = [
-            #         list(self.agg_curves[tag]).index(
-            #             tag_value.encode('utf8'))
-            #         for tag_value in selected_tag_values]
-            # NOTE: dimensions are:
-            #       return_period, rlz_or_stat, loss_type, tag1, ..., tagN
-            # filtering by stat_idx is done later while plotting
-            # FIXME: currently forcing the selection of 2 tags and 1 value
-            # per tag. I have to understand how to flatten the following:
-            # tuple([value for value in tag_idxs.values()])]
+            stats_idxs, loss_type_idx, tag_value_idxs = self._get_idxs()
             tup = (slice(None), stats_idxs, loss_type_idx) + tuple(
                 tag_value_idxs)
             ordinates = self.agg_curves['array'][tup]
@@ -1609,24 +1596,31 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                     row.extend([value for value in values[i]])
                     writer.writerow(row)
             elif self.output_type == 'agg_curves-stats':
-                # the expected shape is (P, S), where P is the number of return
-                # periods and S is the number of statistics
-                stats = [stat.decode('utf8')
-                         for stat in self.agg_curves['stats']]
+                stats = list(self.stats_multiselect.get_selected_items())
                 csv_file.write(
                     "# Loss type: %s\r\n" % self.loss_type_cbx.currentText())
+                tags = {}
+                for tag in self.agg_curves['aggregate_by']:
+                    tag_name = tag.decode('utf8')
+                    tag_cbx = getattr(self, "%s_cbx" % tag_name)
+                    tag_value = tag_cbx.currentText()
+                    tags[tag_name] = tag_value
+                tags_str = "; ".join(["%s = %s" % (tag, tags[tag])
+                                      for tag in tags])
                 csv_file.write(
-                    "# Tags: %s\r\n" % (
-                        self.list_selected_edt.toPlainText() or 'None'))
+                    "# Tags: %s\r\n" % tags_str)
                 headers = ['return_period']
                 headers.extend(stats)
                 writer.writerow(headers)
                 for return_period_idx, return_period in enumerate(
                         self.agg_curves['return_periods']):
                     row = [return_period]
-                    for stat_idx, stat in enumerate(stats):
-                        row.append(self.agg_curves[
-                            'array'][stat_idx, return_period_idx])
+                    (stats_idxs, loss_type_idx,
+                        tag_value_idxs) = self._get_idxs()
+                    tup = (return_period_idx, stats_idxs,
+                           loss_type_idx) + tuple(tag_value_idxs)
+                    values = self.agg_curves['array'][tup]
+                    row.extend(values)
                     writer.writerow(row)
             elif self.output_type == 'dmg_by_asset_aggr':
                 csv_file.write(
