@@ -735,7 +735,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                           for stat in self.agg_curves['stats']]
             self.stats_multiselect.set_selected_items(self.stats)
         elif output_type == 'agg_curves-rlzs':
-            rlzs = ["Rlz %3d" % rlz
+            rlzs = ["Rlz %s" % rlz
                     for rlz in range(self.agg_curves['array'].shape[1])]
             self.rlzs_multiselect.set_selected_items(rlzs)
         else:
@@ -755,7 +755,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         rlzs_or_stats_idxs = []
         if self.output_type == 'agg_curves-rlzs':
             for rlz_idx in range(self.agg_curves['array'].shape[1]):
-                if "Rlz %3d" % rlz_idx in rlzs_or_stats:
+                if "Rlz %s" % rlz_idx in rlzs_or_stats:
                     rlzs_or_stats_idxs.append(rlz_idx)
         else:
             for stat_idx, stat in enumerate(self.agg_curves['stats']):
