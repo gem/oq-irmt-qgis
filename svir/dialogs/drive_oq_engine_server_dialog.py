@@ -599,8 +599,9 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 for file_name in file_names:
                     zipped_file.write(file_name)
         selected_file_name, ok_pressed = QInputDialog.getItem(
-            self, "Select the ini file (or press cancel to use a default)",
-            "File name:",
+            self, "Selection of the .ini file",
+            "Select a file or press Cancel to let the OQ-Engine pick"
+            " one by default",
             [os.path.basename(file_name) for file_name in file_names
              if os.path.splitext(file_name)[1] == '.ini'],
             0, False)
