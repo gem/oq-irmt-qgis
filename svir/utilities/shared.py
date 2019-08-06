@@ -221,7 +221,7 @@ RECOVERY_DEFAULTS['n_recovery_based_dmg_states'] = len(
 
 OQ_BASIC_CSV_TO_LAYER_TYPES = set([
     'realizations',
-    'sourcegroups',
+    'events',
     'dmg_by_event',
     'losses_by_event',
     'agg_risk'])
