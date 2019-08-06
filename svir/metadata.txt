@@ -13,7 +13,7 @@ name=OpenQuake Integrated Risk Modelling Toolkit
 qgisMinimumVersion=3.0
 description=Tools to drive the OpenQuake Engine, to develop composite indicators and integrate them with physical risk estimations, and to predict building recovery times following an earthquake
 about=This plugin allows users to drive OpenQuake Engine calculations (https://github.com/gem/oq-engine) of physical hazard and risk, and to load the corresponding outputs as QGIS layers. For those outputs, data visualization tools are provided. The toolkit also enables users to develop composite indicators to measure and quantify social characteristics, and combine them with estimates of human or infrastructure loss. The plugin can interact with the OpenQuake Platform (https://platform.openquake.org), to browse and download socio-economic data or existing projects, edit projects locally in QGIS and upload and share them with the scientific community. A post-earthquake recovery modeling framework is incorporated into the toolkit, to produce building level and/or community level recovery functions.
-version=3.7.0
+version=3.7.1
 author=GEM Foundation
 email=staff.it@globalquakemodel.org
 
@@ -23,6 +23,9 @@ email=staff.it@globalquakemodel.org
 
 # Uncomment the following line and add your changelog entries:
 changelog=
+    3.7.1
+    * Instead of the 'sourcegroups' output (that was removed from the OQ-Engine), the plugin can now load the new output 'events'
+    * The user can choose if selecting the '.ini' file to run a OQ-Engine calculation, or letting the OQ-Engine automatically pick one from the list of input files.
     3.7.0
     * Loading the OQ-Engine output 'dmg_by_asset', it is possible to aggregate assets by site (as in the previous implementation) or to load the raw data
       as it is compatible with the recovery modeling tool
@@ -30,8 +33,6 @@ changelog=
     * The recovery modeling tool calculates the probabilities of being in each damage state as the number of buildings per damage state divided by the total number of buildings (per asset)
     * While selecting assets for recovery modeling, a new checkbox enables/disables recalculating recovery curves on-the-fly
     * Another checkbox enables/disables the selection of all the assets that share the same coordinates, when the user clicks on a feature in the map
-    * Instead of the 'sourcegroups' output (that was removed from the OQ-Engine), the plugin can now load the new output 'events'
-    * The user can choose if selecting the '.ini' file to run a OQ-Engine calculation, or letting the OQ-Engine automatically pick one from the list of input files.
     3.6.1
     * Calls to QgsVectorLayer.getFeatures() are optimized, reading only the necessary fields and ignoring geometries if unneeded
     * Multi-peril input files containing geometries as WKT can be loaded as layers
