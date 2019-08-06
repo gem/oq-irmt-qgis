@@ -724,12 +724,13 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.loss_type_cbx.clear()
         self.loss_type_cbx.addItems(loss_types)
         self.loss_type_cbx.blockSignals(False)
-        for tag in self.agg_curves['aggregate_by']:
-            tag_name = tag.decode('utf8')
-            tag_values = [tag_value.decode('utf8')
-                          for tag_value in self.agg_curves[tag_name]]
-            self.create_tag_selector(
-                tag_name, tag_values, self.filter_agg_curves)
+        if 'aggregate_by' in self.agg_curves:
+            for tag in self.agg_curves['aggregate_by']:
+                tag_name = tag.decode('utf8')
+                tag_values = [tag_value.decode('utf8')
+                              for tag_value in self.agg_curves[tag_name]]
+                self.create_tag_selector(
+                    tag_name, tag_values, self.filter_agg_curves)
         if output_type == 'agg_curves-stats':
             self.stats = [stat.decode('utf8')
                           for stat in self.agg_curves['stats']]
@@ -761,12 +762,15 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             for stat_idx, stat in enumerate(self.agg_curves['stats']):
                 if stat.decode('utf8') in rlzs_or_stats:
                     rlzs_or_stats_idxs.append(stat_idx)
-        tag_value_idxs = []
-        for tag in self.agg_curves['aggregate_by']:
-            tag_name = tag.decode('utf8')
-            tag_value_idx = getattr(
-                self, "%s_cbx" % tag_name).currentIndex()
-            tag_value_idxs.append(tag_value_idx)
+        if 'aggregate_by' in self.agg_curves:
+            tag_value_idxs = []
+            for tag in self.agg_curves['aggregate_by']:
+                tag_name = tag.decode('utf8')
+                tag_value_idx = getattr(
+                    self, "%s_cbx" % tag_name).currentIndex()
+                tag_value_idxs.append(tag_value_idx)
+        else:
+            tag_value_idxs = None
         return rlzs_or_stats_idxs, loss_type_idx, tag_value_idxs
 
     def draw_agg_curves(self, output_type):
@@ -785,9 +789,12 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         if output_type in ['agg_curves-rlzs', 'agg_curves-stats']:
             rlzs_or_stats_idxs, loss_type_idx, tag_value_idxs = \
                 self._get_idxs()
-            tup = (slice(None), rlzs_or_stats_idxs, loss_type_idx) + tuple(
-                tag_value_idxs)
-            ordinates = self.agg_curves['array'][tup]
+            if tag_value_idxs is not None:
+                tup = (slice(None), rlzs_or_stats_idxs, loss_type_idx) + tuple(
+                    tag_value_idxs)
+            else:
+                tup = (slice(None), rlzs_or_stats_idxs, loss_type_idx)
+                ordinates = self.agg_curves['array'][tup]
             unit = self.agg_curves['units'][loss_type_idx]
         self.plot.clear()
         if not ordinates.any():  # too much filtering
@@ -1584,8 +1591,6 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                     writer.writerow(row)
             elif self.output_type in ['agg_curves-rlzs', 'agg_curves-stats']:
                 if self.output_type == 'agg_curves-rlzs':
-                    # num_rlzs = self.agg_curves['array'].shape[1]
-                    # rlzs_or_stats = ['rlz-%s' % rlz for rlz in range(num_rlzs)]
                     rlzs_or_stats = self.rlzs_multiselect.get_selected_items()
                 else:
                     rlzs_or_stats = list(
@@ -1593,15 +1598,16 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 csv_file.write(
                     "# Loss type: %s\r\n" % self.loss_type_cbx.currentText())
                 tags = {}
-                for tag in self.agg_curves['aggregate_by']:
-                    tag_name = tag.decode('utf8')
-                    tag_cbx = getattr(self, "%s_cbx" % tag_name)
-                    tag_value = tag_cbx.currentText()
-                    tags[tag_name] = tag_value
-                tags_str = "; ".join(["%s = %s" % (tag, tags[tag])
-                                      for tag in tags])
-                csv_file.write(
-                    "# Tags: %s\r\n" % tags_str)
+                if 'aggregate_by' in self.agg_curves:
+                    for tag in self.agg_curves['aggregate_by']:
+                        tag_name = tag.decode('utf8')
+                        tag_cbx = getattr(self, "%s_cbx" % tag_name)
+                        tag_value = tag_cbx.currentText()
+                        tags[tag_name] = tag_value
+                    tags_str = "; ".join(["%s = %s" % (tag, tags[tag])
+                                        for tag in tags])
+                    csv_file.write(
+                        "# Tags: %s\r\n" % tags_str)
                 headers = ['return_period']
                 headers.extend(rlzs_or_stats)
                 writer.writerow(headers)
@@ -1610,8 +1616,12 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                     row = [return_period]
                     (rlzs_or_stats_idxs, loss_type_idx,
                         tag_value_idxs) = self._get_idxs()
-                    tup = (return_period_idx, rlzs_or_stats_idxs,
-                           loss_type_idx) + tuple(tag_value_idxs)
+                    if tag_value_idxs is not None:
+                        tup = (return_period_idx, rlzs_or_stats_idxs,
+                               loss_type_idx) + tuple(tag_value_idxs)
+                    else:
+                        tup = (return_period_idx, rlzs_or_stats_idxs,
+                               loss_type_idx)
                     values = self.agg_curves['array'][tup]
                     row.extend(values)
                     writer.writerow(row)
