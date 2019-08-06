@@ -26,6 +26,7 @@ changelog=
     3.7.1
     * Instead of the 'sourcegroups' output (that was removed from the OQ-Engine), the plugin can now load the new output 'events'
     * The user can choose if selecting the '.ini' file to run a OQ-Engine calculation, or letting the OQ-Engine automatically pick one from the list of input files.
+    * A note about updating the SSL certificate bundle on MacOS was added to the manual
     3.7.0
     * Loading the OQ-Engine output 'dmg_by_asset', it is possible to aggregate assets by site (as in the previous implementation) or to load the raw data
       as it is compatible with the recovery modeling tool
