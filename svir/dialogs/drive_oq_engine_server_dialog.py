@@ -42,6 +42,7 @@ from qgis.PyQt.QtWidgets import (QDialog,
                                  QAbstractItemView,
                                  QPushButton,
                                  QFileDialog,
+                                 QInputDialog,
                                  QMessageBox)
 from qgis.PyQt.QtGui import QColor, QBrush
 from qgis.gui import QgsMessageBar
@@ -597,6 +598,16 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             with zipfile.ZipFile(zipped_file_name, 'w') as zipped_file:
                 for file_name in file_names:
                     zipped_file.write(file_name)
+        selected_file_name, ok_pressed = QInputDialog.getItem(
+            self, "Select the ini file (or press cancel to use a default)",
+            "File name:",
+            [os.path.basename(file_name) for file_name in file_names
+             if os.path.splitext(file_name)[1] == '.ini'],
+            0, False)
+        if ok_pressed and selected_file_name:
+            job_ini_filename = selected_file_name
+        else:
+            job_ini_filename = None
         run_calc_url = "%s/v1/calc/run" % self.hostname
         with WaitCursorManager('Starting calculation...', self.message_bar):
             if calc_id is not None:
@@ -606,6 +617,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 data = {'hazard_job_id': calc_id}
             else:
                 data = {}
+            if job_ini_filename is not None:
+                data['job_ini'] = job_ini_filename
             files = {'archive': open(zipped_file_name, 'rb')}
             try:
                 log_msg('POST: %s, with files: %s, with data: %s' % (
