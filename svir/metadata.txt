@@ -31,6 +31,7 @@ changelog=
     * While selecting assets for recovery modeling, a new checkbox enables/disables recalculating recovery curves on-the-fly
     * Another checkbox enables/disables the selection of all the assets that share the same coordinates, when the user clicks on a feature in the map
     * Instead of the 'sourcegroups' output (that was removed from the OQ-Engine), the plugin can now load the new output 'events'
+    * The user can choose if selecting the '.ini' file to run a OQ-Engine calculation, or letting the OQ-Engine automatically pick one from the list of input files.
     3.6.1
     * Calls to QgsVectorLayer.getFeatures() are optimized, reading only the necessary fields and ignoring geometries if unneeded
     * Multi-peril input files containing geometries as WKT can be loaded as layers
