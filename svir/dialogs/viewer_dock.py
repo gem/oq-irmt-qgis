@@ -794,7 +794,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                     tag_value_idxs)
             else:
                 tup = (slice(None), rlzs_or_stats_idxs, loss_type_idx)
-                ordinates = self.agg_curves['array'][tup]
+            ordinates = self.agg_curves['array'][tup]
             unit = self.agg_curves['units'][loss_type_idx]
         self.plot.clear()
         if not ordinates.any():  # too much filtering
