@@ -66,6 +66,11 @@ Some users reported issues about `upgrading` the plugin to its latest version.
 We recommend to `reinstall` the plugin instead, in order to make sure the new installation is
 done in a clean folder.
 
+## Mirror
+
+A mirror of this repository, hosted in Pavia (Italy), is available at
+[https://mirror.openquake.org/git/GEM/oq-irmt-qgis.git](https://mirror.openquake.org/git/GEM/oq-irmt-qgis.git).
+
 ## User manual
 
 The user manual for each of the released versions of this plugin is available
