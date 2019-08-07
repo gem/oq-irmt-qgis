@@ -489,7 +489,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             self.loading_completed[dlg] = False
             self.loading_exception[dlg] = None
             dlg.loading_completed.connect(self.on_loading_completed)
-            dlg.loading_exception[QDialog, Exception].connect(self.on_loading_exception)
+            dlg.loading_exception[QDialog, Exception].connect(
+                self.on_loading_exception)
             dlg.init_done.connect(
                 lambda: self.on_init_done(
                     dlg,

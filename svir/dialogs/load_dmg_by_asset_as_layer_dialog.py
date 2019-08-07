@@ -91,7 +91,7 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
         self.adjustSize()
         self.set_ok_button()
         self.show()
-        self.init_done.emit()
+        self.init_done.emit(self)
 
     def set_ok_button(self):
         self.ok_button.setEnabled(self.dmg_state_cbx.currentIndex() != -1
