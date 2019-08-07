@@ -175,7 +175,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.num_login_attempts = 0
 
         self.download_tasks = {}
-        self.open_output_dlgs = {}
+        self.open_output_dlgs = []
 
         self.is_gui_enabled = False
         self.attempt_login()
@@ -936,10 +936,12 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             raise NotImplementedError(action)
 
     def del_task(self, task_id):
-        del(self.download_tasks[task_id])
+        task = self.download_tasks.pop(task_id)
+        del(task)
 
-    def del_dlg(self, dlg_id):
-        del(self.open_output_dlgs[dlg_id])
+    def del_dlg(self, dlg):
+        self.open_output_dlgs.remove(dlg)
+        del(dlg)
 
     def open_full_report(
             self, output_id=None, output_type=None, filepath=None):
@@ -957,7 +959,6 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         assert(output_type is not None)
         if output_type not in OUTPUT_TYPE_LOADERS:
             raise NotImplementedError(output_type)
-        dlg_id = uuid4()
         log_msg('Loading output started. Watch progress in QGIS task bar',
                 level='I', message_bar=self.message_bar)
         open_output_dlg = OUTPUT_TYPE_LOADERS[output_type](
@@ -965,9 +966,9 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             self.session, self.hostname, self.current_calc_id,
             output_type, path=filepath,
             engine_version=self.engine_version)
-        self.open_output_dlgs[dlg_id] = open_output_dlg
+        self.open_output_dlgs.append(open_output_dlg)
         open_output_dlg.finished[int].connect(
-            lambda result: self.del_dlg(dlg_id))
+            lambda result: self.del_dlg(open_output_dlg))
 
     def notify_downloaded(
             self, output_id=None, output_type=None, filepath=None):
@@ -981,11 +982,10 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
     def on_zip_downloaded(
             self, output_id=None, output_type=None, filepath=None):
         self.notify_downloaded(output_id, output_type, filepath)
-        dlg_id = uuid4()
         load_inputs_dlg = LoadInputsDialog(filepath, self.iface)
-        self.open_output_dlgs[dlg_id] = load_inputs_dlg
-        load_inputs_dlg.loading_completed.connect(lambda: self.del_dlg(dlg_id))
-        load_inputs_dlg.loading_canceled.connect(lambda: self.del_dlg(dlg_id))
+        self.open_output_dlgs.append(load_inputs_dlg)
+        load_inputs_dlg.loading_completed[QDialog].connect(self.del_dlg)
+        load_inputs_dlg.loading_canceled[QDialog].connect(self.del_dlg)
         load_inputs_dlg.show()
 
     def notify_error(self, exc):

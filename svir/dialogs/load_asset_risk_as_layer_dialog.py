@@ -259,4 +259,4 @@ class LoadAssetRiskAsLayerDialog(LoadOutputAsLayerDialog):
                 and self.zonal_layer_gbx.isChecked()):
             self.aggregate_by_zone()
         else:
-            self.loading_completed.emit()
+            self.loading_completed.emit(self)

@@ -37,6 +37,7 @@ from qgis.core import QgsApplication
 from qgis.utils import iface
 from qgis.testing import unittest
 from qgis.PyQt.QtCore import QTimer, QSettings
+from qgis.PyQt.QtWidgets import QDialog
 from svir.irmt import Irmt
 from svir.utilities.shared import (
                                    OQ_CSV_TO_LAYER_TYPES,
@@ -113,6 +114,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             cls.output_list[calc['id']] = calc_output_list
             print('\t\tOutput types: %s' % ', '.join(
                 [output['type'] for output in calc_output_list]))
+        cls.loading_exception = {}
+        cls.loading_completed = {}
 
     @classmethod
     def tearDownClass(cls):
@@ -419,7 +422,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         elif dlg.output_type == 'dmg_by_asset' and not aggregate_by_site:
             self.load_recovery_curves(dlg, approach, n_simulations)
             return
-        dlg.loading_completed.emit()
+        dlg.loading_completed.emit(dlg)
 
     def _store_skipped_attempt(self, id, calculation_mode, description, type):
         skipped_attempt = {
@@ -483,10 +486,10 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 self.irmt.iface, self.irmt.viewer_dock,
                 self.irmt.drive_oq_engine_server_dlg.session,
                 self.hostname, calc_id, output_type)
-            self.loading_completed = False
-            self.loading_exception = None
+            self.loading_completed[dlg] = False
+            self.loading_exception[dlg] = None
             dlg.loading_completed.connect(self.on_loading_completed)
-            dlg.loading_exception[Exception].connect(self.on_loading_exception)
+            dlg.loading_exception[QDialog, Exception].connect(self.on_loading_exception)
             dlg.init_done.connect(
                 lambda: self.on_init_done(
                     dlg,
@@ -498,11 +501,11 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             start_time = time.time()
             while time.time() - start_time < timeout:
                 QGIS_APP.processEvents()
-                if self.loading_completed:
+                if self.loading_completed[dlg]:
                     print('\t\tok')
                     return 'ok'
-                if self.loading_exception:
-                    raise self.loading_exception
+                if self.loading_exception[dlg]:
+                    raise self.loading_exception[dlg]
                     return 'ok'
                 time.sleep(0.1)
             raise TimeoutError(
@@ -520,11 +523,11 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             print('\t\tok')
             return 'ok'
 
-    def on_loading_completed(self):
-        self.loading_completed = True
+    def on_loading_completed(self, dlg):
+        self.loading_completed[dlg] = True
 
-    def on_loading_exception(self, exception):
-        self.loading_exception = exception
+    def on_loading_exception(self, dlg, exception):
+        self.loading_exception[dlg] = exception
 
     def load_output_type(self, selected_output_type):
         self.failed_attempts = []
@@ -587,7 +590,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         self.irmt.viewer_dock.n_simulations_sbx.setValue(n_simulations)
         self._change_selection()
         self._test_export()
-        dlg.loading_completed.emit()
+        dlg.loading_completed.emit(dlg)
 
     def load_uhs(self):
         self._set_output_type('Uniform Hazard Spectra')
