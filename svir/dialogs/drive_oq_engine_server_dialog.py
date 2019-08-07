@@ -790,13 +790,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 self.output_list_tbl.setItem(row, col, item)
             outtypes = output_list[row]['outtypes']
             for col, outtype in enumerate(outtypes, len(selected_keys)):
-                # For each output id, add a Download btn per each output type
-                # (like in the webui)
-                action = 'Download'
-                button = QPushButton()
-                self.connect_button_to_action(button, action, output, outtype)
-                self.output_list_tbl.setCellWidget(row, col, button)
-                self.calc_list_tbl.setColumnWidth(col, BUTTON_WIDTH)
+                additional_cols = 2  # start after "Id, Name"
                 # Additional buttons with respect to the webui
                 if output['type'] in (OQ_TO_LAYER_TYPES |
                                       OQ_RST_TYPES |
@@ -827,14 +821,27 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                     button = QPushButton()
                     self.connect_button_to_action(
                         button, action, output, outtype)
-                    self.output_list_tbl.setCellWidget(row, col + 1, button)
+                    self.output_list_tbl.setCellWidget(
+                        row, additional_cols, button)
+                    additional_cols += 1
                 if "%s_aggr" % output['type'] in OQ_EXTRACT_TO_VIEW_TYPES:
                     mod_output = copy.deepcopy(output)
                     mod_output['type'] = "%s_aggr" % output['type']
                     button = QPushButton()
                     self.connect_button_to_action(
                         button, 'Aggregate', mod_output, outtype)
-                    self.output_list_tbl.setCellWidget(row, col + 2, button)
+                    self.output_list_tbl.setCellWidget(
+                        row, additional_cols, button)
+                    additional_cols += 1
+                # For each output id, add a Download btn per each output type
+                # (like in the webui)
+                action = 'Download'
+                button = QPushButton()
+                self.connect_button_to_action(button, action, output, outtype)
+                self.output_list_tbl.setCellWidget(
+                    row, additional_cols, button)
+                self.calc_list_tbl.setColumnWidth(
+                    additional_cols, BUTTON_WIDTH)
         col_names = [key.capitalize() for key in selected_keys]
         empty_col_names = ['' for outtype in range(max_actions)]
         headers = col_names + empty_col_names
