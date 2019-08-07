@@ -52,6 +52,13 @@ We recommend to `reinstall` the plugin instead, in order to make sure the new in
 done in a clean folder.
 
 
+Mirror
+======
+
+A mirror of this repository, hosted in Pavia (Italy), is available at
+`https://mirror.openquake.org/git/GEM/oq-irmt-qgis.git <https://mirror.openquake.org/git/GEM/oq-irmt-qgis.git>`_.
+
+
 How to run tests on Ubuntu 18.04 LTS
 ====================================
 
