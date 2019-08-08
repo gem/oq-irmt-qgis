@@ -1505,6 +1505,15 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         csv_headline += (
             "OpenQuake Integrated Risk Modelling Toolkit v%s\r\n"
             % irmt_version)
+        if self.output_type == 'recovery_curves':
+            approach = self.approach_cbx.currentText()
+            n_simulations = self.n_simulations_sbx.value()
+            asset_ids = [
+                feat['id']
+                for feat in self.iface.activeLayer().selectedFeatures()]
+            csv_headline += "# Recovery time approach: %s\r\n" % approach
+            csv_headline += "# n_simulations: %s\r\n" % n_simulations
+            csv_headline += "# Asset ids: %s\r\n" % ", ".join(asset_ids)
         with open(filename, 'w', newline='') as csv_file:
             csv_file.write(csv_headline)
             writer = csv.writer(csv_file)
