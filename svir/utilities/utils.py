@@ -1138,12 +1138,12 @@ def extract_npz(
         msg = "Unable to extract %s with parameters %s (%s):\n%s" % (
             url, params, resp.reason, resp.content.decode('utf8'))
         log_msg(msg, level='C', message_bar=message_bar, print_to_stderr=True)
-        return
+        raise RuntimeError(msg)
     resp_content = resp.content
     if not resp_content:
         msg = 'GET %s returned an empty content!' % url
         log_msg(msg, level='C', message_bar=message_bar, print_to_stderr=True)
-        return
+        raise RuntimeError(msg)
     return numpy.load(io.BytesIO(resp_content), allow_pickle=True)
 
 
