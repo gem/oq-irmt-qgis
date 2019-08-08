@@ -1512,7 +1512,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 feat['id']
                 for feat in self.iface.activeLayer().selectedFeatures()]
             csv_headline += "# Recovery time approach: %s\r\n" % approach
-            csv_headline += "# n_simulations: %s\r\n" % n_simulations
+            csv_headline += "# Number of simulations: %s\r\n" % n_simulations
             csv_headline += "# Asset ids: %s\r\n" % ", ".join(asset_ids)
         with open(filename, 'w', newline='') as csv_file:
             csv_file.write(csv_headline)
