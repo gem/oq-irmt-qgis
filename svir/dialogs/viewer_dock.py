@@ -1377,7 +1377,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 self.on_container_hover(event, self.legend)
 
     def on_container_hover(self, event, container):
-        if self.output_type in OQ_EXTRACT_TO_VIEW_TYPES | 'recovery_curves':
+        if self.output_type in (
+                OQ_EXTRACT_TO_VIEW_TYPES | set(['recovery_curves'])):
             # NOTE: recovery curves correspond to many points in the map, but
             # only one id can be retrieved from the line. Highlighting only one
             # of the points might be misleading, so it's probably better to
