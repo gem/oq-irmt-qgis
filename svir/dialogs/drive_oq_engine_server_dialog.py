@@ -123,6 +123,7 @@ OUTPUT_TYPE_LOADERS = {
     'hcurves': LoadHazardCurvesAsLayerDialog,
     'uhs': LoadUhsAsLayerDialog,
     'losses_by_asset': LoadLossesByAssetAsLayerDialog,
+    'avg_losses': LoadLossesByAssetAsLayerDialog,
     'avg_losses-stats': LoadLossesByAssetAsLayerDialog,
     'asset_risk': LoadAssetRiskAsLayerDialog,
     'input': LoadInputsDialog,

@@ -236,6 +236,7 @@ OQ_EXTRACT_TO_LAYER_TYPES = set([
     'losses_by_asset',
     'gmf_data',
     'dmg_by_asset',
+    'avg_losses',
     'avg_losses-stats',
     'asset_risk'])
 OQ_ZIPPED_TYPES = set([

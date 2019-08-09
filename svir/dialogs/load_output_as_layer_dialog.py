@@ -569,6 +569,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             default_color_ramp_names = default_qgs_style.colorRampNames()
             if output_type in ('dmg_by_asset',
                                'losses_by_asset',
+                               'avg_losses',
                                'avg_losses-stats',):
                 # options are EqualInterval, Quantile, Jenks, StdDev, Pretty
                 # jenks = natural breaks
@@ -877,6 +878,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             self.load_from_npz()
             if self.output_type in ('losses_by_asset',
                                     'dmg_by_asset',
+                                    'avg_losses',
                                     'avg_losses-stats'):
                 # check if also aggregating by zone or not
                 if (not self.zonal_layer_cbx.currentText() or

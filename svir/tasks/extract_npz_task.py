@@ -175,6 +175,10 @@ class ExtractThread(QThread):
                 "%s: returned an empty content" % err_msg))
             return
         try:
+            import pdb
+            from qgis.PyQt.QtCore import (pyqtRemoveInputHook, pyqtRestoreInputHook)
+            pyqtRemoveInputHook(); pdb.set_trace()
+            # pyqtRestoreInputHook()
             extracted_npz = numpy.load(
                 io.BytesIO(resp.content), allow_pickle=True)
         except Exception as exc:

@@ -42,7 +42,8 @@ class LoadLossesByAssetAsLayerDialog(LoadOutputAsLayerDialog):
                  output_type=None,
                  path=None, mode=None, zonal_layer_path=None,
                  engine_version=None):
-        assert output_type in ('losses_by_asset', 'avg_losses-stats')
+        assert output_type in (
+            'losses_by_asset', 'avg_losses', 'avg_losses-stats')
         LoadOutputAsLayerDialog.__init__(
             self, iface, viewer_dock, session, hostname, calc_id,
             output_type=output_type, path=path, mode=mode,
@@ -55,6 +56,9 @@ class LoadLossesByAssetAsLayerDialog(LoadOutputAsLayerDialog):
             self.setWindowTitle(
                 'Load average asset losses (statistics),'
                 ' aggregated by location, as layer')
+        elif self.output_type == 'avg_losses':
+            self.setWindowTitle(
+                'Load average asset losses as layer')
         else:
             raise NotImplementedError(output_type)
         self.create_load_selected_only_ckb()
@@ -124,6 +128,9 @@ class LoadLossesByAssetAsLayerDialog(LoadOutputAsLayerDialog):
                 rlz_or_stat, taxonomy, loss_type)
         elif self.output_type == 'avg_losses-stats':
             layer_name = "avg_losses-stats_%s_%s_%s" % (
+                rlz_or_stat, taxonomy, loss_type)
+        elif self.output_type == 'avg_losses':
+            layer_name = "avg_losses_%s_%s_%s" % (
                 rlz_or_stat, taxonomy, loss_type)
         else:
             raise NotImplementedError(self.output_type)
