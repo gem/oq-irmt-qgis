@@ -865,10 +865,9 @@ def get_style(layer, message_bar, restore_defaults=False):
         color_from_rgba = DEFAULT_SETTINGS['color_from_rgba']
     else:
         try:
-            color_from_rgba = settings.value(
+            color_from_rgba = int(settings.value(
                 'irmt/style_color_from',
-                DEFAULT_SETTINGS['color_from_rgba'],
-                type=int)
+                DEFAULT_SETTINGS['color_from_rgba']))
         except TypeError:
             msg = ('The type of the stored setting "style_color_from" was not'
                    ' valid, so the default has been restored.')
@@ -879,10 +878,9 @@ def get_style(layer, message_bar, restore_defaults=False):
         color_to_rgba = DEFAULT_SETTINGS['color_to_rgba']
     else:
         try:
-            color_to_rgba = settings.value(
+            color_to_rgba = int(settings.value(
                 'irmt/style_color_to',
-                DEFAULT_SETTINGS['color_to_rgba'],
-                type=int)
+                DEFAULT_SETTINGS['color_to_rgba']))
         except TypeError:
             msg = ('The type of the stored setting "style_color_to" was not'
                    ' valid, so the default has been restored.')
@@ -891,14 +889,13 @@ def get_style(layer, message_bar, restore_defaults=False):
     color_to = QColor().fromRgba(color_to_rgba)
     mode = (DEFAULT_SETTINGS['style_mode']
             if restore_defaults
-            else settings.value(
-                'irmt/style_mode', DEFAULT_SETTINGS['style_mode'], type=int))
+            else int(settings.value(
+                'irmt/style_mode', DEFAULT_SETTINGS['style_mode'])))
     classes = (DEFAULT_SETTINGS['style_classes']
                if restore_defaults
-               else settings.value(
+               else int(settings.value(
                    'irmt/style_classes',
-                   DEFAULT_SETTINGS['style_classes'],
-                   type=int))
+                   DEFAULT_SETTINGS['style_classes'])))
     # look for the setting associated to the layer if available
     force_restyling = None
     if layer is not None:
