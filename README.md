@@ -35,12 +35,6 @@ On macOS:
 $ sudo pip3.6 install matplotlib scipy
 ```
 
-NOTE: matplotlib v3.0.0 on macOS and on Microsoft Windows has a known bug importing pyplot.
-In order to fix that issue, an earlier version of matplotlib can be installed:
-```bash
-$ sudo pip3.6 install matplotlib==2.2.3
-```
-
 On Ubuntu (Debian and similar):
 
 ```bash
@@ -52,6 +46,10 @@ On Fedora and similar:
 ```bash
 $ sudo dnf install python3-scipy python3-matplotlib python3-matplotlib-qt5
 ```
+
+On macOS make sure to run the script located under
+`/Applications/Python 3.6/Install Certificates.command`,
+after Python has been installed, to update the SSL certificates bundle.
 
 On Fedora, please follow these [instructions](https://copr.fedorainfracloud.org/coprs/dani/qgis/).
 
@@ -67,6 +65,11 @@ break or to behave unexpectedly.
 Some users reported issues about `upgrading` the plugin to its latest version.
 We recommend to `reinstall` the plugin instead, in order to make sure the new installation is
 done in a clean folder.
+
+## Mirror
+
+A mirror of this repository, hosted in Pavia (Italy), is available at
+[https://mirror.openquake.org/git/GEM/oq-irmt-qgis.git](https://mirror.openquake.org/git/GEM/oq-irmt-qgis.git).
 
 ## User manual
 
