@@ -284,6 +284,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         self.global_failed_attempts.append(failed_attempt)
         traceback.print_tb(failed_attempt['traceback'])
         print(ex)
+        self.loading_running = None
 
     def _on_loading_ok(self, start_time, output_dict):
         loading_time = time.time() - start_time
@@ -298,11 +299,29 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             num_feats = loaded_layer.featureCount()
             self.assertGreater(
                 num_feats, 0, 'The loaded layer does not contain any feature!')
+        self.loading_running = None
 
     def load_calc_output(
             self, calc, selected_output_type,
             taxonomy_idx=None, aggregate_by_site=None, approach=None,
             n_simulations=None):
+
+        # wait if any other loader is still running, to avoid concurrency
+        # issues in the viewer_dock and other possible shared resources
+        timeout = 240
+        start_time = time.time()
+        while time.time() - start_time < timeout:
+            QGIS_APP.processEvents()
+            if self.loading_running is not None:
+                time.sleep(0.1)
+            else:
+                break
+        else:
+            print("The previous output (%s) was not loaded within %s seconds."
+                  " Attempting to load a new output anyway"
+                  % (self.loading_running, timeout))
+        self.loading_running = (calc, selected_output_type)
+
         calc_id = calc['id']
         for output in self.output_list[calc_id]:
             if (output['type'] != selected_output_type and
@@ -532,21 +551,6 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         self.loading_exception[dlg] = exception
 
     def load_output_type(self, selected_output_type):
-        # wait if any other loader is still running, to avoid concurrency
-        # issues in the viewer_dock and other possible shared resources
-        timeout = 240
-        start_time = time.time()
-        while time.time() - start_time < timeout:
-            QGIS_APP.processEvents()
-            if self.loading_running:
-                time.sleep(0.1)
-            else:
-                break
-        else:
-            print("The previous output (%s) was not loaded within %s seconds."
-                  " Attempting to load a new output anyway"
-                  % (self.loading_running, timeout))
-        self.loading_running = selected_output_type
         self.failed_attempts = []
         self.skipped_attempts = []
         self.time_consuming_outputs = []
@@ -599,7 +603,6 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                                  key=operator.itemgetter('loading_time'),
                                  reverse=True):
                 print('\t%s' % output)
-        self.loading_running = None
 
     def load_recovery_curves(self, dlg, approach, n_simulations):
         self._set_output_type('Recovery Curves')
