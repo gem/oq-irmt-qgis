@@ -45,9 +45,10 @@ from qgis.PyQt.QtWidgets import (
                                  QAbstractItemView,
                                  QTableWidget,
                                  QTableWidgetItem,
+                                 QDialog,
                                  )
 from qgis.gui import QgsVertexMarker
-from qgis.core import QgsMapLayer, QgsFeatureRequest, QgsWkbTypes
+from qgis.core import QgsMapLayer, QgsFeatureRequest, QgsWkbTypes, pyqtSignal
 
 from svir.utilities.shared import (
                                    OQ_TO_LAYER_TYPES,
@@ -84,6 +85,10 @@ FORM_CLASS = get_ui_class('ui_viewer_dock.ui')
 
 
 class ViewerDock(QDockWidget, FORM_CLASS):
+
+    loading_completed = pyqtSignal(QDialog)
+    loading_exception = pyqtSignal(QDialog, Exception)
+
     def __init__(self, iface, action):
         """Constructor for the viewer dock.
 

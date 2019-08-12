@@ -87,6 +87,10 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         cls.global_failed_attempts = []
         cls.global_skipped_attempts = []
         cls.global_time_consuming_outputs = []
+        cls.irmt.viewer_dock.loading_completed.connect(
+            cls.on_loading_completed)
+        cls.irmt.viewer_dock.loading_exception.connect(
+            cls.on_loading_exception)
         cls.irmt.drive_oq_engine_server(show=False, hostname=cls.hostname)
         # NOTE: calc_list must be retrieved BEFORE starting any test
         cls.calc_list = cls.irmt.drive_oq_engine_server_dlg.calc_list
@@ -545,6 +549,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 'Loading time exceeded %s seconds' % timeout)
             return 'ko'
         elif output_type in OQ_EXTRACT_TO_VIEW_TYPES:
+            self.loading_completed[self.irmt.viewer_dock] = False
             self.irmt.iface.newProject()
             self.irmt.viewer_dock.load_no_map_output(
                 calc_id, self.irmt.drive_oq_engine_server_dlg.session,
@@ -553,8 +558,20 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             tmpfile_handler, tmpfile_name = tempfile.mkstemp()
             self.irmt.viewer_dock.write_export_file(tmpfile_name)
             os.close(tmpfile_handler)
-            print('\t\tok')
-            return 'ok'
+            timeout = 10
+            start_time = time.time()
+            while time.time() - start_time < timeout:
+                QGIS_APP.processEvents()
+                if self.loading_completed[dlg]:
+                    print('\t\tok')
+                    return 'ok'
+                if self.loading_exception[dlg]:
+                    raise self.loading_exception[dlg]
+                    return 'ok'
+                time.sleep(0.1)
+            raise TimeoutError(
+                'Loading time exceeded %s seconds' % timeout)
+            return 'ko'
 
     def on_loading_completed(self, dlg):
         self.loading_completed[dlg] = True
