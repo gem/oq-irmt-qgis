@@ -958,6 +958,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                     row, col, QTableWidgetItem(str(losses_array[row, col])))
         table.resizeColumnsToContents()
         self.table_layout.addWidget(table)
+        self.loading_completed.emit(self)
 
     def draw(self):
         self.plot.clear()
