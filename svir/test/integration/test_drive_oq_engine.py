@@ -121,8 +121,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         cls.lock = QMutex()
         with QMutexLocker(cls.lock):
             cls.loading_running = None
-        cls.loading_exception = {}
-        cls.loading_completed = {}
+        cls.loading_exception_dict = {}
+        cls.loading_completed_dict = {}
 
     @classmethod
     def tearDownClass(cls):
@@ -524,8 +524,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 self.irmt.iface, self.irmt.viewer_dock,
                 self.irmt.drive_oq_engine_server_dlg.session,
                 self.hostname, calc_id, output_type)
-            self.loading_completed[dlg] = False
-            self.loading_exception[dlg] = None
+            self.loading_completed_dict[dlg] = False
+            self.loading_exception_dict[dlg] = None
             dlg.loading_completed[QDialog].connect(self.on_loading_completed)
             dlg.loading_exception[QDialog, Exception].connect(
                 self.on_loading_exception)
@@ -540,19 +540,19 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             start_time = time.time()
             while time.time() - start_time < timeout:
                 QGIS_APP.processEvents()
-                if self.loading_completed[dlg]:
+                if self.loading_completed_dict[dlg]:
                     print('\t\tok')
                     return 'ok'
-                if self.loading_exception[dlg]:
-                    raise self.loading_exception[dlg]
+                if self.loading_exception_dict[dlg]:
+                    raise self.loading_exception_dict[dlg]
                     return 'ok'
                 time.sleep(0.1)
             raise TimeoutError(
                 'Loading time exceeded %s seconds' % timeout)
             return 'ko'
         elif output_type in OQ_EXTRACT_TO_VIEW_TYPES:
-            self.loading_completed[self.irmt.viewer_dock] = False
-            self.loading_exception[self.irmt.viewer_dock] = False
+            self.loading_completed_dict[self.irmt.viewer_dock] = False
+            self.loading_exception_dict[self.irmt.viewer_dock] = False
             self.irmt.iface.newProject()
             self.irmt.viewer_dock.load_no_map_output(
                 calc_id, self.irmt.drive_oq_engine_server_dlg.session,
@@ -568,8 +568,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 if self.loading_completed[self.irmt.viewer_dock]:
                     print('\t\tok')
                     return 'ok'
-                if self.loading_exception[self.irmt.viewer_dock]:
-                    raise self.loading_exception[self.irmt.viewer_dock]
+                if self.loading_exception_dict[self.irmt.viewer_dock]:
+                    raise self.loading_exception_dict[self.irmt.viewer_dock]
                     return 'ok'
                 time.sleep(0.1)
             raise TimeoutError(
@@ -577,10 +577,10 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             return 'ko'
 
     def on_loading_completed(self, dlg):
-        self.loading_completed[dlg] = True
+        self.loading_completed_dict[dlg] = True
 
     def on_loading_exception(self, dlg, exception):
-        self.loading_exception[dlg] = exception
+        self.loading_exception_dict[dlg] = exception
 
     def load_output_type(self, selected_output_type):
         self.failed_attempts = []
