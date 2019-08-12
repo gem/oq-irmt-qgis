@@ -742,8 +742,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         else:
             raise NotImplementedError(
                 'Can not draw outputs of type %s' % output_type)
+            return
         self.filter_agg_curves()
-        return
 
     def _get_idxs(self):
         if self.output_type == 'agg_curves-rlzs':
@@ -862,6 +862,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.legend = self.plot.legend(
                 loc=location, fancybox=True, shadow=True, fontsize='small')
         self.plot_canvas.draw()
+        self.loading_completed.emit(self)
 
     def draw_dmg_by_asset_aggr(self):
         '''
@@ -914,6 +915,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.plot.margins(.15, 0)
         self.plot.yaxis.grid()
         self.plot_canvas.draw()
+        self.loading_completed.emit(self)
 
     def _to_2d(self, array):
         # convert 1d array into 2d, unless already 2d
