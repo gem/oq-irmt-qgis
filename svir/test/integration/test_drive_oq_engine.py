@@ -319,8 +319,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 time.sleep(1)
                 i += 1
                 if i % 10 == 0:
-                    print(
-                        "Waiting time: %s seconds" % time.time() - start_time)
+                    print("%s has been waiting for %s seconds"
+                          % (selected_output_type, time.time() - start_time))
             else:
                 break
         else:
