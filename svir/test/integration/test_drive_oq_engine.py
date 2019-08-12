@@ -36,7 +36,7 @@ import requests
 from qgis.core import QgsApplication
 from qgis.utils import iface
 from qgis.testing import unittest
-from qgis.PyQt.QtCore import QTimer, QSettings
+from qgis.PyQt.QtCore import QTimer, QSettings, QMutex, QMutexLocker
 from qgis.PyQt.QtWidgets import QDialog
 from svir.irmt import Irmt
 from svir.utilities.shared import (
@@ -114,7 +114,9 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             cls.output_list[calc['id']] = calc_output_list
             print('\t\tOutput types: %s' % ', '.join(
                 [output['type'] for output in calc_output_list]))
-        cls.loading_running = None
+        cls.lock = QMutex()
+        with QMutexLocker(cls.lock):
+            cls.loading_running = None
         cls.loading_exception = {}
         cls.loading_completed = {}
 
@@ -284,7 +286,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         self.global_failed_attempts.append(failed_attempt)
         traceback.print_tb(failed_attempt['traceback'])
         print(ex)
-        self.loading_running = None
+        with QMutexLocker(self.lock):
+            self.loading_running = None
 
     def _on_loading_ok(self, start_time, output_dict):
         loading_time = time.time() - start_time
@@ -299,7 +302,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             num_feats = loaded_layer.featureCount()
             self.assertGreater(
                 num_feats, 0, 'The loaded layer does not contain any feature!')
-        self.loading_running = None
+        with QMutexLocker(self.lock):
+            self.loading_running = None
 
     def load_calc_output(
             self, calc, selected_output_type,
@@ -327,7 +331,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             print("The previous output (%s) was not loaded within %s seconds."
                   " Attempting to load a new output anyway"
                   % (self.loading_running, timeout))
-        self.loading_running = (calc, selected_output_type)
+        with QMutexLocker(self.lock):
+            self.loading_running = (calc, selected_output_type)
 
         calc_id = calc['id']
         for output in self.output_list[calc_id]:
