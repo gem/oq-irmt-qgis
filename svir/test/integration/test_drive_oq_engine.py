@@ -87,9 +87,9 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         cls.global_failed_attempts = []
         cls.global_skipped_attempts = []
         cls.global_time_consuming_outputs = []
-        cls.irmt.viewer_dock.loading_completed.connect(
+        cls.irmt.viewer_dock.loading_completed[QDialog].connect(
             cls.on_loading_completed)
-        cls.irmt.viewer_dock.loading_exception.connect(
+        cls.irmt.viewer_dock.loading_exception[QDialog, Exception].connect(
             cls.on_loading_exception)
         cls.irmt.drive_oq_engine_server(show=False, hostname=cls.hostname)
         # NOTE: calc_list must be retrieved BEFORE starting any test
@@ -552,6 +552,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             return 'ko'
         elif output_type in OQ_EXTRACT_TO_VIEW_TYPES:
             self.loading_completed[self.irmt.viewer_dock] = False
+            self.loading_exception[self.irmt.viewer_dock] = False
             self.irmt.iface.newProject()
             self.irmt.viewer_dock.load_no_map_output(
                 calc_id, self.irmt.drive_oq_engine_server_dlg.session,
