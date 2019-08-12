@@ -308,7 +308,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
 
         # wait if any other loader is still running, to avoid concurrency
         # issues in the viewer_dock and other possible shared resources
-        timeout = 240
+        timeout = 1000
         start_time = time.time()
         while time.time() - start_time < timeout:
             QGIS_APP.processEvents()
