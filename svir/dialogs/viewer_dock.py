@@ -30,7 +30,7 @@ import numpy
 from datetime import datetime
 from collections import OrderedDict
 
-from qgis.PyQt.QtCore import pyqtSlot, QSettings, Qt
+from qgis.PyQt.QtCore import pyqtSlot, QSettings, Qt, pyqtSignal
 from qgis.PyQt.QtGui import QColor
 from qgis.PyQt.QtWidgets import (
                                  QLabel,
@@ -48,7 +48,7 @@ from qgis.PyQt.QtWidgets import (
                                  QDialog,
                                  )
 from qgis.gui import QgsVertexMarker
-from qgis.core import QgsMapLayer, QgsFeatureRequest, QgsWkbTypes, pyqtSignal
+from qgis.core import QgsMapLayer, QgsFeatureRequest, QgsWkbTypes
 
 from svir.utilities.shared import (
                                    OQ_TO_LAYER_TYPES,
