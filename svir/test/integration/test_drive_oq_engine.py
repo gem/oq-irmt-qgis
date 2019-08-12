@@ -114,6 +114,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             cls.output_list[calc['id']] = calc_output_list
             print('\t\tOutput types: %s' % ', '.join(
                 [output['type'] for output in calc_output_list]))
+        cls.loading_running = None
         cls.loading_exception = {}
         cls.loading_completed = {}
 
@@ -531,6 +532,21 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         self.loading_exception[dlg] = exception
 
     def load_output_type(self, selected_output_type):
+        # wait if any other loader is still running, to avoid concurrency
+        # issues in the viewer_dock and other possible shared resources
+        timeout = 240
+        start_time = time.time()
+        while time.time() - start_time < timeout:
+            QGIS_APP.processEvents()
+            if self.loading_running:
+                time.sleep(0.1)
+            else:
+                break
+        else:
+            print("The previous output (%s) was not loaded within %s seconds."
+                  " Attempting to load a new output anyway"
+                  % (self.loading_running, timeout))
+        self.loading_running = selected_output_type
         self.failed_attempts = []
         self.skipped_attempts = []
         self.time_consuming_outputs = []
@@ -583,6 +599,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                                  key=operator.itemgetter('loading_time'),
                                  reverse=True):
                 print('\t%s' % output)
+        self.loading_running = None
 
     def load_recovery_curves(self, dlg, approach, n_simulations):
         self._set_output_type('Recovery Curves')
