@@ -332,6 +332,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             else:
                 break
         else:
+            with QMutexLocker(self.lock):
+                self.loading_running = None
             print("The previous output (%s) was not loaded within %s seconds."
                   " Attempting to load a new %s output anyway"
                   % (self.loading_running, timeout, selected_output_type))
