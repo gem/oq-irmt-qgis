@@ -564,11 +564,11 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             start_time = time.time()
             while time.time() - start_time < timeout:
                 QGIS_APP.processEvents()
-                if self.loading_completed[dlg]:
+                if self.loading_completed[self.irmt.viewer_dock]:
                     print('\t\tok')
                     return 'ok'
-                if self.loading_exception[dlg]:
-                    raise self.loading_exception[dlg]
+                if self.loading_exception[self.irmt.viewer_dock]:
+                    raise self.loading_exception[self.irmt.viewer_dock]
                     return 'ok'
                 time.sleep(0.1)
             raise TimeoutError(
