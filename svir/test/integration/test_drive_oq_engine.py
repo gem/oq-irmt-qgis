@@ -310,10 +310,17 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         # issues in the viewer_dock and other possible shared resources
         timeout = 1000
         start_time = time.time()
+        i = 0
         while time.time() - start_time < timeout:
             QGIS_APP.processEvents()
             if self.loading_running is not None:
-                time.sleep(0.1)
+                # add a print every 10 seconds, to avoid Travis complaining
+                # about the fact that it is not receiving any output
+                time.sleep(1)
+                i += 1
+                if i % 10 == 0:
+                    print(
+                        "Waiting time: %s seconds" % time.time() - start_time)
             else:
                 break
         else:
