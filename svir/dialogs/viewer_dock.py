@@ -330,7 +330,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
 
     def create_tag_names_multiselect(self):
         title = 'Select tag names'
-        self.tag_names_multiselect = ListMultiSelectWidget(title=title)
+        # self.tag_names_multiselect = ListMultiSelectWidget(title=title)
+        self.tag_names_multiselect = ListMultiSelectMonoWidget(
+            message_bar=self.iface.messageBar(), title=title)
         self.tag_names_multiselect.setSizePolicy(
             QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
         self.tag_names_multiselect.selected_widget.setSelectionMode(
@@ -353,8 +355,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
 
     def create_tag_values_multiselect(self):
         title = 'Select tag values'
-        self.tag_values_multiselect = ListMultiSelectMonoWidget(
-            message_bar=self.iface.messageBar(), title=title)
+        # self.tag_values_multiselect = ListMultiSelectMonoWidget(
+        #     message_bar=self.iface.messageBar(), title=title)
+        self.tag_values_multiselect = ListMultiSelectWidget(title=title)
         self.tag_values_multiselect.setSizePolicy(
             QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
         self.tag_values_multiselect.select_all_btn.hide()
@@ -632,9 +635,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         tag_names = [str(tag_name, encoding='utf8')
                      for tag_name in self.agg_curves['shape_descr'][3:]]
         self.tags = {}
-        for tag_name in tag_names:
+        for tag_idx, tag_name in enumerate(tag_names):
             self.tags[tag_name] = {
-                'selected': True,
+                'selected': True if tag_idx == 0 else False,
                 'values': {
                     value.decode('utf8'): True if value_idx == 0 else False
                     for value_idx, value in enumerate(
@@ -773,7 +776,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 if self.tags[tag_name]['values'][tag_value]:  # is selected
                     tag_value_idx = list(self.agg_curves[tag_name]).index(
                         tag_value.encode('utf8'))
-                tag_values_idxs[tag_name].append(tag_value_idx)
+                    tag_values_idxs[tag_name].append(tag_value_idx)
         return stats_idxs, loss_type_idx, tag_values_idxs
 
     def draw_agg_curves(self, output_type):
@@ -800,7 +803,13 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             stats_idxs, loss_type_idx, tag_value_idxs = self._get_idxs()
             # tup = (slice(None), stats_idxs, loss_type_idx) + tuple(
             #     tag_value_idxs['NAME_1'])
-            tup = (slice(None), stats_idxs, loss_type_idx)
+            # tup = (slice(None), stats_idxs, loss_type_idx)
+            tup = (slice(None), slice(None), loss_type_idx)
+            for tag in self.tags:
+                if self.tags[tag]['selected']:
+                    tup += tuple(tag_value_idxs[tag])
+                # else:
+                #     tup += tuple([0])
             ordinates = self.agg_curves['array'][tup]
             unit = self.agg_curves['units'][loss_type_idx]
         self.plot.clear()
@@ -848,11 +857,20 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         #         label=rlz_or_stat,
         #     )
         for tag_name in tag_value_idxs:
+            if not self.tags[tag_name]['selected']:
+                continue
             for value_idx in tag_value_idxs[tag_name]:
                 tag_value = self.agg_curves[tag_name][value_idx].decode('utf8')
-                # FIXME: working only for 1 tag
-                tup = (slice(None), stats_idxs, loss_type_idx, value_idx)
-                ordinates = self.agg_curves['array'][tup]
+                # tup = (slice(None), stats_idxs, loss_type_idx)
+                # for tname in tag_value_idxs:
+                #     tup += tuple(slice(None))
+                # tup = (slice(None), stats_idxs, loss_type_idx, value_idx)
+                # ordinates = self.agg_curves['array'][tup]
+                import pdb
+                from qgis.PyQt.QtCore import (pyqtRemoveInputHook, pyqtRestoreInputHook)
+                pyqtRemoveInputHook(); pdb.set_trace()
+                # pyqtRestoreInputHook()
+                ordinates = ordinates[:, stats_idxs, value_idx]
                 for ys, rlz_or_stat in zip(ordinates.T, rlzs_or_stats):
                     self.plot.plot(
                             abscissa,
@@ -861,7 +879,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                             # linestyle=line_style[rlz_or_stat_idx],
                             # marker=marker[rlz_or_stat_idx],
                             # label=rlz_or_stat,
-                            label="%s (NAME_1: %s)" % (rlz_or_stat, tag_value)
+                            label="%s (%s: %s)" % (
+                                rlz_or_stat, tag_name, tag_value)
                     )
         # for taxonomy_idx in range(5):
         #     for name1_idx in range(5):
