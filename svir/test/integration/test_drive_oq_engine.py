@@ -37,7 +37,7 @@ from qgis.core import QgsApplication
 from qgis.utils import iface
 from qgis.testing import unittest
 from qgis.PyQt.QtCore import QTimer, QSettings, QMutex, QMutexLocker
-from qgis.PyQt.QtWidgets import QDialog
+from qgis.PyQt.QtWidgets import QDialog, QDockWidget
 from svir.irmt import Irmt
 from svir.utilities.shared import (
                                    OQ_CSV_TO_LAYER_TYPES,
@@ -87,9 +87,9 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         cls.global_failed_attempts = []
         cls.global_skipped_attempts = []
         cls.global_time_consuming_outputs = []
-        cls.irmt.viewer_dock.loading_completed[QDialog].connect(
+        cls.irmt.viewer_dock.loading_completed[QDockWidget].connect(
             cls.on_loading_completed)
-        cls.irmt.viewer_dock.loading_exception[QDialog, Exception].connect(
+        cls.irmt.viewer_dock.loading_exception[QDockWidget, Exception].connect(
             cls.on_loading_exception)
         cls.irmt.drive_oq_engine_server(show=False, hostname=cls.hostname)
         # NOTE: calc_list must be retrieved BEFORE starting any test
@@ -565,7 +565,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             start_time = time.time()
             while time.time() - start_time < timeout:
                 QGIS_APP.processEvents()
-                if self.loading_completed[self.irmt.viewer_dock]:
+                if self.loading_completed_dict[self.irmt.viewer_dock]:
                     print('\t\tok')
                     return 'ok'
                 if self.loading_exception_dict[self.irmt.viewer_dock]:
@@ -576,11 +576,11 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 'Loading time exceeded %s seconds' % timeout)
             return 'ko'
 
-    def on_loading_completed(self, dlg):
-        self.loading_completed_dict[dlg] = True
+    def on_loading_completed(self, widget):
+        self.loading_completed_dict[widget] = True
 
-    def on_loading_exception(self, dlg, exception):
-        self.loading_exception_dict[dlg] = exception
+    def on_loading_exception(self, widget, exception):
+        self.loading_exception_dict[widget] = exception
 
     def load_output_type(self, selected_output_type):
         self.failed_attempts = []
