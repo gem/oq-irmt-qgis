@@ -866,14 +866,10 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 #     tup += tuple(slice(None))
                 # tup = (slice(None), stats_idxs, loss_type_idx, value_idx)
                 # ordinates = self.agg_curves['array'][tup]
-                import pdb
-                from qgis.PyQt.QtCore import (pyqtRemoveInputHook, pyqtRestoreInputHook)
-                pyqtRemoveInputHook(); pdb.set_trace()
-                # pyqtRestoreInputHook()
                 tup = (slice(None), stats_idxs, loss_type_idx, value_idx)
-                ordinates = ordinates[tup]
+                curr_ordinates = ordinates[tup]
                 # ordinates = ordinates[:, stats_idxs, value_idx]
-                for ys, rlz_or_stat in zip(ordinates.T, rlzs_or_stats):
+                for ys, rlz_or_stat in zip(curr_ordinates.T, rlzs_or_stats):
                     self.plot.plot(
                             abscissa,
                             ys,
