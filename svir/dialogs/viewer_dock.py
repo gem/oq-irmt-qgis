@@ -805,11 +805,11 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             #     tag_value_idxs['NAME_1'])
             # tup = (slice(None), stats_idxs, loss_type_idx)
             tup = (slice(None), slice(None), loss_type_idx)
-            for tag in self.tags:
-                if self.tags[tag]['selected']:
-                    tup += tuple(tag_value_idxs[tag])
-                # else:
-                #     tup += tuple([0])
+            # for tag in self.tags:
+            #     if self.tags[tag]['selected']:
+            #         tup += tuple(tag_value_idxs[tag])
+            #     else:
+            #         tup += tuple([0])
             ordinates = self.agg_curves['array'][tup]
             unit = self.agg_curves['units'][loss_type_idx]
         self.plot.clear()
@@ -870,7 +870,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 from qgis.PyQt.QtCore import (pyqtRemoveInputHook, pyqtRestoreInputHook)
                 pyqtRemoveInputHook(); pdb.set_trace()
                 # pyqtRestoreInputHook()
-                ordinates = ordinates[:, stats_idxs, value_idx]
+                tup = (slice(None), stats_idxs, loss_type_idx, value_idx)
+                ordinates = ordinates[tup]
+                # ordinates = ordinates[:, stats_idxs, value_idx]
                 for ys, rlz_or_stat in zip(ordinates.T, rlzs_or_stats):
                     self.plot.plot(
                             abscissa,
