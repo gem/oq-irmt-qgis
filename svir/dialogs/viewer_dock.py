@@ -1683,14 +1683,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 stats = list(self.stats_multiselect.get_selected_items())
                 csv_file.write(
                     "# Loss type: %s\r\n" % self.loss_type_cbx.currentText())
-                tags = {}
-                for tag in self.agg_curves['aggregate_by']:
-                    tag_name = tag.decode('utf8')
-                    tag_cbx = getattr(self, "%s_cbx" % tag_name)
-                    tag_value = tag_cbx.currentText()
-                    tags[tag_name] = tag_value
-                tags_str = "; ".join(["%s = %s" % (tag, tags[tag])
-                                      for tag in tags])
+                tags_str = self.list_selected_edt.text()
                 csv_file.write(
                     "# Tags: %s\r\n" % tags_str)
                 headers = ['return_period']
@@ -1699,8 +1692,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 for return_period_idx, return_period in enumerate(
                         self.agg_curves['return_periods']):
                     row = [return_period]
-                    (stats_idxs, loss_type_idx,
-                        tag_value_idxs) = self._get_idxs()
+                    (stats_idxs, loss_type_idx, tag_name_idxs,
+                     tag_value_idxs) = self._get_idxs()
                     tup = (return_period_idx, stats_idxs,
                            loss_type_idx) + tuple(tag_value_idxs)
                     values = self.agg_curves['array'][tup]
