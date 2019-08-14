@@ -385,8 +385,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 if item.text() == "*":
                     item.setFlags(Qt.ItemIsEnabled)
                     item.setBackground(QColor('darkGray'))
-        self.tag_values_multiselect.setEnabled(
-            tag_name in list(self.tag_names_multiselect.get_selected_items()))
+        # self.tag_values_multiselect.setEnabled(
+        #     tag_name in list(self.tag_names_multiselect.get_selected_items()))
 
     def filter_dmg_by_asset_aggr(self):
         params = {}
@@ -437,8 +437,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             #     self.tags[tag_name]['values'][value] = False
             #     if self.tag_with_all_values == tag_name:
             #         self.tag_with_all_values = None
-        self.tag_values_multiselect.setEnabled(
-            tag_name in list(self.tag_names_multiselect.get_selected_items()))
+        # self.tag_values_multiselect.setEnabled(
+        #     tag_name in list(self.tag_names_multiselect.get_selected_items()))
         self.update_list_selected_edt()
         if self.output_type == 'dmg_by_asset_aggr':
             self.filter_dmg_by_asset_aggr()
