@@ -360,8 +360,6 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.tag_values_multiselect = ListMultiSelectWidget(title=title)
         self.tag_values_multiselect.setSizePolicy(
             QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
-        self.tag_values_multiselect.select_all_btn.hide()
-        self.tag_values_multiselect.deselect_all_btn.hide()
         self.typeDepVLayout.addWidget(self.tag_values_multiselect)
         self.tag_values_multiselect.selection_changed.connect(
             self.update_selected_tag_values)
@@ -451,10 +449,10 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.filter_agg_curves()
 
     def update_selected_tag_values(self):
-        for tag_value in self.tag_values_multiselect.get_selected_items():
-            self.tags[self.current_tag_name]['values'][tag_value] = True
-        for tag_value in self.tag_values_multiselect.get_unselected_items():
-            self.tags[self.current_tag_name]['values'][tag_value] = False
+        # for tag_value in self.tag_values_multiselect.get_selected_items():
+        #     self.tags[self.current_tag_name]['values'][tag_value] = True
+        # for tag_value in self.tag_values_multiselect.get_unselected_items():
+        #     self.tags[self.current_tag_name]['values'][tag_value] = False
         self.update_list_selected_edt()
         if self.output_type == 'dmg_by_asset_aggr':
             self.filter_dmg_by_asset_aggr()
@@ -767,17 +765,21 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         for stat_idx, stat in enumerate(self.agg_curves['stats']):
             if stat.decode('utf8') in rlzs_or_stats:
                 stats_idxs.append(stat_idx)
-        tag_values_idxs = {}
+        tag_name_idxs = {}
+        tag_value_idxs = {}
         for tag_name in self.tags:
-            tag_values_idxs[tag_name] = []
-            if not self.tags[tag_name]['selected']:
-                continue
+            tag_name_idx = list(self.agg_curves['aggregate_by']).index(
+                tag_name.encode('utf8'))
+            tag_name_idxs[tag_name] = tag_name_idx
+            tag_value_idxs[tag_name] = []
+            # if not self.tags[tag_name]['selected']:
+            #     continue
             for tag_value in self.tags[tag_name]['values']:
                 if self.tags[tag_name]['values'][tag_value]:  # is selected
                     tag_value_idx = list(self.agg_curves[tag_name]).index(
                         tag_value.encode('utf8'))
-                    tag_values_idxs[tag_name].append(tag_value_idx)
-        return stats_idxs, loss_type_idx, tag_values_idxs
+                    tag_value_idxs[tag_name].append(tag_value_idx)
+        return stats_idxs, loss_type_idx, tag_name_idxs, tag_value_idxs
 
     def draw_agg_curves(self, output_type):
         if output_type == 'agg_curves-rlzs':
@@ -800,11 +802,12 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             ordinates = self.agg_curves['array'][:, loss_type_idx]
             unit = self.agg_curves['units'][loss_type_idx]
         else:  # agg_curves-stats
-            stats_idxs, loss_type_idx, tag_value_idxs = self._get_idxs()
+            stats_idxs, loss_type_idx, tag_name_idxs, tag_value_idxs = \
+                self._get_idxs()
             # tup = (slice(None), stats_idxs, loss_type_idx) + tuple(
             #     tag_value_idxs['NAME_1'])
             # tup = (slice(None), stats_idxs, loss_type_idx)
-            tup = (slice(None), slice(None), loss_type_idx)
+            tup = (slice(None), slice(None), slice(None))
             # for tag in self.tags:
             #     if self.tags[tag]['selected']:
             #         tup += tuple(tag_value_idxs[tag])
@@ -866,7 +869,13 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 #     tup += tuple(slice(None))
                 # tup = (slice(None), stats_idxs, loss_type_idx, value_idx)
                 # ordinates = self.agg_curves['array'][tup]
-                tup = (slice(None), stats_idxs, loss_type_idx, value_idx)
+                tup = (slice(None), stats_idxs, loss_type_idx)
+                tag_name_idx = tag_name_idxs[tag_name]
+                for t_name in tag_name_idxs:
+                    if tag_name_idxs[t_name] == tag_name_idx:
+                        tup += (value_idx,)
+                    else:
+                        tup += (tag_value_idxs[t_name],)
                 curr_ordinates = ordinates[tup]
                 # ordinates = ordinates[:, stats_idxs, value_idx]
                 for ys, rlz_or_stat in zip(curr_ordinates.T, rlzs_or_stats):
@@ -877,8 +886,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                             # linestyle=line_style[rlz_or_stat_idx],
                             # marker=marker[rlz_or_stat_idx],
                             # label=rlz_or_stat,
-                            label="%s (%s: %s)" % (
-                                rlz_or_stat, tag_name, tag_value)
+                            label="%s (%s)" % (tag_value, rlz_or_stat)
                     )
         # for taxonomy_idx in range(5):
         #     for name1_idx in range(5):
