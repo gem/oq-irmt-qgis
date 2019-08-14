@@ -877,7 +877,14 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                         tup += (value_idx,)
                     else:
                         tup += (tag_value_idxs[t_name],)
-                curr_ordinates = ordinates[tup]
+                try:
+                    curr_ordinates = ordinates[tup]
+                except IndexError:
+                    log_msg('For each unselected tag, one and only one value'
+                            ' must be selected.', level='C',
+                            message_bar=self.iface.messageBar())
+                    self.plot_canvas.draw()
+                    return
                 # ordinates = ordinates[:, stats_idxs, value_idx]
                 for ys, rlz_or_stat in zip(curr_ordinates.T, rlzs_or_stats):
                     self.plot.plot(
