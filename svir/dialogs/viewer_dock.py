@@ -433,10 +433,10 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         for tag_name in self.tag_names_multiselect.get_unselected_items():
             self.tags[tag_name]['selected'] = False
             # deselect all tag values for tags that are unselected
-            for value in self.tags[tag_name]['values']:
-                self.tags[tag_name]['values'][value] = False
-                if self.tag_with_all_values == tag_name:
-                    self.tag_with_all_values = None
+            # for value in self.tags[tag_name]['values']:
+            #     self.tags[tag_name]['values'][value] = False
+            #     if self.tag_with_all_values == tag_name:
+            #         self.tag_with_all_values = None
         self.tag_values_multiselect.setEnabled(
             tag_name in list(self.tag_names_multiselect.get_selected_items()))
         self.update_list_selected_edt()
@@ -449,10 +449,10 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.filter_agg_curves()
 
     def update_selected_tag_values(self):
-        # for tag_value in self.tag_values_multiselect.get_selected_items():
-        #     self.tags[self.current_tag_name]['values'][tag_value] = True
-        # for tag_value in self.tag_values_multiselect.get_unselected_items():
-        #     self.tags[self.current_tag_name]['values'][tag_value] = False
+        for tag_value in self.tag_values_multiselect.get_selected_items():
+            self.tags[self.current_tag_name]['values'][tag_value] = True
+        for tag_value in self.tag_values_multiselect.get_unselected_items():
+            self.tags[self.current_tag_name]['values'][tag_value] = False
         self.update_list_selected_edt()
         if self.output_type == 'dmg_by_asset_aggr':
             self.filter_dmg_by_asset_aggr()
@@ -481,7 +481,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
     def update_list_selected_edt(self):
         selected_tags_str = ''
         for tag_name in self.tags:
-            if self.tags[tag_name]['selected']:
+            # if self.tags[tag_name]['selected']:
                 for tag_value in self.tags[tag_name]['values']:
                     if self.tags[tag_name]['values'][tag_value]:
                         selected_tags_str += '%s="%s" ' % (tag_name, tag_value)
