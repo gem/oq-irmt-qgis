@@ -758,7 +758,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                     self.tag_names_multiselect.add_unselected_items([tag_name])
             self.filter_agg_curves()
         elif output_type == 'agg_curves-rlzs':
-            rlzs = ["Rlz %3d" % rlz
+            rlzs = ["Rlz %s" % rlz
                     for rlz in range(self.agg_curves['array'].shape[1])]
             self.rlzs_multiselect.set_selected_items(rlzs)
             self.draw_agg_curves(output_type)
@@ -768,28 +768,39 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             return
 
     def _get_idxs(self):
-        rlzs_or_stats = list(
-            self.stats_multiselect.get_selected_items())
+        if self.output_type == 'agg_curves-rlzs':
+            rlzs_or_stats = list(
+                self.rlzs_multiselect.get_selected_items())
+        else:  # agg_curves-stats
+            rlzs_or_stats = list(
+                self.stats_multiselect.get_selected_items())
         loss_type_idx = self.loss_type_cbx.currentIndex()
-        stats_idxs = []
-        for stat_idx, stat in enumerate(self.agg_curves['stats']):
-            if stat.decode('utf8') in rlzs_or_stats:
-                stats_idxs.append(stat_idx)
-        tag_name_idxs = {}
-        tag_value_idxs = {}
-        for tag_name in self.tags:
-            tag_name_idx = list(self.agg_curves['aggregate_by']).index(
-                tag_name.encode('utf8'))
-            tag_name_idxs[tag_name] = tag_name_idx
-            tag_value_idxs[tag_name] = []
-            # if not self.tags[tag_name]['selected']:
-            #     continue
-            for tag_value in self.tags[tag_name]['values']:
-                if self.tags[tag_name]['values'][tag_value]:  # is selected
-                    tag_value_idx = list(self.agg_curves[tag_name]).index(
-                        tag_value.encode('utf8'))
-                    tag_value_idxs[tag_name].append(tag_value_idx)
-        return stats_idxs, loss_type_idx, tag_name_idxs, tag_value_idxs
+        rlzs_or_stats_idxs = []
+        if self.output_type == 'agg_curves-rlzs':
+            for rlz_idx in range(self.agg_curves['array'].shape[1]):
+                if "Rlz %s" % rlz_idx in rlzs_or_stats:
+                    rlzs_or_stats_idxs.append(rlz_idx)
+            tag_name_idxs = None
+            tag_value_idxs = None
+        else:  # agg_curves-stats
+            for stat_idx, stat in enumerate(self.agg_curves['stats']):
+                if stat.decode('utf8') in rlzs_or_stats:
+                    rlzs_or_stats_idxs.append(stat_idx)
+            tag_name_idxs = {}
+            tag_value_idxs = {}
+            for tag_name in self.tags:
+                tag_name_idx = list(self.agg_curves['aggregate_by']).index(
+                    tag_name.encode('utf8'))
+                tag_name_idxs[tag_name] = tag_name_idx
+                tag_value_idxs[tag_name] = []
+                # if not self.tags[tag_name]['selected']:
+                #     continue
+                for tag_value in self.tags[tag_name]['values']:
+                    if self.tags[tag_name]['values'][tag_value]:  # is selected
+                        tag_value_idx = list(self.agg_curves[tag_name]).index(
+                            tag_value.encode('utf8'))
+                        tag_value_idxs[tag_name].append(tag_value_idx)
+        return rlzs_or_stats_idxs, loss_type_idx, tag_name_idxs, tag_value_idxs
 
     def draw_agg_curves(self, output_type):
         if output_type == 'agg_curves-rlzs':
@@ -807,13 +818,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             return
         loss_type = self.loss_type_cbx.currentText()
         abscissa = self.agg_curves['return_periods']
-        if output_type == 'agg_curves-rlzs':
-            loss_type_idx = self.loss_type_cbx.currentIndex()
-            ordinates = self.agg_curves['array'][:, loss_type_idx]
-            unit = self.agg_curves['units'][loss_type_idx]
-        else:  # agg_curves-stats
-            stats_idxs, loss_type_idx, tag_name_idxs, tag_value_idxs = \
-                self._get_idxs()
+        if output_type in ['agg_curves-rlzs', 'agg_curves-stats']:
+            (rlzs_or_stats_idxs, loss_type_idx, tag_name_idxs,
+             tag_value_idxs) = self._get_idxs()
             ordinates = self.agg_curves['array']
             unit = self.agg_curves['units'][loss_type_idx]
         self.plot.clear()
@@ -851,10 +858,15 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 color_hex[rlz_or_stat_idx] = color.darker(120).name()
                 line_style[rlz_or_stat_idx] = "-"  # solid
         if output_type == 'agg_curves-rlzs':
-            ords = ordinates[:, rlz_or_stat_idx]
+            tup = (slice(None), rlzs_or_stats_idxs, loss_type_idx)
+            import pdb
+            from qgis.PyQt.QtCore import (pyqtRemoveInputHook, pyqtRestoreInputHook)
+            pyqtRemoveInputHook(); pdb.set_trace()
+            # pyqtRestoreInputHook()
+            ordinates = self.agg_curves['array'][tup]
             self.plot.plot(
                 abscissa,
-                ords,
+                ordinates,
                 color=color_hex[rlz_or_stat_idx],
                 linestyle=line_style[rlz_or_stat_idx],
                 marker=marker[rlz_or_stat_idx],
@@ -867,7 +879,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 for value_idx in tag_value_idxs[tag_name]:
                     tag_value = self.agg_curves[tag_name][value_idx].decode(
                         'utf8')
-                    tup = (slice(None), stats_idxs, loss_type_idx)
+                    tup = (slice(None), rlzs_or_stats_idxs, loss_type_idx)
                     tag_name_idx = tag_name_idxs[tag_name]
                     for t_name in tag_name_idxs:
                         if tag_name_idxs[t_name] == tag_name_idx:
@@ -882,7 +894,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                                 message_bar=self.iface.messageBar())
                         self.plot_canvas.draw()
                         return
-                    # ordinates = ordinates[:, stats_idxs, value_idx]
+                    # ordinates = ordinates[:, rlzs_or_stats_idxs, value_idx]
                     for ys, rlz_or_stat in zip(
                             curr_ordinates.T, rlzs_or_stats):
                         rlz_or_stat_idx = rlzs_or_stats.index(rlz_or_stat)
@@ -1675,9 +1687,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 for return_period_idx, return_period in enumerate(
                         self.agg_curves['return_periods']):
                     row = [return_period]
-                    (stats_idxs, loss_type_idx, tag_name_idxs,
+                    (rlzs_or_stats_idxs, loss_type_idx, tag_name_idxs,
                      tag_value_idxs) = self._get_idxs()
-                    tup = (return_period_idx, stats_idxs,
+                    tup = (return_period_idx, rlzs_or_stats_idxs,
                            loss_type_idx) + tuple(tag_value_idxs)
                     values = self.agg_curves['array'][tup]
                     row.extend(values)
