@@ -892,7 +892,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                             abscissa,
                             ys,
                             # color=color_hex[rlz_or_stat_idx],
-                            # linestyle=line_style[rlz_or_stat_idx],
+                            linestyle=line_style[rlz_or_stat_idx],
                             marker=marker[rlz_or_stat_idx],
                             # label=rlz_or_stat,
                             label="%s (%s)" % (tag_value, rlz_or_stat)
