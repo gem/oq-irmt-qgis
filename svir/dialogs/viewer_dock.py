@@ -820,36 +820,36 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         if not ordinates.any():  # too much filtering
             self.plot_canvas.draw()
             return
-        # marker = dict()
-        # line_style = dict()
-        # color_hex = dict()
-        # for rlz_or_stat_idx, rlz_or_stat in enumerate(rlzs_or_stats):
-        #     marker[rlz_or_stat_idx] = self.markers[
-        #         rlz_or_stat_idx % len(self.markers)]
-        #     if self.bw_chk.isChecked():
-        #         line_styles_whole_cycles = (
-        #             rlz_or_stat_idx // len(self.line_styles))
-        #         # NOTE: 85 is approximately 256 / 3
-        #         r = g = b = format(
-        #             (85 * line_styles_whole_cycles) % 256, '02x')
-        #         color_hex_str = "#%s%s%s" % (r, g, b)
-        #         color = QColor(color_hex_str)
-        #         color_hex[rlz_or_stat_idx] = color.darker(120).name()
-        #         # here I am using i in order to cycle through all the
-        #         # line styles, regardless from the feature id
-        #         # (otherwise I might easily repeat styles, that are a
-        #         # small set of 4 items)
-        #         line_style[rlz_or_stat_idx] = self.line_styles[
-        #             rlz_or_stat_idx % len(self.line_styles)]
-        #     else:
-        #         # here I am using the feature id in order to keep a
-        #         # matching between a curve and the corresponding point
-        #         # in the map
-        #         color_name = self.color_names[
-        #             rlz_or_stat_idx % len(self.color_names)]
-        #         color = QColor(color_name)
-        #         color_hex[rlz_or_stat_idx] = color.darker(120).name()
-        #         line_style[rlz_or_stat_idx] = "-"  # solid
+        marker = dict()
+        line_style = dict()
+        color_hex = dict()
+        for rlz_or_stat_idx, rlz_or_stat in enumerate(rlzs_or_stats):
+            marker[rlz_or_stat_idx] = self.markers[
+                rlz_or_stat_idx % len(self.markers)]
+            if self.bw_chk.isChecked():
+                line_styles_whole_cycles = (
+                    rlz_or_stat_idx // len(self.line_styles))
+                # NOTE: 85 is approximately 256 / 3
+                r = g = b = format(
+                    (85 * line_styles_whole_cycles) % 256, '02x')
+                color_hex_str = "#%s%s%s" % (r, g, b)
+                color = QColor(color_hex_str)
+                color_hex[rlz_or_stat_idx] = color.darker(120).name()
+                # here I am using i in order to cycle through all the
+                # line styles, regardless from the feature id
+                # (otherwise I might easily repeat styles, that are a
+                # small set of 4 items)
+                line_style[rlz_or_stat_idx] = self.line_styles[
+                    rlz_or_stat_idx % len(self.line_styles)]
+            else:
+                # here I am using the feature id in order to keep a
+                # matching between a curve and the corresponding point
+                # in the map
+                color_name = self.color_names[
+                    rlz_or_stat_idx % len(self.color_names)]
+                color = QColor(color_name)
+                color_hex[rlz_or_stat_idx] = color.darker(120).name()
+                line_style[rlz_or_stat_idx] = "-"  # solid
         #     if output_type in ['agg_curves-rlzs', 'agg_curves-stats']:
         #         ords = ordinates[:, rlz_or_stat_idx]
         #     self.plot.plot(
@@ -887,12 +887,13 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                     return
                 # ordinates = ordinates[:, stats_idxs, value_idx]
                 for ys, rlz_or_stat in zip(curr_ordinates.T, rlzs_or_stats):
+                    rlz_or_stat_idx = rlzs_or_stats.index(rlz_or_stat)
                     self.plot.plot(
                             abscissa,
                             ys,
                             # color=color_hex[rlz_or_stat_idx],
                             # linestyle=line_style[rlz_or_stat_idx],
-                            # marker=marker[rlz_or_stat_idx],
+                            marker=marker[rlz_or_stat_idx],
                             # label=rlz_or_stat,
                             label="%s (%s)" % (tag_value, rlz_or_stat)
                     )
@@ -1683,7 +1684,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 stats = list(self.stats_multiselect.get_selected_items())
                 csv_file.write(
                     "# Loss type: %s\r\n" % self.loss_type_cbx.currentText())
-                tags_str = self.list_selected_edt.text()
+                tags_str = self.list_selected_edt.toPlainText()
                 csv_file.write(
                     "# Tags: %s\r\n" % tags_str)
                 headers = ['return_period']
