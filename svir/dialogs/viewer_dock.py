@@ -850,48 +850,51 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 color = QColor(color_name)
                 color_hex[rlz_or_stat_idx] = color.darker(120).name()
                 line_style[rlz_or_stat_idx] = "-"  # solid
-        #     if output_type in ['agg_curves-rlzs', 'agg_curves-stats']:
-        #         ords = ordinates[:, rlz_or_stat_idx]
-        #     self.plot.plot(
-        #         abscissa,
-        #         ords,
-        #         color=color_hex[rlz_or_stat_idx],
-        #         linestyle=line_style[rlz_or_stat_idx],
-        #         marker=marker[rlz_or_stat_idx],
-        #         label=rlz_or_stat,
-        #     )
-        for tag_name in tag_value_idxs:
-            if not self.tags[tag_name]['selected']:
-                continue
-            for value_idx in tag_value_idxs[tag_name]:
-                tag_value = self.agg_curves[tag_name][value_idx].decode('utf8')
-                tup = (slice(None), stats_idxs, loss_type_idx)
-                tag_name_idx = tag_name_idxs[tag_name]
-                for t_name in tag_name_idxs:
-                    if tag_name_idxs[t_name] == tag_name_idx:
-                        tup += (value_idx,)
-                    else:
-                        tup += (tag_value_idxs[t_name],)
-                try:
-                    curr_ordinates = ordinates[tup]
-                except IndexError:
-                    log_msg('For each unselected tag, one and only one value'
-                            ' must be selected.', level='C',
-                            message_bar=self.iface.messageBar())
-                    self.plot_canvas.draw()
-                    return
-                # ordinates = ordinates[:, stats_idxs, value_idx]
-                for ys, rlz_or_stat in zip(curr_ordinates.T, rlzs_or_stats):
-                    rlz_or_stat_idx = rlzs_or_stats.index(rlz_or_stat)
-                    self.plot.plot(
-                            abscissa,
-                            ys,
-                            # color=color_hex[rlz_or_stat_idx],
-                            linestyle=line_style[rlz_or_stat_idx],
-                            marker=marker[rlz_or_stat_idx],
-                            # label=rlz_or_stat,
-                            label="%s (%s)" % (tag_value, rlz_or_stat)
-                    )
+        if output_type == 'agg_curves-rlzs':
+            ords = ordinates[:, rlz_or_stat_idx]
+            self.plot.plot(
+                abscissa,
+                ords,
+                color=color_hex[rlz_or_stat_idx],
+                linestyle=line_style[rlz_or_stat_idx],
+                marker=marker[rlz_or_stat_idx],
+                label=rlz_or_stat,
+            )
+        elif output_type == 'agg_curves-stats':
+            for tag_name in tag_value_idxs:
+                if not self.tags[tag_name]['selected']:
+                    continue
+                for value_idx in tag_value_idxs[tag_name]:
+                    tag_value = self.agg_curves[tag_name][value_idx].decode(
+                        'utf8')
+                    tup = (slice(None), stats_idxs, loss_type_idx)
+                    tag_name_idx = tag_name_idxs[tag_name]
+                    for t_name in tag_name_idxs:
+                        if tag_name_idxs[t_name] == tag_name_idx:
+                            tup += (value_idx,)
+                        else:
+                            tup += (tag_value_idxs[t_name],)
+                    try:
+                        curr_ordinates = ordinates[tup]
+                    except IndexError:
+                        log_msg('For each unselected tag, one and only one'
+                                ' value must be selected.', level='C',
+                                message_bar=self.iface.messageBar())
+                        self.plot_canvas.draw()
+                        return
+                    # ordinates = ordinates[:, stats_idxs, value_idx]
+                    for ys, rlz_or_stat in zip(
+                            curr_ordinates.T, rlzs_or_stats):
+                        rlz_or_stat_idx = rlzs_or_stats.index(rlz_or_stat)
+                        self.plot.plot(
+                                abscissa,
+                                ys,
+                                # color=color_hex[rlz_or_stat_idx],
+                                linestyle=line_style[rlz_or_stat_idx],
+                                marker=marker[rlz_or_stat_idx],
+                                # label=rlz_or_stat,
+                                label="%s (%s)" % (tag_value, rlz_or_stat)
+                        )
         self.plot.set_xscale('log')
         self.plot.set_yscale('linear')
         self.plot.set_xlabel('Return period (years)')
