@@ -881,14 +881,17 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             value_idxs = tag_value_idxs.values()
             tup += tuple(value_idxs)
             ordinates = self.agg_curves['array'][tup]
-            self.plot.plot(
-                abscissa,
-                ordinates,
-                color=color_hex[rlz_or_stat_idx],
-                linestyle=line_style[rlz_or_stat_idx],
-                marker=marker[rlz_or_stat_idx],
-                label=rlz_or_stat,
-            )
+            for ys, rlz_or_stat in zip(
+                    ordinates.T, rlzs_or_stats):
+                rlz_or_stat_idx = rlzs_or_stats.index(rlz_or_stat)
+                self.plot.plot(
+                    abscissa,
+                    ys,
+                    # color=color_hex[rlz_or_stat_idx],
+                    linestyle=line_style[rlz_or_stat_idx],
+                    marker=marker[rlz_or_stat_idx],
+                    label="Rlz_%s" % rlz_or_stat_idx
+                )
         elif output_type == 'agg_curves-stats':
             for tag_name in tag_value_idxs:
                 if not self.tags[tag_name]['selected']:
