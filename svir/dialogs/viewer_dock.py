@@ -193,18 +193,18 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.typeDepHLayout2.addWidget(self.loss_type_lbl)
         self.typeDepHLayout2.addWidget(self.loss_type_cbx)
 
-    # def create_tag_selector(
-    #         self, tag_name, tag_values=None, on_currentIndexChanged=None):
-    #     setattr(self, "%s_lbl" % tag_name, QLabel(tag_name))
-    #     setattr(self, "%s_cbx" % tag_name, QComboBox())
-    #     lbl = getattr(self, "%s_lbl" % tag_name)
-    #     cbx = getattr(self, "%s_cbx" % tag_name)
-    #     if tag_values is not None:
-    #         cbx.addItems(tag_values)
-    #     self.typeDepVLayout.addWidget(lbl)
-    #     self.typeDepVLayout.addWidget(cbx)
-    #     if on_currentIndexChanged is not None:
-    #         cbx.currentIndexChanged.connect(on_currentIndexChanged)
+    def create_tag_selector(
+            self, tag_name, tag_values=None, on_currentIndexChanged=None):
+        setattr(self, "%s_lbl" % tag_name, QLabel(tag_name))
+        setattr(self, "%s_cbx" % tag_name, QComboBox())
+        lbl = getattr(self, "%s_lbl" % tag_name)
+        cbx = getattr(self, "%s_cbx" % tag_name)
+        if tag_values is not None:
+            cbx.addItems(tag_values)
+        self.typeDepVLayout.addWidget(lbl)
+        self.typeDepVLayout.addWidget(cbx)
+        if on_currentIndexChanged is not None:
+            cbx.currentIndexChanged.connect(on_currentIndexChanged)
 
     def create_imt_selector(self):
         self.imt_lbl = QLabel('Intensity Measure Type')
@@ -354,6 +354,10 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.update_selected_tag_names)
 
     def create_tag_values_multiselect(self):
+        # NOTE: probably MultiSelectMonoWidget makes sense for tag names but
+        # not for tag values, because we might need to click on an unselected
+        # tag name to choose its values, but for values we could simply use a
+        # combobox instead
         title = 'Select tag values'
         # self.tag_values_multiselect = ListMultiSelectMonoWidget(
         #     message_bar=self.iface.messageBar(), title=title)
@@ -385,8 +389,11 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 if item.text() == "*":
                     item.setFlags(Qt.ItemIsEnabled)
                     item.setBackground(QColor('darkGray'))
+        # NOTE: we can use this to prevent changing the set of selected values
+        # for tag names that are not selected
         # self.tag_values_multiselect.setEnabled(
-        #     tag_name in list(self.tag_names_multiselect.get_selected_items()))
+        #     tag_name in list(
+        #         self.tag_names_multiselect.get_selected_items()))
 
     def filter_dmg_by_asset_aggr(self):
         params = {}
@@ -438,7 +445,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             #     if self.tag_with_all_values == tag_name:
             #         self.tag_with_all_values = None
         # self.tag_values_multiselect.setEnabled(
-        #     tag_name in list(self.tag_names_multiselect.get_selected_items()))
+        #     tag_name in list(
+        #         self.tag_names_multiselect.get_selected_items()))
         self.update_list_selected_edt()
         if self.output_type == 'dmg_by_asset_aggr':
             self.filter_dmg_by_asset_aggr()
@@ -481,10 +489,11 @@ class ViewerDock(QDockWidget, FORM_CLASS):
     def update_list_selected_edt(self):
         selected_tags_str = ''
         for tag_name in self.tags:
-            # if self.tags[tag_name]['selected']:
-                for tag_value in self.tags[tag_name]['values']:
-                    if self.tags[tag_name]['values'][tag_value]:
-                        selected_tags_str += '%s="%s" ' % (tag_name, tag_value)
+            # if not self.tags[tag_name]['selected']:
+            #     continue
+            for tag_value in self.tags[tag_name]['values']:
+                if self.tags[tag_name]['values'][tag_value]:
+                    selected_tags_str += '%s="%s" ' % (tag_name, tag_value)
         self.list_selected_edt.setPlainText(selected_tags_str)
 
     def refresh_feature_selection(self):
@@ -805,16 +814,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         else:  # agg_curves-stats
             stats_idxs, loss_type_idx, tag_name_idxs, tag_value_idxs = \
                 self._get_idxs()
-            # tup = (slice(None), stats_idxs, loss_type_idx) + tuple(
-            #     tag_value_idxs['NAME_1'])
-            # tup = (slice(None), stats_idxs, loss_type_idx)
-            tup = (slice(None), slice(None), slice(None))
-            # for tag in self.tags:
-            #     if self.tags[tag]['selected']:
-            #         tup += tuple(tag_value_idxs[tag])
-            #     else:
-            #         tup += tuple([0])
-            ordinates = self.agg_curves['array'][tup]
+            ordinates = self.agg_curves['array']
             unit = self.agg_curves['units'][loss_type_idx]
         self.plot.clear()
         if not ordinates.any():  # too much filtering
@@ -865,11 +865,6 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 continue
             for value_idx in tag_value_idxs[tag_name]:
                 tag_value = self.agg_curves[tag_name][value_idx].decode('utf8')
-                # tup = (slice(None), stats_idxs, loss_type_idx)
-                # for tname in tag_value_idxs:
-                #     tup += tuple(slice(None))
-                # tup = (slice(None), stats_idxs, loss_type_idx, value_idx)
-                # ordinates = self.agg_curves['array'][tup]
                 tup = (slice(None), stats_idxs, loss_type_idx)
                 tag_name_idx = tag_name_idxs[tag_name]
                 for t_name in tag_name_idxs:
@@ -897,22 +892,6 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                             # label=rlz_or_stat,
                             label="%s (%s)" % (tag_value, rlz_or_stat)
                     )
-        # for taxonomy_idx in range(5):
-        #     for name1_idx in range(5):
-        #         tup = (slice(None), stats_idxs, loss_type_idx, taxonomy_idx,
-        #                name1_idx)
-        #         ordinates = self.agg_curves['array'][tup]
-        #         for ys, lab in zip(ordinates.T, rlzs_or_stats):
-        #             self.plot.plot(
-        #                     abscissa,
-        #                     ys,
-        #                     # color=color_hex[rlz_or_stat_idx],
-        #                     # linestyle=line_style[rlz_or_stat_idx],
-        #                     # marker=marker[rlz_or_stat_idx],
-        #                     # label=rlz_or_stat,
-        #                     label="%s (t: %s; n: %s)" % (
-        #                         lab, taxonomy_idx, name1_idx)
-        #             )
         self.plot.set_xscale('log')
         self.plot.set_yscale('linear')
         self.plot.set_xlabel('Return period (years)')
