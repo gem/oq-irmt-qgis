@@ -482,7 +482,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.list_selected_edt = QPlainTextEdit('Selected tags:')
         self.list_selected_edt.setSizePolicy(
             QSizePolicy.Minimum, QSizePolicy.Minimum)
-        self.list_selected_edt.setMaximumHeight(30)
+        self.list_selected_edt.setMaximumHeight(60)
         self.list_selected_edt.setReadOnly(True)
         self.typeDepVLayout.addWidget(self.list_selected_edt)
 
