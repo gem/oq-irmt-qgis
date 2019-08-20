@@ -1733,14 +1733,24 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                     csv_file.write(
                         "# Tags: %s\r\n" % tags_str)
                 headers = ['return_period']
-                headers.extend(stats)
+                (rlzs_or_stats_idxs, loss_type_idx, tag_name_idxs,
+                    tag_value_idxs) = self._get_idxs()
+                # FIXME: using only the first stat
+                if tag_value_idxs:
+                    for tag_name in tag_value_idxs:
+                        if len(tag_value_idxs[tag_name]) > 1:
+                            for tval_idx in tag_value_idxs[tag_name]:
+                                tval = self.agg_curves[tag_name][tval_idx]
+                                headers.append(tval.decode('utf8'))
+                            break
+                else:
+                    headers.extend(stats)
                 writer.writerow(headers)
                 for return_period_idx, return_period in enumerate(
                         self.agg_curves['return_periods']):
                     row = [return_period]
-                    (rlzs_or_stats_idxs, loss_type_idx, tag_name_idxs,
-                     tag_value_idxs) = self._get_idxs()
-                    tup = (return_period_idx, rlzs_or_stats_idxs,
+                    # FIXME: using only the first stat
+                    tup = (return_period_idx, rlzs_or_stats_idxs[0],
                            loss_type_idx)
                     if tag_value_idxs is not None:
                         tup += tuple(tag_value_idxs.values())
