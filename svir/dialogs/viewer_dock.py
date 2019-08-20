@@ -1715,9 +1715,10 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 stats = list(self.stats_multiselect.get_selected_items())
                 csv_file.write(
                     "# Loss type: %s\r\n" % self.loss_type_cbx.currentText())
-                tags_str = self.list_selected_edt.toPlainText()
-                csv_file.write(
-                    "# Tags: %s\r\n" % tags_str)
+                if hasattr(self, 'list_selected_edt'):
+                    tags_str = self.list_selected_edt.toPlainText()
+                    csv_file.write(
+                        "# Tags: %s\r\n" % tags_str)
                 headers = ['return_period']
                 headers.extend(stats)
                 writer.writerow(headers)
@@ -1727,7 +1728,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                     (rlzs_or_stats_idxs, loss_type_idx, tag_name_idxs,
                      tag_value_idxs) = self._get_idxs()
                     tup = (return_period_idx, rlzs_or_stats_idxs,
-                           loss_type_idx) + tuple(tag_value_idxs)
+                           loss_type_idx)
+                    if tag_value_idxs is not None:
+                        tup += tuple(tag_value_idxs)
                     values = self.agg_curves['array'][tup]
                     row.extend(values)
                     writer.writerow(row)
