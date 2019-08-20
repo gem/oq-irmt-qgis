@@ -532,9 +532,6 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         elif new_output_type == 'agg_curves-stats':
             self.create_loss_type_selector()
             self.create_stats_multiselect()
-            self.create_tag_names_multiselect()
-            self.create_tag_values_multiselect()
-            self.create_list_selected_edt()
             self.stats_multiselect.selection_changed.connect(
                 self.filter_agg_curves)
         elif new_output_type == 'dmg_by_asset_aggr':
@@ -748,6 +745,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                           for stat in self.agg_curves['stats']]
             self.stats_multiselect.set_selected_items(self.stats)
             if 'aggregate_by' in self.agg_curves:
+                self.create_tag_names_multiselect()
+                self.create_tag_values_multiselect()
+                self.create_list_selected_edt()
                 self._build_tags()
                 self.update_selected_tag_names()
                 self.tag_names_multiselect.set_selected_items([])
