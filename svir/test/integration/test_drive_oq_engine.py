@@ -157,7 +157,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
 
     def run_calc(self, input_files, job_type='hazard', calc_id=None):
         resp = self.irmt.drive_oq_engine_server_dlg.run_calc(
-            calc_id=calc_id, file_names=input_files)
+            calc_id=calc_id, file_names=input_files, use_default_ini=True)
         calc_id = resp['job_id']
         print("Running %s calculation #%s" % (job_type, calc_id))
         self.timer = QTimer()
@@ -188,8 +188,13 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         risk_demos_path = os.path.join(
             os.pardir, 'oq-engine', 'demos', 'risk')
         risk_demos_dirs = glob.glob(os.path.join(risk_demos_path, "*", ""))
-        # NOTE: using the first risk demo found
-        demo_dir = risk_demos_dirs[0]
+        # NOTE: assuming to find ScenarioDamage folder
+        demo_dir_list = [demo_dir
+                         for demo_dir in risk_demos_dirs
+                         if "ScenarioDamage" in demo_dir]
+        self.assertEquals(len(demo_dir_list), 1,
+                          "Demo directory ScenarioDamage was not found")
+        demo_dir = demo_dir_list[0]
         filepaths = glob.glob(os.path.join(demo_dir, '*'))
         hazard_calc_id = self.run_calc(filepaths, 'hazard')
         risk_calc_id = self.run_calc(filepaths, 'risk', hazard_calc_id)

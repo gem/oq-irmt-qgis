@@ -558,7 +558,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             log_msg(msg, level='C', message_bar=self.message_bar)
         return
 
-    def run_calc(self, calc_id=None, file_names=None, directory=None):
+    def run_calc(self, calc_id=None, file_names=None, directory=None,
+                 use_default_ini=False):
         """
         Run a calculation. If `calc_id` is given, it means we want to run
         a calculation re-using the output of the given calculation
@@ -603,16 +604,20 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         ini_file_names = [file_name for file_name in input_file_names
                           if os.path.splitext(file_name)[1] == '.ini']
         if len(ini_file_names) > 1:
-            selected_file_name, ok_pressed = QInputDialog.getItem(
-                self, "Selection of the .ini file",
-                "Select a file or press Cancel to let the OQ-Engine pick"
-                " one by default",
-                [os.path.basename(file_name) for file_name in ini_file_names],
-                0, False)
-            if ok_pressed and selected_file_name:
-                job_ini_filename = selected_file_name
-            else:
+            if use_default_ini:
                 job_ini_filename = None
+            else:
+                selected_file_name, ok_pressed = QInputDialog.getItem(
+                    self, "Selection of the .ini file",
+                    "Select a file or press Cancel to let the OQ-Engine pick"
+                    " one by default",
+                    [os.path.basename(file_name)
+                     for file_name in ini_file_names],
+                    0, False)
+                if ok_pressed and selected_file_name:
+                    job_ini_filename = selected_file_name
+                else:
+                    job_ini_filename = None
         elif len(ini_file_names) == 1:
             job_ini_filename = os.path.basename(ini_file_names[0])
         else:
