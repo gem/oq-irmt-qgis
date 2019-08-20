@@ -1700,14 +1700,19 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             elif self.output_type == 'agg_curves-rlzs':
                 # the expected shape is (P, R), where P is the number of return
                 # periods and R is the number of realizations
-                num_rlzs = self.agg_curves['array'].shape[1]
+                (rlzs_idxs, loss_type_idx, tag_name_idxs,
+                    tag_value_idxs) = self._get_idxs()
+                rlzs = list(self.rlzs_multiselect.get_selected_items())
                 headers = ['return_period']
-                headers.extend(['rlz-%s' % rlz for rlz in range(num_rlzs)])
+                headers.extend(rlzs)
                 writer.writerow(headers)
-                loss_type_idx = self.loss_type_cbx.currentIndex()
+                # loss_type_idx = self.loss_type_cbx.currentIndex()
                 for i, return_period in enumerate(
                         self.agg_curves['return_periods']):
-                    values = self.agg_curves['array'][:, loss_type_idx]
+                    tup = (slice(None), rlzs_idxs, loss_type_idx)
+                    if tag_value_idxs is not None:
+                        tup += tuple(tag_value_idxs.values())
+                    values = self.agg_curves['array'][tup]
                     row = [return_period]
                     row.extend([value for value in values[i]])
                     writer.writerow(row)
@@ -1730,7 +1735,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                     tup = (return_period_idx, rlzs_or_stats_idxs,
                            loss_type_idx)
                     if tag_value_idxs is not None:
-                        tup += tuple(tag_value_idxs)
+                        tup += tuple(tag_value_idxs.values())
                     values = self.agg_curves['array'][tup]
                     row.extend(values)
                     writer.writerow(row)
