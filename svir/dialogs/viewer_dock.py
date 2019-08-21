@@ -1737,27 +1737,37 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                     tag_value_idxs) = self._get_idxs()
                 # FIXME: we should probably produce a zipped file containing N
                 # csv files, one per tag value
-                # FIXME: using only the first stat
+                has_single_tag_value = None
                 if tag_value_idxs:
+                    has_single_tag_value = True
                     for tag_name in tag_value_idxs:
                         if len(tag_value_idxs[tag_name]) > 1:
+                            has_single_tag_value = False
+                            # FIXME: using only the first stat
                             for tval_idx in tag_value_idxs[tag_name]:
                                 tval = self.agg_curves[tag_name][tval_idx]
                                 headers.append(tval.decode('utf8'))
                             break
-                else:
+                if has_single_tag_value or has_single_tag_value is None:
                     headers.extend(stats)
                 writer.writerow(headers)
                 for return_period_idx, return_period in enumerate(
                         self.agg_curves['return_periods']):
                     row = [return_period]
-                    # FIXME: using only the first stat
-                    tup = (return_period_idx, rlzs_or_stats_idxs[0],
-                           loss_type_idx)
+                    if has_single_tag_value or has_single_tag_value is None:
+                        tup = (return_period_idx, rlzs_or_stats_idxs,
+                               loss_type_idx)
+                    else:
+                        # FIXME: using only the first stat
+                        tup = (return_period_idx, rlzs_or_stats_idxs[0],
+                               loss_type_idx)
                     if tag_value_idxs is not None:
                         tup += tuple(tag_value_idxs.values())
                     values = self.agg_curves['array'][tup]
-                    row.extend(values)
+                    try:
+                        row.extend(values)
+                    except TypeError:  # it is a single value instead of list
+                        row.append(values)
                     writer.writerow(row)
             elif self.output_type == 'dmg_by_asset_aggr':
                 csv_file.write(
