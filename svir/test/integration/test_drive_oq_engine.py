@@ -303,7 +303,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
     def load_calc_output(
             self, calc, selected_output_type,
             taxonomy_idx=None, aggregate_by_site=None, approach=None,
-            n_simulations=None):
+            n_simulations=None, is_last=False):
         calc_id = calc['id']
         for output in self.output_list[calc_id]:
             if (output['type'] != selected_output_type and
@@ -324,7 +324,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 loading_resp = self.load_output(
                     calc, output_copy, taxonomy_idx=taxonomy_idx,
                     aggregate_by_site=aggregate_by_site, approach=approach,
-                    n_simulations=n_simulations)
+                    n_simulations=n_simulations, is_last=is_last)
             except Exception:
                 self._on_loading_ko(output_dict)
             else:
@@ -332,7 +332,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                     self._on_loading_ok(start_time, output_dict)
 
     def on_init_done(self, dlg, taxonomy_idx=None, aggregate_by_site=None,
-                     approach=None, n_simulations=None):
+                     approach=None, n_simulations=None, is_last=False):
         if taxonomy_idx is not None:
             print("\t\tTaxonomy: %s" % dlg.taxonomy_cbx.itemText(taxonomy_idx))
             dlg.taxonomy_cbx.setCurrentIndex(taxonomy_idx)
@@ -422,7 +422,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         elif dlg.output_type == 'uhs':
             self.load_uhs()
         elif dlg.output_type == 'dmg_by_asset' and not aggregate_by_site:
-            self.load_recovery_curves(dlg, approach, n_simulations)
+            self.load_recovery_curves(dlg, approach, n_simulations, is_last)
             return
         dlg.loading_completed.emit()
 
@@ -437,7 +437,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
 
     def load_output(
             self, calc, output, taxonomy_idx=None, aggregate_by_site=None,
-            approach=None, n_simulations=None):
+            approach=None, n_simulations=None, is_last=False):
         # NOTE: it is better to avoid resetting the project here, because some
         # outputs might be skipped, therefore it would not be needed
         calc_id = calc['id']
@@ -498,7 +498,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                     taxonomy_idx=taxonomy_idx,
                     aggregate_by_site=aggregate_by_site,
                     approach=approach,
-                    n_simulations=n_simulations))
+                    n_simulations=n_simulations,
+                    is_last=is_last))
             timeout = 10
             start_time = time.time()
             while time.time() - start_time < timeout:
@@ -526,7 +527,6 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             return 'ok'
 
     def on_loading_completed(self):
-        time.sleep(10)
         self.loading_completed = True
 
     def on_loading_exception(self, exception):
@@ -545,15 +545,18 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 for taxonomy_idx in [0, 1]:
                     self.load_calc_output(
                         calc, selected_output_type, taxonomy_idx=taxonomy_idx,
-                        aggregate_by_site=aggregate_by_site)
+                        aggregate_by_site=aggregate_by_site, is_last=False)
                 # for dmg_by_asset also test recovery modeling
                 if selected_output_type == 'dmg_by_asset':
-                    for approach in ['Disaggregate', 'Aggregate']:
+                    approaches = ['Disaggregate', 'Aggregate']
+                    for approach_idx, approach in enumerate(approaches):
+                        is_last = (approach_idx == len(approaches) - 1)
                         self.load_calc_output(
                             calc, selected_output_type,
                             aggregate_by_site=False,
                             approach=approach,
-                            n_simulations=2)
+                            n_simulations=2,
+                            is_last=is_last)
             else:
                 self.load_calc_output(calc, selected_output_type)
         if self.skipped_attempts:
@@ -586,14 +589,16 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                                  reverse=True):
                 print('\t%s' % output)
 
-    def load_recovery_curves(self, dlg, approach, n_simulations):
+    def load_recovery_curves(self, dlg, approach, n_simulations,
+                             is_last=False):
         self._set_output_type('Recovery Curves')
         self.irmt.viewer_dock.approach_cbx.setCurrentIndex(
             self.irmt.viewer_dock.approach_cbx.findText(approach))
         self.irmt.viewer_dock.n_simulations_sbx.setValue(n_simulations)
         self._change_selection()
         self._test_export()
-        dlg.loading_completed.emit()
+        if is_last:
+            dlg.loading_completed.emit()
 
     def load_uhs(self):
         self._set_output_type('Uniform Hazard Spectra')
