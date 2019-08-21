@@ -546,13 +546,14 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                         calc, selected_output_type, taxonomy_idx=taxonomy_idx,
                         aggregate_by_site=aggregate_by_site)
                 # for dmg_by_asset also test recovery modeling
-                if selected_output_type == 'dmg_by_asset':
-                    for approach in ['Disaggregate', 'Aggregate']:
-                        self.load_calc_output(
-                            calc, selected_output_type,
-                            aggregate_by_site=False,
-                            approach=approach,
-                            n_simulations=2)
+                # FIXME: temporarily skipped
+                # if selected_output_type == 'dmg_by_asset':
+                #     for approach in ['Disaggregate', 'Aggregate']:
+                #         self.load_calc_output(
+                #             calc, selected_output_type,
+                #             aggregate_by_site=False,
+                #             approach=approach,
+                #             n_simulations=2)
             else:
                 self.load_calc_output(calc, selected_output_type)
         if self.skipped_attempts:
