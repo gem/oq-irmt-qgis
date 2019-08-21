@@ -1735,6 +1735,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 headers = ['return_period']
                 (rlzs_or_stats_idxs, loss_type_idx, tag_name_idxs,
                     tag_value_idxs) = self._get_idxs()
+                # FIXME: we should probably produce a zipped file containing N
+                # csv files, one per tag value
                 # FIXME: using only the first stat
                 if tag_value_idxs:
                     for tag_name in tag_value_idxs:
