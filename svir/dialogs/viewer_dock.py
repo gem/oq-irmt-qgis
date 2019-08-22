@@ -735,17 +735,11 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.loss_type_cbx.addItems(loss_types)
         self.loss_type_cbx.blockSignals(False)
         if output_type == 'agg_curves-stats':
-            # for tag in self.agg_curves['aggregate_by']:
-            #     tag_name = tag.decode('utf8')
-            #     tag_values = [tag_value.decode('utf8')
-            #                   for tag_value in self.agg_curves[tag_name]]
-            #     self.create_tag_selector(
-            #         tag_name, tag_values, self.filter_agg_curves)
             self.stats = [stat.decode('utf8')
                           for stat in self.agg_curves['stats']]
             self.stats_multiselect.set_selected_items(self.stats)
             if ('aggregate_by' in self.agg_curves
-                    and len(self.agg_curves['aggregate_by'] > 0)):
+                    and len(self.agg_curves['aggregate_by']) > 0):
                 self.create_tag_names_multiselect()
                 self.create_tag_values_multiselect()
                 self.create_list_selected_edt()
@@ -765,7 +759,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             rlzs = ["Rlz %s" % rlz
                     for rlz in range(self.agg_curves['array'].shape[1])]
             self.rlzs_multiselect.set_selected_items(rlzs)
-            if 'aggregate_by' in self.agg_curves:
+            if ('aggregate_by' in self.agg_curves
+                    and len(self.agg_curves['aggregate_by']) > 0):
                 for tag in self.agg_curves['aggregate_by']:
                     tag_name = tag.decode('utf8')
                     tag_values = [tag_value.decode('utf8')
@@ -796,7 +791,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 if stat.decode('utf8') in rlzs_or_stats:
                     rlzs_or_stats_idxs.append(stat_idx)
         if ('aggregate_by' in self.agg_curves
-                and len(self.agg_curves['aggregate_by'] > 0)):
+                and len(self.agg_curves['aggregate_by']) > 0):
             tag_name_idxs = {}
             tag_value_idxs = {}
             if hasattr(self, 'tags'):
