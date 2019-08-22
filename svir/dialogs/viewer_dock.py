@@ -744,7 +744,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.stats = [stat.decode('utf8')
                           for stat in self.agg_curves['stats']]
             self.stats_multiselect.set_selected_items(self.stats)
-            if 'aggregate_by' in self.agg_curves:
+            if ('aggregate_by' in self.agg_curves
+                    and len(self.agg_curves['aggregate_by'] > 0)):
                 self.create_tag_names_multiselect()
                 self.create_tag_values_multiselect()
                 self.create_list_selected_edt()
@@ -794,7 +795,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             for stat_idx, stat in enumerate(self.agg_curves['stats']):
                 if stat.decode('utf8') in rlzs_or_stats:
                     rlzs_or_stats_idxs.append(stat_idx)
-        if 'aggregate_by' in self.agg_curves:
+        if ('aggregate_by' in self.agg_curves
+                and len(self.agg_curves['aggregate_by'] > 0)):
             tag_name_idxs = {}
             tag_value_idxs = {}
             if hasattr(self, 'tags'):
