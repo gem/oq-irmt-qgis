@@ -66,6 +66,7 @@ from svir.recovery_modeling.recovery_modeling import (
     RecoveryModeling, fill_fields_multiselect)
 from svir.ui.list_multiselect_widget import ListMultiSelectWidget
 from svir.ui.list_multiselect_mono_widget import ListMultiSelectMonoWidget
+from svir.ui.multi_select_combo_box import MultiSelectComboBox
 
 from svir import IS_SCIPY_INSTALLED, IS_MATPLOTLIB_INSTALLED
 
@@ -308,11 +309,19 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
         self.typeDepVLayout.addWidget(self.rlzs_multiselect)
 
-    def create_stats_multiselect(self):
+    def create_stats_multiselect_FIXME(self):
         title = 'Select statistics'
         self.stats_multiselect = ListMultiSelectWidget(title=title)
         self.stats_multiselect.setSizePolicy(
             QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
+        self.typeDepVLayout.addWidget(self.stats_multiselect)
+
+    def create_stats_multiselect(self):
+        self.stats_lbl = QLabel('Select statistics')
+        self.stats_multiselect = MultiSelectComboBox(self)
+        # self.stats_multiselect.setSizePolicy(
+        #     QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
+        self.typeDepVLayout.addWidget(self.stats_lbl)
         self.typeDepVLayout.addWidget(self.stats_multiselect)
 
     def create_tag_names_multiselect(self):
