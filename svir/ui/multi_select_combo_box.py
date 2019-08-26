@@ -55,7 +55,6 @@ class MultiSelectComboBox(QComboBox):
         selected_data = ""
         for i in range(1, self.mlist.count()):
             checkbox = self.mlist.itemWidget(self.mlist.item(i))
-            # FIXME: casting to checkbox
             if checkbox.isChecked():
                 selected_data += checkbox.text() + "; "
         if selected_data.endswith("; "):
@@ -88,11 +87,20 @@ class MultiSelectComboBox(QComboBox):
                 checkbox.setChecked(not checked)
 
     def get_selected_items(self):
-        return self.currentText()
+        items = []
+        for i in range(1, self.mlist.count()):
+            checkbox = self.mlist.itemWidget(self.mlist.item(i))
+            if checkbox.isChecked():
+                items.append(checkbox.text())
+        return items
 
     def get_unselected_items(self):
-        # FIXME
-        return []
+        items = []
+        for i in range(1, self.mlist.count()):
+            checkbox = self.mlist.itemWidget(self.mlist.item(i))
+            if not checkbox.isChecked():
+                items.append(checkbox.text())
+        return items
 
     def addItem(self, text, user_data=None, selected=False):
         # NOTE: not using user_data
