@@ -1286,7 +1286,7 @@ class Irmt(object):
                 target_attr_alias = input_attr_aliases[input_attr_idx]
                 if dlg.overwrite_ckb.isChecked():
                     target_attr_name = input_attr_name
-                elif dlg.fields_multiselect.selected_widget.count() == 1:
+                elif dlg.fields_multiselect.selected_count() == 1:
                     target_attr_name = dlg.new_field_name_txt.text()
                 else:
                     # the limit of 10 chars for shapefiles is handled by

@@ -133,8 +133,7 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
     def on_dmg_by_asset_layer_cbx_currentIndexChanged(self, selected_index):
         self.dmg_by_asset_layer = self.dmg_by_asset_layer_cbx.itemData(
             selected_index)
-        self.fields_multiselect.selected_widget.clear()
-        self.fields_multiselect.unselected_widget.clear()
+        self.fields_multiselect.clear()
         fill_fields_multiselect(
             self.fields_multiselect, self.dmg_by_asset_layer)
 

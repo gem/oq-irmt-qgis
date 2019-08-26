@@ -130,6 +130,9 @@ class MultiSelectComboBox(QComboBox):
             count = 0
         return count
 
+    def selected_count(self):
+        return len(self.get_selected_items)
+
     def onSearch(self, search_str):
         for i in range(1, self.mlist.count()):
             checkbox = self.mlist.itemWidget(self.mlist.item(i))

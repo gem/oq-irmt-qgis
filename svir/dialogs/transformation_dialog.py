@@ -79,10 +79,10 @@ class TransformationDialog(QDialog, FORM_CLASS):
 
     def set_ok_button(self):
         self.ok_button.setEnabled(
-            self.fields_multiselect.selected_widget.count() > 0)
+            self.fields_multiselect.selected_count() > 0)
 
     def set_new_field_editable(self):
-        n_fields_selected = self.fields_multiselect.selected_widget.count()
+        n_fields_selected = self.fields_multiselect.selected_count()
         self.new_field_name_lbl.setEnabled(n_fields_selected == 1)
         self.new_field_name_txt.setEnabled(n_fields_selected == 1)
 
@@ -133,7 +133,7 @@ class TransformationDialog(QDialog, FORM_CLASS):
     def on_new_field_name_txt_textEdited(self):
         # we assume exactly one item is in the selected list
         input_field_name = self._extract_field_name(
-            self.fields_multiselect.selected_widget.item(0).text())
+            self.fields_multiselect.get_selected_items()[0])
         new_field_name = self.new_field_name_txt.text()
         # if the name of the new field is equal to the name of the input field,
         # automatically check the 'overwrite' checkbox (and consequently
@@ -161,14 +161,14 @@ class TransformationDialog(QDialog, FORM_CLASS):
         return field_name_plus_alias.split('(')[0].strip()
 
     def update_default_fieldname(self):
-        if self.fields_multiselect.selected_widget.count() != 1:
+        if self.fields_multiselect.selected_count() != 1:
             self.new_field_name_txt.setText('')
             self.attr_name_user_def = False
             return
         if (not self.attr_name_user_def
                 or not self.new_field_name_txt.text()):
             attribute_name = self._extract_field_name(
-                self.fields_multiselect.selected_widget.item(0).text())
+                self.fields_multiselect.get_selected_items()[0])
             algorithm_name = self.algorithm_cbx.currentText()
             variant = self.variant_cbx.currentText()
             inverse = self.inverse_ckb.isChecked()
