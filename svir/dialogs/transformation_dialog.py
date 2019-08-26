@@ -23,7 +23,7 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 from qgis.PyQt.QtCore import pyqtSlot
-from qgis.PyQt.QtWidgets import QDialog, QDialogButtonBox
+from qgis.PyQt.QtWidgets import QDialog, QDialogButtonBox, QLabel
 
 from svir.calculations.transformation_algs import (RANK_VARIANTS,
                                                    QUADRATIC_VARIANTS,
@@ -32,7 +32,7 @@ from svir.calculations.transformation_algs import (RANK_VARIANTS,
 from svir.utilities.utils import get_ui_class, log_msg
 from svir.utilities.shared import NUMERIC_FIELD_TYPES
 from svir.calculations.process_layer import ProcessLayer
-from svir.ui.list_multiselect_widget import ListMultiSelectWidget
+from svir.ui.multi_select_combo_box import MultiSelectComboBox
 
 FORM_CLASS = get_ui_class('ui_transformation.ui')
 
@@ -50,9 +50,10 @@ class TransformationDialog(QDialog, FORM_CLASS):
         self.use_advanced = False
         # Set up the user interface from Designer.
         self.setupUi(self)
-        self.fields_multiselect = ListMultiSelectWidget(
-            title='Select fields to transform')
-        self.vertical_layout.insertWidget(1, self.fields_multiselect)
+        self.fields_lbl = QLabel('Fields to transform')
+        self.fields_multiselect = MultiSelectComboBox(self)
+        self.vertical_layout.insertWidget(1, self.fields_lbl)
+        self.vertical_layout.insertWidget(2, self.fields_multiselect)
         self.ok_button = self.buttonBox.button(QDialogButtonBox.Ok)
         self.fill_fields_multiselect()
 
@@ -208,4 +209,4 @@ class TransformationDialog(QDialog, FORM_CLASS):
                         field.name(),
                         self.iface.activeLayer().attributeAlias(field_idx))
                     names_plus_aliases.append(name_plus_alias)
-        self.fields_multiselect.set_unselected_items(names_plus_aliases)
+        self.fields_multiselect.add_unselected_items(names_plus_aliases)
