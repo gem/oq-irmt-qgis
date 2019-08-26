@@ -304,11 +304,12 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.fields_multiselect, self.iface.activeLayer())
 
     def create_rlzs_multiselect(self):
-        title = 'Select realizations'
-        self.rlzs_multiselect = ListMultiSelectWidget(title=title)
-        self.rlzs_multiselect.setSizePolicy(
-            QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
-        self.typeDepVLayout.addWidget(self.rlzs_multiselect)
+        self.rlzs_lbl = QLabel('Realizations')
+        self.rlzs_multiselect = MultiSelectComboBox(self)
+        hlayout = QHBoxLayout()
+        hlayout.addWidget(self.rlzs_lbl)
+        hlayout.addWidget(self.rlzs_multiselect)
+        self.typeDepVLayout.addLayout(hlayout)
 
     def create_stats_multiselect(self):
         self.stats_lbl = QLabel('Statistics')
@@ -740,7 +741,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         if output_type == 'agg_curves-stats':
             self.stats = [stat.decode('utf8')
                           for stat in self.agg_curves['stats']]
-            self.stats_multiselect.set_selected_items(self.stats)
+            self.stats_multiselect.add_selected_items(self.stats)
             self._get_tags(session, hostname, calc_id, self.iface.messageBar(),
                            with_star=False)
             self.update_list_selected_edt()
@@ -754,7 +755,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         elif output_type == 'agg_curves-rlzs':
             rlzs = ["Rlz %3d" % rlz
                     for rlz in range(self.agg_curves['array'].shape[1])]
-            self.rlzs_multiselect.set_selected_items(rlzs)
+            self.rlzs_multiselect.add_selected_items(rlzs)
             self.draw_agg_curves(output_type)
         else:
             raise NotImplementedError(
