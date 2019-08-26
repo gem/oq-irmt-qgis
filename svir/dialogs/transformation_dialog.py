@@ -23,7 +23,7 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 from qgis.PyQt.QtCore import pyqtSlot
-from qgis.PyQt.QtWidgets import QDialog, QDialogButtonBox, QLabel
+from qgis.PyQt.QtWidgets import QDialog, QDialogButtonBox, QLabel, QHBoxLayout
 
 from svir.calculations.transformation_algs import (RANK_VARIANTS,
                                                    QUADRATIC_VARIANTS,
@@ -52,8 +52,11 @@ class TransformationDialog(QDialog, FORM_CLASS):
         self.setupUi(self)
         self.fields_lbl = QLabel('Fields to transform')
         self.fields_multiselect = MultiSelectComboBox(self)
-        self.vertical_layout.insertWidget(1, self.fields_lbl)
-        self.vertical_layout.insertWidget(2, self.fields_multiselect)
+        hlayout = QHBoxLayout()
+        hlayout.addWidget(self.fields_lbl)
+        hlayout.addWidget(self.fields_multiselect)
+        self.vertical_layout.insertLayout(1, hlayout)
+        self.adjustSize()
         self.ok_button = self.buttonBox.button(QDialogButtonBox.Ok)
         self.fill_fields_multiselect()
 
