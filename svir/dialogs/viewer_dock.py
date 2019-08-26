@@ -294,11 +294,10 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.on_recalculate_curve_btn_clicked)
 
     def create_fields_multiselect(self):
-        title = (
-            'Select fields containing loss-based damage state probabilities')
-        self.fields_multiselect = ListMultiSelectWidget(title=title)
-        self.fields_multiselect.setSizePolicy(
-            QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
+        self.fields_lbl = QLabel(
+            'Fields containing loss-based damage state probabilities')
+        self.fields_multiselect = MultiSelectComboBox(self)
+        self.typeDepVLayout.addWidget(self.fields_lbl)
         self.typeDepVLayout.addWidget(self.fields_multiselect)
         fill_fields_multiselect(
             self.fields_multiselect, self.iface.activeLayer())
@@ -1235,7 +1234,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         approach = self.approach_cbx.currentText()
         recovery = RecoveryModeling(features, approach, self.iface)
         integrate_svi = False
-        probs_field_names = list(self.fields_multiselect.get_selected_items())
+        probs_field_names = self.fields_multiselect.get_selected_items()
         zonal_dmg_by_asset_probs, zonal_asset_refs = \
             recovery.collect_zonal_data(probs_field_names, integrate_svi)
         n_simulations = self.n_simulations_sbx.value()
