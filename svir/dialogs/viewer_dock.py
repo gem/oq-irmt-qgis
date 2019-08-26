@@ -45,6 +45,7 @@ from qgis.PyQt.QtWidgets import (
                                  QAbstractItemView,
                                  QTableWidget,
                                  QTableWidgetItem,
+                                 QHBoxLayout,
                                  )
 from qgis.gui import QgsVertexMarker
 from qgis.core import QgsMapLayer, QgsFeatureRequest, QgsWkbTypes
@@ -309,20 +310,13 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
         self.typeDepVLayout.addWidget(self.rlzs_multiselect)
 
-    def create_stats_multiselect_FIXME(self):
-        title = 'Select statistics'
-        self.stats_multiselect = ListMultiSelectWidget(title=title)
-        self.stats_multiselect.setSizePolicy(
-            QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
-        self.typeDepVLayout.addWidget(self.stats_multiselect)
-
     def create_stats_multiselect(self):
-        self.stats_lbl = QLabel('Select statistics')
+        self.stats_lbl = QLabel('Statistics')
         self.stats_multiselect = MultiSelectComboBox(self)
-        # self.stats_multiselect.setSizePolicy(
-        #     QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
-        self.typeDepVLayout.addWidget(self.stats_lbl)
-        self.typeDepVLayout.addWidget(self.stats_multiselect)
+        hlayout = QHBoxLayout()
+        hlayout.addWidget(self.stats_lbl)
+        hlayout.addWidget(self.stats_multiselect)
+        self.typeDepVLayout.addLayout(hlayout)
 
     def create_tag_names_multiselect(self):
         title = 'Select tag names'
@@ -518,7 +512,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.list_selected_edt.setPlainText(selected_tags_str)
 
     def refresh_feature_selection(self):
-        if not list(self.stats_multiselect.get_selected_items()):
+        if not self.stats_multiselect.get_selected_items():
             self.clear_plot()
             return
         # feature selection triggers the redrawing of plots
@@ -1289,8 +1283,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                     'calc_id')
                 for rlz_or_stat in self.stats_multiselect.get_selected_items():
                     self.current_selection[rlz_or_stat] = {}
-                self.stats_multiselect.set_selected_items([])
-                self.stats_multiselect.set_unselected_items([])
+                self.stats_multiselect.clear()
                 self.field_names = [
                     field.name()
                     for field in self.iface.activeLayer().fields()

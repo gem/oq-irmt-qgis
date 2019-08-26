@@ -70,14 +70,22 @@ class MultiSelectComboBox(QComboBox):
     def add_selected_items(self, items):
         self.addItems(items, selected=True)
 
-    def set_selected_items(self, items):
-        return self.add_selected_items(items)
-
     def add_unselected_items(self, items):
         self.addItems(items, selected=False)
 
+    def set_selected_items(self, items):
+        self.set_items_selection(items, True)
+
     def set_unselected_items(self, items):
-        return self.add_unselected_items(items)
+        self.set_items_selection(items, False)
+
+    def set_items_selection(self, items, checked):
+        for i in range(1, self.mlist.count()):
+            checkbox = self.mlist.itemWidget(self.mlist.item(i))
+            if checkbox.text() in items:
+                checkbox.setChecked(checked)
+            else:
+                checkbox.setChecked(not checked)
 
     def get_selected_items(self):
         return self.currentText()
@@ -99,6 +107,7 @@ class MultiSelectComboBox(QComboBox):
     def currentText(self):
         items = self.line_edit.text().split('; ')
         if len(items) == 1 and not items[0]:
+            # avoid returning ['']
             return []
         else:
             return items
@@ -140,8 +149,7 @@ class MultiSelectComboBox(QComboBox):
         self.search_bar.setClearButtonEnabled(True)
         self.mlist.addItem(curr_item)
         self.mlist.setItemWidget(curr_item, self.search_bar)
-
-        self.search_bar.textChanged.connect(self.onSearch)
+        self.search_bar.textChanged[str].connect(self.onSearch)
 
     def wheelEvent(self, wheel_event):
         # do not handle the wheel event
