@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1080</width>
-    <height>830</height>
+    <width>806</width>
+    <height>554</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -15,13 +15,137 @@
   </property>
   <property name="windowIcon">
    <iconset>
-    <normaloff>../resources/oq_icon.svg</normaloff>../resources/oq_icon.svg</iconset>
+    <normaloff>../../../../.designer/resources/oq_icon.svg</normaloff>../../../../.designer/resources/oq_icon.svg</iconset>
   </property>
   <property name="modal">
    <bool>true</bool>
   </property>
-  <layout class="QGridLayout" name="gridLayout">
-   <item row="2" column="0">
+  <layout class="QVBoxLayout" name="verticalLayout_2">
+   <item>
+    <widget class="QScrollArea" name="scroll_area">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="widgetResizable">
+      <bool>true</bool>
+     </property>
+     <widget class="QWidget" name="scroll_area_contents">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>786</width>
+        <height>406</height>
+       </rect>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout">
+       <item>
+        <widget class="QGroupBox" name="filters_group">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="title">
+          <string>Filters (if no filter is set, the whole list of indicators will be retrieved)</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_3">
+          <item>
+           <widget class="QLabel" name="name_filter_lbl">
+            <property name="text">
+             <string>Name</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="name_filter_le">
+            <property name="placeholderText">
+             <string>Type the name of an indicator, or part of it</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="keywords_lbl">
+            <property name="text">
+             <string>Keywords</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="keywords_le">
+            <property name="placeholderText">
+             <string>Type one or more keywords (comma-separated)</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="theme_lbl">
+            <property name="text">
+             <string>Theme</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QComboBox" name="theme_cbx"/>
+          </item>
+          <item>
+           <widget class="QLabel" name="subtheme_lbl">
+            <property name="text">
+             <string>Subtheme</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QComboBox" name="subtheme_cbx"/>
+          </item>
+          <item>
+           <widget class="QPushButton" name="filter_btn">
+            <property name="text">
+             <string>Filter Indicators</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="indicator_info">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="text">
+          <string>Indicator Details</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QTextBrowser" name="indicator_details">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>100</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+   <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
       <widget class="QLabel" name="label_2">
@@ -41,195 +165,6 @@
       </widget>
      </item>
     </layout>
-   </item>
-   <item row="1" column="0">
-    <widget class="QScrollArea" name="scrollArea">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="mouseTracking">
-      <bool>true</bool>
-     </property>
-     <property name="widgetResizable">
-      <bool>true</bool>
-     </property>
-     <widget class="QWidget" name="scrollAreaWidgetContents">
-      <property name="geometry">
-       <rect>
-        <x>0</x>
-        <y>0</y>
-        <width>1060</width>
-        <height>401</height>
-       </rect>
-      </property>
-      <layout class="QVBoxLayout" name="verticalLayout">
-       <item>
-        <layout class="QVBoxLayout" name="vertical_layout">
-         <property name="topMargin">
-          <number>0</number>
-         </property>
-         <item>
-          <widget class="QGroupBox" name="filters_group">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="title">
-            <string>Filters</string>
-           </property>
-           <widget class="QLabel" name="label">
-            <property name="geometry">
-             <rect>
-              <x>50</x>
-              <y>30</y>
-              <width>984</width>
-              <height>32</height>
-             </rect>
-            </property>
-            <property name="text">
-             <string>All filters are optional. If no filter is set, the whole set of indicators will be retrieved.</string>
-            </property>
-           </widget>
-           <widget class="QLabel" name="name_filter_lbl">
-            <property name="geometry">
-             <rect>
-              <x>51</x>
-              <y>69</y>
-              <width>41</width>
-              <height>25</height>
-             </rect>
-            </property>
-            <property name="text">
-             <string>Name</string>
-            </property>
-           </widget>
-           <widget class="QLabel" name="keywords_lbl">
-            <property name="geometry">
-             <rect>
-              <x>51</x>
-              <y>100</y>
-              <width>67</width>
-              <height>25</height>
-             </rect>
-            </property>
-            <property name="text">
-             <string>Keywords</string>
-            </property>
-           </widget>
-           <widget class="QLabel" name="theme_lbl">
-            <property name="geometry">
-             <rect>
-              <x>51</x>
-              <y>131</y>
-              <width>47</width>
-              <height>25</height>
-             </rect>
-            </property>
-            <property name="text">
-             <string>Theme</string>
-            </property>
-           </widget>
-           <widget class="QComboBox" name="theme_cbx">
-            <property name="geometry">
-             <rect>
-              <x>127</x>
-              <y>131</y>
-              <width>906</width>
-              <height>25</height>
-             </rect>
-            </property>
-           </widget>
-           <widget class="QLabel" name="subtheme_lbl">
-            <property name="geometry">
-             <rect>
-              <x>51</x>
-              <y>162</y>
-              <width>70</width>
-              <height>25</height>
-             </rect>
-            </property>
-            <property name="text">
-             <string>Subtheme</string>
-            </property>
-           </widget>
-           <widget class="QLineEdit" name="keywords_le">
-            <property name="geometry">
-             <rect>
-              <x>127</x>
-              <y>100</y>
-              <width>906</width>
-              <height>25</height>
-             </rect>
-            </property>
-            <property name="placeholderText">
-             <string>Type one or more keywords (comma-separated)</string>
-            </property>
-           </widget>
-           <widget class="QLineEdit" name="name_filter_le">
-            <property name="geometry">
-             <rect>
-              <x>127</x>
-              <y>69</y>
-              <width>906</width>
-              <height>25</height>
-             </rect>
-            </property>
-            <property name="placeholderText">
-             <string>Type the name of an indicator, or part of it</string>
-            </property>
-           </widget>
-           <widget class="QComboBox" name="subtheme_cbx">
-            <property name="geometry">
-             <rect>
-              <x>127</x>
-              <y>162</y>
-              <width>906</width>
-              <height>25</height>
-             </rect>
-            </property>
-           </widget>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="filter_btn">
-           <property name="text">
-            <string>Filter indicators</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLabel" name="indicator_info">
-           <property name="text">
-            <string>Indicator details</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QTextBrowser" name="indicator_details">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>16777215</width>
-             <height>100</height>
-            </size>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-      </layout>
-     </widget>
-    </widget>
    </item>
   </layout>
  </widget>
