@@ -9,6 +9,7 @@ class MultiSelectComboBox(QComboBox):
 
     SEARCH_BAR_IDX = 0
     selection_changed = pyqtSignal()
+    item_was_clicked = pyqtSignal(str)
 
     def __init__(self, parent):
 
@@ -145,6 +146,7 @@ class MultiSelectComboBox(QComboBox):
         if idx != self.SEARCH_BAR_IDX:  # 0 means the search bar
             checkbox = self.mlist.itemWidget(self.mlist.item(idx))
             checkbox.setChecked(not checkbox.isChecked())
+            self.item_was_clicked.emit(checkbox.text())
 
     def set_search_bar_placeholder_text(self, text):
         self.search_bar.setPlaceholderText(text)
