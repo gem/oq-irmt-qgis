@@ -8,6 +8,7 @@ from PyQt5.QtGui import QCursor
 class MultiSelectComboBox(QComboBox):
 
     SEARCH_BAR_IDX = 0
+    SELECT_ALL_IDX = 1
     selection_changed = pyqtSignal()
     item_was_clicked = pyqtSignal(str)
 
@@ -19,11 +20,7 @@ class MultiSelectComboBox(QComboBox):
         self.line_edit = QLineEdit(self)
         self.search_bar = QLineEdit(self)
 
-        self.curr_item = QListWidgetItem(self.mlist)
-        self.search_bar.setPlaceholderText('Search...')
-        self.search_bar.setClearButtonEnabled(True)
-        self.mlist.addItem(self.curr_item)
-        self.mlist.setItemWidget(self.curr_item, self.search_bar)
+        self.clear()
 
         self.line_edit.setReadOnly(True)
         self.line_edit.installEventFilter(self)
@@ -34,6 +31,11 @@ class MultiSelectComboBox(QComboBox):
 
         self.search_bar.textChanged[str].connect(self.onSearch)
         self.activated.connect(self.itemClicked)
+
+    def on_select_all_toggled(self, state):
+        for i in range(2, self.mlist.count()):
+            checkbox = self.mlist.itemWidget(self.mlist.item(i))
+            checkbox.setChecked(state)
 
     def hidePopup(self):
         width = self.width()
@@ -54,7 +56,7 @@ class MultiSelectComboBox(QComboBox):
     def stateChanged(self, state):
         # NOTE: not using state
         selected_data = ""
-        for i in range(1, self.mlist.count()):
+        for i in range(2, self.mlist.count()):
             checkbox = self.mlist.itemWidget(self.mlist.item(i))
             if checkbox.isChecked():
                 selected_data += checkbox.text() + "; "
@@ -80,7 +82,7 @@ class MultiSelectComboBox(QComboBox):
         self.set_items_selection(items, False)
 
     def set_items_selection(self, items, checked):
-        for i in range(1, self.mlist.count()):
+        for i in range(2, self.mlist.count()):
             checkbox = self.mlist.itemWidget(self.mlist.item(i))
             if checkbox.text() in items:
                 checkbox.setChecked(checked)
@@ -89,7 +91,7 @@ class MultiSelectComboBox(QComboBox):
 
     def get_selected_items(self):
         items = []
-        for i in range(1, self.mlist.count()):
+        for i in range(2, self.mlist.count()):
             checkbox = self.mlist.itemWidget(self.mlist.item(i))
             if checkbox.isChecked():
                 items.append(checkbox.text())
@@ -97,7 +99,7 @@ class MultiSelectComboBox(QComboBox):
 
     def get_unselected_items(self):
         items = []
-        for i in range(1, self.mlist.count()):
+        for i in range(2, self.mlist.count()):
             checkbox = self.mlist.itemWidget(self.mlist.item(i))
             if not checkbox.isChecked():
                 items.append(checkbox.text())
@@ -126,7 +128,8 @@ class MultiSelectComboBox(QComboBox):
             self.addItem(text, selected=selected)
 
     def count(self):
-        count = self.mlist.count() - 1  # do not count the search bar
+        # do not count search bar and toggle select all
+        count = self.mlist.count() - 2
         if count < 0:
             count = 0
         return count
@@ -135,7 +138,7 @@ class MultiSelectComboBox(QComboBox):
         return len(self.get_selected_items())
 
     def onSearch(self, search_str):
-        for i in range(1, self.mlist.count()):
+        for i in range(2, self.mlist.count()):
             checkbox = self.mlist.itemWidget(self.mlist.item(i))
             if search_str.lower() in checkbox.text().lower():
                 self.mlist.item(i).setHidden(False)
@@ -143,7 +146,7 @@ class MultiSelectComboBox(QComboBox):
                 self.mlist.item(i).setHidden(True)
 
     def itemClicked(self, idx):
-        if idx != self.SEARCH_BAR_IDX:  # 0 means the search bar
+        if idx not in [self.SEARCH_BAR_IDX, self.SELECT_ALL_IDX]:
             checkbox = self.mlist.itemWidget(self.mlist.item(idx))
             checkbox.setChecked(not checkbox.isChecked())
             self.item_was_clicked.emit(checkbox.text())
@@ -156,13 +159,17 @@ class MultiSelectComboBox(QComboBox):
 
     def clear(self):
         self.mlist.clear()
-        curr_item = QListWidgetItem(self.mlist)
-        self.search_bar = QLineEdit(self)
+        search_item = QListWidgetItem(self.mlist)
         self.search_bar.setPlaceholderText("Search...")
         self.search_bar.setClearButtonEnabled(True)
-        self.mlist.addItem(curr_item)
-        self.mlist.setItemWidget(curr_item, self.search_bar)
-        self.search_bar.textChanged[str].connect(self.onSearch)
+        self.mlist.addItem(search_item)
+        self.mlist.setItemWidget(search_item, self.search_bar)
+        toggle_select_item = QListWidgetItem(self.mlist)
+        self.toggle_ckb = QCheckBox(self)
+        self.toggle_ckb.setText('Select/unselect all')
+        self.mlist.addItem(toggle_select_item)
+        self.mlist.setItemWidget(toggle_select_item, self.toggle_ckb)
+        self.toggle_ckb.stateChanged.connect(self.on_select_all_toggled)
 
     def wheelEvent(self, wheel_event):
         # do not handle the wheel event
@@ -182,14 +189,14 @@ class MultiSelectComboBox(QComboBox):
     #     pass
 
     def setCurrentText(self, texts):
-        for i in range(1, self.mlist.count()):
+        for i in range(2, self.mlist.count()):
             checkbox = self.mlist.itemWidget(self.mlist.item(i))
             checkbox_str = checkbox.text()
             if checkbox_str in texts:
                 checkbox.setChecked(True)
 
     def resetSelection(self):
-        for i in range(1, self.mlist.count()):
+        for i in range(2, self.mlist.count()):
             checkbox = self.mlist.itemWidget(self.mlist.item(i))
             checkbox.setChecked(False)
 
