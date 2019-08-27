@@ -45,7 +45,7 @@ class SelectSvVariablesDialog(QDialog, FORM_CLASS):
         self.setupUi(self)
         self.indicator_multiselect = ListMultiSelectWidget(
             title='Select Indicators')
-        self.vertical_layout.insertWidget(4, self.indicator_multiselect)
+        self.vertical_layout.insertWidget(2, self.indicator_multiselect)
         self.country_multiselect = ListMultiSelectWidget(
             title='Select Countries')
         self.vertical_layout.insertWidget(7, self.country_multiselect)
@@ -54,8 +54,11 @@ class SelectSvVariablesDialog(QDialog, FORM_CLASS):
         # login to platform, to be able to retrieve sv indices
         self.sv_downloader = downloader
         self.indicators_info_dict = {}
-        with WaitCursorManager():
+        with WaitCursorManager('Filling list of indicators...'):
+            self.fill_names()
+        with WaitCursorManager('Filling list of themes...'):
             self.fill_themes()
+        with WaitCursorManager('Filling list of countries...'):
             self.fill_countries()
         self.indicator_multiselect.unselected_widget.itemClicked.connect(
             self.update_indicator_info)
