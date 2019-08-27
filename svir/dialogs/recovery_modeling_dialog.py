@@ -25,7 +25,7 @@
 import os
 import csv
 from qgis.PyQt.QtCore import pyqtSlot, QSettings, QDir
-from qgis.PyQt.QtWidgets import QDialog, QFileDialog, QDialogButtonBox
+from qgis.PyQt.QtWidgets import QDialog, QFileDialog, QDialogButtonBox, QLabel
 from qgis.core import QgsMapLayer, QgsProject, QgsWkbTypes, QgsFeatureRequest
 from svir.calculations.aggregate_loss_by_zone import add_zone_id_to_points
 from svir.utilities.utils import (get_ui_class,
@@ -36,7 +36,7 @@ from svir.utilities.utils import (get_ui_class,
 from svir.utilities.shared import DEBUG
 from svir.recovery_modeling.recovery_modeling import (
     RecoveryModeling, fill_fields_multiselect)
-from svir.ui.list_multiselect_widget import ListMultiSelectWidget
+from svir.ui.multi_select_combo_box import MultiSelectComboBox
 
 FORM_CLASS = get_ui_class('ui_recovery_modeling.ui')
 
@@ -50,10 +50,11 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
         self.iface = iface
         # Set up the user interface from Designer.
         self.setupUi(self)
-        title = (
-            'Select fields containing loss-based damage state probabilities')
-        self.fields_multiselect = ListMultiSelectWidget(title=title)
-        self.vLayout.insertWidget(2, self.fields_multiselect)
+        self.fields_lbl = QLabel(
+            'Fields containing loss-based damage state probabilities')
+        self.fields_multiselect = MultiSelectComboBox(self)
+        self.vLayout.insertWidget(2, self.fields_lbl)
+        self.vLayout.insertWidget(3, self.fields_multiselect)
         self.ok_button = self.buttonBox.button(QDialogButtonBox.Ok)
         approach_explanation = (
             'Aggregate: building-level recovery model as a single process\n'
@@ -178,7 +179,7 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
             dmg_by_asset_features, approach, self.iface, self.svi_layer,
             self.output_data_dir, self.save_bldg_curves_check.isChecked())
 
-        probs_field_names = list(self.fields_multiselect.get_selected_items())
+        probs_field_names = self.fields_multiselect.get_selected_items()
         for i, fieldname in enumerate(probs_field_names):
             probs_field_names[i] = point_attrs_dict[fieldname]
         zonal_dmg_by_asset_probs, zonal_asset_refs = \
