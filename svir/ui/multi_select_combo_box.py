@@ -34,7 +34,6 @@ class MultiSelectComboBox(QComboBox):
         self.set_placeholder_text('Click to select items')
 
         self.search_bar.textChanged[str].connect(self.onSearch)
-        self.activated.connect(self.itemClicked)
 
     def on_select_all_toggled(self, state):
         for i in range(2, self.mlist.count()):
@@ -148,18 +147,19 @@ class MultiSelectComboBox(QComboBox):
         return len(self.get_selected_items())
 
     def onSearch(self, search_str):
+        self.setMaxVisibleItems(self.mlist.count())
         for i in range(2, self.mlist.count()):
             checkbox = self.mlist.itemWidget(self.mlist.item(i))
             if search_str.lower() in checkbox.text().lower():
                 self.mlist.item(i).setHidden(False)
             else:
                 self.mlist.item(i).setHidden(True)
-
-    def itemClicked(self, idx):
-        if idx not in [self.SEARCH_BAR_IDX, self.SELECT_ALL_IDX]:
-            checkbox = self.mlist.itemWidget(self.mlist.item(idx))
-            checkbox.setChecked(not checkbox.isChecked())
-            self.item_was_clicked.emit(checkbox.text())
+        # NOTE: hack to fix problem when you first filter and have few items,
+        # then filter again and have more items
+        self.hidePopup()
+        self.showPopup()
+        # NOTE: hide/show would lose focus from the search bar
+        self.search_bar.setFocus()
 
     def set_search_bar_placeholder_text(self, text):
         self.search_bar.setPlaceholderText(text)
