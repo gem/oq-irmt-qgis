@@ -70,6 +70,9 @@ class MultiSelectComboBox(QComboBox):
         self.line_edit.setToolTip(selected_data)
         self.selection_changed.emit()
 
+    def on_checkbox_stateChanged(self, text):
+        self.item_was_clicked.emit(text)
+
     def add_selected_items(self, items):
         self.addItems(items, selected=True)
 
@@ -114,6 +117,8 @@ class MultiSelectComboBox(QComboBox):
         self.mlist.addItem(list_widget_item)
         self.mlist.setItemWidget(list_widget_item, checkbox)
         checkbox.stateChanged.connect(self.stateChanged)
+        checkbox.stateChanged.connect(
+            lambda state: self.on_checkbox_stateChanged(checkbox.text()))
         checkbox.setChecked(selected)
 
     def currentText(self):
