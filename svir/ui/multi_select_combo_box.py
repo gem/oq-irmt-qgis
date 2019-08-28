@@ -35,7 +35,8 @@ class MultiSelectComboBox(QComboBox):
     def on_select_all_toggled(self, state):
         for i in range(2, self.mlist.count()):
             checkbox = self.mlist.itemWidget(self.mlist.item(i))
-            checkbox.setChecked(state)
+            if self.search_bar.text().lower() in checkbox.text().lower():
+                checkbox.setChecked(state)
 
     def hidePopup(self):
         width = self.width()
