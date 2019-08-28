@@ -1,3 +1,4 @@
+from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import (
     QLineEdit, QCheckBox, QComboBox, QListWidget, QListWidgetItem,
     QApplication, QMainWindow)
@@ -27,6 +28,7 @@ class MultiSelectComboBox(QComboBox):
 
         self.setModel(self.mlist.model())
         self.setView(self.mlist)
+        self.view().setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.setLineEdit(self.line_edit)
 
         self.set_placeholder_text('Click to select items')
