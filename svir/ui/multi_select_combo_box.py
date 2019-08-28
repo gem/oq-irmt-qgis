@@ -29,6 +29,8 @@ class MultiSelectComboBox(QComboBox):
         self.setView(self.mlist)
         self.setLineEdit(self.line_edit)
 
+        self.set_placeholder_text('Click to select items')
+
         self.search_bar.textChanged[str].connect(self.onSearch)
         self.activated.connect(self.itemClicked)
 

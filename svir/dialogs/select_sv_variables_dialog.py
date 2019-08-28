@@ -46,7 +46,8 @@ class SelectSvVariablesDialog(QDialog, FORM_CLASS):
         self.indicator_lbl = QLabel('Select Indicators')
         self.indicator_multiselect = MultiSelectComboBox(self)
         self.scroll_area_contents.layout().addWidget(self.indicator_lbl)
-        self.scroll_area_contents.layout().addWidget(self.indicator_multiselect)
+        self.scroll_area_contents.layout().addWidget(
+            self.indicator_multiselect)
         self.country_lbl = QLabel('Select Countries')
         self.country_multiselect = MultiSelectComboBox(self)
         self.scroll_area_contents.layout().addWidget(self.country_lbl)
