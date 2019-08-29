@@ -147,7 +147,7 @@ class MultiSelectComboBox(QComboBox):
         return len(self.get_selected_items())
 
     def onSearch(self, search_str):
-        self.setMaxVisibleItems(self.mlist.count())
+        self.setMaxVisibleItems(min(10, self.mlist.count()))
         for i in range(2, self.mlist.count()):
             checkbox = self.mlist.itemWidget(self.mlist.item(i))
             if search_str.lower() in checkbox.text().lower():
