@@ -35,11 +35,21 @@ class MultiSelectComboBox(QComboBox):
 
         self.search_bar.textChanged[str].connect(self.onSearch)
 
+        # NOTE: this is necessary to handle the case in which an item in the
+        # list is clicked to its right part, outside the text
+        self.activated.connect(self.itemClicked)
+
     def on_select_all_toggled(self, state):
         for i in range(2, self.mlist.count()):
             checkbox = self.mlist.itemWidget(self.mlist.item(i))
             if self.search_bar.text().lower() in checkbox.text().lower():
                 checkbox.setChecked(state)
+
+    def itemClicked(self, idx):
+        if idx not in [self.SEARCH_BAR_IDX, self.SELECT_ALL_IDX]:
+            checkbox = self.mlist.itemWidget(self.mlist.item(idx))
+            checkbox.setChecked(not checkbox.isChecked())
+            self.item_was_clicked.emit(checkbox.text())
 
     def hidePopup(self):
         width = self.width()
