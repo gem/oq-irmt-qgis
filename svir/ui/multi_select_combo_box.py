@@ -19,7 +19,6 @@ class MultiSelectComboBox(QComboBox):
 
         self.mlist = QListWidget(self)
         self.line_edit = QLineEdit(self)
-        self.search_bar = QLineEdit(self)
 
         self.clear()
 
@@ -32,8 +31,6 @@ class MultiSelectComboBox(QComboBox):
         self.setLineEdit(self.line_edit)
 
         self.set_placeholder_text('Click to select items')
-
-        self.search_bar.textChanged[str].connect(self.onSearch)
 
         # NOTE: this is necessary to handle the case in which an item in the
         # list is clicked to its right part, outside the text
@@ -179,17 +176,19 @@ class MultiSelectComboBox(QComboBox):
 
     def clear(self):
         self.mlist.clear()
-        search_item = QListWidgetItem(self.mlist)
+        self.search_bar = QLineEdit(self)
+        self.search_item = QListWidgetItem(self.mlist)
         self.search_bar.setPlaceholderText("Search...")
         self.search_bar.setClearButtonEnabled(True)
-        self.mlist.addItem(search_item)
-        self.mlist.setItemWidget(search_item, self.search_bar)
-        toggle_select_item = QListWidgetItem(self.mlist)
+        self.mlist.addItem(self.search_item)
+        self.mlist.setItemWidget(self.search_item, self.search_bar)
+        self.toggle_select_item = QListWidgetItem(self.mlist)
         self.toggle_ckb = QCheckBox(self)
         self.toggle_ckb.setText('Select/unselect all')
-        self.mlist.addItem(toggle_select_item)
-        self.mlist.setItemWidget(toggle_select_item, self.toggle_ckb)
+        self.mlist.addItem(self.toggle_select_item)
+        self.mlist.setItemWidget(self.toggle_select_item, self.toggle_ckb)
         self.toggle_ckb.stateChanged.connect(self.on_select_all_toggled)
+        self.search_bar.textChanged[str].connect(self.onSearch)
 
     def wheelEvent(self, wheel_event):
         # do not handle the wheel event
