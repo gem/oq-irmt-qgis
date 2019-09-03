@@ -11,7 +11,7 @@ class MultiSelectComboBox(QComboBox):
     SEARCH_BAR_IDX = 0
     SELECT_ALL_IDX = 1
     selection_changed = pyqtSignal()
-    item_was_clicked = pyqtSignal(str)
+    item_was_clicked = pyqtSignal(str, bool)
 
     def __init__(self, parent):
 
@@ -46,7 +46,7 @@ class MultiSelectComboBox(QComboBox):
         if idx not in [self.SEARCH_BAR_IDX, self.SELECT_ALL_IDX]:
             checkbox = self.mlist.itemWidget(self.mlist.item(idx))
             checkbox.setChecked(not checkbox.isChecked())
-            self.item_was_clicked.emit(checkbox.text())
+            self.item_was_clicked.emit(checkbox.text(), checkbox.isChecked())
 
     def hidePopup(self):
         width = self.width()
@@ -80,8 +80,8 @@ class MultiSelectComboBox(QComboBox):
         self.line_edit.setToolTip(selected_data)
         self.selection_changed.emit()
 
-    def on_checkbox_stateChanged(self, text):
-        self.item_was_clicked.emit(text)
+    def on_checkbox_stateChanged(self, text, state):
+        self.item_was_clicked.emit(text, state)
 
     def add_selected_items(self, items):
         self.addItems(items, selected=True)
@@ -128,7 +128,8 @@ class MultiSelectComboBox(QComboBox):
         self.mlist.setItemWidget(list_widget_item, checkbox)
         checkbox.stateChanged.connect(self.stateChanged)
         checkbox.stateChanged.connect(
-            lambda state: self.on_checkbox_stateChanged(checkbox.text()))
+            lambda state: self.on_checkbox_stateChanged(
+                checkbox.text(), state))
         checkbox.setChecked(selected)
 
     def currentText(self):
