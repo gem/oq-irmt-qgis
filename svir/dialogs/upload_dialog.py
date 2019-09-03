@@ -222,6 +222,8 @@ class UploadDialog(QDialog, FORM_CLASS):
                                       QDialogButtonBox.YesRole)
 
     def _login_to_platform(self):
+        self.hostname, self.username, self.password = get_credentials(
+            'platform')
         platform_login(
             self.hostname, self.username, self.password, self.session)
         sessionid = dict_from_cookiejar(self.session.cookies)['sessionid']
