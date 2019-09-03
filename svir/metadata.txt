@@ -25,6 +25,7 @@ email=staff.it@globalquakemodel.org
 changelog=
     3.7.2
     * The management of profiles for the connection to the OpenQuake Platform was fixed.
+    * The output type selector in the Data Viewer was disabled, so it still shows the output type but it can not be modified by the user.
     * OQ-Engine outputs to be loaded as tables from csv are loaded directly with a single click, instead of prior displaying a dialog showing the file size.
     3.7.1
     * Instead of the 'sourcegroups' output (that was removed from the OQ-Engine), the plugin can now load the new output 'events'
