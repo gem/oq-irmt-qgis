@@ -30,7 +30,7 @@ import numpy
 from datetime import datetime
 from collections import OrderedDict
 
-from qgis.PyQt.QtCore import pyqtSlot, QSettings, Qt
+from qgis.PyQt.QtCore import pyqtSlot, QSettings  # , Qt
 from qgis.PyQt.QtGui import QColor
 from qgis.PyQt.QtWidgets import (
                                  QLabel,
@@ -65,8 +65,6 @@ from svir.utilities.utils import (get_ui_class,
                                   )
 from svir.recovery_modeling.recovery_modeling import (
     RecoveryModeling, fill_fields_multiselect)
-from svir.ui.list_multiselect_widget import ListMultiSelectWidget
-from svir.ui.list_multiselect_mono_widget import ListMultiSelectMonoWidget
 from svir.ui.multi_select_combo_box import MultiSelectComboBox
 
 from svir import IS_SCIPY_INSTALLED, IS_MATPLOTLIB_INSTALLED
@@ -319,63 +317,64 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.typeDepVLayout.addLayout(hlayout)
 
     def create_tag_names_multiselect(self):
-        title = 'Select tag names'
-        self.tag_names_multiselect = ListMultiSelectWidget(title=title)
-        self.tag_names_multiselect.setSizePolicy(
-            QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
-        self.tag_names_multiselect.selected_widget.setSelectionMode(
-            QAbstractItemView.SingleSelection)
-        self.tag_names_multiselect.unselected_widget.setSelectionMode(
-            QAbstractItemView.SingleSelection)
-        self.tag_names_multiselect.select_all_btn.hide()
-        self.tag_names_multiselect.deselect_all_btn.hide()
+        self.tag_names_lbl = QLabel('Tag names')
+        self.tag_names_multiselect = MultiSelectComboBox(self)
+        self.typeDepVLayout.addWidget(self.tag_names_lbl)
         self.typeDepVLayout.addWidget(self.tag_names_multiselect)
-        self.tag_names_multiselect.unselected_widget.itemClicked.connect(
-            self.populate_tag_values_multiselect)
-        self.tag_names_multiselect.selected_widget.itemClicked.connect(
-            self.populate_tag_values_multiselect)
-        self.tag_names_multiselect.unselected_widget.itemDoubleClicked.connect(
-            self.populate_tag_values_multiselect)
-        self.tag_names_multiselect.selected_widget.itemDoubleClicked.connect(
-            self.populate_tag_values_multiselect)
+        self.tag_names_multiselect.item_was_clicked.connect(
+            self.toggle_tag_values_multiselect)
         self.tag_names_multiselect.selection_changed.connect(
             self.update_selected_tag_names)
 
-    def create_tag_values_multiselect(self):
-        title = 'Select tag values'
-        self.tag_values_multiselect = ListMultiSelectMonoWidget(
-            message_bar=self.iface.messageBar(), title=title)
-        self.tag_values_multiselect.setSizePolicy(
-            QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
-        self.tag_values_multiselect.select_all_btn.hide()
-        self.tag_values_multiselect.deselect_all_btn.hide()
-        self.typeDepVLayout.addWidget(self.tag_values_multiselect)
-        self.tag_values_multiselect.selection_changed.connect(
-            self.update_selected_tag_values)
+    def toggle_tag_values_multiselect(
+            self, tag_name, tag_name_is_checked, mono=True):  # FIXME
+        lbl = getattr(self, "%s_values_lbl" % tag_name, None)
+        cbx = getattr(self, "%s_values_multiselect" % tag_name, None)
+        if not lbl and not cbx and tag_name_is_checked:
+            setattr(self, "%s_values_lbl" % tag_name,
+                    QLabel('%s values' % tag_name))
+            setattr(self, "%s_values_multiselect" % tag_name,
+                    MultiSelectComboBox(self, mono=mono))
+            self.typeDepVLayout.addWidget(
+                getattr(self, "%s_values_lbl" % tag_name))
+            self.typeDepVLayout.addWidget(
+                getattr(self, "%s_values_multiselect" % tag_name))
+            if mono:
+                getattr(self, "%s_values_multiselect"
+                        % tag_name).currentIndexChanged.connect(
+                            lambda idx: self.update_selected_tag_values(
+                                tag_name))
+            else:
+                getattr(self, "%s_values_multiselect"
+                        % tag_name).selection_changed.connect(
+                            lambda: self.update_selected_tag_values(tag_name))
+            self.populate_tag_values_multiselect(tag_name)
+        elif lbl and cbx and not tag_name_is_checked:
+            delattr(self, "%s_values_lbl" % tag_name)
+            lbl.setParent(None)
+            delattr(self, "%s_values_multiselect" % tag_name)
+            cbx.setParent(None)
 
-    def populate_tag_values_multiselect(self, item):
-        tag_name = item.text()
+    def populate_tag_values_multiselect(self, tag_name):
         self.current_tag_name = tag_name
-        self.tag_values_multiselect.setTitle(
-            'Select values for tag: %s' % tag_name)
         tag_values = self.tags[tag_name]['values']
         selected_tag_values = [tag_value for tag_value in tag_values
                                if tag_values[tag_value]]
         unselected_tag_values = [tag_value for tag_value in tag_values
                                  if not tag_values[tag_value]]
-        self.tag_values_multiselect.set_selected_items(selected_tag_values)
-        self.tag_values_multiselect.set_unselected_items(unselected_tag_values)
-        unselected_items = [
-            self.tag_values_multiselect.unselected_widget.item(i) for i in
-            range(self.tag_values_multiselect.unselected_widget.count())]
-        if self.tag_with_all_values:
-            for i in range(len(unselected_items)):
-                item = unselected_items[i]
-                if item.text() == "*":
-                    item.setFlags(Qt.ItemIsEnabled)
-                    item.setBackground(QColor('darkGray'))
-        self.tag_values_multiselect.setEnabled(
-            tag_name in list(self.tag_names_multiselect.get_selected_items()))
+        cbx = getattr(self, "%s_values_multiselect" % tag_name)
+        cbx.clear()
+        if cbx.mono:
+            cbx.add_selected_items([''])
+        cbx.add_selected_items(sorted(selected_tag_values))
+        cbx.add_unselected_items(sorted(unselected_tag_values))
+        # if self.tag_with_all_values:
+        #     for value in cbx.get_unselected_items():
+        #         if value == "*":
+        #             value.setFlags(Qt.ItemIsEnabled)
+        #             value.setBackground(QColor('darkGray'))
+        cbx.setEnabled(
+            tag_name in self.tag_names_multiselect.get_selected_items())
 
     def filter_dmg_by_asset_aggr(self):
         params = {}
@@ -383,15 +382,22 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             if self.tags[tag_name]['selected']:
                 for value in self.tags[tag_name]['values']:
                     if self.tags[tag_name]['values'][value]:
-                        # NOTE: this would not work for multiple values per tag
-                        params[tag_name] = value
+                        if tag_name in params:
+                            params[tag_name].append(value)
+                        else:
+                            params[tag_name] = [value]
         output_type = 'agg_damages/%s' % self.loss_type_cbx.currentText()
         with WaitCursorManager(
                 'Extracting...', message_bar=self.iface.messageBar()):
             self.dmg_by_asset_aggr = extract_npz(
                 self.session, self.hostname, self.calc_id, output_type,
                 message_bar=self.iface.messageBar(), params=params)
-        if self.dmg_by_asset_aggr is None:
+        if (self.dmg_by_asset_aggr is None
+                or 'array' not in self.dmg_by_asset_aggr):
+            msg = 'No data corresponds to the current selection'
+            log_msg(msg, level='W', message_bar=self.iface.messageBar(),
+                    duration=5)
+            self.plot.clear()
             return
         self.draw_dmg_by_asset_aggr()
 
@@ -423,8 +429,10 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             if self.tags[tag_name]['selected']:
                 for value in self.tags[tag_name]['values']:
                     if self.tags[tag_name]['values'][value]:
-                        # NOTE: this would not work for multiple values per tag
-                        params[tag_name] = value
+                        if tag_name in params:
+                            params[tag_name].append(value)
+                        else:
+                            params[tag_name] = [value]
         to_extract = 'agg_curves/%s' % self.loss_type_cbx.currentText()
         with WaitCursorManager(
                 'Extracting...', message_bar=self.iface.messageBar()):
@@ -439,15 +447,22 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             if self.tags[tag_name]['selected']:
                 for value in self.tags[tag_name]['values']:
                     if self.tags[tag_name]['values'][value]:
-                        # NOTE: this would not work for multiple values per tag
-                        params[tag_name] = value
+                        if tag_name in params:
+                            params[tag_name].append(value)
+                        else:
+                            params[tag_name] = [value]
         to_extract = 'agg_losses/%s' % self.loss_type_cbx.currentText()
         with WaitCursorManager(
                 'Extracting...', message_bar=self.iface.messageBar()):
             self.losses_by_asset_aggr = extract_npz(
                 self.session, self.hostname, self.calc_id, to_extract,
                 message_bar=self.iface.messageBar(), params=params)
-        if self.losses_by_asset_aggr is None:
+        if (self.losses_by_asset_aggr is None
+                or 'array' not in self.losses_by_asset_aggr):
+            msg = 'No data corresponds to the current selection'
+            log_msg(msg, level='W', message_bar=self.iface.messageBar(),
+                    duration=5)
+            self.plot.clear()
             return
         self.draw_losses_by_asset_aggr()
 
@@ -461,8 +476,6 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 self.tags[tag_name]['values'][value] = False
                 if self.tag_with_all_values == tag_name:
                     self.tag_with_all_values = None
-        self.tag_values_multiselect.setEnabled(
-            tag_name in list(self.tag_names_multiselect.get_selected_items()))
         self.update_list_selected_edt()
         if self.output_type == 'dmg_by_asset_aggr':
             self.filter_dmg_by_asset_aggr()
@@ -472,10 +485,12 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         elif self.output_type == 'agg_curves-stats':
             self.filter_agg_curves()
 
-    def update_selected_tag_values(self):
-        for tag_value in self.tag_values_multiselect.get_selected_items():
+    def update_selected_tag_values(self, tag_name):
+        self.current_tag_name = tag_name
+        cbx = getattr(self, "%s_values_multiselect" % self.current_tag_name)
+        for tag_value in cbx.get_selected_items():
             self.tags[self.current_tag_name]['values'][tag_value] = True
-        for tag_value in self.tag_values_multiselect.get_unselected_items():
+        for tag_value in cbx.get_unselected_items():
             self.tags[self.current_tag_name]['values'][tag_value] = False
         self.update_list_selected_edt()
         if self.output_type == 'dmg_by_asset_aggr':
@@ -483,10 +498,10 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         elif self.output_type in ('losses_by_asset_aggr',
                                   'avg_losses-stats_aggr',
                                   'agg_curves-stats'):
-            if "*" in self.tag_values_multiselect.get_selected_items():
+            if "*" in cbx.get_selected_items():
                 self.tag_with_all_values = self.current_tag_name
             elif (self.tag_with_all_values == self.current_tag_name and
-                    "*" in self.tag_values_multiselect.get_unselected_items()):
+                    "*" in cbx.get_unselected_items()):
                 self.tag_with_all_values = None
             if self.output_type in ('losses_by_asset_aggr',
                                     'avg_losses-stats_aggr'):
@@ -548,7 +563,6 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.create_loss_type_selector()
             self.create_stats_multiselect()
             self.create_tag_names_multiselect()
-            self.create_tag_values_multiselect()
             self.create_list_selected_edt()
             self.stats_multiselect.selection_changed.connect(
                 self.filter_agg_curves)
@@ -556,14 +570,12 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.create_loss_type_selector()
             self.create_rlz_selector()
             self.create_tag_names_multiselect()
-            self.create_tag_values_multiselect()
             self.create_list_selected_edt()
             self.create_exclude_no_dmg_ckb()
         elif new_output_type in ('losses_by_asset_aggr',
                                  'avg_losses-stats_aggr'):
             self.create_loss_type_selector()
             self.create_tag_names_multiselect()
-            self.create_tag_values_multiselect()
             self.create_list_selected_edt()
         elif new_output_type == 'uhs':
             self.create_stats_multiselect()
@@ -643,10 +655,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.loss_type_cbx.addItems(loss_types)
         self.loss_type_cbx.blockSignals(False)
 
-        self.tag_names_multiselect.set_unselected_items(self.tags.keys())
-        self.tag_names_multiselect.set_selected_items([])
-        self.tag_values_multiselect.set_unselected_items([])
-        self.tag_values_multiselect.set_selected_items([])
+        self.tag_names_multiselect.clear()
+        self.tag_names_multiselect.add_unselected_items(
+            sorted(self.tags.keys()))
 
         self.filter_dmg_by_asset_aggr()
 
@@ -660,7 +671,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             return
         tags_list = []
         for tag_name in tags_npz:
-            if tag_name == 'array':
+            if tag_name in ['id', 'array']:
                 continue
             for tag in tags_npz[tag_name]:
                 tag = tag.decode('utf8')
@@ -716,10 +727,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             else:
                 self.stats = [str(stat, 'utf8') for stat in npz['stats']]
 
-        self.tag_names_multiselect.set_unselected_items(list(self.tags.keys()))
-        self.tag_names_multiselect.set_selected_items([])
-        self.tag_values_multiselect.set_unselected_items([])
-        self.tag_values_multiselect.set_selected_items([])
+        self.tag_names_multiselect.clear()
+        self.tag_names_multiselect.add_unselected_items(
+            sorted(list(self.tags.keys())))
 
         self.filter_losses_by_asset_aggr()
 
@@ -744,11 +754,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self._get_tags(session, hostname, calc_id, self.iface.messageBar(),
                            with_star=False)
             self.update_list_selected_edt()
-            self.tag_names_multiselect.set_unselected_items(
-                list(self.tags.keys()))
-            self.tag_names_multiselect.set_selected_items([])
-            self.tag_values_multiselect.set_unselected_items([])
-            self.tag_values_multiselect.set_selected_items([])
+            self.tag_names_multiselect.clear()
+            self.tag_names_multiselect.add_unselected_items(
+                sorted(self.tags.keys()))
 
             self.filter_agg_curves()
         elif output_type == 'agg_curves-rlzs':
