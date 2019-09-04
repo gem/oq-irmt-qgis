@@ -363,6 +363,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         unselected_tag_values = [tag_value for tag_value in tag_values
                                  if not tag_values[tag_value]]
         cbx = getattr(self, "%s_values_multiselect" % tag_name)
+        cbx.clear()
+        if cbx.mono:
+            cbx.add_selected_items([''])
         cbx.add_selected_items(sorted(selected_tag_values))
         cbx.add_unselected_items(sorted(unselected_tag_values))
         # if self.tag_with_all_values:
@@ -389,7 +392,11 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.dmg_by_asset_aggr = extract_npz(
                 self.session, self.hostname, self.calc_id, output_type,
                 message_bar=self.iface.messageBar(), params=params)
-        if self.dmg_by_asset_aggr is None:
+        if (self.dmg_by_asset_aggr is None
+                or 'array' not in self.dmg_by_asset_aggr):
+            msg = 'No data corresponds to the current selection'
+            log_msg(msg, level='W', message_bar=self.iface.messageBar())
+            self.plot.clear()
             return
         self.draw_dmg_by_asset_aggr()
 
@@ -473,7 +480,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.filter_agg_curves()
 
     def update_selected_tag_values(self, tag_name):
-        cbx = getattr(self, "%s_values_multiselect" % tag_name)
+        self.current_tag_name = tag_name
+        cbx = getattr(self, "%s_values_multiselect" % self.current_tag_name)
         for tag_value in cbx.get_selected_items():
             self.tags[self.current_tag_name]['values'][tag_value] = True
         for tag_value in cbx.get_unselected_items():

@@ -145,7 +145,7 @@ class MultiSelectComboBox(QComboBox):
             selected_text = self.currentText()
             for i in range(self.count()):
                 item_text = self.itemText(i)
-                if item_text != selected_text:
+                if item_text and item_text != selected_text:
                     items.append(item_text)
             return items
         for i in range(2, self.mlist.count()):
