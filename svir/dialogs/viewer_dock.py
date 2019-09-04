@@ -432,8 +432,10 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             if self.tags[tag_name]['selected']:
                 for value in self.tags[tag_name]['values']:
                     if self.tags[tag_name]['values'][value]:
-                        # NOTE: this would not work for multiple values per tag
-                        params[tag_name] = value
+                        if tag_name in params:
+                            params[tag_name].append(value)
+                        else:
+                            params[tag_name] = [value]
         to_extract = 'agg_losses/%s' % self.loss_type_cbx.currentText()
         with WaitCursorManager(
                 'Extracting...', message_bar=self.iface.messageBar()):
