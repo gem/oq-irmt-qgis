@@ -395,7 +395,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         if (self.dmg_by_asset_aggr is None
                 or 'array' not in self.dmg_by_asset_aggr):
             msg = 'No data corresponds to the current selection'
-            log_msg(msg, level='W', message_bar=self.iface.messageBar())
+            log_msg(msg, level='W', message_bar=self.iface.messageBar(),
+                    duration=5)
             self.plot.clear()
             return
         self.draw_dmg_by_asset_aggr()
@@ -459,7 +460,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         if (self.losses_by_asset_aggr is None
                 or 'array' not in self.losses_by_asset_aggr):
             msg = 'No data corresponds to the current selection'
-            log_msg(msg, level='W', message_bar=self.iface.messageBar())
+            log_msg(msg, level='W', message_bar=self.iface.messageBar(),
+                    duration=5)
             self.plot.clear()
             return
         self.draw_losses_by_asset_aggr()
