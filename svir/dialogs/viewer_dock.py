@@ -30,7 +30,7 @@ import numpy
 from datetime import datetime
 from collections import OrderedDict
 
-from qgis.PyQt.QtCore import pyqtSlot, QSettings, Qt
+from qgis.PyQt.QtCore import pyqtSlot, QSettings  # , Qt
 from qgis.PyQt.QtGui import QColor
 from qgis.PyQt.QtWidgets import (
                                  QLabel,
@@ -372,8 +372,10 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             if self.tags[tag_name]['selected']:
                 for value in self.tags[tag_name]['values']:
                     if self.tags[tag_name]['values'][value]:
-                        # NOTE: this would not work for multiple values per tag
-                        params[tag_name] = value
+                        if tag_name in params:
+                            params[tag_name].append(value)
+                        else:
+                            params[tag_name] = [value]
         output_type = 'agg_damages/%s' % self.loss_type_cbx.currentText()
         with WaitCursorManager(
                 'Extracting...', message_bar=self.iface.messageBar()):
@@ -412,8 +414,10 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             if self.tags[tag_name]['selected']:
                 for value in self.tags[tag_name]['values']:
                     if self.tags[tag_name]['values'][value]:
-                        # NOTE: this would not work for multiple values per tag
-                        params[tag_name] = value
+                        if tag_name in params:
+                            params[tag_name].append(value)
+                        else:
+                            params[tag_name] = [value]
         to_extract = 'agg_curves/%s' % self.loss_type_cbx.currentText()
         with WaitCursorManager(
                 'Extracting...', message_bar=self.iface.messageBar()):
@@ -536,7 +540,6 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.create_loss_type_selector()
             self.create_stats_multiselect()
             self.create_tag_names_multiselect()
-            self.create_tag_values_multiselect()
             self.create_list_selected_edt()
             self.stats_multiselect.selection_changed.connect(
                 self.filter_agg_curves)
@@ -544,7 +547,6 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.create_loss_type_selector()
             self.create_rlz_selector()
             self.create_tag_names_multiselect()
-            self.create_tag_values_multiselect()
             self.create_list_selected_edt()
             self.create_exclude_no_dmg_ckb()
         elif new_output_type in ('losses_by_asset_aggr',
@@ -630,10 +632,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.loss_type_cbx.addItems(loss_types)
         self.loss_type_cbx.blockSignals(False)
 
-        self.tag_names_multiselect.set_unselected_items(self.tags.keys())
-        self.tag_names_multiselect.set_selected_items([])
-        self.tag_values_multiselect.set_unselected_items([])
-        self.tag_values_multiselect.set_selected_items([])
+        self.tag_names_multiselect.clear()
+        self.tag_names_multiselect.add_unselected_items(
+            sorted(self.tags.keys()))
 
         self.filter_dmg_by_asset_aggr()
 
@@ -730,11 +731,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self._get_tags(session, hostname, calc_id, self.iface.messageBar(),
                            with_star=False)
             self.update_list_selected_edt()
-            self.tag_names_multiselect.set_unselected_items(
-                list(self.tags.keys()))
-            self.tag_names_multiselect.set_selected_items([])
-            self.tag_values_multiselect.set_unselected_items([])
-            self.tag_values_multiselect.set_selected_items([])
+            self.tag_names_multiselect.clear()
+            self.tag_names_multiselect.add_unselected_items(
+                sorted(self.tags.keys()))
 
             self.filter_agg_curves()
         elif output_type == 'agg_curves-rlzs':
