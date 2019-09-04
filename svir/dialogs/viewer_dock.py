@@ -456,7 +456,11 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.losses_by_asset_aggr = extract_npz(
                 self.session, self.hostname, self.calc_id, to_extract,
                 message_bar=self.iface.messageBar(), params=params)
-        if self.losses_by_asset_aggr is None:
+        if (self.losses_by_asset_aggr is None
+                or 'array' not in self.losses_by_asset_aggr):
+            msg = 'No data corresponds to the current selection'
+            log_msg(msg, level='W', message_bar=self.iface.messageBar())
+            self.plot.clear()
             return
         self.draw_losses_by_asset_aggr()
 
