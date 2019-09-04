@@ -326,21 +326,28 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.tag_names_multiselect.selection_changed.connect(
             self.update_selected_tag_names)
 
-    def toggle_tag_values_multiselect(self, tag_name, tag_name_is_checked):
+    def toggle_tag_values_multiselect(
+            self, tag_name, tag_name_is_checked, mono=True):  # FIXME
         lbl = getattr(self, "%s_values_lbl" % tag_name, None)
         cbx = getattr(self, "%s_values_multiselect" % tag_name, None)
         if not lbl and not cbx and tag_name_is_checked:
             setattr(self, "%s_values_lbl" % tag_name,
                     QLabel('%s values' % tag_name))
             setattr(self, "%s_values_multiselect" % tag_name,
-                    MultiSelectComboBox(self))
+                    MultiSelectComboBox(self, mono=mono))
             self.typeDepVLayout.addWidget(
                 getattr(self, "%s_values_lbl" % tag_name))
             self.typeDepVLayout.addWidget(
                 getattr(self, "%s_values_multiselect" % tag_name))
-            getattr(self, "%s_values_multiselect"
-                    % tag_name).selection_changed.connect(
-                        lambda: self.update_selected_tag_values(tag_name))
+            if mono:
+                getattr(self, "%s_values_multiselect"
+                        % tag_name).currentIndexChanged.connect(
+                            lambda idx: self.update_selected_tag_values(
+                                tag_name))
+            else:
+                getattr(self, "%s_values_multiselect"
+                        % tag_name).selection_changed.connect(
+                            lambda: self.update_selected_tag_values(tag_name))
             self.populate_tag_values_multiselect(tag_name)
         elif lbl and cbx and not tag_name_is_checked:
             delattr(self, "%s_values_lbl" % tag_name)
