@@ -63,7 +63,7 @@ class SelectSvVariablesDialog(QDialog, FORM_CLASS):
             self.fill_themes()
         with WaitCursorManager('Filling list of countries...'):
             self.fill_countries()
-        self.indicator_multiselect.item_was_clicked[str].connect(
+        self.indicator_multiselect.item_was_clicked[str, bool].connect(
             self.update_indicator_info)
         self.indicator_multiselect.selection_changed.connect(
             self.set_ok_button)
@@ -133,15 +133,18 @@ class SelectSvVariablesDialog(QDialog, FORM_CLASS):
             raise SvNetworkError(
                 "Unable to download social vulnerability names: %s" % e)
 
-    def update_indicator_info(self, text):
-        hint_text = text
-        indicator_code = text.split(':')[0]
-        indicator_info_dict = self.indicators_info_dict[indicator_code]
-        hint_text += '\n\n' + 'Description:\n' + indicator_info_dict[
-            'description']
-        hint_text += '\n\n' + 'Source:\n' + indicator_info_dict['source']
-        hint_text += '\n\n' + 'Aggregation method:\n' + indicator_info_dict[
-            'aggregation_method']
+    def update_indicator_info(self, text, status):
+        if status:
+            hint_text = text
+            indicator_code = text.split(':')[0]
+            indicator_info_dict = self.indicators_info_dict[indicator_code]
+            hint_text += '\n\n' + 'Description:\n' + indicator_info_dict[
+                'description']
+            hint_text += '\n\n' + 'Source:\n' + indicator_info_dict['source']
+            hint_text += ('\n\n' + 'Aggregation method:\n'
+                          + indicator_info_dict['aggregation_method'])
+        else:
+            hint_text = ''
         self.indicator_details.setText(hint_text)
 
     def fill_countries(self):
