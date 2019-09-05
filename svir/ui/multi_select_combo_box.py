@@ -40,13 +40,10 @@ class MultiSelectComboBox(QComboBox):
         self.activated.connect(self.itemClicked)
 
     def on_select_all_toggled(self, state):
-        self.blockSignals(True)
         for i in range(2, self.mlist.count()):
             checkbox = self.mlist.itemWidget(self.mlist.item(i))
             if self.search_bar.text().lower() in checkbox.text().lower():
                 checkbox.setChecked(state)
-        self.blockSignals(False)
-        self.selection_changed.emit()
 
     def itemClicked(self, idx):
         if self.mono:
