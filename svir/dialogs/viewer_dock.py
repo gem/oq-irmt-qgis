@@ -329,7 +329,12 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self, tag_name, tag_name_is_checked, mono=True):  # FIXME
         lbl = getattr(self, "%s_values_lbl" % tag_name, None)
         cbx = getattr(self, "%s_values_multiselect" % tag_name, None)
-        if not lbl and not cbx and tag_name_is_checked:
+        # NOTE: removing widgets anyway, then re-adding them if needed
+        if lbl is not None:
+            lbl.setParent(None)
+        if cbx is not None:
+            cbx.setParent(None)
+        if tag_name_is_checked:
             setattr(self, "%s_values_lbl" % tag_name,
                     QLabel('%s values' % tag_name))
             setattr(self, "%s_values_multiselect" % tag_name,
@@ -348,11 +353,6 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                         % tag_name).selection_changed.connect(
                             lambda: self.update_selected_tag_values(tag_name))
             self.populate_tag_values_multiselect(tag_name)
-        elif lbl and cbx and not tag_name_is_checked:
-            delattr(self, "%s_values_lbl" % tag_name)
-            lbl.setParent(None)
-            delattr(self, "%s_values_multiselect" % tag_name)
-            cbx.setParent(None)
 
     def populate_tag_values_multiselect(self, tag_name):
         tag_values = self.tags[tag_name]['values']
@@ -640,10 +640,24 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.loss_type_cbx.blockSignals(False)
 
         self.tag_names_multiselect.clear()
-        self.tag_names_multiselect.add_unselected_items(
-            sorted(self.tags.keys()))
+        tag_names = sorted(self.tags.keys())
+        self.tag_names_multiselect.add_unselected_items(tag_names)
+        self.clear_tag_values_multiselects(tag_names)
 
         self.filter_dmg_by_asset_aggr()
+
+    def clear_tag_values_multiselects(self, tag_names):
+        for tag_name in tag_names:
+            lbl_name = '%s_values_lbl' % tag_name
+            cbx_name = '%s_values_multiselect' % tag_name
+            lbl = getattr(self, lbl_name, None)
+            cbx = getattr(self, cbx_name, None)
+            if lbl is not None:
+                delattr(self, lbl_name)
+                lbl.setParent(None)
+            if cbx is not None:
+                delattr(self, cbx_name)
+                cbx.setParent(None)
 
     def _get_tags(self, session, hostname, calc_id, message_bar, with_star):
         with WaitCursorManager(
@@ -711,8 +725,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 self.stats = [str(stat, 'utf8') for stat in npz['stats']]
 
         self.tag_names_multiselect.clear()
-        self.tag_names_multiselect.add_unselected_items(
-            sorted(list(self.tags.keys())))
+        tag_names = sorted(self.tags.keys())
+        self.tag_names_multiselect.add_unselected_items(tag_names)
+        self.clear_tag_values_multiselects(tag_names)
 
         self.filter_losses_by_asset_aggr()
 
@@ -737,8 +752,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self._get_tags(session, hostname, calc_id, self.iface.messageBar(),
                            with_star=False)
             self.tag_names_multiselect.clear()
-            self.tag_names_multiselect.add_unselected_items(
-                sorted(self.tags.keys()))
+            tag_names = sorted(self.tags.keys())
+            self.tag_names_multiselect.add_unselected_items(tag_names)
+            self.clear_tag_values_multiselects(tag_names)
 
             self.filter_agg_curves()
         elif output_type == 'agg_curves-rlzs':
