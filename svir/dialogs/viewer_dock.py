@@ -356,7 +356,6 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             cbx.setParent(None)
 
     def populate_tag_values_multiselect(self, tag_name):
-        self.current_tag_name = tag_name
         tag_values = self.tags[tag_name]['values']
         selected_tag_values = [tag_value for tag_value in tag_values
                                if tag_values[tag_value]]
@@ -486,12 +485,11 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.filter_agg_curves()
 
     def update_selected_tag_values(self, tag_name):
-        self.current_tag_name = tag_name
-        cbx = getattr(self, "%s_values_multiselect" % self.current_tag_name)
+        cbx = getattr(self, "%s_values_multiselect" % tag_name)
         for tag_value in cbx.get_selected_items():
-            self.tags[self.current_tag_name]['values'][tag_value] = True
+            self.tags[tag_name]['values'][tag_value] = True
         for tag_value in cbx.get_unselected_items():
-            self.tags[self.current_tag_name]['values'][tag_value] = False
+            self.tags[tag_name]['values'][tag_value] = False
         self.update_list_selected_edt()
         if self.output_type == 'dmg_by_asset_aggr':
             self.filter_dmg_by_asset_aggr()
@@ -499,8 +497,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                                   'avg_losses-stats_aggr',
                                   'agg_curves-stats'):
             if "*" in cbx.get_selected_items():
-                self.tag_with_all_values = self.current_tag_name
-            elif (self.tag_with_all_values == self.current_tag_name and
+                self.tag_with_all_values = tag_name
+            elif (self.tag_with_all_values == tag_name and
                     "*" in cbx.get_unselected_items()):
                 self.tag_with_all_values = None
             if self.output_type in ('losses_by_asset_aggr',
@@ -605,7 +603,6 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.calc_id = calc_id
         self.session = session
         self.hostname = hostname
-        self.current_tag_name = None
         self.tag_with_all_values = None
         self.change_output_type(output_type)
         self.engine_version = engine_version
