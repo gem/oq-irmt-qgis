@@ -971,6 +971,8 @@ def import_layer_from_csv(parent,
                           subset=None,
                           add_to_legend=True,
                           add_on_top=False):
+    if not lines_to_skip_count:
+        lines_to_skip_count = count_heading_commented_lines(csv_path)
     url = QUrl.fromLocalFile(csv_path)
     url_query = QUrlQuery()
     url_query.addQueryItem('type', 'csv')
