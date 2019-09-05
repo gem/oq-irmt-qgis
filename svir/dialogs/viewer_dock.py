@@ -34,7 +34,6 @@ from qgis.PyQt.QtCore import pyqtSlot, QSettings  # , Qt
 from qgis.PyQt.QtGui import QColor
 from qgis.PyQt.QtWidgets import (
                                  QLabel,
-                                 QPlainTextEdit,
                                  QComboBox,
                                  QSizePolicy,
                                  QSpinBox,
@@ -475,7 +474,6 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 self.tags[tag_name]['values'][value] = False
                 if self.tag_with_all_values == tag_name:
                     self.tag_with_all_values = None
-        self.update_list_selected_edt()
         if self.output_type == 'dmg_by_asset_aggr':
             self.filter_dmg_by_asset_aggr()
         elif self.output_type in ('losses_by_asset_aggr',
@@ -490,7 +488,6 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.tags[tag_name]['values'][tag_value] = True
         for tag_value in cbx.get_unselected_items():
             self.tags[tag_name]['values'][tag_value] = False
-        self.update_list_selected_edt()
         if self.output_type == 'dmg_by_asset_aggr':
             self.filter_dmg_by_asset_aggr()
         elif self.output_type in ('losses_by_asset_aggr',
@@ -507,22 +504,14 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             elif self.output_type == 'agg_curves-stats':
                 self.filter_agg_curves()
 
-    def create_list_selected_edt(self):
-        self.list_selected_edt = QPlainTextEdit('Selected tags:')
-        self.list_selected_edt.setSizePolicy(
-            QSizePolicy.Minimum, QSizePolicy.Minimum)
-        self.list_selected_edt.setMaximumHeight(30)
-        self.list_selected_edt.setReadOnly(True)
-        self.typeDepVLayout.addWidget(self.list_selected_edt)
-
-    def update_list_selected_edt(self):
+    def get_list_selected_tags_str(self):
         selected_tags_str = ''
         for tag_name in self.tags:
             if self.tags[tag_name]['selected']:
                 for tag_value in self.tags[tag_name]['values']:
                     if self.tags[tag_name]['values'][tag_value]:
                         selected_tags_str += '%s="%s" ' % (tag_name, tag_value)
-        self.list_selected_edt.setPlainText(selected_tags_str)
+        return selected_tags_str
 
     def refresh_feature_selection(self):
         if not self.stats_multiselect.get_selected_items():
@@ -563,20 +552,17 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.create_loss_type_selector()
             self.create_stats_multiselect()
             self.create_tag_names_multiselect()
-            self.create_list_selected_edt()
             self.stats_multiselect.selection_changed.connect(
                 self.filter_agg_curves)
         elif new_output_type == 'dmg_by_asset_aggr':
             self.create_loss_type_selector()
             self.create_rlz_selector()
             self.create_tag_names_multiselect()
-            self.create_list_selected_edt()
             self.create_exclude_no_dmg_ckb()
         elif new_output_type in ('losses_by_asset_aggr',
                                  'avg_losses-stats_aggr'):
             self.create_loss_type_selector()
             self.create_tag_names_multiselect()
-            self.create_list_selected_edt()
         elif new_output_type == 'uhs':
             self.create_stats_multiselect()
             self.stats_multiselect.selection_changed.connect(
@@ -632,7 +618,6 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.dmg_states = numpy.append(['no damage'], limit_states)
         self._get_tags(session, hostname, calc_id, self.iface.messageBar(),
                        with_star=False)
-        self.update_list_selected_edt()
 
         with WaitCursorManager(
                 'Extracting...', message_bar=self.iface.messageBar()):
@@ -704,7 +689,6 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                          for rlz in rlzs_npz['array']]
         self._get_tags(session, hostname, calc_id, self.iface.messageBar(),
                        with_star=True)
-        self.update_list_selected_edt()
 
         loss_types = get_loss_types(
             session, hostname, calc_id, self.iface.messageBar())
@@ -752,7 +736,6 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.stats_multiselect.add_selected_items(self.stats)
             self._get_tags(session, hostname, calc_id, self.iface.messageBar(),
                            with_star=False)
-            self.update_list_selected_edt()
             self.tag_names_multiselect.clear()
             self.tag_names_multiselect.add_unselected_items(
                 sorted(self.tags.keys()))
@@ -1612,7 +1595,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                     "# Loss type: %s\r\n" % self.loss_type_cbx.currentText())
                 csv_file.write(
                     "# Tags: %s\r\n" % (
-                        self.list_selected_edt.toPlainText() or 'None'))
+                        self.get_list_selected_tags_str() or 'None'))
                 headers = ['return_period']
                 headers.extend(stats)
                 writer.writerow(headers)
@@ -1630,7 +1613,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                     "# Loss type: %s\r\n" % self.loss_type_cbx.currentText())
                 csv_file.write(
                     "# Tags: %s\r\n" % (
-                        self.list_selected_edt.toPlainText() or 'None'))
+                        self.get_list_selected_tags_str() or 'None'))
                 headers = self.dmg_states
                 writer.writerow(headers)
                 values = self.dmg_by_asset_aggr[
@@ -1642,7 +1625,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                     "# Loss type: %s\r\n" % self.loss_type_cbx.currentText())
                 csv_file.write(
                     "# Tags: %s\r\n" % (
-                        self.list_selected_edt.toPlainText() or 'None'))
+                        self.get_list_selected_tags_str() or 'None'))
                 try:
                     tags = [tag.decode('utf8')
                             for tag in self.losses_by_asset_aggr['tags']]
