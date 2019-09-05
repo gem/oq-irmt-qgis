@@ -230,7 +230,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.exclude_no_dmg_ckb.setChecked(True)
         self.exclude_no_dmg_ckb.stateChanged[int].connect(
             self.on_exclude_no_dmg_ckb_state_changed)
-        self.typeDepVLayout.addWidget(self.exclude_no_dmg_ckb)
+        self.plot_layout.insertWidget(0, self.exclude_no_dmg_ckb)
 
     def create_approach_selector(self):
         self.approach_lbl = QLabel('Recovery time approach')
@@ -548,6 +548,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.plot.clear()
             self.plot_canvas.show()
             self.plot_canvas.draw()
+        if hasattr(self, 'exclude_no_dmg_ckb'):
+            self.exclude_no_dmg_ckb.setParent(None)
 
         if new_output_type == 'hcurves':
             self.create_imt_selector()
