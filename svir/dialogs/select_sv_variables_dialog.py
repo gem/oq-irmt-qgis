@@ -63,7 +63,7 @@ class SelectSvVariablesDialog(QDialog, FORM_CLASS):
             self.fill_themes()
         with WaitCursorManager('Filling list of countries...'):
             self.fill_countries()
-        self.indicator_multiselect.item_was_clicked[str, bool].connect(
+        self.indicator_multiselect.item_was_clicked.connect(
             self.update_indicator_info)
         self.indicator_multiselect.selection_changed.connect(
             self.set_ok_button)
