@@ -1597,11 +1597,12 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 # periods and S is the number of statistics
                 stats = [stat.decode('utf8')
                          for stat in self.agg_curves['stats']]
-                csv_file.write(
-                    "# Loss type: %s\r\n" % self.loss_type_cbx.currentText())
-                csv_file.write(
-                    "# Tags: %s\r\n" % (
-                        self.list_selected_edt.toPlainText() or 'None'))
+                loss_type = self.loss_type_cbx.currentText()
+                loss_type_idx = self.loss_type_cbx.currentIndex()
+                csv_file.write("# Loss type: %s\r\n" % loss_type)
+                # csv_file.write(
+                #     "# Tags: %s\r\n" % (
+                #         self.list_selected_edt.toPlainText() or 'None'))
                 headers = ['return_period']
                 headers.extend(stats)
                 writer.writerow(headers)
@@ -1609,8 +1610,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                         self.agg_curves['return_periods']):
                     row = [return_period]
                     for stat_idx, stat in enumerate(stats):
-                        row.append(self.agg_curves[
-                            'array'][stat_idx, return_period_idx])
+                        row.append(self.agg_curves['array'][return_period_idx,
+                                                            stat_idx,
+                                                            loss_type_idx])
                     writer.writerow(row)
             elif self.output_type == 'dmg_by_asset_aggr':
                 csv_file.write(
