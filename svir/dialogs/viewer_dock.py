@@ -728,8 +728,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 message_bar=self.iface.messageBar())
         if self.agg_curves is None:
             return
-        loss_types = str(
-            self.agg_curves['loss_types'], encoding='utf8').split(" ")
+        loss_types = [loss_type.decode('utf8')
+                      for loss_type in self.agg_curves['loss_types']]
         self.loss_type_cbx.blockSignals(True)
         self.loss_type_cbx.clear()
         self.loss_type_cbx.addItems(loss_types)
