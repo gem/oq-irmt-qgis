@@ -1612,9 +1612,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 loss_type = self.loss_type_cbx.currentText()
                 loss_type_idx = self.loss_type_cbx.currentIndex()
                 csv_file.write("# Loss type: %s\r\n" % loss_type)
-                csv_file.write(
-                    "# Tags: %s\r\n" % (
-                        self.get_list_selected_tags_str() or 'None'))
+                # csv_file.write(
+                #     "# Tags: %s\r\n" % (
+                #         self.get_list_selected_tags_str() or 'None'))
                 headers = ['return_period']
                 headers.extend(stats)
                 writer.writerow(headers)
