@@ -551,7 +551,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         elif new_output_type == 'agg_curves-stats':
             self.create_loss_type_selector()
             self.create_stats_multiselect()
-            self.create_tag_names_multiselect()
+            # FIXME: do we need tags?
             # self.create_tag_names_multiselect()
             # self.create_tag_values_multiselect()
             # self.create_list_selected_edt()
@@ -754,14 +754,18 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                           for stat in self.agg_curves['stats']]
             # FIXME: check if we need tags here
             self.stats_multiselect.add_selected_items(self.stats)
-            self._get_tags(session, hostname, calc_id, self.iface.messageBar(),
-                           with_star=False)
-            self.tag_names_multiselect.clear()
-            tag_names = sorted(self.tags.keys())
-            self.tag_names_multiselect.add_unselected_items(tag_names)
-            self.clear_tag_values_multiselects(tag_names)
+            # self._get_tags(session,
+            #                hostname,
+            #                calc_id,
+            #                self.iface.messageBar(),
+            #                with_star=False)
+            # self.tag_names_multiselect.clear()
+            # tag_names = sorted(self.tags.keys())
+            # self.tag_names_multiselect.add_unselected_items(tag_names)
+            # self.clear_tag_values_multiselects(tag_names)
 
-            self.filter_agg_curves()
+            # self.filter_agg_curves()
+            self.draw_agg_curves(output_type)
         elif output_type == 'agg_curves-rlzs':
             rlzs = ["Rlz %3d" % rlz
                     for rlz in range(self.agg_curves['array'].shape[1])]
