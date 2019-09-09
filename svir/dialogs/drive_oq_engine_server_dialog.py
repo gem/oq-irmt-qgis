@@ -116,6 +116,7 @@ OUTPUT_TYPE_LOADERS = {
     'events': LoadBasicCsvAsLayerDialog,
     'dmg_by_event': LoadBasicCsvAsLayerDialog,
     'losses_by_event': LoadBasicCsvAsLayerDialog,
+    'agglosses': LoadBasicCsvAsLayerDialog,
     'agg_risk': LoadBasicCsvAsLayerDialog,
     'dmg_by_asset': LoadDmgByAssetAsLayerDialog,
     'gmf_data': LoadGmfDataAsLayerDialog,
