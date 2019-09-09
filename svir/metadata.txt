@@ -28,6 +28,7 @@ changelog=
     * The output type selector in the Data Viewer was disabled, so it still shows the output type but it can not be modified by the user.
     * OQ-Engine outputs to be loaded as tables from csv are loaded directly with a single click, instead of prior displaying a dialog showing the file size.
     * OQ-Engine outputs agg_curves-rlzs and agg_curves-stats for event_based_risk calculations can be visualized in the Data Viewer.
+    * Added loader for OQ-Engine outputs 'agglosses'
     3.7.1
     * Instead of the 'sourcegroups' output (that was removed from the OQ-Engine), the plugin can now load the new output 'events'
     * The user can choose if selecting the '.ini' file to run a OQ-Engine calculation, or letting the OQ-Engine automatically pick one from the list of input files.
