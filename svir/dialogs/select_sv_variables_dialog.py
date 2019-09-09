@@ -23,13 +23,13 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 from qgis.PyQt.QtCore import pyqtSlot
-from qgis.PyQt.QtWidgets import QDialog, QDialogButtonBox
+from qgis.PyQt.QtWidgets import QDialog, QDialogButtonBox, QLabel
 
 from svir.utilities.utils import (WaitCursorManager,
                                   SvNetworkError,
                                   get_ui_class,
                                   )
-from svir.ui.list_multiselect_widget import ListMultiSelectWidget
+from svir.ui.multi_select_combo_box import MultiSelectComboBox
 
 FORM_CLASS = get_ui_class('ui_select_sv_variables.ui')
 
@@ -43,12 +43,15 @@ class SelectSvVariablesDialog(QDialog, FORM_CLASS):
         QDialog.__init__(self)
         # Set up the user interface from Designer.
         self.setupUi(self)
-        self.indicator_multiselect = ListMultiSelectWidget(
-            title='Select Indicators')
-        self.vertical_layout.insertWidget(2, self.indicator_multiselect)
-        self.country_multiselect = ListMultiSelectWidget(
-            title='Select Countries')
-        self.vertical_layout.insertWidget(7, self.country_multiselect)
+        self.indicator_lbl = QLabel('Select Indicators')
+        self.indicator_multiselect = MultiSelectComboBox(self)
+        self.scroll_area_contents.layout().addWidget(self.indicator_lbl)
+        self.scroll_area_contents.layout().addWidget(
+            self.indicator_multiselect)
+        self.country_lbl = QLabel('Select Countries')
+        self.country_multiselect = MultiSelectComboBox(self)
+        self.scroll_area_contents.layout().addWidget(self.country_lbl)
+        self.scroll_area_contents.layout().addWidget(self.country_multiselect)
         self.ok_button = self.buttonBox.button(QDialogButtonBox.Ok)
         self.set_ok_button()
         # login to platform, to be able to retrieve sv indices
@@ -60,9 +63,7 @@ class SelectSvVariablesDialog(QDialog, FORM_CLASS):
             self.fill_themes()
         with WaitCursorManager('Filling list of countries...'):
             self.fill_countries()
-        self.indicator_multiselect.unselected_widget.itemClicked.connect(
-            self.update_indicator_info)
-        self.indicator_multiselect.selected_widget.itemClicked.connect(
+        self.indicator_multiselect.item_was_clicked.connect(
             self.update_indicator_info)
         self.indicator_multiselect.selection_changed.connect(
             self.set_ok_button)
@@ -82,8 +83,8 @@ class SelectSvVariablesDialog(QDialog, FORM_CLASS):
 
     def set_ok_button(self):
         self.ok_button.setEnabled(
-            self.indicator_multiselect.selected_widget.count() > 0
-            and self.country_multiselect.selected_widget.count() > 0)
+            self.indicator_multiselect.selected_count() > 0
+            and self.country_multiselect.selected_count() > 0)
 
     def fill_themes(self):
         self.theme_cbx.clear()
@@ -114,7 +115,7 @@ class SelectSvVariablesDialog(QDialog, FORM_CLASS):
                     " subthemes: %s" % e)
 
     def fill_names(self):
-        self.indicator_multiselect.set_unselected_items([])
+        self.indicator_multiselect.clear()
         # load list of social vulnerability variable names from the platform
         name_filter = self.name_filter_le.text()
         keywords = self.keywords_le.text()
@@ -132,15 +133,18 @@ class SelectSvVariablesDialog(QDialog, FORM_CLASS):
             raise SvNetworkError(
                 "Unable to download social vulnerability names: %s" % e)
 
-    def update_indicator_info(self, item):
-        hint_text = item.text()
-        indicator_code = item.text().split(':')[0]
-        indicator_info_dict = self.indicators_info_dict[indicator_code]
-        hint_text += '\n\n' + 'Description:\n' + indicator_info_dict[
-            'description']
-        hint_text += '\n\n' + 'Source:\n' + indicator_info_dict['source']
-        hint_text += '\n\n' + 'Aggregation method:\n' + indicator_info_dict[
-            'aggregation_method']
+    def update_indicator_info(self, text, status):
+        if status:
+            hint_text = text
+            indicator_code = text.split(':')[0]
+            indicator_info_dict = self.indicators_info_dict[indicator_code]
+            hint_text += '\n\n' + 'Description:\n' + indicator_info_dict[
+                'description']
+            hint_text += '\n\n' + 'Source:\n' + indicator_info_dict['source']
+            hint_text += ('\n\n' + 'Aggregation method:\n'
+                          + indicator_info_dict['aggregation_method'])
+        else:
+            hint_text = ''
         self.indicator_details.setText(hint_text)
 
     def fill_countries(self):
@@ -151,7 +155,7 @@ class SelectSvVariablesDialog(QDialog, FORM_CLASS):
             names = sorted(
                 [countries_dict[iso] + ' (' + iso + ')'
                     for iso in countries_dict])
-            self.country_multiselect.set_unselected_items(names)
+            self.country_multiselect.add_unselected_items(names)
         except SvNetworkError as e:
             raise SvNetworkError(
                 "Unable to download the list of countries: %s" % e)

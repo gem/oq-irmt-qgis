@@ -23,7 +23,7 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 from qgis.PyQt.QtCore import pyqtSlot
-from qgis.PyQt.QtWidgets import QDialog, QDialogButtonBox
+from qgis.PyQt.QtWidgets import QDialog, QDialogButtonBox, QLabel, QHBoxLayout
 
 from svir.calculations.transformation_algs import (RANK_VARIANTS,
                                                    QUADRATIC_VARIANTS,
@@ -32,7 +32,7 @@ from svir.calculations.transformation_algs import (RANK_VARIANTS,
 from svir.utilities.utils import get_ui_class, log_msg
 from svir.utilities.shared import NUMERIC_FIELD_TYPES
 from svir.calculations.process_layer import ProcessLayer
-from svir.ui.list_multiselect_widget import ListMultiSelectWidget
+from svir.ui.multi_select_combo_box import MultiSelectComboBox
 
 FORM_CLASS = get_ui_class('ui_transformation.ui')
 
@@ -50,9 +50,13 @@ class TransformationDialog(QDialog, FORM_CLASS):
         self.use_advanced = False
         # Set up the user interface from Designer.
         self.setupUi(self)
-        self.fields_multiselect = ListMultiSelectWidget(
-            title='Select fields to transform')
-        self.vertical_layout.insertWidget(1, self.fields_multiselect)
+        self.fields_lbl = QLabel('Fields to transform')
+        self.fields_multiselect = MultiSelectComboBox(self)
+        hlayout = QHBoxLayout()
+        hlayout.addWidget(self.fields_lbl)
+        hlayout.addWidget(self.fields_multiselect)
+        self.vertical_layout.insertLayout(1, hlayout)
+        self.adjustSize()
         self.ok_button = self.buttonBox.button(QDialogButtonBox.Ok)
         self.fill_fields_multiselect()
 
@@ -79,10 +83,10 @@ class TransformationDialog(QDialog, FORM_CLASS):
 
     def set_ok_button(self):
         self.ok_button.setEnabled(
-            self.fields_multiselect.selected_widget.count() > 0)
+            self.fields_multiselect.selected_count() > 0)
 
     def set_new_field_editable(self):
-        n_fields_selected = self.fields_multiselect.selected_widget.count()
+        n_fields_selected = self.fields_multiselect.selected_count()
         self.new_field_name_lbl.setEnabled(n_fields_selected == 1)
         self.new_field_name_txt.setEnabled(n_fields_selected == 1)
 
@@ -133,7 +137,7 @@ class TransformationDialog(QDialog, FORM_CLASS):
     def on_new_field_name_txt_textEdited(self):
         # we assume exactly one item is in the selected list
         input_field_name = self._extract_field_name(
-            self.fields_multiselect.selected_widget.item(0).text())
+            self.fields_multiselect.get_selected_items()[0])
         new_field_name = self.new_field_name_txt.text()
         # if the name of the new field is equal to the name of the input field,
         # automatically check the 'overwrite' checkbox (and consequently
@@ -161,14 +165,14 @@ class TransformationDialog(QDialog, FORM_CLASS):
         return field_name_plus_alias.split('(')[0].strip()
 
     def update_default_fieldname(self):
-        if self.fields_multiselect.selected_widget.count() != 1:
+        if self.fields_multiselect.selected_count() != 1:
             self.new_field_name_txt.setText('')
             self.attr_name_user_def = False
             return
         if (not self.attr_name_user_def
                 or not self.new_field_name_txt.text()):
             attribute_name = self._extract_field_name(
-                self.fields_multiselect.selected_widget.item(0).text())
+                self.fields_multiselect.get_selected_items()[0])
             algorithm_name = self.algorithm_cbx.currentText()
             variant = self.variant_cbx.currentText()
             inverse = self.inverse_ckb.isChecked()
@@ -208,4 +212,4 @@ class TransformationDialog(QDialog, FORM_CLASS):
                         field.name(),
                         self.iface.activeLayer().attributeAlias(field_idx))
                     names_plus_aliases.append(name_plus_alias)
-        self.fields_multiselect.set_unselected_items(names_plus_aliases)
+        self.fields_multiselect.add_unselected_items(names_plus_aliases)

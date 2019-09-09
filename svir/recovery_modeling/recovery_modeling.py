@@ -492,5 +492,6 @@ def fill_fields_multiselect(fields_multiselect, layer):
                     if field.name() not in default_field_names
                     and field.typeName() in NUMERIC_FIELD_TYPES]
     other_field_names = [field.name() for field in other_fields]
-    fields_multiselect.set_selected_items(default_field_names)
-    fields_multiselect.set_unselected_items(other_field_names)
+    fields_multiselect.clear()
+    fields_multiselect.add_selected_items(default_field_names)
+    fields_multiselect.add_unselected_items(other_field_names)
