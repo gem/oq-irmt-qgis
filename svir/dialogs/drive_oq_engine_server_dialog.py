@@ -810,9 +810,18 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                             continue
                         action = 'Show'
                     elif output['type'] in OQ_ZIPPED_TYPES:
-                        if calculation_mode != 'multi_risk':
+                        if calculation_mode == 'multi_risk':
+                            action = 'Load from zip'
+                        else:
+                            action = 'Download'
+                            button = QPushButton()
+                            self.connect_button_to_action(
+                                button, action, output, outtype)
+                            self.output_list_tbl.setCellWidget(
+                                row, additional_cols, button)
+                            self.calc_list_tbl.setColumnWidth(
+                                additional_cols, BUTTON_WIDTH)
                             continue
-                        action = 'Load from zip'
                     elif output['type'] in OQ_BASIC_CSV_TO_LAYER_TYPES:
                         action = 'Load table'
                     else:
