@@ -631,7 +631,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         if rlzs_npz is None:
             return
         # rlz[1] is the branch-path field
-        rlzs = [rlz[1].decode('utf8') for rlz in rlzs_npz['array']]
+        rlzs = [rlz[1].decode('utf8').strip('"') for rlz in rlzs_npz['array']]
         self.rlz_cbx.blockSignals(True)
         self.rlz_cbx.clear()
         self.rlz_cbx.addItems(rlzs)
