@@ -36,7 +36,7 @@
          <x>0</x>
          <y>0</y>
          <width>402</width>
-         <height>612</height>
+         <height>618</height>
         </rect>
        </property>
        <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -64,7 +64,11 @@
              </widget>
             </item>
             <item row="0" column="1">
-             <widget class="QComboBox" name="output_type_cbx"/>
+             <widget class="QComboBox" name="output_type_cbx">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
+             </widget>
             </item>
            </layout>
           </item>
