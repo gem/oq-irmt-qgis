@@ -24,7 +24,8 @@
 
 import os
 import tempfile
-from svir.utilities.utils import import_layer_from_csv, log_msg
+from svir.utilities.utils import (
+    import_layer_from_csv, log_msg, count_heading_commented_lines)
 from svir.utilities.shared import OQ_BASIC_CSV_TO_LAYER_TYPES
 from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
 
@@ -51,7 +52,12 @@ class LoadBasicCsvAsLayerDialog(LoadOutputAsLayerDialog):
         self.file_browser_tbn.setEnabled(True)
         if self.path:
             self.path_le.setText(self.path)
-        self.show()
+        # TODO: add a warning in case the file size exceeds a threshold
+        # self.show()
+        if self.ok_button.isEnabled():
+            self.accept()
+        else:
+            self.show()
 
     def set_ok_button(self):
         self.ok_button.setEnabled(bool(self.path))
