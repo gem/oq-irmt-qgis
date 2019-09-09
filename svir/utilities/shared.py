@@ -224,6 +224,7 @@ OQ_BASIC_CSV_TO_LAYER_TYPES = set([
     'events',
     'dmg_by_event',
     'losses_by_event',
+    'agglosses',
     'agg_risk'])
 OQ_COMPLEX_CSV_TO_LAYER_TYPES = set([
     'ruptures'])
