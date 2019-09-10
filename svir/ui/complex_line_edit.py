@@ -43,22 +43,26 @@ class ComplexLineEdit(QLineEdit):
                           width,
                           self.height() - self.settings['padding-y'] * 2
                           )
-            self.draw_bg(event, qp, rect)
-            self.draw_text(event, qp, text, rect)
+            if not text:
+                self.draw_text(qp,
+                               event.rect(),
+                               'Click to select items')
+                return
+            self.draw_bg(qp, rect)
+            self.draw_text(qp, rect, text)
             # add margin between elements
             x = x + width + self.settings['padding-x']
 
-    def draw_bg(self, event, qp, rect):
+    def draw_bg(self, qp, rect):
         path = QPainterPath()
         path.addRoundedRect(rect, 4, 4)
         qp.setPen(QPen(self.settings['highlight'], 2))
         qp.fillPath(path, self.settings['bg'])
         qp.drawPath(path)
 
-    def draw_text(self, event, qp, text, rect):
+    def draw_text(self, qp, rect, text):
         qp.setPen(self.settings['text'])
         # start text one padding in
         left = rect.left() + self.settings['padding-x']
         rect.setLeft(left)
         qp.drawText(rect, Qt.AlignLeft, text)
-

@@ -35,8 +35,6 @@ class MultiSelectComboBox(QComboBox):
         self.view().setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.setLineEdit(self.line_edit)
 
-        self.set_placeholder_text('Click to select items')
-
         # NOTE: this is necessary to handle the case in which an item in the
         # list is clicked to its right part, outside the text
         self.activated.connect(self.itemClicked)
@@ -218,9 +216,6 @@ class MultiSelectComboBox(QComboBox):
 
     def set_search_bar_placeholder_text(self, text):
         self.search_bar.setPlaceholderText(text)
-
-    def set_placeholder_text(self, text):
-        self.line_edit.setPlaceholderText(text)
 
     def clear(self):
         if self.mono:
