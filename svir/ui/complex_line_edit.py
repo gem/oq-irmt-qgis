@@ -1,7 +1,7 @@
-from PyQt5.QtWidgets import QWidget, QApplication
 from PyQt5.QtGui import (
     QPainter, QColor, QFont, QPainterPath, QPen,
     QFontMetrics,
+    QFontDatabase,
     )
 from PyQt5.QtCore import Qt, QRectF
 from PyQt5.QtWidgets import QLineEdit
@@ -15,8 +15,9 @@ class ComplexLineEdit(QLineEdit):
             'bg': QColor(224, 242, 241),
             'highlight': QColor(0, 150, 136),
             'text': QColor(0, 105, 92),
-            'font': QFont('Decorative', 10),
-            'padding': 4,
+            'font': QFontDatabase.systemFont(QFontDatabase.GeneralFont),
+            'padding-x': 8,
+            'padding-y': 2,
             }
         self.font_metrics = QFontMetrics(self.settings['font'])
 
@@ -30,33 +31,35 @@ class ComplexLineEdit(QLineEdit):
         print(self.text())
         qp.setFont(self.settings['font'])
         qp.setRenderHint(QPainter.Antialiasing)
-        x = 0
+        x = self.settings['padding-x']
         for text in self.text().split(';'):
+            text = text.strip()
             width = self.font_metrics.width(text)
-            new_x = self.draw_bg(event, qp, text, x, width)
-            self.draw_text(event, qp, text, x, width)
-            x = new_x
+            # add padding
+            width += 2 * self.settings['padding-x']
+            height = self.font_metrics.height()
 
-    def draw_bg(self, event, qp, text, x, width):
+            rect = QRectF(x,
+                          self.settings['padding-y'],
+                          width,
+                          self.height() - self.settings['padding-y'] * 2
+                          )
+            self.draw_bg(event, qp, rect)
+            self.draw_text(event, qp, text, rect)
+            # add margin between elements
+            x = x + width + self.settings['padding-x']
+
+    def draw_bg(self, event, qp, rect):
         path = QPainterPath()
-        x = x + self.settings['padding']
-        rect = QRectF(x,
-                      self.settings['padding'],
-                      width,
-                      self.height() - self.settings['padding'] * 2
-                      )
-        path.addRoundedRect(rect, 8, 8)
+        path.addRoundedRect(rect, 4, 4)
         qp.setPen(QPen(self.settings['highlight'], 2))
         qp.fillPath(path, self.settings['bg'])
         qp.drawPath(path)
-        return x + width
 
-    def draw_text(self, event, qp, text, x, width):
+    def draw_text(self, event, qp, text, rect):
         qp.setPen(self.settings['text'])
-        rect = QRectF(x,
-                      self.settings['padding'],
-                      width,
-                      self.height() - self.settings['padding'] * 2
-                      )
-        qp.drawText(rect, Qt.AlignCenter, text)
+        # start text one padding in
+        left = rect.left() + self.settings['padding-x']
+        rect.setLeft(left)
+        qp.drawText(rect, Qt.AlignLeft, text)
 
