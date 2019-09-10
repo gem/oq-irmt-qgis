@@ -28,7 +28,6 @@ class MultiSelectComboBox(QComboBox):
 
         self.line_edit.setReadOnly(True)
         self.line_edit.installEventFilter(self)
-        self.line_edit_style()
 
         self.setModel(self.mlist.model())
         self.setView(self.mlist)
@@ -169,12 +168,7 @@ class MultiSelectComboBox(QComboBox):
     def currentText(self):
         if self.mono:
             return super().currentText()
-        items = self.line_edit.text().split('; ')
-        if len(items) == 1 and not items[0]:
-            # avoid returning ['']
-            return []
-        else:
-            return items
+        return self.line_edit.current_text()
 
     def addItems(self, texts, selected=False):
         if self.mono:
@@ -273,9 +267,6 @@ class MultiSelectComboBox(QComboBox):
         for i in range(2, self.mlist.count()):
             checkbox = self.mlist.itemWidget(self.mlist.item(i))
             checkbox.setChecked(False)
-
-    def line_edit_style(self):
-        self.line_edit.setStyleSheet("background-color: yellow")
 
 
 if __name__ == "__main__":
