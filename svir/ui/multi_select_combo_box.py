@@ -1,9 +1,10 @@
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import (
     QLineEdit, QCheckBox, QComboBox, QListWidget, QListWidgetItem,
-    QApplication, QMainWindow, QWidget, QVBoxLayout)
+    QApplication, QMainWindow, QWidget, QVBoxLayout, QTextEdit)
 from PyQt5.QtCore import QEvent, pyqtSignal
 from PyQt5.QtGui import QCursor
+from ui.complex_line_edit import ComplexLineEdit
 
 
 class MultiSelectComboBox(QComboBox):
@@ -21,12 +22,13 @@ class MultiSelectComboBox(QComboBox):
             return
 
         self.mlist = QListWidget(self)
-        self.line_edit = QLineEdit(self)
+        self.line_edit = ComplexLineEdit(self)
 
         self.clear()
 
         self.line_edit.setReadOnly(True)
         self.line_edit.installEventFilter(self)
+        self.line_edit_style()
 
         self.setModel(self.mlist.model())
         self.setView(self.mlist)
@@ -276,6 +278,9 @@ class MultiSelectComboBox(QComboBox):
         for i in range(2, self.mlist.count()):
             checkbox = self.mlist.itemWidget(self.mlist.item(i))
             checkbox.setChecked(False)
+
+    def line_edit_style(self):
+        self.line_edit.setStyleSheet("background-color: yellow")
 
 
 if __name__ == "__main__":
