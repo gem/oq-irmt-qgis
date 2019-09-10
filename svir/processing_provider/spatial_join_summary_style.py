@@ -34,9 +34,6 @@ from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
 
 class SpatialJoinSummaryStyle(SpatialJoinSummary):
 
-    def __init__(self):
-        super(SpatialJoinSummary, self).__init__()
-
     def group(self):
         return self.tr('Zonal aggregation')
 
