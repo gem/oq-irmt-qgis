@@ -28,7 +28,6 @@ class ComplexLineEdit(QLineEdit):
         qp.end()
 
     def draw_items(self, event, qp):
-        print(self.text())
         qp.setFont(self.settings['font'])
         qp.setRenderHint(QPainter.Antialiasing)
         x = self.settings['padding-x']
