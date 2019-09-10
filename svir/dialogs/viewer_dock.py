@@ -339,7 +339,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.update_selected_tag_names)
 
     def toggle_tag_values_multiselect(
-            self, tag_name, tag_name_is_checked, mono=True):  # FIXME
+            self, tag_name, tag_name_is_checked, mono=False):  # FIXME
         lbl = getattr(self, "%s_values_lbl" % tag_name, None)
         cbx = getattr(self, "%s_values_multiselect" % tag_name, None)
         # NOTE: removing widgets anyway, then re-adding them if needed
@@ -413,43 +413,43 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.draw_dmg_by_asset_aggr()
 
     def filter_agg_curves(self):
-        params = {}
-        # NOTE: self.tags is structured like:
-        # {'taxonomy': {
-        #     'selected': True,
-        #     'values': {
-        #         'Wood': False,
-        #         'Adobe': False,
-        #         'Stone-Masonry': False,
-        #         'Unreinforced-Brick-Masonry': False,
-        #         'Concrete': True
-        #     }
-        #  },
-        #  'NAME_1': {
-        #      'selected': False,
-        #      'values': {
-        #          'Mid-Western': False,
-        #          'Far-Western': False,
-        #          'West': False,
-        #          'East': False,
-        #          'Central': False
-        #      }
-        #  },
-        # }
-        for tag_name in self.tags:
-            if self.tags[tag_name]['selected']:
-                for value in self.tags[tag_name]['values']:
-                    if self.tags[tag_name]['values'][value]:
-                        if tag_name in params:
-                            params[tag_name].append(value)
-                        else:
-                            params[tag_name] = [value]
-        to_extract = 'agg_curves'
-        with WaitCursorManager(
-                'Extracting...', message_bar=self.iface.messageBar()):
-            self.agg_curves = extract_npz(
-                self.session, self.hostname, self.calc_id, to_extract,
-                message_bar=self.iface.messageBar(), params=params)
+        # params = {}
+        # # NOTE: self.tags is structured like:
+        # # {'taxonomy': {
+        # #     'selected': True,
+        # #     'values': {
+        # #         'Wood': False,
+        # #         'Adobe': False,
+        # #         'Stone-Masonry': False,
+        # #         'Unreinforced-Brick-Masonry': False,
+        # #         'Concrete': True
+        # #     }
+        # #  },
+        # #  'NAME_1': {
+        # #      'selected': False,
+        # #      'values': {
+        # #          'Mid-Western': False,
+        # #          'Far-Western': False,
+        # #          'West': False,
+        # #          'East': False,
+        # #          'Central': False
+        # #      }
+        # #  },
+        # # }
+        # for tag_name in self.tags:
+        #     if self.tags[tag_name]['selected']:
+        #         for value in self.tags[tag_name]['values']:
+        #             if self.tags[tag_name]['values'][value]:
+        #                 if tag_name in params:
+        #                     params[tag_name].append(value)
+        #                 else:
+        #                     params[tag_name] = [value]
+        # to_extract = self.output_type
+        # with WaitCursorManager(
+        #         'Extracting...', message_bar=self.iface.messageBar()):
+        #     self.agg_curves = extract_npz(
+        #         self.session, self.hostname, self.calc_id, to_extract,
+        #         message_bar=self.iface.messageBar(), params=params)
         self.draw_agg_curves(self.output_type)
 
     def filter_losses_by_asset_aggr(self):
@@ -483,19 +483,20 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         for tag_name in self.tag_names_multiselect.get_unselected_items():
             self.tags[tag_name]['selected'] = False
             # deselect all tag values for tags that are unselected
-            for value in self.tags[tag_name]['values']:
-                self.tags[tag_name]['values'][value] = False
-                if self.tag_with_all_values == tag_name:
-                    self.tag_with_all_values = None
+            # for value in self.tags[tag_name]['values']:
+            #     self.tags[tag_name]['values'][value] = False
+            #     if self.tag_with_all_values == tag_name:
+            #         self.tag_with_all_values = None
         if self.output_type == 'dmg_by_asset_aggr':
             self.filter_dmg_by_asset_aggr()
         elif self.output_type in ('losses_by_asset_aggr',
                                   'avg_losses-stats_aggr'):
             self.filter_losses_by_asset_aggr()
-        # elif self.output_type == 'agg_curves-stats':
-        #     self.filter_agg_curves()
+        elif self.output_type == 'agg_curves-stats':
+            self.filter_agg_curves()
 
     def update_selected_tag_values(self, tag_name):
+        print('update_selected_tag_values for %s' % tag_name)
         cbx = getattr(self, "%s_values_multiselect" % tag_name)
         for tag_value in cbx.get_selected_items():
             self.tags[tag_name]['values'][tag_value] = True
@@ -514,8 +515,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             if self.output_type in ('losses_by_asset_aggr',
                                     'avg_losses-stats_aggr'):
                 self.filter_losses_by_asset_aggr()
-            # elif self.output_type == 'agg_curves-stats':
-            #     self.filter_agg_curves()
+            elif self.output_type == 'agg_curves-stats':
+                self.filter_agg_curves()
 
     def get_list_selected_tags_str(self):
         selected_tags_str = ''
@@ -564,11 +565,10 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         elif new_output_type == 'agg_curves-stats':
             self.create_loss_type_selector()
             self.create_stats_multiselect()
-            # FIXME: do we need tags?
-            # self.create_tag_names_multiselect()
+            # NOTE: tag_names_multiselect is created dynamically afterwards
             self.stats_multiselect.selection_changed.connect(
-                # self.filter_agg_curves)
-                lambda: self.draw_agg_curves(new_output_type))
+                # lambda: self.draw_agg_curves(new_output_type))
+                self.filter_agg_curves)
         elif new_output_type == 'dmg_by_asset_aggr':
             self.create_loss_type_selector()
             self.create_rlz_selector()
@@ -699,7 +699,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             return
         tags_list = []
         for tag_name in tags_npz:
-            if tag_name in ['id', 'array']:
+            # if tag_name in ['id', 'array']:
+            if tag_name == 'array':
                 continue
             for tag in tags_npz[tag_name]:
                 tag = tag.decode('utf8')
@@ -778,7 +779,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         if output_type == 'agg_curves-stats':
             self.stats = [stat.decode('utf8')
                           for stat in self.agg_curves['stats']]
-            self.stats_multiselect.set_selected_items(self.stats)
+            self.stats_multiselect.add_selected_items(self.stats)
             if ('aggregate_by' in self.agg_curves
                     and len(self.agg_curves['aggregate_by']) > 0):
                 self.create_tag_names_multiselect()
@@ -793,6 +794,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                         self.tag_names_multiselect.add_unselected_items([
                             tag_name])
             self.filter_agg_curves()
+            # self.draw_agg_curves(output_type)
         elif output_type == 'agg_curves-rlzs':
             rlzs = ["Rlz %s" % rlz
                     for rlz in range(self.agg_curves['array'].shape[1])]
@@ -803,6 +805,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                     tag_name = tag.decode('utf8')
                     tag_values = [tag_value.decode('utf8')
                                   for tag_value in self.agg_curves[tag_name]]
+                    # FIXME?
                     self.create_tag_selector(
                         tag_name, tag_values, self.filter_agg_curves)
             self.draw_agg_curves(output_type)
@@ -850,8 +853,10 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             else:
                 for tag in self.agg_curves['aggregate_by']:
                     tag_name = tag.decode('utf8')
+                    # FIXME: check if currentIndex is ok
                     tag_value_idx = getattr(
-                        self, "%s_cbx" % tag_name).currentIndex()
+                        self,
+                        "%s_values_multiselect" % tag_name).currentIndex()
                     tag_value_idxs[tag_name] = tag_value_idx
         else:
             tag_name_idxs = None
@@ -1557,8 +1562,10 @@ class ViewerDock(QDockWidget, FORM_CLASS):
     @pyqtSlot(str)
     def on_loss_type_changed(self, loss_type):
         self.current_loss_type = self.loss_type_cbx.currentText()
-        if self.output_type in ['agg_curves-rlzs', 'agg_curves-stats']:
+        if self.output_type == 'agg_curves-rlzs':
             self.draw_agg_curves(self.output_type)
+        elif self.output_type == 'agg_curves-stats':
+            self.filter_agg_curves()
         elif self.output_type == 'dmg_by_asset_aggr':
             self.filter_dmg_by_asset_aggr()
         elif self.output_type in ('losses_by_asset_aggr',
@@ -1763,10 +1770,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 loss_type_idx = self.loss_type_cbx.currentIndex()
                 csv_file.write(
                     "# Loss type: %s\r\n" % loss_type)
-                if hasattr(self, 'list_selected_edt'):  # FIXME
-                    tags_str = self.list_selected_edt.toPlainText()
-                    csv_file.write(
-                        "# Tags: %s\r\n" % tags_str)
+                csv_file.write(
+                    "# Tags: %s\r\n" % (
+                        self.get_list_selected_tags_str() or 'None'))
                 headers = ['return_period']
                 (rlzs_or_stats_idxs, loss_type_idx, tag_name_idxs,
                     tag_value_idxs) = self._get_idxs()
@@ -1864,6 +1870,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         if self.output_type == 'agg_curves-rlzs':
             self.draw_agg_curves(self.output_type)
         elif self.output_type == 'agg_curves-stats':
+            # self.draw_agg_curves(self.output_type)
             self.filter_agg_curves()
         elif self.output_type == 'dmg_by_asset_aggr':
             self.filter_dmg_by_asset_aggr()
@@ -1901,10 +1908,3 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 # signal currentIndexChanged is not emitted, but we need to
                 # reset the GUI anyway
                 self.on_output_type_cbx_currentIndexChanged(target_index)
-        layer = self.iface.activeLayer()
-        if layer:
-            layer_type = layer.customProperty('output_type')
-            if layer_type:
-                self.output_type_cbx.setDisabled(True)
-                return
-        self.output_type_cbx.setEnabled(True)
