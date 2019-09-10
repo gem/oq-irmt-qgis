@@ -105,8 +105,10 @@ class SpatialJoinSummaryStyle(SpatialJoinSummary):
         processed_layer = QgsProcessingUtils.mapLayerFromString(
             self.dest_id, context)
 
-        added_fieldnames = set(processed_layer.fields().names()) - set(
-            input_layer.fields().names())
+        added_fieldnames = [
+            fieldname for fieldname in processed_layer.fields().names()
+            if fieldname not in input_layer.fields().names()]
+
         if len(added_fieldnames) > 1:
             style_by = QInputDialog.getItem(
                 iface.mainWindow(), "Style output by", "Field",
