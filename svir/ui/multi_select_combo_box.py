@@ -238,9 +238,7 @@ class MultiSelectComboBox(QComboBox):
     def eventFilter(self, obj, event):
         if self.mono:
             return super().eventFilter(obj, event)
-        if obj == self.line_edit and event.type() == QEvent.MouseButtonRelease:
-            self.showPopup()
-            return False
+        # this is handled by ComplexLineEdit
         return False
 
     def keyPressedEvent(self, event):

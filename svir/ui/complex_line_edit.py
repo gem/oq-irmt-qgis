@@ -3,7 +3,7 @@ from PyQt5.QtGui import (
     QFontMetrics,
     QFontDatabase,
     )
-from PyQt5.QtCore import Qt, QRectF
+from PyQt5.QtCore import Qt, QRectF, QEvent
 from PyQt5.QtWidgets import QLineEdit
 
 
@@ -25,34 +25,39 @@ class ComplexLineEdit(QLineEdit):
 
         self.close_rectangles = {}
 
+        self.installEventFilter(self)
+
     def paintEvent(self, event):
         qp = QPainter()
         qp.begin(self)
         self.draw_items(event, qp)
         qp.end()
 
-    def mousePressEvent(self, event):
-        print(event.pos())
-        for text, rect in self.close_rectangles.items():
-            if event.pos() in rect:
-                print(rect, text)
-                idx = self.parent.findText(text)
-                print(idx, str(self.parent.mlist))
-                self.parent.item_was_clicked.emit(text, True)
-                event.ignore()
+    def eventFilter(self, obj, event):
+        if event.type() == QEvent.MouseButtonRelease:
+            for text, rect in self.close_rectangles.items():
+                if event.pos() in rect:
+                    print('Close clicked on: ', text)
+                    selected = self.parent.get_selected_items()
+                    selected.remove(text)
+                    self.parent.set_selected_items(selected)
+
+                    return True
+            self.parent.showPopup()
+        return False
 
     def draw_items(self, event, qp):
         qp.setFont(self.settings['font'])
         qp.setRenderHint(QPainter.Antialiasing)
 
-        if not self.currentText():
+        if not self.current_text():
             self.draw_text(qp,
                            event.rect(),
                            'Click to select items')
             return
 
         x = self.settings['padding-x']
-        for text in self.currentText():
+        for text in self.current_text():
             text = text.strip()
             width = self.font_metrics.width(text)
 
@@ -98,7 +103,7 @@ class ComplexLineEdit(QLineEdit):
         qp.drawLine(inside_rect.topLeft(), inside_rect.bottomRight())
         qp.drawLine(inside_rect.bottomLeft(), inside_rect.topRight())
 
-        self.close_rectangles[text] = inside_rect
+        self.close_rectangles[text] = rect
 
     def draw_text(self, qp, rect, text):
         qp.setPen(self.settings['text'])
