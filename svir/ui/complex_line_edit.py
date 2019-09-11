@@ -25,25 +25,22 @@ class ComplexLineEdit(QLineEdit):
 
         self.close_rectangles = {}
 
-        self.installEventFilter(self)
-
     def paintEvent(self, event):
         qp = QPainter()
         qp.begin(self)
         self.draw_items(event, qp)
         qp.end()
 
-    def eventFilter(self, obj, event):
-        if event.type() == QEvent.MouseButtonRelease:
-            for text, rect in self.close_rectangles.items():
-                if event.pos() in rect:
-                    selected = self.parent.get_selected_items()
-                    selected.remove(text)
-                    self.parent.set_selected_items(selected)
+    def mouseReleaseEvent(self, event):
+        for text, rect in self.close_rectangles.items():
+            if event.pos() in rect:
+                selected = self.parent.get_selected_items()
+                selected.remove(text)
+                self.parent.set_selected_items(selected)
 
-                    return True
-            self.parent.showPopup()
-        return False
+                event.accept()
+                return
+        self.parent.showPopup()
 
     def draw_items(self, event, qp):
         font = self.settings['font']
