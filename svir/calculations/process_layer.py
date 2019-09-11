@@ -36,7 +36,6 @@ from qgis.core import (
                        QgsProject,
                        QgsField,
                        edit,
-                       NULL,
                        )
 
 from qgis.PyQt.QtCore import QVariant
