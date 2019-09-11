@@ -37,7 +37,6 @@ class ComplexLineEdit(QLineEdit):
         if event.type() == QEvent.MouseButtonRelease:
             for text, rect in self.close_rectangles.items():
                 if event.pos() in rect:
-                    print('Close clicked on: ', text)
                     selected = self.parent.get_selected_items()
                     selected.remove(text)
                     self.parent.set_selected_items(selected)
@@ -47,13 +46,18 @@ class ComplexLineEdit(QLineEdit):
         return False
 
     def draw_items(self, event, qp):
-        qp.setFont(self.settings['font'])
+        font = self.settings['font']
         qp.setRenderHint(QPainter.Antialiasing)
+        qp.setFont(font)
 
+        self.close_rectangles = {}
         if not self.current_text():
+            font.setUnderline(True)
+            qp.setFont(font)
             self.draw_text(qp,
                            event.rect(),
                            'Click to select items')
+            font.setUnderline(True)
             return
 
         x = self.settings['padding-x']
