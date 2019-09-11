@@ -54,9 +54,9 @@ class SigmoidAlgorithm(TransformFieldsAlgorithm):
             " a 'simple sigmoid function' as well as its inverse. The inverse"
             " of the Sigmoid function is a logit function which transfers"
             " variables on (0, 1) into a new variable on (-∞, ∞).\n\n"
-            "Direct transformation:\n"
-            "f(x) = 1 / 1 + e^(-x)\n\n"
-            "Inverse transformation:\n"
+            "<h4>Direct transformation:</h4>\n"
+            "f(x) = 1 / 1 + e<sup>-x</sup>\n\n"
+            "<h4>Inverse transformation:</h4>\n"
             "f(x) = ln(x / (1-x))")
 
     def initAlgorithm(self, config=None):

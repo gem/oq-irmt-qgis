@@ -50,7 +50,7 @@ class RankAlgorithm(TransformFieldsAlgorithm):
             " relative positions (rankings).\n"
             "This algorithm ranks values of vector layer fields, dealing with"
             " ties using the chosen strategy (see"
-            " https://en.wikipedia.org/wiki/Ranking#Strategies_for_assigning_rankings)") # NOQA
+            " <a href=\"https://en.wikipedia.org/wiki/Ranking#Strategies_for_assigning_rankings)\">Wikipedia</a>") # NOQA
 
     def initAlgorithm(self, config=None):
         super().initAlgorithm(config)

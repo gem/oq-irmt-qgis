@@ -45,10 +45,10 @@ class MinMaxAlgorithm(TransformFieldsAlgorithm):
             " every other value gets transformed into a decimal between"
             " 0 and 1. It guarantees that all transformed fields will have the"
             " exact same scale, but does not handle outliers well.\n\n"
-            "Direct transformation:\n"
-            "f(x_i) = (x_i - min(x)) / (max(x) - min(x))\n\n"
-            "Inverse transformation:\n"
-            "f(x_i) = 1 - (x_i - min(x)) / (max(x) - min(x))")
+            "<h4>Direct transformation:</h4>\n"
+            "f(x<sub>i</sub>) = (x<sub>i</sub> - min(x)) / (max(x) - min(x))\n\n"
+            "<h4>Inverse transformation:</h4>\n"
+            "f(x<sub>i</sub>) = 1 - (x<sub>i</sub> - min(x)) / (max(x) - min(x))")
 
     def initAlgorithm(self, config=None):
         super().initAlgorithm(config)

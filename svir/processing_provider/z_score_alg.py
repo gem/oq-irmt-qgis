@@ -50,9 +50,9 @@ class ZScoreAlgorithm(TransformFieldsAlgorithm):
             " another.\n"
             "Z-score handles outliers, but does not produce normalized data"
             " with the exact same scale.\n\n"
-            "Direct transformation:\n"
-            "f(x_i) = x_i - μ_x / σ_x\n\n"
-            "Inverse transformation:\n"
+            "<h4>Direct transformation:</h4>\n"
+            "f(x<sub>i</sub>) = x<sub>i</sub> - μ<sub>x</sub> / σ<sub>x</sub>\n\n"  # NOQA
+            "<h4>Inverse transformation:</h4>\n"
             "Multiply each input by -1, before doing the same")
 
     def initAlgorithm(self, config=None):
