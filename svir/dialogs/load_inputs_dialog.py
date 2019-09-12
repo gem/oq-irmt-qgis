@@ -96,7 +96,7 @@ class LoadInputsDialog(QDialog):
             multi_peril_csv_str.replace('\'', '"'))
         return multi_peril_csv_dict
 
-    def load_from_csv(self, csv_path):
+    def load_from_csv(self, csv_path, peril):
         # extract the name of the csv file and remove the extension
         layer_name, ext = os.path.splitext(os.path.basename(csv_path))
         wkt_field = None
@@ -117,18 +117,25 @@ class LoadInputsDialog(QDialog):
             LoadOutputAsLayerDialog.style_maps(
                 self.layer, 'intensity', self.iface, 'input',
                 render_higher_on_top=self.higher_on_top_chk.isChecked())
-        self.write_metadata_to_layer(self.layer)
+        user_params = {'output_type': 'input',
+                       'peril': peril}
+        self.write_metadata_to_layer(self.layer, user_params)
         log_msg('Layer %s was loaded successfully' % layer_name,
                 level='S', message_bar=self.iface.messageBar())
 
-    def write_metadata_to_layer(self, layer):
+    def write_metadata_to_layer(self, layer, extra_params=None):
+        extra_params = extra_params or {}
         json_params = self.drive_engine_dlg.get_oqparam()
         lm = layer.metadata()
         for param in json_params:
             if param == 'description':
                 lm.setTitle(json_params[param])
             else:
-                lm.addKeywords(param, [str(json_params[param])])
+                lm.addKeywords("oqparam:%s" % param, [str(json_params[param])])
+        for param in extra_params:
+            value = extra_params[param]
+            if value is not None:
+                lm.addKeywords("oqparam:%s" % param, [str(value)])
         layer.setMetadata(lm)
 
     def accept(self):
@@ -140,7 +147,7 @@ class LoadInputsDialog(QDialog):
                 extracted_csv_path = zfile.extract(
                     self.multi_peril_csv_dict[peril],
                     path=os.path.dirname(self.zip_filepath))
-                self.load_from_csv(extracted_csv_path)
+                self.load_from_csv(extracted_csv_path, peril)
         self.loading_completed.emit()
 
     def reject(self):
