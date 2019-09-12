@@ -42,8 +42,9 @@ class LoadInputsDialog(QDialog):
     loading_canceled = pyqtSignal()
     loading_completed = pyqtSignal()
 
-    def __init__(self, zip_filepath, iface, parent=None):
+    def __init__(self, drive_engine_dlg, zip_filepath, iface, parent=None):
         super().__init__(parent)
+        self.drive_engine_dlg = drive_engine_dlg
         self.zip_filepath = zip_filepath
         self.iface = iface
         ini_str = self.get_ini_str(self.zip_filepath)
@@ -116,8 +117,19 @@ class LoadInputsDialog(QDialog):
             LoadOutputAsLayerDialog.style_maps(
                 self.layer, 'intensity', self.iface, 'input',
                 render_higher_on_top=self.higher_on_top_chk.isChecked())
+        self.write_metadata_to_layer(self.layer)
         log_msg('Layer %s was loaded successfully' % layer_name,
                 level='S', message_bar=self.iface.messageBar())
+
+    def write_metadata_to_layer(self, layer):
+        json_params = self.drive_engine_dlg.get_oqparam()
+        lm = layer.metadata()
+        for param in json_params:
+            if param == 'description':
+                lm.setTitle(json_params[param])
+            else:
+                lm.addKeywords(param, [str(json_params[param])])
+        layer.setMetadata(lm)
 
     def accept(self):
         super().accept()

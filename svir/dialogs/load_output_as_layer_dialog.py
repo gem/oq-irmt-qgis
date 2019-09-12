@@ -93,13 +93,14 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
     loading_completed = pyqtSignal()
     loading_exception = pyqtSignal(Exception)
 
-    def __init__(self, iface, viewer_dock,
+    def __init__(self, drive_engine_dlg, iface, viewer_dock,
                  session, hostname, calc_id, output_type=None,
                  path=None, mode=None, zonal_layer_path=None,
                  engine_version=None):
         # sanity check
         if output_type not in OQ_TO_LAYER_TYPES:
             raise NotImplementedError(output_type)
+        self.drive_engine_dlg = drive_engine_dlg
         self.iface = iface
         self.viewer_dock = viewer_dock
         self.path = path
@@ -529,6 +530,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.layer.setCustomProperty('calc_id', self.calc_id)
         if poe is not None:
             self.layer.setCustomProperty('poe', poe)
+        self.write_metadata_to_layer(self.layer)
         try:
             if (self.zonal_layer_cbx.currentText()
                     and self.zonal_layer_gbx.isChecked()):
@@ -543,6 +545,16 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.iface.zoomToActiveLayer()
         log_msg('Layer %s was created successfully' % layer_name, level='S',
                 message_bar=self.iface.messageBar())
+
+    def write_metadata_to_layer(self, layer):
+        json_params = self.drive_engine_dlg.get_oqparam()
+        lm = layer.metadata()
+        for param in json_params:
+            if param == 'description':
+                lm.setTitle(json_params[param])
+            else:
+                lm.addKeywords(param, [str(json_params[param])])
+        layer.setMetadata(lm)
 
     @staticmethod
     def style_maps(layer, style_by, iface, output_type='dmg_by_asset',

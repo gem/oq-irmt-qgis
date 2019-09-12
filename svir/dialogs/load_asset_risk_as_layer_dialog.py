@@ -37,13 +37,13 @@ class LoadAssetRiskAsLayerDialog(LoadOutputAsLayerDialog):
     """
     Dialog to load asset_risk from an oq-engine output, as layer
     """
-    def __init__(self, iface, viewer_dock, session, hostname, calc_id,
-                 output_type='asset_risk', path=None, mode=None,
+    def __init__(self, drive_engine_dlg, iface, viewer_dock, session, hostname,
+                 calc_id, output_type='asset_risk', path=None, mode=None,
                  engine_version=None):
         assert output_type == 'asset_risk'
         LoadOutputAsLayerDialog.__init__(
-            self, iface, viewer_dock, session, hostname, calc_id,
-            output_type=output_type, path=path, mode=mode,
+            self, drive_engine_dlg, iface, viewer_dock, session, hostname,
+            calc_id, output_type=output_type, path=path, mode=mode,
             engine_version=engine_version)
 
         self.setWindowTitle(

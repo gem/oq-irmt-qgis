@@ -36,12 +36,13 @@ class LoadUhsAsLayerDialog(LoadOutputAsLayerDialog):
     as layer
     """
 
-    def __init__(self, iface, viewer_dock, session, hostname, calc_id,
-                 output_type='uhs', path=None, mode=None, engine_version=None):
+    def __init__(self, drive_engine_dlg, iface, viewer_dock, session, hostname,
+                 calc_id, output_type='uhs', path=None, mode=None,
+                 engine_version=None):
         assert output_type == 'uhs'
         LoadOutputAsLayerDialog.__init__(
-            self, iface, viewer_dock, session, hostname, calc_id,
-            output_type=output_type, path=path, mode=mode,
+            self, drive_engine_dlg, iface, viewer_dock, session, hostname,
+            calc_id, output_type=output_type, path=path, mode=mode,
             engine_version=engine_version)
 
         self.setWindowTitle(
