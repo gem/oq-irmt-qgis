@@ -196,6 +196,7 @@ class TransformationDialog(QDialog, FORM_CLASS):
         names_plus_aliases = []
         for field_idx, field in enumerate(self.iface.activeLayer().fields()):
             if field.typeName() in NUMERIC_FIELD_TYPES:
+                alias = self.iface.activeLayer().attributeAlias(field_idx)
                 if '(' in field.name():
                     msg = (
                         'Please remove parentheses from the name of field'
@@ -208,8 +209,8 @@ class TransformationDialog(QDialog, FORM_CLASS):
                     log_msg(
                         msg, level='W', message_bar=self.iface.messageBar())
                 else:
-                    name_plus_alias = '%s (%s)' % (
-                        field.name(),
-                        self.iface.activeLayer().attributeAlias(field_idx))
+                    name_plus_alias = field.name()
+                    if alias:
+                        name_plus_alias += ' (%s)' % alias
                     names_plus_aliases.append(name_plus_alias)
         self.fields_multiselect.add_unselected_items(names_plus_aliases)
