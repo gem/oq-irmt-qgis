@@ -103,6 +103,7 @@ from svir.utilities.shared import (DEBUG,
                                    INDICATOR_TEMPLATE,
                                    OPERATORS_DICT)
 from svir.ui.tool_button_with_help_link import QToolButtonWithHelpLink
+from svir.processing_provider.provider import Provider
 
 # DO NOT REMOVE THIS
 # noinspection PyUnresolvedReferences
@@ -166,11 +167,17 @@ class Irmt(object):
         # get or create directory to store input files for the OQ-Engine
         self.ipt_dir = self.get_ipt_dir()
 
+        self.provider = None
+
+    def initProcessing(self):
+        self.provider = Provider()
+        QgsApplication.processingRegistry().addProvider(self.provider)
+
     def initGui(self):
         if not IS_MATPLOTLIB_INSTALLED:
             # the warning should have already been displayed by the __init__
             return
-
+        self.initProcessing()
         # create our own toolbar
         self.toolbar = self.iface.addToolBar('OpenQuake IRMT')
         self.toolbar.setObjectName('IRMTToolBar')
@@ -340,7 +347,7 @@ class Irmt(object):
 
     def aggregate(self):
         processing.Processing.initialize()
-        alg_id = 'qgis:joinbylocationsummary'
+        alg_id = 'irmt:joinbylocationsummarystyle'
         alg = QgsApplication.processingRegistry().algorithmById(alg_id)
         # make sure to use the actual lists of predicates and summaries as
         # defined in the algorithm when it is instantiated
@@ -369,7 +376,12 @@ class Irmt(object):
             'SUMMARIES': [SUMMARIES[summary]
                           for summary in default_summaries],
             }
-        processing.execAlgorithmDialog(alg_id, initial_params)
+        res = processing.execAlgorithmDialog(alg_id, initial_params)
+        if 'OUTPUT' in res:
+            processed_layer = res['OUTPUT']
+            QgsProject.instance().addMapLayer(processed_layer)
+            self.iface.setActiveLayer(processed_layer)
+            self.iface.zoomToActiveLayer()
 
     def ipt(self):
         if self.ipt_dlg is None:
@@ -565,10 +577,11 @@ class Irmt(object):
         """
         if not IS_MATPLOTLIB_INSTALLED:
             return
-
         # stop any running timers
         if self.drive_oq_engine_server_dlg is not None:
             self.drive_oq_engine_server_dlg.reject()
+
+        QgsApplication.processingRegistry().removeProvider(self.provider)
 
         # Remove the plugin menu items and toolbar icons
         for action_name in self.registered_actions:
@@ -1272,10 +1285,14 @@ class Irmt(object):
             layer = self.iface.activeLayer()
             input_attr_names = [
                 field_name_plus_alias.split('(')[0].strip()
+                if '(' in field_name_plus_alias
+                else field_name_plus_alias
                 for field_name_plus_alias in
                 dlg.fields_multiselect.get_selected_items()]
             input_attr_aliases = [
                 field_name_plus_alias.split('(')[1].split(')')[0].strip()
+                if '(' in field_name_plus_alias
+                else ''
                 for field_name_plus_alias in
                 dlg.fields_multiselect.get_selected_items()]
             algorithm_name = dlg.algorithm_cbx.currentText()

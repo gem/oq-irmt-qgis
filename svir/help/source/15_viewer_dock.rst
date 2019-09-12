@@ -1,8 +1,8 @@
 .. _chap-viewer-dock:
 
-********************
+******************************
 The OpenQuake IRMT Data Viewer
-********************
+******************************
 
 The OpenQuake IRMT Data Viewer is a dock window added to QGIS by the OpenQuake IRMT plugin,
 used for data visualization. It is shown/hidden by pressing the
