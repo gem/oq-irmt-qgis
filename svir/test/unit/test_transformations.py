@@ -23,6 +23,7 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 import unittest
+import numpy as np
 
 from svir.calculations.transformation_algs import (
     transform,
@@ -201,7 +202,21 @@ class Log10TestCase(unittest.TestCase):
                       -94062,
                       -158661,
                       174568]
-        self.assertRaises(ValueError, self.alg, input_list)
+        log10_list, _ = self.alg(input_list)
+        expected_list = [5.005390742537307,
+                         4.973506541084651,
+                         np.nan,
+                         np.nan,
+                         5.241964636293325]
+        for i in range(len(input_list)):
+            if np.isnan(expected_list[i]):
+                if not np.isnan(log10_list[i]):
+                    raise ValueError(
+                        "Expected:\n%s\nGot:\n%s" % (expected_list,
+                                                     log10_list))
+            else:
+                self.assertAlmostEqual(
+                    log10_list[i], expected_list[i], places=6)
 
     def test_log10_incrementing_by_one_case_no_zeros_found(self):
         input_list = [101249,

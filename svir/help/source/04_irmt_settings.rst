@@ -1,8 +1,8 @@
 .. _chap-irmt-settings:
 
-*************
+***********************
 OpenQuake IRMT settings
-*************
+***********************
 
 .. _fig-plugin-settings:
 
