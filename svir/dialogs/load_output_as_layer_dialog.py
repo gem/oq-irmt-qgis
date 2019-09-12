@@ -768,8 +768,10 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         effect.setOpacity(1)
         effect.setColor(QColor(255, 255, 255))
         effect.setBlurLevel(1)
+
         renderer.paintEffect().appendEffect(effect)
         renderer.paintEffect().setEnabled(True)
+
         self.layer.setRenderer(renderer)
         self.layer.setOpacity(0.7)
         self.layer.triggerRepaint()
