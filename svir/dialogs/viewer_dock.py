@@ -30,6 +30,7 @@ import numpy
 from datetime import datetime
 from collections import OrderedDict
 
+from PyQt5.QtWidgets import QTabWidget, QSizePolicy
 from qgis.PyQt.QtCore import pyqtSlot, QSettings  # , Qt
 from qgis.PyQt.QtGui import QColor
 from qgis.PyQt.QtWidgets import (
@@ -126,6 +127,10 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.calc_id = None
 
         self.engine_version = None
+
+        self.tag_names_lbl = QLabel('Tag names')
+        self.tag_names_multiselect = MultiSelectComboBox(self)
+        self.tag_names_tab_widget = QTabWidget(self)
 
         # self.current_selection[None] is for recovery curves
         self.current_selection = {}  # rlz_or_stat -> feature_id -> curve
@@ -317,43 +322,46 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.typeDepVLayout.addLayout(hlayout)
 
     def create_tag_names_multiselect(self):
-        self.tag_names_lbl = QLabel('Tag names')
-        self.tag_names_multiselect = MultiSelectComboBox(self)
         self.typeDepVLayout.addWidget(self.tag_names_lbl)
         self.typeDepVLayout.addWidget(self.tag_names_multiselect)
+        self.typeDepVLayout.addWidget(self.tag_names_tab_widget)
+        self.tag_names_tab_widget.setSizePolicy(
+            QSizePolicy.Minimum, QSizePolicy.Minimum)
+        self.tag_names_tab_widget.resize(
+            self.tag_names_tab_widget.minimumSizeHint())
         self.tag_names_multiselect.item_was_clicked.connect(
-            self.toggle_tag_values_multiselect)
+            self.toggle_tag_values_multiselect_tab)
         self.tag_names_multiselect.selection_changed.connect(
             self.update_selected_tag_names)
 
-    def toggle_tag_values_multiselect(
+    def toggle_tag_values_multiselect_tab(
             self, tag_name, tag_name_is_checked, mono=True):  # FIXME
         lbl = getattr(self, "%s_values_lbl" % tag_name, None)
         cbx = getattr(self, "%s_values_multiselect" % tag_name, None)
         if not lbl and not cbx and tag_name_is_checked:
-            setattr(self, "%s_values_lbl" % tag_name,
-                    QLabel('%s values' % tag_name))
+            setattr(self, "%s_values_lbl" % tag_name, '%s values' % tag_name)
             setattr(self, "%s_values_multiselect" % tag_name,
                     MultiSelectComboBox(self, mono=mono))
-            self.typeDepVLayout.addWidget(
-                getattr(self, "%s_values_lbl" % tag_name))
-            self.typeDepVLayout.addWidget(
-                getattr(self, "%s_values_multiselect" % tag_name))
+
+            label = getattr(self, "%s_values_lbl" % tag_name)
+            widget = getattr(self, "%s_values_multiselect" % tag_name)
+            self.tag_names_tab_widget.addTab(widget, label)
+
             if mono:
                 getattr(self, "%s_values_multiselect"
                         % tag_name).currentIndexChanged.connect(
-                            lambda idx: self.update_selected_tag_values(
-                                tag_name))
+                    lambda idx: self.update_selected_tag_values(
+                        tag_name))
             else:
                 getattr(self, "%s_values_multiselect"
                         % tag_name).selection_changed.connect(
-                            lambda: self.update_selected_tag_values(tag_name))
+                    lambda: self.update_selected_tag_values(tag_name))
             self.populate_tag_values_multiselect(tag_name)
         elif lbl and cbx and not tag_name_is_checked:
             delattr(self, "%s_values_lbl" % tag_name)
-            lbl.setParent(None)
             delattr(self, "%s_values_multiselect" % tag_name)
-            cbx.setParent(None)
+            del lbl
+            cbx.deleteLater()
 
     def populate_tag_values_multiselect(self, tag_name):
         self.current_tag_name = tag_name
