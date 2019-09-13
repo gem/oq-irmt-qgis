@@ -84,6 +84,7 @@ FORM_CLASS = get_ui_class('ui_viewer_dock.ui')
 
 
 class ViewerDock(QDockWidget, FORM_CLASS):
+
     def __init__(self, iface, action):
         """Constructor for the viewer dock.
 
@@ -1575,19 +1576,19 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                     if self.output_type == 'hcurves':
                         # field names are like 'mean_PGA_0.005'
                         rlz_or_stat, imt, iml = field.name().split('_')
-                        print("stat = %s\nimt = %s\niml = %s" % (
-                            rlz_or_stat, imt, iml))
-                        print("selected_imt = %s" % selected_imt)
+                        # print("stat = %s\nimt = %s\niml = %s" % (
+                        #     rlz_or_stat, imt, iml))
+                        # print("selected_imt = %s" % selected_imt)
                         if imt != selected_imt:
-                            print('imt != selected_imt')
+                            # print('imt != selected_imt')
                             continue
                     else:  # 'uhs'
                         # field names are like 'mean_PGA'
                         rlz_or_stat, _ = field.name().split('_')
                     if rlz_or_stat not in selected_rlzs_or_stats:
-                        print("selected_rlzs_or_stats = %s" %
-                              selected_rlzs_or_stats)
-                        print('rlz_or_stat not in selected_rlzs_or_stats')
+                        # print("selected_rlzs_or_stats = %s" %
+                        #       selected_rlzs_or_stats)
+                        # print('rlz_or_stat not in selected_rlzs_or_stats')
                         continue
                     field_names.append(field.name())
                 investigation_time = float(
@@ -1603,9 +1604,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                     csv_file.write(
                         '# return_period = %.0f\r\n' % return_period)
                 headers = ['lon', 'lat']
-                print(field_names)
                 headers.extend(field_names)
-                print(headers)
                 writer.writerow(headers)
                 for feature in self.iface.activeLayer().selectedFeatures():
                     values = [feature[field_name]

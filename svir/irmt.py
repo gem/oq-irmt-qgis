@@ -514,8 +514,6 @@ class Irmt(object):
                 self.initial_selection_color_alpha_part))
 
         self.viewer_dock.change_output_type(output_type)
-        # self.viewer_tock.gui_reset_complete.connect(
-        #     self.viewer_dock.layer_changed())
 
     def add_menu_item(self,
                       action_name,
