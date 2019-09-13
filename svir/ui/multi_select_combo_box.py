@@ -2,8 +2,9 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import (
     QLineEdit, QCheckBox, QComboBox, QListWidget, QListWidgetItem,
     QApplication, QMainWindow, QWidget, QVBoxLayout)
-from PyQt5.QtCore import QEvent, pyqtSignal
+from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtGui import QCursor
+from svir.ui.complex_line_edit import ComplexLineEdit
 
 
 class MultiSelectComboBox(QComboBox):
@@ -21,7 +22,7 @@ class MultiSelectComboBox(QComboBox):
             return
 
         self.mlist = QListWidget(self)
-        self.line_edit = QLineEdit(self)
+        self.line_edit = ComplexLineEdit(self)
 
         self.clear()
 
@@ -32,8 +33,6 @@ class MultiSelectComboBox(QComboBox):
         self.setView(self.mlist)
         self.view().setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.setLineEdit(self.line_edit)
-
-        self.set_placeholder_text('Click to select items')
 
         # NOTE: this is necessary to handle the case in which an item in the
         # list is clicked to its right part, outside the text
@@ -169,12 +168,7 @@ class MultiSelectComboBox(QComboBox):
     def currentText(self):
         if self.mono:
             return super().currentText()
-        items = self.line_edit.text().split('; ')
-        if len(items) == 1 and not items[0]:
-            # avoid returning ['']
-            return []
-        else:
-            return items
+        return self.line_edit.current_text()
 
     def addItems(self, texts, selected=False):
         if self.mono:
@@ -217,9 +211,6 @@ class MultiSelectComboBox(QComboBox):
     def set_search_bar_placeholder_text(self, text):
         self.search_bar.setPlaceholderText(text)
 
-    def set_placeholder_text(self, text):
-        self.line_edit.setPlaceholderText(text)
-
     def clear(self):
         if self.mono:
             return super().clear()
@@ -247,14 +238,12 @@ class MultiSelectComboBox(QComboBox):
     def eventFilter(self, obj, event):
         if self.mono:
             return super().eventFilter(obj, event)
-        if obj == self.line_edit and event.type() == QEvent.MouseButtonRelease:
-            self.showPopup()
-            return False
+        # this is handled by ComplexLineEdit
         return False
 
-    def keyPressedEvent(self, event):
+    def keyPressEvent(self, event):
         if self.mono:
-            return super().keyPressedEvent(event)
+            return super().keyPressEvent(event)
         # do not handle key event
         pass
 
