@@ -44,34 +44,50 @@ mathematical modelling packages (:numref:`tab-transformation-functions`).
 
 These include:
 
-1. **Data Ranking** is the simplest standardization technique.
-   Ranking is not affected by outliers and allows the performance of
+1. **Ranking** is the simplest standardization technique.
+   It is not affected by outliers and allows the performance of
    enumeration units to be benchmarked over time in terms of their relative
-   positions (rankings).
+   positions (rankings). The ranking algorithm deals with
+   ties using a chosen strategy between those listed below (see
+   `<https://en.wikipedia.org/wiki/Ranking#Strategies_for_assigning_rankings>`_):
+
+   * Average - Fractional (1 2.5 2.5 4)
+   * Standard competition - Minimum (1 2 2 4)
+   * Modified competition - Maximum (1 3 3 4)
+   * Dense (1 2 2 3)
+   * Ordinal (1 2 3 4)
  
-2. **Z-scores (or normalization)** is the most common standardization
+2. **Z-scores normalization** is the most common standardization
    technique. A Z-score converts indicators to a common scale with a mean of
    zero and standard deviation of one. Indicators with outliers that are
    extreme values may have a greater effect on the composite indicator. The
    latter may not be desirable if the intention is to support compensability
    where a deficit in one variable can be offset (or compensated) by a surplus
-   in another.
+   in another. Summarizing: Z-score handles outliers, but does not produce
+   normalized data with the exact same scale.
  
-3. **Min-Max Transformation** is a type of transformation that
+3. **Min-Max normalization** is a type of transformation that
    rescales variables into an identical range between 0 and 1. Extreme
    values/or outliers could distort the transformed risk indicator. However,
-   the MIN-MAX transformation can widen a range of indicators lying within a
+   the Min-Max transformation can widen a range of indicators lying within a
    small interval, increasing the effect of the variable on the composite
-   indicator more than the Z-scores.
+   indicator more than the Z-scores. In brief: Min-Max guarantees all
+   normalized fields will have the exact same scale but does not handle
+   outliers well.
  
 4. **Log10** is one of a class of logarithmic transformations that
    include natural log, log2, log3, log4, etc. Within the current plugin, we
    offer functionality for log10 only, yet these transformations are possible
    within the advanced :guilabel:`field calculator`. A logarithm of any negative number
-   or zero is undefined. It is not possible to log transform values within the
-   plugin if the data contains negative values or a zero. For values of zero,
-   the tool will warn users and suggest that a :math:`1.0` constant be added to move
-   the minimum value of the distribution.
+   or zero is undefined.
+   This algorithm copes with the case in which any zeros are
+   present in the input data, offering two strategies:
+
+   * Ignore zeros: each zero in input is transformed into nan
+   * Increment all values by one: each input value is incremented by 1 before running the transformation.
+
+   The algorithm uses the numpy.log10 function to transform the (possibly
+   modified) list of values.
  
 5. **Sigmoid function** is a transformation function having an *S*
    shape (sigmoid curve). A Sigmoid function is used to transform values on
@@ -153,5 +169,8 @@ is opened. Please refer to the `code documentation
 for the detailed description of all the agorithms and variants provided by
 the OpenQuake IRMT.
 
+The plugin is also an algorithm provider (the :guilabel:`OpenQuake IRMT` provider)
+for the Processing Toolbox. The transformation functions described above
+are available under the :guilabel:`Field transformation` group.
 
 .. |icon-transform-attributes| image:: images/iconTransformAttribute.png

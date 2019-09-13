@@ -30,6 +30,11 @@ changelog=
     * OQ-Engine outputs agg_curves-rlzs and agg_curves-stats for event_based_risk calculations can be visualized in the Data Viewer.
     * OQ-Engine input files can be downloaded as zip.
     * Added loader for OQ-Engine outputs 'agglosses'
+    * The plugin is also a Processing Toolbox algorithm provider, offering an extensible set of field transformation functions
+      (normalization/standardization, ranking, and others) and a modified version of the "Join attributes by location (summary)"
+      algorithm, that automatically styles the output joined layer
+    * Re-added and updated the user manual chapter about aggregating points by zone
+    * Scripts running tests and building the user manual have been fixed
     3.7.1
     * Instead of the 'sourcegroups' output (that was removed from the OQ-Engine), the plugin can now load the new output 'events'
     * The user can choose if selecting the '.ini' file to run a OQ-Engine calculation, or letting the OQ-Engine automatically pick one from the list of input files.
@@ -172,3 +177,4 @@ experimental=True
 # deprecated flag (applies to the whole plugin, not just a single version
 deprecated=False
 
+hasProcessingProvider=yes

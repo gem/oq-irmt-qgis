@@ -26,6 +26,7 @@ Contents:
     07_transform_attribute.rst
     08_project_definitions_manager.rst
     09_weighting_and_calculating.rst
+    10_aggregate_loss_by_zone.rst
     11_upload_project_to_platform.rst
     12_using_r_scripts.rst
     13_recovery_modeling.rst

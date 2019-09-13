@@ -545,8 +545,9 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 message_bar=self.iface.messageBar())
 
     @staticmethod
-    def style_maps(layer, style_by, iface, output_type, perils=None,
-                   add_null_class=False, render_higher_on_top=False):
+    def style_maps(layer, style_by, iface, output_type='dmg_by_asset',
+                   perils=None, add_null_class=False,
+                   render_higher_on_top=False):
         symbol = QgsSymbol.defaultSymbol(layer.geometryType())
         # see properties at:
         # https://qgis.org/api/qgsmarkersymbollayerv2_8cpp_source.html#l01073
