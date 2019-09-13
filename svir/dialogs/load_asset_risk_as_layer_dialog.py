@@ -23,13 +23,14 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 from qgis.PyQt.QtWidgets import (
-    QGroupBox, QVBoxLayout, QHBoxLayout, QRadioButton, QCheckBox, QWidget,)
+    QGroupBox, QVBoxLayout, QHBoxLayout, QRadioButton, QCheckBox, QWidget,
+    QLabel)
 from qgis.core import (
     QgsFeature, QgsGeometry, QgsPointXY, edit, QgsTask, QgsApplication,)
 from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
 from svir.calculations.calculate_utils import add_numeric_attribute
 from svir.utilities.utils import WaitCursorManager, log_msg
-from svir.ui.list_multiselect_widget import ListMultiSelectWidget
+from svir.ui.multi_select_combo_box import MultiSelectComboBox
 from svir.tasks.extract_npz_task import ExtractNpzTask
 
 
@@ -97,11 +98,12 @@ class LoadAssetRiskAsLayerDialog(LoadOutputAsLayerDialog):
         self.taxonomies_gbx.setChecked(False)
         self.taxonomies_gbx_v_layout = QVBoxLayout()
         self.taxonomies_gbx.setLayout(self.taxonomies_gbx_v_layout)
-        self.taxonomies_multisel = ListMultiSelectWidget(
-            title='Taxonomies')
+        self.taxonomies_lbl = QLabel("Taxonomies")
+        self.taxonomies_multisel = MultiSelectComboBox(self)
         self.taxonomies_multisel.add_unselected_items(
             sorted([taxonomy for taxonomy in self.exposure_metadata['taxonomy']
                     if taxonomy != '?']))
+        self.taxonomies_gbx_v_layout.addWidget(self.taxonomies_lbl)
         self.taxonomies_gbx_v_layout.addWidget(self.taxonomies_multisel)
         self.taxonomies_gbx.toggled[bool].connect(
             self.on_taxonomies_gbx_toggled)
@@ -112,13 +114,14 @@ class LoadAssetRiskAsLayerDialog(LoadOutputAsLayerDialog):
         self.tag_gbx.setChecked(False)
         self.tag_gbx_v_layout = QVBoxLayout()
         self.tag_gbx.setLayout(self.tag_gbx_v_layout)
-        self.tag_values_multisel = ListMultiSelectWidget(
-            title='Tag values')
+        self.tag_values_lbl = QLabel("Tag values")
+        self.tag_values_multisel = MultiSelectComboBox(self)
         self.create_selector(
             "tag", "Tag", add_to_layout=self.tag_gbx_v_layout,
             on_text_changed=self.on_tag_changed)
         self.tag_cbx.addItems([
             tag_name for tag_name in self.tag_names if tag_name != 'taxonomy'])
+        self.tag_gbx_v_layout.addWidget(self.tag_values_lbl)
         self.tag_gbx_v_layout.addWidget(self.tag_values_multisel)
         self.tag_gbx.toggled[bool].connect(self.on_tag_gbx_toggled)
         self.vlayout.addWidget(self.tag_gbx)
@@ -164,8 +167,8 @@ class LoadAssetRiskAsLayerDialog(LoadOutputAsLayerDialog):
         tag_values = sorted([
             value for value in self.exposure_metadata[tag_name]
             if value != '?'])
-        self.tag_values_multisel.set_selected_items([])
-        self.tag_values_multisel.set_unselected_items(tag_values)
+        self.tag_values_multisel.clear()
+        self.tag_values_multisel.add_unselected_items(tag_values)
 
     def set_ok_button(self):
         self.ok_button.setEnabled(
@@ -231,11 +234,9 @@ class LoadAssetRiskAsLayerDialog(LoadOutputAsLayerDialog):
         params = {}
         if self.tag_gbx.isChecked():
             tag_name = self.tag_cbx.currentText()
-            params[tag_name] = list(
-                self.tag_values_multisel.get_selected_items())
+            params[tag_name] = self.tag_values_multisel.get_selected_items()
         if self.taxonomies_gbx.isChecked():
-            params['taxonomy'] = list(
-                self.taxonomies_multisel.get_selected_items())
+            params['taxonomy'] = self.taxonomies_multisel.get_selected_items()
         return params
 
     def download_asset_risk(self, extract_params):

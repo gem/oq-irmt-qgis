@@ -687,12 +687,8 @@ class Irmt(object):
                     'children'][1]['children']
                 known_themes = []
                 with WaitCursorManager(msg, self.iface.messageBar()):
-                    while dlg.indicator_multiselect.selected_widget.count(
-                            ) > 0:
-                        item = \
-                            dlg.indicator_multiselect.selected_widget.takeItem(
-                                0)
-                        ind_code = item.text().split(':')[0]
+                    for item in dlg.indicator_multiselect.get_selected_items():
+                        ind_code = item.split(':')[0]
                         ind_info = dlg.indicators_info_dict[ind_code]
                         sv_theme = ind_info['theme']
                         sv_field = ind_code
@@ -705,12 +701,10 @@ class Irmt(object):
                                             sv_field)
 
                         indices_list.append(sv_field)
-                    while dlg.country_multiselect.selected_widget.count() > 0:
-                        item = \
-                            dlg.country_multiselect.selected_widget.takeItem(0)
+                    for item in dlg.country_multiselect.get_selected_items():
                         # get the iso from something like:
                         # country_name (iso_code)
-                        iso_code = item.text().split('(')[1].split(')')[0]
+                        iso_code = item.split('(')[1].split(')')[0]
                         iso_codes_list.append(iso_code)
 
                     # create string for DB query
@@ -1344,7 +1338,7 @@ class Irmt(object):
                 target_attr_alias = input_attr_aliases[input_attr_idx]
                 if dlg.overwrite_ckb.isChecked():
                     target_attr_name = input_attr_name
-                elif dlg.fields_multiselect.selected_widget.count() == 1:
+                elif dlg.fields_multiselect.selected_count() == 1:
                     target_attr_name = dlg.new_field_name_txt.text()
                 else:
                     # the limit of 10 chars for shapefiles is handled by
