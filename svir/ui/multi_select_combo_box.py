@@ -241,7 +241,7 @@ class MultiSelectComboBox(QComboBox):
         # this is handled by ComplexLineEdit
         return False
 
-    def keyPressedEvent(self, event):
+    def keyPressEvent(self, event):
         if self.mono:
             return super().keyPressedEvent(event)
         # do not handle key event
