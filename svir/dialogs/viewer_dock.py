@@ -1570,11 +1570,13 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                     selected_imt = self.imt_cbx.currentText()
                 field_names = []
                 for field in self.iface.activeLayer().fields():
+                    print(field.name())
                     if field.name() == 'fid':
                         continue
                     if self.output_type == 'hcurves':
                         # field names are like 'mean_PGA_0.005'
                         rlz_or_stat, imt, iml = field.name().split('_')
+                        print(rlz_or_stat, imt, iml)
                         if imt != selected_imt:
                             continue
                     else:  # 'uhs'
@@ -1596,7 +1598,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                     csv_file.write(
                         '# return_period = %.0f\r\n' % return_period)
                 headers = ['lon', 'lat']
+                print(field_names)
                 headers.extend(field_names)
+                print(headers)
                 writer.writerow(headers)
                 for feature in self.iface.activeLayer().selectedFeatures():
                     values = [feature[field_name]
