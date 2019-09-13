@@ -1,10 +1,10 @@
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import (
     QLineEdit, QCheckBox, QComboBox, QListWidget, QListWidgetItem,
-    QApplication, QMainWindow, QWidget, QVBoxLayout, QTextEdit)
-from PyQt5.QtCore import QEvent, pyqtSignal
+    QApplication, QMainWindow, QWidget, QVBoxLayout)
+from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtGui import QCursor
-from ui.complex_line_edit import ComplexLineEdit
+from svir.ui.complex_line_edit import ComplexLineEdit
 
 
 class MultiSelectComboBox(QComboBox):

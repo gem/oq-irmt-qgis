@@ -1,9 +1,9 @@
 from PyQt5.QtGui import (
-    QPainter, QColor, QFont, QPainterPath, QPen,
+    QPainter, QColor, QPainterPath, QPen,
     QFontMetrics,
     QFontDatabase,
     )
-from PyQt5.QtCore import Qt, QRectF, QEvent
+from PyQt5.QtCore import Qt, QRectF
 from PyQt5.QtWidgets import QLineEdit
 
 
