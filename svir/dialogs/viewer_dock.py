@@ -183,6 +183,21 @@ class ViewerDock(QDockWidget, FORM_CLASS):
 
         self.plot_canvas.mpl_connect('motion_notify_event', self.on_plot_hover)
 
+    def create_annot(self):
+        self.annot = self.plot.annotate(
+            "", xy=(0, 0), xytext=(-20, 20), textcoords="offset points",
+            bbox=dict(boxstyle="round", fc="w"),
+            arrowprops=dict(arrowstyle="->"))
+        self.annot.set_visible(False)
+
+    def update_annot(self, ind):
+        x, y = self.line.get_data()
+        xlab = x[ind["ind"][0]]
+        ylab = y[ind["ind"][0]]
+        self.annot.xy = (xlab, ylab)
+        self.annot.set_text("%.0f days, %.0f%%" % (xlab, ylab))
+        self.annot.get_bbox_patch().set_alpha(0.4)
+
     def create_loss_type_selector(self):
         self.loss_type_lbl = QLabel('Loss Type')
         self.loss_type_lbl.setSizePolicy(
@@ -963,7 +978,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 lon = feature.geometry().asPoint().x()
                 lat = feature.geometry().asPoint().y()
 
-                self.plot.plot(
+                self.line, = self.plot.plot(
                     curve['abscissa'],
                     curve['ordinates'],
                     color=curve['color'],
@@ -974,6 +989,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                     gid=str(site),
                     picker=5  # 5 points tolerance
                 )
+                if self.output_type == 'recovery_curves':
+                    self.create_annot()
         if self.output_type == 'hcurves':
             self.plot.set_xscale('log')
             self.plot.set_yscale('log')
@@ -1373,6 +1390,20 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         if not self.on_container_hover(event, self.plot):
             if hasattr(self.legend, 'get_lines'):
                 self.on_container_hover(event, self.legend)
+        if self.output_type == 'recovery_curves':
+            vis = self.annot.get_visible()
+            if event.inaxes == self.plot:
+                if not hasattr(self, 'line'):
+                    return
+                cont, ind = self.line.contains(event)
+                if cont:
+                    self.update_annot(ind)
+                    self.annot.set_visible(True)
+                    self.plot_figure.canvas.draw_idle()
+                else:
+                    if vis:
+                        self.annot.set_visible(False)
+                        self.plot_figure.canvas.draw_idle()
 
     def on_container_hover(self, event, container):
         if self.output_type in (
