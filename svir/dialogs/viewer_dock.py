@@ -1735,11 +1735,14 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         event.accept()
 
     def change_output_type(self, output_type):
+        current_index = self.output_type_cbx.currentIndex()
         if output_type not in self.output_types_names:
             output_type = ''
         # get the index of the item that has the given string
         # and set the combobox to that item
-        index = self.output_type_cbx.findText(
+        target_index = self.output_type_cbx.findText(
             self.output_types_names[output_type])
-        if index != -1:
-            self.output_type_cbx.setCurrentIndex(index)
+        if target_index != -1:
+            self.output_type_cbx.setCurrentIndex(target_index)
+        if target_index == current_index:
+            self.output_type_cbx.currentIndexChanged.emit(current_index)
