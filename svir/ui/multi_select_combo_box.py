@@ -243,7 +243,7 @@ class MultiSelectComboBox(QComboBox):
 
     def keyPressEvent(self, event):
         if self.mono:
-            return super().keyPressedEvent(event)
+            return super().keyPressEvent(event)
         # do not handle key event
         pass
 
