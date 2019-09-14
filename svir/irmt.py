@@ -101,7 +101,7 @@ from svir.utilities.shared import (DEBUG,
                                    PROJECT_TEMPLATE,
                                    THEME_TEMPLATE,
                                    INDICATOR_TEMPLATE,
-                                   OQ_CURVE_TYPES,
+                                   OQ_XMARKER_TYPES,
                                    OPERATORS_DICT)
 from svir.ui.tool_button_with_help_link import QToolButtonWithHelpLink
 from svir.processing_provider.provider import Provider
@@ -486,7 +486,7 @@ class Irmt(object):
         if layer:
             output_type = layer.customProperty('output_type') or ''
         p = QgsProject.instance()
-        if output_type in OQ_CURVE_TYPES:
+        if output_type in OQ_XMARKER_TYPES:
             # set a darker color for selected features in the project
             p.writeEntry('Gui', '/SelectionColorRedPart', 255)
             p.writeEntry('Gui', '/SelectionColorGreenPart', 0)

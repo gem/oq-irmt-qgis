@@ -252,7 +252,7 @@ OQ_EXTRACT_TO_VIEW_TYPES = set([
      'dmg_by_asset_aggr',
      'losses_by_asset_aggr',
      'avg_losses-stats_aggr'])
-OQ_CURVE_TYPES = set(['hcurves', 'uhs', 'recovery_curves'])
+OQ_XMARKER_TYPES = set(['hcurves', 'uhs', 'recovery_curves'])
 OQ_ALL_TYPES = (OQ_TO_LAYER_TYPES | OQ_RST_TYPES | OQ_EXTRACT_TO_VIEW_TYPES)
 
 LOG_LEVELS = {'I': 'Info (high verbosity)',
