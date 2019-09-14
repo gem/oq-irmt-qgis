@@ -29,7 +29,8 @@ import configparser
 from qgis.PyQt.QtCore import pyqtSignal
 from qgis.PyQt.QtWidgets import (
     QDialog, QVBoxLayout, QDialogButtonBox, QGroupBox, QCheckBox)
-from svir.utilities.utils import import_layer_from_csv, log_msg, get_headers
+from svir.utilities.utils import (
+    import_layer_from_csv, log_msg, get_headers, write_metadata_to_layer)
 from svir.utilities.shared import GEOM_FIELDNAMES
 from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
 
@@ -117,26 +118,11 @@ class LoadInputsDialog(QDialog):
             LoadOutputAsLayerDialog.style_maps(
                 self.layer, 'intensity', self.iface, 'input',
                 render_higher_on_top=self.higher_on_top_chk.isChecked())
-        user_params = {'output_type': 'input',
-                       'peril': peril}
-        self.write_metadata_to_layer(self.layer, user_params)
+        user_params = {'peril': peril}
+        write_metadata_to_layer(
+            self.drive_engine_dlg, 'input', self.layer, user_params)
         log_msg('Layer %s was loaded successfully' % layer_name,
                 level='S', message_bar=self.iface.messageBar())
-
-    def write_metadata_to_layer(self, layer, extra_params=None):
-        extra_params = extra_params or {}
-        json_params = self.drive_engine_dlg.get_oqparam()
-        lm = layer.metadata()
-        for param in json_params:
-            if param == 'description':
-                lm.setTitle(json_params[param])
-            else:
-                lm.addKeywords("oqparam:%s" % param, [str(json_params[param])])
-        for param in extra_params:
-            value = extra_params[param]
-            if value is not None:
-                lm.addKeywords("oqparam:%s" % param, [str(value)])
-        layer.setMetadata(lm)
 
     def accept(self):
         super().accept()

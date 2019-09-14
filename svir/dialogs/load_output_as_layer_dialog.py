@@ -79,6 +79,7 @@ from svir.utilities.utils import (get_ui_class,
                                   tr,
                                   get_file_size,
                                   get_irmt_version,
+                                  write_metadata_to_layer,
                                   )
 from svir.tasks.extract_npz_task import TaskCanceled
 
@@ -537,7 +538,8 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                        'dmg_state': dmg_state,
                        'gsim': gsim,
                        'imt': imt}
-        self.write_metadata_to_layer(self.layer, user_params)
+        write_metadata_to_layer(
+            self.drive_engine_dlg, self.output_type, self.layer, user_params)
         try:
             if (self.zonal_layer_cbx.currentText()
                     and self.zonal_layer_gbx.isChecked()):
@@ -552,22 +554,6 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.iface.zoomToActiveLayer()
         log_msg('Layer %s was created successfully' % layer_name, level='S',
                 message_bar=self.iface.messageBar())
-
-    def write_metadata_to_layer(self, layer, user_params=None):
-        user_params = user_params or {}
-        json_params = self.drive_engine_dlg.get_oqparam()
-        lm = layer.metadata()
-        for param in json_params:
-            if param == 'description':
-                lm.setTitle(json_params[param])
-            else:
-                lm.addKeywords("oqparam:%s" % param, [str(json_params[param])])
-        lm.addKeywords("oqparam:output_type", [self.output_type])
-        for param in user_params:
-            value = user_params[param]
-            if value is not None:
-                lm.addKeywords("userparam:%s" % param, [str(value)])
-        layer.setMetadata(lm)
 
     @staticmethod
     def style_maps(layer, style_by, iface, output_type='dmg_by_asset',
