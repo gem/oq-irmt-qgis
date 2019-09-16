@@ -1290,10 +1290,6 @@ class ViewerDock(QDockWidget, FORM_CLASS):
     def layer_changed(self):
         self.calc_id = None
         self.clear_plot()
-        if hasattr(self, 'self.imt_cbx'):
-            self.clear_imt_cbx()
-        if hasattr(self, 'loss_type_cbx'):
-            self.clear_loss_type_cbx()
 
         self.remove_connects()
 
@@ -1321,7 +1317,6 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                     imts = sorted(set(
                         [field_name.split('_')[1]
                          for field_name in self.field_names]))
-                    self.imt_cbx.clear()
                     self.imt_cbx.addItems(imts)
                 self.rlzs_or_stats = sorted(set(
                     [field_name.split('_')[0]
