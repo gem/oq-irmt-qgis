@@ -129,8 +129,6 @@ class ViewerDock(QDockWidget, FORM_CLASS):
 
         # self.current_selection[None] is for recovery curves
         self.current_selection = {}  # rlz_or_stat -> feature_id -> curve
-        self.current_imt = None
-        self.current_loss_type = None
         self.was_imt_switched = False
         self.was_loss_type_switched = False
         self.was_poe_switched = False
@@ -1437,13 +1435,11 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         return False
 
     def on_imt_changed(self):
-        self.current_imt = self.imt_cbx.currentText()
         self.was_imt_switched = True
         self.redraw_current_selection()
 
     @pyqtSlot(str)
     def on_loss_type_changed(self, loss_type):
-        self.current_loss_type = self.loss_type_cbx.currentText()
         if self.output_type in ['agg_curves-rlzs', 'agg_curves-stats']:
             self.draw_agg_curves(self.output_type)
         elif self.output_type == 'dmg_by_asset_aggr':
@@ -1456,12 +1452,10 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.redraw_current_selection()
 
     def on_poe_changed(self):
-        self.current_poe = self.poe_cbx.currentText()
         self.was_poe_switched = True
         self.redraw_current_selection()
 
     def on_approach_changed(self):
-        self.current_approach = self.approach_cbx.currentText()
         self.redraw_current_selection()
 
     def on_recalculate_on_the_fly_chk_toggled(self, checked):
@@ -1495,7 +1489,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 self.tr('Export data'),
                 os.path.expanduser(
                     '~/hazard_curves_%s_%s.csv' % (
-                        self.current_imt, self.calc_id)),
+                        self.imt_cbx.currentText(), self.calc_id)),
                 '*.csv')
         elif self.output_type == 'uhs':
             filename, _ = QFileDialog.getSaveFileName(
