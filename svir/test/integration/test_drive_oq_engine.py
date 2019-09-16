@@ -476,12 +476,13 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 return 'ok'
             if output_type in OQ_ZIPPED_TYPES:
                 dlg = LoadInputsDialog(
-                    self.drive_oq_engine_server_dlg, filepath, self.irmt.iface)
+                    self.irmt.drive_oq_engine_server_dlg,
+                    filepath, self.irmt.iface)
                 dlg.accept()
                 print('\t\tok')
                 return 'ok'
             dlg = OUTPUT_TYPE_LOADERS[output_type](
-                self.drive_oq_engine_server_dlg, self.irmt.iface,
+                self.irmt.drive_oq_engine_server_dlg, self.irmt.iface,
                 self.irmt.viewer_dock,
                 self.irmt.drive_oq_engine_server_dlg.session,
                 self.hostname, calc_id, output_type, filepath)
@@ -495,7 +496,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         elif output_type in OQ_EXTRACT_TO_LAYER_TYPES:
             self.irmt.iface.newProject()
             dlg = OUTPUT_TYPE_LOADERS[output_type](
-                self.drive_oq_engine_server_dlg,
+                self.irmt.drive_oq_engine_server_dlg,
                 self.irmt.iface, self.irmt.viewer_dock,
                 self.irmt.drive_oq_engine_server_dlg.session,
                 self.hostname, calc_id, output_type)
