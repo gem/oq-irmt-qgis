@@ -57,7 +57,7 @@ from qgis.PyQt.QtCore import (
                               QUrlQuery,
                               )
 from qgis.PyQt.QtWidgets import QAction, QFileDialog, QApplication, QMenu
-from qgis.PyQt.QtGui import QIcon, QDesktopServices
+from qgis.PyQt.QtGui import QIcon, QDesktopServices, QColor
 
 from svir.dialogs.viewer_dock import ViewerDock
 from svir.utilities.import_sv_data import get_loggedin_downloader
@@ -101,6 +101,7 @@ from svir.utilities.shared import (DEBUG,
                                    PROJECT_TEMPLATE,
                                    THEME_TEMPLATE,
                                    INDICATOR_TEMPLATE,
+                                   OQ_XMARKER_TYPES,
                                    OPERATORS_DICT)
 from svir.ui.tool_button_with_help_link import QToolButtonWithHelpLink
 from svir.processing_provider.provider import Provider
@@ -157,17 +158,31 @@ class Irmt(object):
         # 'selected_project_definition_idx', 'project_definitions'
         self.supplemental_information = {}
 
+        self.iface.initializationCompleted.connect(
+            self.on_iface_initialization_completed)
+
+        # get or create directory to store input files for the OQ-Engine
+        self.ipt_dir = self.get_ipt_dir()
+
+        self.provider = None
+
+    def on_iface_initialization_completed(self):
         self.iface.currentLayerChanged.connect(self.current_layer_changed)
         self.iface.newProjectCreated.connect(self.current_layer_changed)
         self.iface.projectRead.connect(self.current_layer_changed)
         QgsProject.instance().layersAdded.connect(self.layers_added)
         QgsProject.instance().layersRemoved.connect(
             self.layers_removed)
-
-        # get or create directory to store input files for the OQ-Engine
-        self.ipt_dir = self.get_ipt_dir()
-
-        self.provider = None
+        # save the default selection color settings
+        p = QgsProject.instance()
+        self.initial_selection_color_red_part = p.readNumEntry(
+            'Gui', '/SelectionColorRedPart')[0]
+        self.initial_selection_color_green_part = p.readNumEntry(
+            'Gui', '/SelectionColorGreenPart')[0]
+        self.initial_selection_color_blue_part = p.readNumEntry(
+            'Gui', '/SelectionColorBluePart')[0]
+        self.initial_selection_color_alpha_part = p.readNumEntry(
+            'Gui', '/SelectionColorAlphaPart')[0]
 
     def initProcessing(self):
         self.provider = Provider()
@@ -470,8 +485,35 @@ class Irmt(object):
         output_type = ''
         if layer:
             output_type = layer.customProperty('output_type') or ''
+        p = QgsProject.instance()
+        if output_type in OQ_XMARKER_TYPES:
+            # set a darker color for selected features in the project
+            p.writeEntry('Gui', '/SelectionColorRedPart', 255)
+            p.writeEntry('Gui', '/SelectionColorGreenPart', 0)
+            p.writeEntry('Gui', '/SelectionColorBluePart', 0)
+            p.writeEntry('Gui', '/SelectionColorAlphaPart', 255)
+            self.iface.mapCanvas().setSelectionColor(QColor(255, 0, 0, 255))
+        else:
+            # restore intial selection color
+            p.writeEntry(
+                'Gui', '/SelectionColorRedPart',
+                self.initial_selection_color_red_part)
+            p.writeEntry(
+                'Gui', '/SelectionColorGreenPart',
+                self.initial_selection_color_green_part)
+            p.writeEntry(
+                'Gui', '/SelectionColorBluePart',
+                self.initial_selection_color_blue_part)
+            p.writeEntry(
+                'Gui', '/SelectionColorAlphaPart',
+                self.initial_selection_color_alpha_part)
+            self.iface.mapCanvas().setSelectionColor(QColor(
+                self.initial_selection_color_red_part,
+                self.initial_selection_color_green_part,
+                self.initial_selection_color_blue_part,
+                self.initial_selection_color_alpha_part))
+
         self.viewer_dock.change_output_type(output_type)
-        self.viewer_dock.layer_changed()
 
     def add_menu_item(self,
                       action_name,

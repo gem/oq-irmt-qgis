@@ -35,6 +35,8 @@ changelog=
       algorithm, that automatically styles the output joined layer
     * Re-added and updated the user manual chapter about aggregating points by zone
     * Scripts running tests and building the user manual have been fixed
+    * The color for selected features is red for layers that use a cross symbol in the map (e.g. hazard curves and uniform hazard spectra)
+    * Moving the mouse over recovery curves, a dynamic annotation is displayed, showing the coordinates of the pointed element
     * Widgets to select multiple items have been replaced by more compact selectors that also allow text searching
     3.7.1
     * Instead of the 'sourcegroups' output (that was removed from the OQ-Engine), the plugin can now load the new output 'events'
