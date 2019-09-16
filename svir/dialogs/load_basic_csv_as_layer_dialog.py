@@ -24,7 +24,8 @@
 
 import os
 import tempfile
-from svir.utilities.utils import import_layer_from_csv, log_msg
+from svir.utilities.utils import (
+    import_layer_from_csv, log_msg, write_metadata_to_layer)
 from svir.utilities.shared import OQ_BASIC_CSV_TO_LAYER_TYPES
 from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
 
@@ -82,7 +83,8 @@ class LoadBasicCsvAsLayerDialog(LoadOutputAsLayerDialog):
             log_msg(str(exc), level='C', message_bar=self.iface.messageBar(),
                     exception=exc)
             return
-        self.write_metadata_to_layer(self.layer)
+        write_metadata_to_layer(
+            self.drive_engine_dlg, self.output_type, self.layer)
         log_msg('Layer %s was loaded successfully' % layer_name,
                 level='S', message_bar=self.iface.messageBar())
         self.iface.showAttributeTable(self.layer)
