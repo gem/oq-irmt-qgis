@@ -42,6 +42,7 @@ from qgis.PyQt.QtWidgets import (
                                  QDockWidget,
                                  QFileDialog,
                                  QAbstractItemView,
+                                 QTabWidget,
                                  QTableWidget,
                                  QTableWidgetItem,
                                  QHBoxLayout,
@@ -347,31 +348,37 @@ class ViewerDock(QDockWidget, FORM_CLASS):
     def create_tag_names_multiselect(self):
         self.tag_names_lbl = QLabel('Tag names')
         self.tag_names_multiselect = MultiSelectComboBox(self)
+        self.tag_names_tab_widget = QTabWidget(self)
         self.typeDepVLayout.addWidget(self.tag_names_lbl)
         self.typeDepVLayout.addWidget(self.tag_names_multiselect)
+        self.typeDepVLayout.addWidget(self.tag_names_tab_widget)
+        self.tag_names_tab_widget.setSizePolicy(
+            QSizePolicy.Minimum, QSizePolicy.Minimum)
+        self.tag_names_tab_widget.resize(
+            self.tag_names_tab_widget.minimumSizeHint())
         self.tag_names_multiselect.item_was_clicked.connect(
-            self.toggle_tag_values_multiselect)
+            self.toggle_tag_values_multiselect_tab)
         self.tag_names_multiselect.selection_changed.connect(
             self.update_selected_tag_names)
 
-    def toggle_tag_values_multiselect(
+    def toggle_tag_values_multiselect_tab(
             self, tag_name, tag_name_is_checked, mono=False):  # FIXME
         lbl = getattr(self, "%s_values_lbl" % tag_name, None)
         cbx = getattr(self, "%s_values_multiselect" % tag_name, None)
         # NOTE: removing widgets anyway, then re-adding them if needed
         if lbl is not None:
-            lbl.setParent(None)
+            del lbl
         if cbx is not None:
-            cbx.setParent(None)
+            cbx.deleteLater()
         if tag_name_is_checked:
-            setattr(self, "%s_values_lbl" % tag_name,
-                    QLabel('%s values' % tag_name))
+            # setattr(self, "%s_values_lbl" % tag_name,
+            #         QLabel('%s values' % tag_name))
+            setattr(self, "%s_values_lbl" % tag_name, '%s values' % tag_name)
             setattr(self, "%s_values_multiselect" % tag_name,
                     MultiSelectComboBox(self, mono=mono))
-            self.typeDepVLayout.addWidget(
-                getattr(self, "%s_values_lbl" % tag_name))
-            self.typeDepVLayout.addWidget(
-                getattr(self, "%s_values_multiselect" % tag_name))
+            label = getattr(self, "%s_values_lbl" % tag_name)
+            widget = getattr(self, "%s_values_multiselect" % tag_name)
+            self.tag_names_tab_widget.addTab(widget, label)
             if mono:
                 getattr(self, "%s_values_multiselect"
                         % tag_name).currentIndexChanged.connect(
