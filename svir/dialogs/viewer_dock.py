@@ -207,17 +207,19 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.typeDepHLayout2.addWidget(self.loss_type_cbx)
 
     def create_tag_selector(
-            self, tag_name, tag_values=None, on_currentIndexChanged=None):
+            self, tag_name, tag_values=None, on_currentIndexChanged=None,
+            mono=False):
         setattr(self, "%s_lbl" % tag_name, QLabel(tag_name))
-        setattr(self, "%s_cbx" % tag_name, QComboBox())
+        setattr(self, "%s_values_multiselect" % tag_name,
+                MultiSelectComboBox(self))
         lbl = getattr(self, "%s_lbl" % tag_name)
-        cbx = getattr(self, "%s_cbx" % tag_name)
+        cbx = getattr(self, "%s_values_multiselect" % tag_name)
         if tag_values is not None:
             cbx.addItems(tag_values)
         self.typeDepVLayout.addWidget(lbl)
         self.typeDepVLayout.addWidget(cbx)
         if on_currentIndexChanged is not None:
-            cbx.currentIndexChanged.connect(on_currentIndexChanged)
+            cbx.item_was_clicked.connect(on_currentIndexChanged)
 
     def create_imt_selector(self):
         self.imt_lbl = QLabel('Intensity Measure Type')
@@ -506,11 +508,10 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         elif self.output_type in ('losses_by_asset_aggr',
                                   'avg_losses-stats_aggr'):
             self.filter_losses_by_asset_aggr()
-        elif self.output_type == 'agg_curves-stats':
+        elif self.output_type in ['agg_curves-rlzs', 'agg_curves-stats']:
             self.filter_agg_curves()
 
     def update_selected_tag_values(self, tag_name):
-        print('update_selected_tag_values for %s' % tag_name)
         cbx = getattr(self, "%s_values_multiselect" % tag_name)
         for tag_value in cbx.get_selected_items():
             self.tags[tag_name]['values'][tag_value] = True
@@ -520,6 +521,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.filter_dmg_by_asset_aggr()
         elif self.output_type in ('losses_by_asset_aggr',
                                   'avg_losses-stats_aggr',
+                                  'agg_curves-rlzs',
                                   'agg_curves-stats'):
             if "*" in cbx.get_selected_items():
                 self.tag_with_all_values = tag_name
@@ -529,7 +531,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             if self.output_type in ('losses_by_asset_aggr',
                                     'avg_losses-stats_aggr'):
                 self.filter_losses_by_asset_aggr()
-            elif self.output_type == 'agg_curves-stats':
+            elif self.output_type in ['agg_curves-rlzs', 'agg_curves-stats']:
                 self.filter_agg_curves()
 
     def get_list_selected_tags_str(self):
@@ -782,8 +784,6 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.agg_curves = extract_npz(
                 session, hostname, calc_id, output_type,
                 message_bar=self.iface.messageBar())
-        if self.agg_curves is None:
-            return
         loss_types = [loss_type.decode('utf8')
                       for loss_type in self.agg_curves['loss_types']]
         self.loss_type_cbx.blockSignals(True)
@@ -793,40 +793,33 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         if output_type == 'agg_curves-stats':
             self.stats = [stat.decode('utf8')
                           for stat in self.agg_curves['stats']]
+            self.stats_multiselect.blockSignals(True)
+            self.stats_multiselect.clear()
             self.stats_multiselect.add_selected_items(self.stats)
-            if ('aggregate_by' in self.agg_curves
-                    and len(self.agg_curves['aggregate_by']) > 0):
-                self.create_tag_names_multiselect()
-                self._build_tags()
-                self.update_selected_tag_names()
-                self.tag_names_multiselect.clear()
-                for tag_name in self.tags:
-                    if self.tags[tag_name]['selected']:
-                        self.tag_names_multiselect.add_selected_items([
-                            tag_name])
-                    else:
-                        self.tag_names_multiselect.add_unselected_items([
-                            tag_name])
-            self.filter_agg_curves()
-            # self.draw_agg_curves(output_type)
+            self.stats_multiselect.blockSignals(False)
         elif output_type == 'agg_curves-rlzs':
             rlzs = ["Rlz %s" % rlz
                     for rlz in range(self.agg_curves['array'].shape[1])]
+            self.rlzs_multiselect.blockSignals(True)
+            self.rlzs_multiselect.clear()
             self.rlzs_multiselect.add_selected_items(rlzs)
-            if ('aggregate_by' in self.agg_curves
-                    and len(self.agg_curves['aggregate_by']) > 0):
-                for tag in self.agg_curves['aggregate_by']:
-                    tag_name = tag.decode('utf8')
-                    tag_values = [tag_value.decode('utf8')
-                                  for tag_value in self.agg_curves[tag_name]]
-                    # FIXME?
-                    self.create_tag_selector(
-                        tag_name, tag_values, self.filter_agg_curves)
-            self.draw_agg_curves(output_type)
+            self.rlzs_multiselect.blockSignals(False)
         else:
             raise NotImplementedError(
-                'Can not draw outputs of type %s' % output_type)
+                'Unable to draw outputs of type %s' % output_type)
             return
+        if ('aggregate_by' in self.agg_curves
+                and len(self.agg_curves['aggregate_by']) > 0):
+            self.create_tag_names_multiselect()
+            self._build_tags()
+            self.update_selected_tag_names()
+            self.tag_names_multiselect.clear()
+            for tag_name in self.tags:
+                if self.tags[tag_name]['selected']:
+                    self.tag_names_multiselect.add_selected_items([tag_name])
+                else:
+                    self.tag_names_multiselect.add_unselected_items([tag_name])
+        self.filter_agg_curves()
 
     def _get_idxs(self):
         if self.output_type == 'agg_curves-rlzs':
@@ -1586,7 +1579,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
     @pyqtSlot(str)
     def on_loss_type_changed(self, loss_type):
         if self.output_type == 'agg_curves-rlzs':
-            self.draw_agg_curves(self.output_type)
+            self.filter_agg_curves()
+            # self.draw_agg_curves(self.output_type)
         elif self.output_type == 'agg_curves-stats':
             self.filter_agg_curves()
         elif self.output_type == 'dmg_by_asset_aggr':
@@ -1796,9 +1790,11 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 loss_type_idx = self.loss_type_cbx.currentIndex()
                 csv_file.write(
                     "# Loss type: %s\r\n" % loss_type)
-                csv_file.write(
-                    "# Tags: %s\r\n" % (
-                        self.get_list_selected_tags_str() or 'None'))
+                if ('aggregate_by' in self.agg_curves
+                        and len(self.agg_curves['aggregate_by']) > 0):
+                    csv_file.write(
+                        "# Tags: %s\r\n" % (
+                            self.get_list_selected_tags_str() or 'None'))
                 headers = ['return_period']
                 (rlzs_or_stats_idxs, loss_type_idx, tag_name_idxs,
                     tag_value_idxs) = self._get_idxs()
