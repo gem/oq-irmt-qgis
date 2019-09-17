@@ -640,14 +640,30 @@ class Irmt(object):
         self.viewer_dock.remove_connects()
         self.viewer_dock.deleteLater()
 
-        # remove connects
-        self.iface.currentLayerChanged.disconnect(self.current_layer_changed)
-        self.iface.newProjectCreated.disconnect(self.current_layer_changed)
-        self.iface.projectRead.disconnect(self.current_layer_changed)
-        QgsProject.instance().layersAdded.disconnect(
-            self.layers_added)
-        QgsProject.instance().layersRemoved.disconnect(
-            self.layers_removed)
+        # remove connects (or do nothing if they are not connected)
+        try:
+            self.iface.currentLayerChanged.disconnect(
+                self.current_layer_changed)
+        except TypeError:
+            pass
+        try:
+            self.iface.newProjectCreated.disconnect(self.current_layer_changed)
+        except TypeError:
+            pass
+        try:
+            self.iface.projectRead.disconnect(self.current_layer_changed)
+        except TypeError:
+            pass
+        try:
+            QgsProject.instance().layersAdded.disconnect(
+                self.layers_added)
+        except TypeError:
+            pass
+        try:
+            QgsProject.instance().layersRemoved.disconnect(
+                self.layers_removed)
+        except TypeError:
+            pass
 
     def import_sv_variables(self):
         """
