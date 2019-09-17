@@ -129,8 +129,6 @@ class ViewerDock(QDockWidget, FORM_CLASS):
 
         # self.current_selection[None] is for recovery curves
         self.current_selection = {}  # rlz_or_stat -> feature_id -> curve
-        self.current_imt = None
-        self.current_loss_type = None
         self.was_imt_switched = False
         self.was_loss_type_switched = False
         self.was_poe_switched = False
@@ -1435,10 +1433,6 @@ class ViewerDock(QDockWidget, FORM_CLASS):
     def layer_changed(self):
         self.calc_id = None
         self.clear_plot()
-        if hasattr(self, 'self.imt_cbx'):
-            self.clear_imt_cbx()
-        if hasattr(self, 'loss_type_cbx'):
-            self.clear_loss_type_cbx()
 
         self.remove_connects()
 
@@ -1466,7 +1460,6 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                     imts = sorted(set(
                         [field_name.split('_')[1]
                          for field_name in self.field_names]))
-                    self.imt_cbx.clear()
                     self.imt_cbx.addItems(imts)
                 self.rlzs_or_stats = sorted(set(
                     [field_name.split('_')[0]
@@ -1587,13 +1580,11 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         return False
 
     def on_imt_changed(self):
-        self.current_imt = self.imt_cbx.currentText()
         self.was_imt_switched = True
         self.redraw_current_selection()
 
     @pyqtSlot(str)
     def on_loss_type_changed(self, loss_type):
-        self.current_loss_type = self.loss_type_cbx.currentText()
         if self.output_type == 'agg_curves-rlzs':
             self.draw_agg_curves(self.output_type)
         elif self.output_type == 'agg_curves-stats':
@@ -1608,12 +1599,10 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.redraw_current_selection()
 
     def on_poe_changed(self):
-        self.current_poe = self.poe_cbx.currentText()
         self.was_poe_switched = True
         self.redraw_current_selection()
 
     def on_approach_changed(self):
-        self.current_approach = self.approach_cbx.currentText()
         self.redraw_current_selection()
 
     def on_recalculate_on_the_fly_chk_toggled(self, checked):
@@ -1647,7 +1636,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 self.tr('Export data'),
                 os.path.expanduser(
                     '~/hazard_curves_%s_%s.csv' % (
-                        self.current_imt, self.calc_id)),
+                        self.imt_cbx.currentText(), self.calc_id)),
                 '*.csv')
         elif self.output_type == 'uhs':
             filename, _ = QFileDialog.getSaveFileName(
@@ -1726,10 +1715,6 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                     row.extend(values['ordinates'])
                 writer.writerow(row)
             elif self.output_type in ['hcurves', 'uhs']:
-                selected_rlzs_or_stats = list(
-                    self.stats_multiselect.get_selected_items())
-                if self.output_type == 'hcurves':
-                    selected_imt = self.imt_cbx.currentText()
                 field_names = []
                 for field in self.iface.activeLayer().fields():
                     if field.name() == 'fid':
@@ -1739,16 +1724,18 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                         rlz_or_stat, imt, iml = field.name().split('_')
                         # print("stat = %s\nimt = %s\niml = %s" % (
                         #     rlz_or_stat, imt, iml))
-                        # print("selected_imt = %s" % selected_imt)
-                        if imt != selected_imt:
+                        # print("selected_imt = %s"
+                        #       % self.imt_cbx.currentText())
+                        if imt != self.imt_cbx.currentText():
                             # print('imt != selected_imt')
                             continue
                     else:  # 'uhs'
                         # field names are like 'mean_PGA'
                         rlz_or_stat, _ = field.name().split('_')
-                    if rlz_or_stat not in selected_rlzs_or_stats:
+                    if (rlz_or_stat not in
+                            self.stats_multiselect.get_selected_items()):
                         # print("selected_rlzs_or_stats = %s" %
-                        #       selected_rlzs_or_stats)
+                        #       self.stats_multiselect.get_selected_items())
                         # print('rlz_or_stat not in selected_rlzs_or_stats')
                         continue
                     field_names.append(field.name())

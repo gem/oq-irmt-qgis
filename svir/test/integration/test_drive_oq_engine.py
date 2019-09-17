@@ -467,12 +467,15 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 print('\t\tok')
                 return 'ok'
             if output_type in OQ_ZIPPED_TYPES:
-                dlg = LoadInputsDialog(filepath, self.irmt.iface)
+                dlg = LoadInputsDialog(
+                    self.irmt.drive_oq_engine_server_dlg,
+                    filepath, self.irmt.iface)
                 dlg.accept()
                 print('\t\tok')
                 return 'ok'
             dlg = OUTPUT_TYPE_LOADERS[output_type](
-                self.irmt.iface, self.irmt.viewer_dock,
+                self.irmt.drive_oq_engine_server_dlg, self.irmt.iface,
+                self.irmt.viewer_dock,
                 self.irmt.drive_oq_engine_server_dlg.session,
                 self.hostname, calc_id, output_type, filepath)
             if dlg.ok_button.isEnabled():
@@ -485,6 +488,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         elif output_type in OQ_EXTRACT_TO_LAYER_TYPES:
             self.irmt.iface.newProject()
             dlg = OUTPUT_TYPE_LOADERS[output_type](
+                self.irmt.drive_oq_engine_server_dlg,
                 self.irmt.iface, self.irmt.viewer_dock,
                 self.irmt.drive_oq_engine_server_dlg.session,
                 self.hostname, calc_id, output_type)
@@ -640,6 +644,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         print("\t\tSelected data was exported to %s" % exported_file_path)
 
     def _set_output_type(self, output_type):
+        self.irmt.viewer_dock.output_type_cbx.setCurrentIndex(-1)
         idx = self.irmt.viewer_dock.output_type_cbx.findText(output_type)
         self.assertNotEqual(idx, -1, 'Output type %s not found' % output_type)
         self.irmt.viewer_dock.output_type_cbx.setCurrentIndex(idx)

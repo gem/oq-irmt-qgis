@@ -79,6 +79,7 @@ from svir.utilities.utils import (get_ui_class,
                                   tr,
                                   get_file_size,
                                   get_irmt_version,
+                                  write_metadata_to_layer,
                                   )
 from svir.tasks.extract_npz_task import TaskCanceled
 
@@ -93,13 +94,14 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
     loading_completed = pyqtSignal()
     loading_exception = pyqtSignal(Exception)
 
-    def __init__(self, iface, viewer_dock,
+    def __init__(self, drive_engine_dlg, iface, viewer_dock,
                  session, hostname, calc_id, output_type=None,
                  path=None, mode=None, zonal_layer_path=None,
                  engine_version=None):
         # sanity check
         if output_type not in OQ_TO_LAYER_TYPES:
             raise NotImplementedError(output_type)
+        self.drive_engine_dlg = drive_engine_dlg
         self.iface = iface
         self.viewer_dock = viewer_dock
         self.path = path
@@ -529,6 +531,15 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.layer.setCustomProperty('calc_id', self.calc_id)
         if poe is not None:
             self.layer.setCustomProperty('poe', poe)
+        user_params = {'rlz_or_stat': rlz_or_stat,
+                       'taxonomy': taxonomy,
+                       'poe': poe,
+                       'loss_type': loss_type,
+                       'dmg_state': dmg_state,
+                       'gsim': gsim,
+                       'imt': imt}
+        write_metadata_to_layer(
+            self.drive_engine_dlg, self.output_type, self.layer, user_params)
         try:
             if (self.zonal_layer_cbx.currentText()
                     and self.zonal_layer_gbx.isChecked()):
