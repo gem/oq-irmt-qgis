@@ -1767,16 +1767,11 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             elif self.output_type == 'agg_curves-rlzs':
                 (rlzs_idxs, loss_type_idx, tag_name_idxs,
                     tag_value_idxs) = self._get_idxs()
-                if tag_name_idxs is not None:
-                    tag_values = {}
-                    for tag_name in tag_value_idxs:
-                        tag_values[tag_name] = self.agg_curves[tag_name][
-                            tag_value_idxs[tag_name]]
-                    tag_values_list = [
-                        "%s=%s" % (tname, tag_values[tname].decode('utf8'))
-                        for tname in tag_values]
+                if ('aggregate_by' in self.agg_curves
+                        and len(self.agg_curves['aggregate_by']) > 0):
                     csv_file.write(
-                        "# Tags: %s\r\n" % ", ".join(tag_values_list))
+                        "# Tags: %s\r\n" % (
+                            self.get_list_selected_tags_str() or 'None'))
                 rlzs = list(self.rlzs_multiselect.get_selected_items())
                 headers = ['return_period']
                 headers.extend(rlzs)
