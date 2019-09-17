@@ -1207,3 +1207,21 @@ def get_loss_types(session, hostname, calc_id, message_bar):
         str(loss_type)
         for loss_type in composite_risk_model_attrs['loss_types']]
     return loss_types
+
+
+def write_metadata_to_layer(
+        drive_engine_dlg, output_type, layer, user_params=None):
+    user_params = user_params or {}
+    json_params = drive_engine_dlg.get_oqparam()
+    lm = layer.metadata()
+    for param in json_params:
+        if param == 'description':
+            lm.setTitle(json_params[param])
+        else:
+            lm.addKeywords("oqengine:%s" % param, [str(json_params[param])])
+    lm.addKeywords("oqengine:output_type", [output_type])
+    for param in user_params:
+        value = user_params[param]
+        if value is not None:
+            lm.addKeywords("oquser:%s" % param, [str(value)])
+    layer.setMetadata(lm)

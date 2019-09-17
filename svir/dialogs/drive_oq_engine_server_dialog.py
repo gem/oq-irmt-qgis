@@ -719,6 +719,12 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.params_dlg = ShowParamsDialog()
         self.params_dlg.setWindowTitle(
             'Parameters of calculation %s' % self.current_calc_id)
+        json_params = self.get_oqparam()
+        indented_params = json.dumps(json_params, indent=4)
+        self.params_dlg.text_browser.setText(indented_params)
+        self.params_dlg.show()
+
+    def get_oqparam(self):
         get_calc_params_url = "%s/v1/calc/%s/oqparam" % (
             self.hostname, self.current_calc_id)
         with WaitCursorManager('Getting calculation parameters...',
@@ -731,9 +737,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 self._handle_exception(exc)
                 return
             json_params = json.loads(resp.text)
-            indented_params = json.dumps(json_params, indent=4)
-            self.params_dlg.text_browser.setText(indented_params)
-        self.params_dlg.show()
+        return json_params
 
     def get_output_list(self, calc_id):
         output_list_url = "%s/v1/calc/%s/results" % (self.hostname, calc_id)
@@ -988,7 +992,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         log_msg('Loading output started. Watch progress in QGIS task bar',
                 level='I', message_bar=self.message_bar)
         open_output_dlg = OUTPUT_TYPE_LOADERS[output_type](
-            self.iface, self.viewer_dock,
+            self, self.iface, self.viewer_dock,
             self.session, self.hostname, self.current_calc_id,
             output_type, path=filepath,
             engine_version=self.engine_version)
@@ -1009,7 +1013,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             self, output_id=None, output_type=None, filepath=None):
         self.notify_downloaded(output_id, output_type, filepath)
         dlg_id = uuid4()
-        load_inputs_dlg = LoadInputsDialog(filepath, self.iface)
+        load_inputs_dlg = LoadInputsDialog(self, filepath, self.iface)
         self.open_output_dlgs[dlg_id] = load_inputs_dlg
         load_inputs_dlg.loading_completed.connect(lambda: self.del_dlg(dlg_id))
         load_inputs_dlg.loading_canceled.connect(lambda: self.del_dlg(dlg_id))

@@ -29,7 +29,8 @@ import configparser
 from qgis.PyQt.QtCore import pyqtSignal
 from qgis.PyQt.QtWidgets import (
     QDialog, QVBoxLayout, QDialogButtonBox, QGroupBox, QCheckBox)
-from svir.utilities.utils import import_layer_from_csv, log_msg, get_headers
+from svir.utilities.utils import (
+    import_layer_from_csv, log_msg, get_headers, write_metadata_to_layer)
 from svir.utilities.shared import GEOM_FIELDNAMES
 from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
 
@@ -42,8 +43,9 @@ class LoadInputsDialog(QDialog):
     loading_canceled = pyqtSignal()
     loading_completed = pyqtSignal()
 
-    def __init__(self, zip_filepath, iface, parent=None):
+    def __init__(self, drive_engine_dlg, zip_filepath, iface, parent=None):
         super().__init__(parent)
+        self.drive_engine_dlg = drive_engine_dlg
         self.zip_filepath = zip_filepath
         self.iface = iface
         ini_str = self.get_ini_str(self.zip_filepath)
@@ -95,7 +97,7 @@ class LoadInputsDialog(QDialog):
             multi_peril_csv_str.replace('\'', '"'))
         return multi_peril_csv_dict
 
-    def load_from_csv(self, csv_path):
+    def load_from_csv(self, csv_path, peril):
         # extract the name of the csv file and remove the extension
         layer_name, ext = os.path.splitext(os.path.basename(csv_path))
         wkt_field = None
@@ -116,6 +118,9 @@ class LoadInputsDialog(QDialog):
             LoadOutputAsLayerDialog.style_maps(
                 self.layer, 'intensity', self.iface, 'input',
                 render_higher_on_top=self.higher_on_top_chk.isChecked())
+        user_params = {'peril': peril}
+        write_metadata_to_layer(
+            self.drive_engine_dlg, 'input', self.layer, user_params)
         log_msg('Layer %s was loaded successfully' % layer_name,
                 level='S', message_bar=self.iface.messageBar())
 
@@ -128,7 +133,7 @@ class LoadInputsDialog(QDialog):
                 extracted_csv_path = zfile.extract(
                     self.multi_peril_csv_dict[peril],
                     path=os.path.dirname(self.zip_filepath))
-                self.load_from_csv(extracted_csv_path)
+                self.load_from_csv(extracted_csv_path, peril)
         self.loading_completed.emit()
 
     def reject(self):
