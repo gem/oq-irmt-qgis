@@ -652,6 +652,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         print("\t\tSelected data was exported to %s" % exported_file_path)
 
     def _set_output_type(self, output_type):
+        self.irmt.viewer_dock.output_type_cbx.setCurrentIndex(-1)
         idx = self.irmt.viewer_dock.output_type_cbx.findText(output_type)
         self.assertNotEqual(idx, -1, 'Output type %s not found' % output_type)
         self.irmt.viewer_dock.output_type_cbx.setCurrentIndex(idx)
