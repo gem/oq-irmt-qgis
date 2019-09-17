@@ -573,7 +573,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.plot_canvas.show()
             self.plot_canvas.draw()
         if hasattr(self, 'exclude_no_dmg_ckb'):
-            self.exclude_no_dmg_ckb.setParent(None)
+            self.exclude_no_dmg_ckb.deleteLater()
 
         if new_output_type == 'hcurves':
             self.create_imt_selector()
@@ -707,10 +707,10 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             cbx = getattr(self, cbx_name, None)
             if lbl is not None:
                 delattr(self, lbl_name)
-                lbl.setParent(None)
+                del lbl
             if cbx is not None:
                 delattr(self, cbx_name)
-                cbx.setParent(None)
+                cbx.deleteLater()
 
     def _get_tags(self, session, hostname, calc_id, message_bar, with_star):
         with WaitCursorManager(
