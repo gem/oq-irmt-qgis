@@ -345,7 +345,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         hlayout.addWidget(self.stats_multiselect)
         self.typeDepVLayout.addLayout(hlayout)
 
-    def create_tag_names_multiselect(self):
+    def create_tag_names_multiselect(self, monovalue=False):
         self.tag_names_lbl = QLabel('Tag names')
         self.tag_names_multiselect = MultiSelectComboBox(self)
         self.tag_names_tab_widget = QTabWidget(self)
@@ -357,12 +357,14 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.tag_names_tab_widget.resize(
             self.tag_names_tab_widget.minimumSizeHint())
         self.tag_names_multiselect.item_was_clicked.connect(
-            self.toggle_tag_values_multiselect_tab)
+            lambda tag_name, tag_name_is_checked:
+            self.toggle_tag_values_multiselect_tab(
+                tag_name, tag_name_is_checked, monovalue=monovalue))
         self.tag_names_multiselect.selection_changed.connect(
             self.update_selected_tag_names)
 
     def toggle_tag_values_multiselect_tab(
-            self, tag_name, tag_name_is_checked, mono=False):  # FIXME
+            self, tag_name, tag_name_is_checked, monovalue=False):
         lbl = getattr(self, "%s_values_lbl" % tag_name, None)
         cbx = getattr(self, "%s_values_multiselect" % tag_name, None)
         # NOTE: removing widgets anyway, then re-adding them if needed
@@ -371,13 +373,14 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         if cbx is not None:
             delattr(self, "%s_values_multiselect" % tag_name)
         if tag_name_is_checked:
-            setattr(self, "%s_values_lbl" % tag_name, '%s values' % tag_name)
+            setattr(self, "%s_values_lbl" % tag_name,
+                    tag_name + ' value' + ('' if monovalue else 's'))
             setattr(self, "%s_values_multiselect" % tag_name,
-                    MultiSelectComboBox(self, mono=mono))
+                    MultiSelectComboBox(self, mono=monovalue))
             label = getattr(self, "%s_values_lbl" % tag_name)
             widget = getattr(self, "%s_values_multiselect" % tag_name)
             self.tag_names_tab_widget.addTab(widget, label)
-            if mono:
+            if monovalue:
                 getattr(self, "%s_values_multiselect"
                         % tag_name).currentIndexChanged.connect(
                             lambda idx: self.update_selected_tag_values(
@@ -581,7 +584,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         elif new_output_type == 'dmg_by_asset_aggr':
             self.create_loss_type_selector()
             self.create_rlz_selector()
-            self.create_tag_names_multiselect()
+            self.create_tag_names_multiselect(monovalue=True)
             self.create_exclude_no_dmg_ckb()
         elif new_output_type in ('losses_by_asset_aggr',
                                  'avg_losses-stats_aggr'):
