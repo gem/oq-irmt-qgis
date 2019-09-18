@@ -367,9 +367,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         cbx = getattr(self, "%s_values_multiselect" % tag_name, None)
         # NOTE: removing widgets anyway, then re-adding them if needed
         if lbl is not None:
-            del lbl
+            delattr(self, "%s_values_lbl" % tag_name)
         if cbx is not None:
-            cbx.deleteLater()
+            delattr(self, "%s_values_multiselect" % tag_name)
         if tag_name_is_checked:
             # setattr(self, "%s_values_lbl" % tag_name,
             #         QLabel('%s values' % tag_name))
@@ -573,7 +573,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.plot_canvas.show()
             self.plot_canvas.draw()
         if hasattr(self, 'exclude_no_dmg_ckb'):
-            self.exclude_no_dmg_ckb.deleteLater()
+            delattr(self, 'exclude_no_dmg_ckb')
 
         if new_output_type == 'hcurves':
             self.create_imt_selector()

@@ -948,10 +948,10 @@ def clear_widgets_from_layout(layout):
         # check if the item is a widget
         widget = item.widget()
         if widget is not None:
-            # NOTE: in the past, we were setting the parent to None, which
-            #       is a valid alternative to delete the widget. This approach
-            #       is probably a little safer
-            widget.deleteLater()
+            # NOTE: deleteLater() and setParent(None) are almost equivalent,
+            # but deleteLater() tends to cause more frequently the annoying:
+            # 'wrapped C/C++ object of type has been deleted'
+            widget.setParent(None)
 
 
 def import_layer_from_csv(parent,
