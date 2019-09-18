@@ -551,19 +551,26 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         layer.blockSignals(False)
         layer.selectByIds(selected_feats)
 
+    def remove_type_dep_attrs(self):
+        for widget_name in ['stats_multiselect',
+                            'rlzs_multiselect',
+                            'exclude_no_dmg_ckb']:
+            if hasattr(self, widget_name):
+                delattr(self, widget_name)
+
     def set_output_type_and_its_gui(self, new_output_type):
         # clear type dependent widgets
         # NOTE: typeDepVLayout contains typeDepHLayout1 and typeDepHLayout2,
         #       that will be cleared recursively
         clear_widgets_from_layout(self.typeDepVLayout)
         clear_widgets_from_layout(self.table_layout)
+        # NOTE: even after removing widgets from layouts, the viewer dock
+        # widget might still keep references to some of its children widgets
+        self.remove_type_dep_attrs()
         if hasattr(self, 'plot'):
             self.plot.clear()
             self.plot_canvas.show()
             self.plot_canvas.draw()
-        if hasattr(self, 'exclude_no_dmg_ckb'):
-            delattr(self, 'exclude_no_dmg_ckb')
-
         if new_output_type == 'hcurves':
             self.create_imt_selector()
             self.create_stats_multiselect()
@@ -1096,7 +1103,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
     def draw(self):
         self.plot.clear()
         gids = dict()
-        if self.stats_multiselect is not None:
+        if (hasattr(self, 'stats_multiselect')
+                and self.stats_multiselect is not None):
             selected_rlzs_or_stats = list(
                 self.stats_multiselect.get_selected_items())
         else:
@@ -1236,7 +1244,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         if not self.output_type:
             return
 
-        if self.stats_multiselect is not None:
+        if (hasattr(self, 'stats_multiselect')
+                and self.stats_multiselect is not None):
             selected_rlzs_or_stats = list(
                 self.stats_multiselect.get_selected_items())
         else:
@@ -1497,7 +1506,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.vertex_marker.hide()
 
     def clear_imt_cbx(self):
-        if self.imt_cbx is not None:
+        if hasattr(self, 'imt_cbx') and self.imt_cbx is not None:
             try:
                 self.imt_cbx.blockSignals(True)
                 self.imt_cbx.clear()
@@ -1512,7 +1521,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 log_msg(msg, level='W')
 
     def clear_loss_type_cbx(self):
-        if self.loss_type_cbx is not None:
+        if hasattr(self, 'loss_type_cbx') and self.loss_type_cbx is not None:
             try:
                 self.loss_type_cbx.blockSignals(True)
                 self.loss_type_cbx.clear()
