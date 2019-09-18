@@ -707,10 +707,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             cbx = getattr(self, cbx_name, None)
             if lbl is not None:
                 delattr(self, lbl_name)
-                del lbl
             if cbx is not None:
                 delattr(self, cbx_name)
-                cbx.deleteLater()
 
     def _get_tags(self, session, hostname, calc_id, message_bar, with_star):
         with WaitCursorManager(
