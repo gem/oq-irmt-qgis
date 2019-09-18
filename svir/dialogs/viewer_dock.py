@@ -552,9 +552,24 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         layer.selectByIds(selected_feats)
 
     def remove_type_dep_attrs(self):
-        for widget_name in ['stats_multiselect',
-                            'rlzs_multiselect',
-                            'exclude_no_dmg_ckb']:
+        for widget_name in [
+                'stats_multiselect', 'rlzs_multiselect',
+                'exclude_no_dmg_ckb',
+                'loss_type_lbl', 'loss_type_cbx',
+                'n_simulations_lbl', 'n_simulations_cbx',
+                'imt_lbl', 'imt_cbx',
+                'poe_lbl', 'poe_cbx',
+                'rlz_lbl', 'rlz_cbx',
+                'rlzs_lbl', 'rlzs_multiselect',
+                'approach_lbl', 'approach_cbx',
+                'n_simulations_lbl', 'n_simulations_sbx',
+                'warning_n_simulations_lbl',
+                'select_assets_at_same_site_chk',
+                'recalculate_on_the_fly_chk', 'recalculate_curve_btn',
+                'fields_lbl', 'fields_multiselect',
+                'stats_lbl', 'stats_multiselect',
+                'tag_names_lbl', 'tag_names_multiselect',
+                'tag_names_tab_widget']:
             if hasattr(self, widget_name):
                 delattr(self, widget_name)
 
