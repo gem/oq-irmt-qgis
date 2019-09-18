@@ -589,7 +589,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         elif new_output_type in ('losses_by_asset_aggr',
                                  'avg_losses-stats_aggr'):
             self.create_loss_type_selector()
-            self.create_tag_names_multiselect()
+            self.create_tag_names_multiselect(monovalue=True)
         elif new_output_type == 'uhs':
             self.create_stats_multiselect()
             self.stats_multiselect.selection_changed.connect(
