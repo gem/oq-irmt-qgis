@@ -371,8 +371,6 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         if cbx is not None:
             delattr(self, "%s_values_multiselect" % tag_name)
         if tag_name_is_checked:
-            # setattr(self, "%s_values_lbl" % tag_name,
-            #         QLabel('%s values' % tag_name))
             setattr(self, "%s_values_lbl" % tag_name, '%s values' % tag_name)
             setattr(self, "%s_values_multiselect" % tag_name,
                     MultiSelectComboBox(self, mono=mono))
