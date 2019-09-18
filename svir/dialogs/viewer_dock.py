@@ -409,6 +409,28 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             tag_name in self.tag_names_multiselect.get_selected_items())
 
     def filter_dmg_by_asset_aggr(self):
+        # NOTE: self.tags is structured like:
+        # {'taxonomy': {
+        #     'selected': True,
+        #     'values': {
+        #         'Wood': False,
+        #         'Adobe': False,
+        #         'Stone-Masonry': False,
+        #         'Unreinforced-Brick-Masonry': False,
+        #         'Concrete': True
+        #     }
+        #  },
+        #  'NAME_1': {
+        #      'selected': False,
+        #      'values': {
+        #          'Mid-Western': False,
+        #          'Far-Western': False,
+        #          'West': False,
+        #          'East': False,
+        #          'Central': False
+        #      }
+        #  },
+        # }
         params = {}
         for tag_name in self.tags:
             if self.tags[tag_name]['selected']:
@@ -434,43 +456,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.draw_dmg_by_asset_aggr()
 
     def filter_agg_curves(self):
-        # params = {}
-        # # NOTE: self.tags is structured like:
-        # # {'taxonomy': {
-        # #     'selected': True,
-        # #     'values': {
-        # #         'Wood': False,
-        # #         'Adobe': False,
-        # #         'Stone-Masonry': False,
-        # #         'Unreinforced-Brick-Masonry': False,
-        # #         'Concrete': True
-        # #     }
-        # #  },
-        # #  'NAME_1': {
-        # #      'selected': False,
-        # #      'values': {
-        # #          'Mid-Western': False,
-        # #          'Far-Western': False,
-        # #          'West': False,
-        # #          'East': False,
-        # #          'Central': False
-        # #      }
-        # #  },
-        # # }
-        # for tag_name in self.tags:
-        #     if self.tags[tag_name]['selected']:
-        #         for value in self.tags[tag_name]['values']:
-        #             if self.tags[tag_name]['values'][value]:
-        #                 if tag_name in params:
-        #                     params[tag_name].append(value)
-        #                 else:
-        #                     params[tag_name] = [value]
-        # to_extract = self.output_type
-        # with WaitCursorManager(
-        #         'Extracting...', message_bar=self.iface.messageBar()):
-        #     self.agg_curves = extract_npz(
-        #         self.session, self.hostname, self.calc_id, to_extract,
-        #         message_bar=self.iface.messageBar(), params=params)
+        # NOTE: we do not need to call another extract here, because the full
+        # data was already downloaded and it is filtered while building the
+        # plot
         self.draw_agg_curves(self.output_type)
 
     def filter_losses_by_asset_aggr(self):
