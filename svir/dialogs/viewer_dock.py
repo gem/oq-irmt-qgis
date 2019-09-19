@@ -211,11 +211,10 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.loss_type_cbx, 'loss_type_cbx', self.typeDepHLayout2)
 
     def create_tag_selector(
-            self, tag_name, tag_values=None, on_currentIndexChanged=None,
-            mono=False):
+            self, tag_name, tag_values=None, monovalue=False):
         setattr(self, "%s_lbl" % tag_name, QLabel(tag_name))
         setattr(self, "%s_values_multiselect" % tag_name,
-                MultiSelectComboBox(self))
+                MultiSelectComboBox(self, mono=monovalue))
         lbl = getattr(self, "%s_lbl" % tag_name)
         cbx = getattr(self, "%s_values_multiselect" % tag_name)
         if tag_values is not None:
@@ -224,8 +223,15 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             lbl, "%s_lbl" % tag_name, self.typeDepVLayout)
         self.add_widget_to_type_dep_layout(
             cbx, "%s_values_multiselect" % tag_name, self.typeDepVLayout)
-        if on_currentIndexChanged is not None:
-            cbx.item_was_clicked.connect(on_currentIndexChanged)
+        if monovalue:
+            getattr(self, "%s_values_multiselect"
+                    % tag_name).currentIndexChanged.connect(
+                        lambda idx: self.update_selected_tag_values(
+                            tag_name))
+        else:
+            getattr(self, "%s_values_multiselect"
+                    % tag_name).selection_changed.connect(
+                        lambda: self.update_selected_tag_values(tag_name))
 
     def create_imt_selector(self):
         self.imt_lbl = QLabel('Intensity Measure Type')
@@ -377,9 +383,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.add_widget_to_type_dep_layout(
             self.stats_multiselect, 'stats_multiselect', self.typeDepVLayout)
 
-    def create_tag_names_multiselect(self, monovalue=False):
+    def create_tag_names_multiselect(self, mononame=False, monovalue=False):
         self.tag_names_lbl = QLabel('Tag names')
-        self.tag_names_multiselect = MultiSelectComboBox(self)
+        self.tag_names_multiselect = MultiSelectComboBox(self, mono=mononame)
         self.tag_values_tab_widget = QTabWidget(self)
         self.add_widget_to_type_dep_layout(
             self.tag_names_lbl, 'tag_names_lbl', self.typeDepVLayout)
@@ -861,15 +867,25 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             return
         if ('aggregate_by' in self.agg_curves
                 and len(self.agg_curves['aggregate_by']) > 0):
-            self.create_tag_names_multiselect()
-            self._build_tags()
-            self.update_selected_tag_names()
-            self.tag_names_multiselect.clear()
-            for tag_name in self.tags:
-                if self.tags[tag_name]['selected']:
-                    self.tag_names_multiselect.add_selected_items([tag_name])
-                else:
-                    self.tag_names_multiselect.add_unselected_items([tag_name])
+            if output_type == 'agg_curves-rlzs':
+                self._build_tags()
+                for tag_name in self.tags:
+                    self.create_tag_selector(
+                        tag_name,
+                        tag_values=self.tags[tag_name]['values'].keys(),
+                        monovalue=True)
+            else:  # 'agg_curves-stats'
+                self.create_tag_names_multiselect()
+                self._build_tags()
+                self.update_selected_tag_names()
+                self.tag_names_multiselect.clear()
+                for tag_name in self.tags:
+                    if self.tags[tag_name]['selected']:
+                        self.tag_names_multiselect.add_selected_items(
+                            [tag_name])
+                    else:
+                        self.tag_names_multiselect.add_unselected_items(
+                            [tag_name])
         self.filter_agg_curves()
 
     def _get_idxs(self):
