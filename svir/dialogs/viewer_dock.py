@@ -380,19 +380,19 @@ class ViewerDock(QDockWidget, FORM_CLASS):
     def create_tag_names_multiselect(self, monovalue=False):
         self.tag_names_lbl = QLabel('Tag names')
         self.tag_names_multiselect = MultiSelectComboBox(self)
-        self.tag_names_tab_widget = QTabWidget(self)
+        self.tag_values_tab_widget = QTabWidget(self)
         self.add_widget_to_type_dep_layout(
             self.tag_names_lbl, 'tag_names_lbl', self.typeDepVLayout)
         self.add_widget_to_type_dep_layout(
             self.tag_names_multiselect, 'tag_names_multiselect',
             self.typeDepVLayout)
         self.add_widget_to_type_dep_layout(
-            self.tag_names_tab_widget, 'tag_names_tab_widget',
+            self.tag_values_tab_widget, 'tag_values_tab_widget',
             self.typeDepVLayout)
-        self.tag_names_tab_widget.setSizePolicy(
+        self.tag_values_tab_widget.setSizePolicy(
             QSizePolicy.Minimum, QSizePolicy.Minimum)
-        self.tag_names_tab_widget.resize(
-            self.tag_names_tab_widget.minimumSizeHint())
+        self.tag_values_tab_widget.resize(
+            self.tag_values_tab_widget.minimumSizeHint())
         self.tag_names_multiselect.item_was_clicked.connect(
             lambda tag_name, tag_name_is_checked:
             self.toggle_tag_values_multiselect_tab(
@@ -409,6 +409,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             delattr(self, "%s_values_lbl" % tag_name)
         if cbx is not None:
             delattr(self, "%s_values_multiselect" % tag_name)
+        self.tag_values_tab_widget.removeTab(
+            self.tag_values_tab_widget.indexOf(cbx))
         if tag_name_is_checked:
             setattr(self, "%s_values_lbl" % tag_name,
                     tag_name + ' value' + ('' if monovalue else 's'))
@@ -416,7 +418,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                     MultiSelectComboBox(self, mono=monovalue))
             label = getattr(self, "%s_values_lbl" % tag_name)
             widget = getattr(self, "%s_values_multiselect" % tag_name)
-            self.tag_names_tab_widget.addTab(widget, label)
+            self.tag_values_tab_widget.addTab(widget, label)
             if monovalue:
                 getattr(self, "%s_values_multiselect"
                         % tag_name).currentIndexChanged.connect(
