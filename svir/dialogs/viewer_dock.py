@@ -271,6 +271,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.exclude_no_dmg_ckb.stateChanged[int].connect(
             self.on_exclude_no_dmg_ckb_state_changed)
         self.plot_layout.insertWidget(0, self.exclude_no_dmg_ckb)
+        # NOTE: this widget has to be inserted and handled differently with
+        # respect to the other type dependent widgets
+        self.type_dep_widget_names.append('exclude_no_dmg_ckb')
 
     def create_approach_selector(self):
         self.approach_lbl = QLabel('Recovery time approach')
@@ -587,6 +590,13 @@ class ViewerDock(QDockWidget, FORM_CLASS):
 
     def remove_type_dep_attrs(self):
         for widget_name in self.type_dep_widget_names:
+            if widget_name == 'exclude_no_dmg_ckb':
+                if hasattr(self, widget_name):
+                    widget = getattr(self, widget_name)
+                    for i in reversed(list(range(self.plot_layout.count()))):
+                        if self.plot_layout.itemAt(i).widget() == widget:
+                            widget.setParent(None)
+                            break
             if hasattr(self, widget_name):
                 delattr(self, widget_name)
 
@@ -599,8 +609,6 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         # NOTE: even after removing widgets from layouts, the viewer dock
         # widget might still keep references to some of its children widgets
         self.remove_type_dep_attrs()
-        if hasattr(self.plot_layout, 'exclude_no_dmg_ckb'):
-            delattr(self.plot_layout, 'exclude_no_dmg_ckb')
         if hasattr(self, 'plot'):
             self.plot.clear()
             self.plot_canvas.show()
