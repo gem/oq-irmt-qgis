@@ -554,7 +554,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
     def remove_type_dep_attrs(self):
         for widget_name in [
                 'stats_multiselect', 'rlzs_multiselect',
-                # 'exclude_no_dmg_ckb',  # to be removed from plot area
+                'exclude_no_dmg_ckb',
                 'loss_type_lbl', 'loss_type_cbx',
                 'n_simulations_lbl', 'n_simulations_cbx',
                 'imt_lbl', 'imt_cbx',
@@ -582,10 +582,6 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         # NOTE: even after removing widgets from layouts, the viewer dock
         # widget might still keep references to some of its children widgets
         self.remove_type_dep_attrs()
-        # NOTE: this type dep widget is the only one belonging to a different
-        # layout
-        if hasattr(self.plot_layout, 'exclude_no_dmg_ckb'):
-            delattr(self.plot_layout, 'exclude_no_dmg_ckb')
         if hasattr(self, 'plot'):
             self.plot.clear()
             self.plot_canvas.show()
