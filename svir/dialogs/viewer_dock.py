@@ -260,6 +260,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.exclude_no_dmg_ckb.stateChanged[int].connect(
             self.on_exclude_no_dmg_ckb_state_changed)
         self.plot_layout.insertWidget(0, self.exclude_no_dmg_ckb)
+        # NOTE: this widget has to be inserted and handled differently with
+        # respect to the other type dependent widgets
+        self.type_dep_widget_names.append('exclude_no_dmg_ckb')
 
     def create_approach_selector(self):
         self.approach_lbl = QLabel('Recovery time approach')
@@ -552,24 +555,14 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         layer.selectByIds(selected_feats)
 
     def remove_type_dep_attrs(self):
-        for widget_name in [
-                'stats_multiselect', 'rlzs_multiselect',
-                'exclude_no_dmg_ckb',
-                'loss_type_lbl', 'loss_type_cbx',
-                'n_simulations_lbl', 'n_simulations_cbx',
-                'imt_lbl', 'imt_cbx',
-                'poe_lbl', 'poe_cbx',
-                'rlz_lbl', 'rlz_cbx',
-                'rlzs_lbl', 'rlzs_multiselect',
-                'approach_lbl', 'approach_cbx',
-                'n_simulations_lbl', 'n_simulations_sbx',
-                'warning_n_simulations_lbl',
-                'select_assets_at_same_site_chk',
-                'recalculate_on_the_fly_chk', 'recalculate_curve_btn',
-                'fields_lbl', 'fields_multiselect',
-                'stats_lbl', 'stats_multiselect',
-                'tag_names_lbl', 'tag_names_multiselect',
-                'tag_names_tab_widget']:
+        for widget_name in self.type_dep_widget_names:
+            if widget_name == 'exclude_no_dmg_ckb':
+                if hasattr(self, widget_name):
+                    widget = getattr(self, widget_name)
+                    for i in reversed(list(range(self.plot_layout.count()))):
+                        if self.plot_layout.itemAt(i).widget() == widget:
+                            widget.setParent(None)
+                            break
             if hasattr(self, widget_name):
                 delattr(self, widget_name)
 
