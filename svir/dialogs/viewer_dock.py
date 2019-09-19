@@ -45,7 +45,6 @@ from qgis.PyQt.QtWidgets import (
                                  QTabWidget,
                                  QTableWidget,
                                  QTableWidgetItem,
-                                 QHBoxLayout,
                                  )
 from qgis.gui import QgsVertexMarker
 from qgis.core import QgsMapLayer, QgsFeatureRequest, QgsWkbTypes
@@ -123,6 +122,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.fields_multiselect = None
         self.stats_multiselect = None
         self.rlzs_multiselect = None
+
+        self.type_dep_widget_names = []
 
         self.calc_id = None
 
@@ -204,8 +205,10 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.loss_type_cbx = QComboBox()
         self.loss_type_cbx.currentIndexChanged['QString'].connect(
             self.on_loss_type_changed)
-        self.typeDepHLayout2.addWidget(self.loss_type_lbl)
-        self.typeDepHLayout2.addWidget(self.loss_type_cbx)
+        self.add_widget_to_type_dep_layout(
+            self.loss_type_lbl, 'loss_type_lbl', self.typeDepHLayout2)
+        self.add_widget_to_type_dep_layout(
+            self.loss_type_cbx, 'loss_type_cbx', self.typeDepHLayout2)
 
     def create_tag_selector(
             self, tag_name, tag_values=None, on_currentIndexChanged=None,
@@ -217,8 +220,10 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         cbx = getattr(self, "%s_values_multiselect" % tag_name)
         if tag_values is not None:
             cbx.addItems(tag_values)
-        self.typeDepVLayout.addWidget(lbl)
-        self.typeDepVLayout.addWidget(cbx)
+        self.add_widget_to_type_dep_layout(
+            lbl, "%s_lbl" % tag_name, self.typeDepVLayout)
+        self.add_widget_to_type_dep_layout(
+            cbx, "%s_values_multiselect" % tag_name, self.typeDepVLayout)
         if on_currentIndexChanged is not None:
             cbx.item_was_clicked.connect(on_currentIndexChanged)
 
@@ -229,8 +234,10 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.imt_cbx = QComboBox()
         self.imt_cbx.currentIndexChanged['QString'].connect(
             self.on_imt_changed)
-        self.typeDepHLayout1.addWidget(self.imt_lbl)
-        self.typeDepHLayout1.addWidget(self.imt_cbx)
+        self.add_widget_to_type_dep_layout(
+            self.imt_lbl, 'imt_lbl', self.typeDepHLayout1)
+        self.add_widget_to_type_dep_layout(
+            self.imt_cbx, 'imt_cbx', self.typeDepHLayout1)
 
     def create_poe_selector(self):
         self.poe_lbl = QLabel('Probability of Exceedance')
@@ -239,8 +246,10 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.poe_cbx = QComboBox()
         self.poe_cbx.currentIndexChanged['QString'].connect(
             self.on_poe_changed)
-        self.typeDepHLayout1.addWidget(self.poe_lbl)
-        self.typeDepHLayout1.addWidget(self.poe_cbx)
+        self.add_widget_to_type_dep_layout(
+            self.poe_lbl, 'poe_lbl', self.typeDepHLayout1)
+        self.add_widget_to_type_dep_layout(
+            self.poe_cbx, 'poe_cbx', self.typeDepHLayout1)
 
     def create_rlz_selector(self):
         self.rlz_lbl = QLabel('Realization')
@@ -249,8 +258,10 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.rlz_cbx = QComboBox()
         self.rlz_cbx.currentIndexChanged['QString'].connect(
             self.on_rlz_changed)
-        self.typeDepHLayout1.addWidget(self.rlz_lbl)
-        self.typeDepHLayout1.addWidget(self.rlz_cbx)
+        self.add_widget_to_type_dep_layout(
+            self.rlz_lbl, 'rlz_lbl', self.typeDepHLayout1)
+        self.add_widget_to_type_dep_layout(
+            self.rlz_cbx, 'rlz_cbx', self.typeDepHLayout1)
 
     def create_exclude_no_dmg_ckb(self):
         self.exclude_no_dmg_ckb = QCheckBox('Exclude "no damage"')
@@ -278,8 +289,14 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.approach_cbx.addItems(['Disaggregate', 'Aggregate'])
         self.approach_cbx.currentIndexChanged['QString'].connect(
             self.on_approach_changed)
-        self.typeDepHLayout1.addWidget(self.approach_lbl)
-        self.typeDepHLayout1.addWidget(self.approach_cbx)
+        self.add_widget_to_type_dep_layout(
+            self.approach_lbl, 'approach_lbl', self.typeDepHLayout1)
+        self.add_widget_to_type_dep_layout(
+            self.approach_cbx, 'approach_cbx', self.typeDepHLayout1)
+
+    def add_widget_to_type_dep_layout(self, widget, widget_name, layout):
+        layout.addWidget(widget)
+        self.type_dep_widget_names.append(widget_name)
 
     def create_n_simulations_spinbox(self):
         simulations_explanation = (
@@ -296,30 +313,40 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.n_simulations_sbx.setValue(n_simulations)
         self.n_simulations_sbx.valueChanged['int'].connect(
             self.on_n_simulations_changed)
-        self.typeDepHLayout2.addWidget(self.n_simulations_lbl)
-        self.typeDepHLayout2.addWidget(self.n_simulations_sbx)
+        self.add_widget_to_type_dep_layout(
+            self.n_simulations_lbl, 'n_simulations_lbl', self.typeDepHLayout2)
+        self.add_widget_to_type_dep_layout(
+            self.n_simulations_lbl, 'n_simulations_sbx', self.typeDepHLayout2)
         self.warning_n_simulations_lbl = QLabel(
             'Warning: increasing the number of simulations per building,'
             ' the application might become irresponsive or run out of memory')
         self.warning_n_simulations_lbl.setWordWrap(True)
-        self.typeDepVLayout.addWidget(self.warning_n_simulations_lbl)
+        self.add_widget_to_type_dep_layout(
+            self.warning_n_simulations_lbl, 'warning_n_simulations_lbl',
+            self.typeDepVLayout)
 
     def create_select_assets_at_same_site_chk(self):
         self.select_assets_at_same_site_chk = QCheckBox(
             'Select all assets at the same site')
         self.select_assets_at_same_site_chk.setChecked(True)
-        self.typeDepVLayout.addWidget(self.select_assets_at_same_site_chk)
+        self.add_widget_to_type_dep_layout(
+            self.select_assets_at_same_site_chk,
+            'select_assets_at_same_site_chk', self.typeDepVLayout)
 
     def create_recalculate_on_the_fly_chk(self):
         self.recalculate_on_the_fly_chk = QCheckBox('Recalculate on-the-fly')
         self.recalculate_on_the_fly_chk.setChecked(True)
-        self.typeDepVLayout.addWidget(self.recalculate_on_the_fly_chk)
+        self.add_widget_to_type_dep_layout(
+            self.recalculate_on_the_fly_chk, 'recalculate_on_the_fly_chk',
+            self.typeDepVLayout)
         self.recalculate_on_the_fly_chk.toggled.connect(
             self.on_recalculate_on_the_fly_chk_toggled)
 
     def create_recalculate_curve_btn(self):
         self.recalculate_curve_btn = QPushButton('Calculate recovery curve')
-        self.typeDepVLayout.addWidget(self.recalculate_curve_btn)
+        self.add_widget_to_type_dep_layout(
+            self.recalculate_curve_btn, 'recalculate_curve_btn',
+            self.typeDepVLayout)
         self.recalculate_curve_btn.clicked.connect(
             self.on_recalculate_curve_btn_clicked)
 
@@ -327,34 +354,41 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.fields_lbl = QLabel(
             'Fields containing loss-based damage state probabilities')
         self.fields_multiselect = MultiSelectComboBox(self)
-        self.typeDepVLayout.addWidget(self.fields_lbl)
-        self.typeDepVLayout.addWidget(self.fields_multiselect)
+        self.add_widget_to_type_dep_layout(
+            self.fields_lbl, 'fields_lbl', self.typeDepVLayout)
+        self.add_widget_to_type_dep_layout(
+            self.fields_multiselect, 'fields_multiselect', self.typeDepVLayout)
         fill_fields_multiselect(
             self.fields_multiselect, self.iface.activeLayer())
 
     def create_rlzs_multiselect(self):
         self.rlzs_lbl = QLabel('Realizations')
         self.rlzs_multiselect = MultiSelectComboBox(self)
-        hlayout = QHBoxLayout()
-        hlayout.addWidget(self.rlzs_lbl)
-        hlayout.addWidget(self.rlzs_multiselect)
-        self.typeDepVLayout.addLayout(hlayout)
+        self.add_widget_to_type_dep_layout(
+            self.rlzs_lbl, 'rlzs_lbl', self.typeDepVLayout)
+        self.add_widget_to_type_dep_layout(
+            self.rlzs_multiselect, 'rlzs_multiselect', self.typeDepVLayout)
 
     def create_stats_multiselect(self):
         self.stats_lbl = QLabel('Statistics')
         self.stats_multiselect = MultiSelectComboBox(self)
-        hlayout = QHBoxLayout()
-        hlayout.addWidget(self.stats_lbl)
-        hlayout.addWidget(self.stats_multiselect)
-        self.typeDepVLayout.addLayout(hlayout)
+        self.add_widget_to_type_dep_layout(
+            self.stats_lbl, 'stats_lbl', self.typeDepVLayout)
+        self.add_widget_to_type_dep_layout(
+            self.stats_multiselect, 'stats_multiselect', self.typeDepVLayout)
 
     def create_tag_names_multiselect(self, monovalue=False):
         self.tag_names_lbl = QLabel('Tag names')
         self.tag_names_multiselect = MultiSelectComboBox(self)
         self.tag_names_tab_widget = QTabWidget(self)
-        self.typeDepVLayout.addWidget(self.tag_names_lbl)
-        self.typeDepVLayout.addWidget(self.tag_names_multiselect)
-        self.typeDepVLayout.addWidget(self.tag_names_tab_widget)
+        self.add_widget_to_type_dep_layout(
+            self.tag_names_lbl, 'tag_names_lbl', self.typeDepVLayout)
+        self.add_widget_to_type_dep_layout(
+            self.tag_names_multiselect, 'tag_names_multiselect',
+            self.typeDepVLayout)
+        self.add_widget_to_type_dep_layout(
+            self.tag_names_tab_widget, 'tag_names_tab_widget',
+            self.typeDepVLayout)
         self.tag_names_tab_widget.setSizePolicy(
             QSizePolicy.Minimum, QSizePolicy.Minimum)
         self.tag_names_tab_widget.resize(
