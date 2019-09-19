@@ -6,7 +6,7 @@ docker rm -f qgis || true
 docker run -d --name qgis -v /tmp/.X11-unix:/tmp/.X11-unix \
  -v `pwd`/../.:/tests_directory \
  -e DISPLAY=:99 \
- qgis/qgis:latest
+ qgis/qgis:final-3_8_3
 
 docker exec -it qgis sh -c "apt update; DEBIAN_FRONTEND=noninteractive apt install -y python3-scipy python3-matplotlib python3-pyqt5.qtwebkit python3-nose"
 
