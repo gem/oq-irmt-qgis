@@ -405,12 +405,18 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         lbl = getattr(self, "%s_values_lbl" % tag_name, None)
         cbx = getattr(self, "%s_values_multiselect" % tag_name, None)
         # NOTE: removing widgets anyway, then re-adding them if needed
+        try:
+            self.tag_values_tab_widget.removeTab(
+                self.tag_values_tab_widget.indexOf(cbx))
+        except RuntimeError:
+            # NOTE: this is needed for ebrisk but not for scenario_damage
+            # otherwise it might cause:
+            # wrapped C/C++ object of type MultiSelectComboBox has been deleted
+            pass
         if lbl is not None:
             delattr(self, "%s_values_lbl" % tag_name)
         if cbx is not None:
             delattr(self, "%s_values_multiselect" % tag_name)
-        self.tag_values_tab_widget.removeTab(
-            self.tag_values_tab_widget.indexOf(cbx))
         if tag_name_is_checked:
             setattr(self, "%s_values_lbl" % tag_name,
                     tag_name + ' value' + ('' if monovalue else 's'))
