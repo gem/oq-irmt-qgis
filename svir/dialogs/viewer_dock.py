@@ -287,9 +287,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.approach_cbx.currentIndexChanged['QString'].connect(
             self.on_approach_changed)
         self.add_widget_to_type_dep_layout(
-            self.approach_lbl, 'approach_lbl', self.typeDepHLayout1)
+            self.approach_lbl, 'approach_lbl', self.typeDepVLayout1)
         self.add_widget_to_type_dep_layout(
-            self.approach_cbx, 'approach_cbx', self.typeDepHLayout1)
+            self.approach_cbx, 'approach_cbx', self.typeDepVLayout1)
 
     def add_widget_to_type_dep_layout(self, widget, widget_name, layout):
         layout.addWidget(widget)
