@@ -210,7 +210,21 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.add_widget_to_type_dep_layout(
             self.loss_type_cbx, 'loss_type_cbx', self.typeDepHLayout2)
 
-    def create_tag_selector(
+    def create_tag_name_selector(self, values=None, preselect_first=True):
+        self.multivalue_tag_lbl = QLabel('Multivalue tag')
+        self.multivalue_tag_cbx = QComboBox(self)
+        self.add_widget_to_type_dep_layout(
+            self.multivalue_tag_lbl, "multivalue_tag_lbl", self.typeDepVLayout)
+        self.add_widget_to_type_dep_layout(
+            self.multivalue_tag_cbx, "multivalue_tag_cbx", self.typeDepVLayout)
+        if values:
+            self.multivalue_tag_cbx.addItems(self.tags.keys())
+        self.multivalue_tag_cbx.currentIndexChanged.connect(
+            self.on_multivalue_tag_name_changed)
+        if preselect_first:
+            self.multivalue_tag_cbx.setCurrentIndex(0)
+
+    def create_tag_values_selector(
             self, tag_name, tag_values=None, monovalue=False,
             preselect_first=False):
         setattr(self, "%s_lbl" % tag_name, QLabel(tag_name))
@@ -872,22 +886,18 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             if output_type == 'agg_curves-rlzs':
                 self._build_tags()
                 for tag_name in self.tags:
-                    self.create_tag_selector(
+                    self.create_tag_values_selector(
                         tag_name,
                         tag_values=self.tags[tag_name]['values'].keys(),
-                        monovalue=True)
+                        monovalue=True, preselect_first=True)
             else:  # 'agg_curves-stats'
-                self.create_tag_names_multiselect()
                 self._build_tags()
-                self.update_selected_tag_names()
-                self.tag_names_multiselect.clear()
+                self.create_tag_name_selector(values=self.tags.keys())
                 for tag_name in self.tags:
-                    if self.tags[tag_name]['selected']:
-                        self.tag_names_multiselect.add_selected_items(
-                            [tag_name])
-                    else:
-                        self.tag_names_multiselect.add_unselected_items(
-                            [tag_name])
+                    self.create_tag_values_selector(
+                        tag_name,
+                        tag_values=self.tags[tag_name]['values'].keys(),
+                        monovalue=False, preselect_first=True)
         self.filter_agg_curves()
 
     def _get_idxs(self):
@@ -1642,6 +1652,15 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             else:
                 self.vertex_marker.hide()
         return False
+
+    def on_multivalue_tag_name_changed(self):
+        selected_tag_name = self.multivalue_tag_cbx.currentText()
+        for tag_name in self.tags:
+            self.tags[tag_name]['selected'] = (tag_name == selected_tag_name)
+            cbx = getattr(self, "%s_values_multiselect" % tag_name)
+            if tag_name != selected_tag_name:
+                cbx.set_idxs_selection([0], checked=True)
+        self.filter_agg_curves()
 
     def on_imt_changed(self):
         self.was_imt_switched = True

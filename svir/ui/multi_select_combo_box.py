@@ -114,17 +114,19 @@ class MultiSelectComboBox(QComboBox):
             return
         self.set_items_selection(items, False)
 
-    def set_idxs_selection(self, idxs, checked):
+    def set_idxs_selection(self, idxs, checked=True):
         if self.mono:
             # NOTE: this method is not expected to be used for mono selectors.
             # Anyway, we are making it possible to use it, and the selector
             # will point to the first element of idxs
             self.setCurrentIndex(idxs[0])
         else:
-            for idx in idxs:
-                checkbox = self.mlist.itemWidget(
-                    self.mlist.item(idx + self.RESERVED_IDXS_COUNT))
-                checkbox.setChecked(checked)
+            for i in range(self.RESERVED_IDXS_COUNT, self.mlist.count()):
+                checkbox = self.mlist.itemWidget(self.mlist.item(i))
+                if i - self.RESERVED_IDXS_COUNT in idxs:
+                    checkbox.setChecked(checked)
+                else:
+                    checkbox.setChecked(not checked)
 
     def set_items_selection(self, items, checked):
         if self.mono:
