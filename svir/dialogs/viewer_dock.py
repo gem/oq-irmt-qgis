@@ -211,7 +211,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.loss_type_cbx, 'loss_type_cbx', self.typeDepHLayout2)
 
     def create_tag_selector(
-            self, tag_name, tag_values=None, monovalue=False):
+            self, tag_name, tag_values=None, monovalue=False,
+            preselect_first=False):
         setattr(self, "%s_lbl" % tag_name, QLabel(tag_name))
         setattr(self, "%s_values_multiselect" % tag_name,
                 MultiSelectComboBox(self, mono=monovalue))
@@ -224,14 +225,15 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.add_widget_to_type_dep_layout(
             cbx, "%s_values_multiselect" % tag_name, self.typeDepVLayout)
         if monovalue:
-            getattr(self, "%s_values_multiselect"
-                    % tag_name).currentIndexChanged.connect(
-                        lambda idx: self.update_selected_tag_values(
-                            tag_name))
+            cbx.currentIndexChanged.connect(
+                lambda idx: self.update_selected_tag_values(tag_name))
+            if preselect_first:
+                cbx.setCurrentIndex(0)
         else:
-            getattr(self, "%s_values_multiselect"
-                    % tag_name).selection_changed.connect(
-                        lambda: self.update_selected_tag_values(tag_name))
+            cbx.selection_changed.connect(
+                lambda: self.update_selected_tag_values(tag_name))
+            if preselect_first:
+                cbx.set_idxs_selection([0], checked=True)
 
     def create_imt_selector(self):
         self.imt_lbl = QLabel('Intensity Measure Type')

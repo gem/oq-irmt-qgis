@@ -11,6 +11,7 @@ class MultiSelectComboBox(QComboBox):
 
     SEARCH_BAR_IDX = 0
     SELECT_ALL_IDX = 1
+    RESERVED_IDXS_COUNT = 2
     selection_changed = pyqtSignal()
     item_was_clicked = pyqtSignal(str, bool)
 
@@ -39,7 +40,7 @@ class MultiSelectComboBox(QComboBox):
         self.activated.connect(self.itemClicked)
 
     def on_select_all_toggled(self, state):
-        for i in range(2, self.mlist.count()):
+        for i in range(self.RESERVED_IDXS_COUNT, self.mlist.count()):
             checkbox = self.mlist.itemWidget(self.mlist.item(i))
             if self.search_bar.text().lower() in checkbox.text().lower():
                 checkbox.setChecked(state)
@@ -76,12 +77,13 @@ class MultiSelectComboBox(QComboBox):
             return super().stateChanged(state)
         # NOTE: not using state
         selected_data = ""
-        for i in range(2, self.mlist.count()):
+        separator = "; "
+        for i in range(self.RESERVED_IDXS_COUNT, self.mlist.count()):
             checkbox = self.mlist.itemWidget(self.mlist.item(i))
             if checkbox.isChecked():
-                selected_data += checkbox.text() + "; "
-        if selected_data.endswith("; "):
-            selected_data = selected_data[:-2]
+                selected_data += checkbox.text() + separator
+        if selected_data.endswith(separator):
+            selected_data = selected_data[:-len(separator)]
         if selected_data:
             self.line_edit.setText(selected_data)
         else:
@@ -112,10 +114,22 @@ class MultiSelectComboBox(QComboBox):
             return
         self.set_items_selection(items, False)
 
+    def set_idxs_selection(self, idxs, checked):
+        if self.mono:
+            # NOTE: this method is not expected to be used for mono selectors.
+            # Anyway, we are making it possible to use it, and the selector
+            # will point to the first element of idxs
+            self.setCurrentIndex(idxs[0])
+        else:
+            for idx in idxs:
+                checkbox = self.mlist.itemWidget(
+                    self.mlist.item(idx + self.RESERVED_IDXS_COUNT))
+                checkbox.setChecked(checked)
+
     def set_items_selection(self, items, checked):
         if self.mono:
             return
-        for i in range(2, self.mlist.count()):
+        for i in range(self.RESERVED_IDXS_COUNT, self.mlist.count()):
             checkbox = self.mlist.itemWidget(self.mlist.item(i))
             if checkbox.text() in items:
                 checkbox.setChecked(checked)
@@ -129,7 +143,7 @@ class MultiSelectComboBox(QComboBox):
                 return [super().currentText()]
             else:
                 return []
-        for i in range(2, self.mlist.count()):
+        for i in range(self.RESERVED_IDXS_COUNT, self.mlist.count()):
             checkbox = self.mlist.itemWidget(self.mlist.item(i))
             if checkbox.isChecked():
                 items.append(checkbox.text())
@@ -144,7 +158,7 @@ class MultiSelectComboBox(QComboBox):
                 if item_text and item_text != selected_text:
                     items.append(item_text)
             return items
-        for i in range(2, self.mlist.count()):
+        for i in range(self.RESERVED_IDXS_COUNT, self.mlist.count()):
             checkbox = self.mlist.itemWidget(self.mlist.item(i))
             if not checkbox.isChecked():
                 items.append(checkbox.text())
@@ -180,7 +194,7 @@ class MultiSelectComboBox(QComboBox):
         if self.mono:
             return super().count()
         # do not count search bar and toggle select all
-        count = self.mlist.count() - 2
+        count = self.mlist.count() - self.RESERVED_IDXS_COUNT
         if count < 0:
             count = 0
         return count
@@ -195,7 +209,7 @@ class MultiSelectComboBox(QComboBox):
 
     def onSearch(self, search_str):
         self.setMaxVisibleItems(min(10, self.mlist.count()))
-        for i in range(2, self.mlist.count()):
+        for i in range(self.RESERVED_IDXS_COUNT, self.mlist.count()):
             checkbox = self.mlist.itemWidget(self.mlist.item(i))
             if search_str.lower() in checkbox.text().lower():
                 self.mlist.item(i).setHidden(False)
@@ -253,7 +267,7 @@ class MultiSelectComboBox(QComboBox):
     def setCurrentText(self, texts):
         if self.mono:
             return super().setCurrentText(texts)
-        for i in range(2, self.mlist.count()):
+        for i in range(self.RESERVED_IDXS_COUNT, self.mlist.count()):
             checkbox = self.mlist.itemWidget(self.mlist.item(i))
             checkbox_str = checkbox.text()
             if checkbox_str in texts:
@@ -262,7 +276,7 @@ class MultiSelectComboBox(QComboBox):
     def resetSelection(self):
         if self.mono:
             return self.resetSelection()
-        for i in range(2, self.mlist.count()):
+        for i in range(self.RESERVED_IDXS_COUNT, self.mlist.count()):
             checkbox = self.mlist.itemWidget(self.mlist.item(i))
             checkbox.setChecked(False)
 
