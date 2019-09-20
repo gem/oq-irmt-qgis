@@ -948,10 +948,10 @@ def clear_widgets_from_layout(layout):
         # check if the item is a widget
         widget = item.widget()
         if widget is not None:
-            # NOTE: in the past, we were setting the parent to None, which
-            #       is a valid alternative to delete the widget. This approach
-            #       is probably a little safer
-            widget.deleteLater()
+            # NOTE: deleteLater() and setParent(None) are almost equivalent,
+            # but deleteLater() tends to cause more frequently the annoying:
+            # 'wrapped C/C++ object of type has been deleted'
+            widget.setParent(None)
 
 
 def import_layer_from_csv(parent,
@@ -1139,11 +1139,15 @@ def extract_npz(
         log_msg(msg, level='C', message_bar=message_bar, print_to_stderr=True)
         return
     resp_content = resp.content
+    msg = 'GET %s returned an empty content!' % url
     if not resp_content:
-        msg = 'GET %s returned an empty content!' % url
         log_msg(msg, level='C', message_bar=message_bar, print_to_stderr=True)
         return
-    return numpy.load(io.BytesIO(resp_content), allow_pickle=True)
+    extracted_content = numpy.load(io.BytesIO(resp_content), allow_pickle=True)
+    if not extracted_content:
+        log_msg(msg, level='C', message_bar=message_bar, print_to_stderr=True)
+        return
+    return extracted_content
 
 
 def convert_bytes(num):

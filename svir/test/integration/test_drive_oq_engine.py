@@ -442,15 +442,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         # outputs might be skipped, therefore it would not be needed
         calc_id = calc['id']
         output_type = output['type']
-        # TODO: when ebrisk becomes loadable, let's not skip this
-        if (output['type'] in OQ_EXTRACT_TO_VIEW_TYPES and
-                calc['calculation_mode'] == 'ebrisk'):
-            self._store_skipped_attempt(
-                calc_id, calc['calculation_mode'],
-                calc['description'], output_type)
-            print('\t\tSKIPPED')
-            return 'skipped'
-        # NOTE: loading zipped output only for multi_risk
+        # NOTE: loading zipped input files only for multi_risk
         if output_type == 'input' and calc['calculation_mode'] != 'multi_risk':
             self._store_skipped_attempt(
                 calc_id, calc['calculation_mode'],
@@ -558,14 +550,13 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                         calc, selected_output_type, taxonomy_idx=taxonomy_idx,
                         aggregate_by_site=aggregate_by_site)
                 # for dmg_by_asset also test recovery modeling
-                # FIXME: temporarily skipped
-                # if selected_output_type == 'dmg_by_asset':
-                #     for approach in ['Disaggregate', 'Aggregate']:
-                #         self.load_calc_output(
-                #             calc, selected_output_type,
-                #             aggregate_by_site=False,
-                #             approach=approach,
-                #             n_simulations=2)
+                if selected_output_type == 'dmg_by_asset':
+                    for approach in ['Disaggregate', 'Aggregate']:
+                        self.load_calc_output(
+                            calc, selected_output_type,
+                            aggregate_by_site=False,
+                            approach=approach,
+                            n_simulations=2)
             else:
                 self.load_calc_output(calc, selected_output_type)
         if self.skipped_attempts:

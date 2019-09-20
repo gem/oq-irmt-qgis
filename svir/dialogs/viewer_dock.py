@@ -42,9 +42,9 @@ from qgis.PyQt.QtWidgets import (
                                  QDockWidget,
                                  QFileDialog,
                                  QAbstractItemView,
+                                 QTabWidget,
                                  QTableWidget,
                                  QTableWidgetItem,
-                                 QHBoxLayout,
                                  )
 from qgis.gui import QgsVertexMarker
 from qgis.core import QgsMapLayer, QgsFeatureRequest, QgsWkbTypes
@@ -122,6 +122,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.fields_multiselect = None
         self.stats_multiselect = None
         self.rlzs_multiselect = None
+
+        self.type_dep_widget_names = []
 
         self.calc_id = None
 
@@ -203,8 +205,49 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.loss_type_cbx = QComboBox()
         self.loss_type_cbx.currentIndexChanged['QString'].connect(
             self.on_loss_type_changed)
-        self.typeDepHLayout2.addWidget(self.loss_type_lbl)
-        self.typeDepHLayout2.addWidget(self.loss_type_cbx)
+        self.add_widget_to_type_dep_layout(
+            self.loss_type_lbl, 'loss_type_lbl', self.typeDepHLayout2)
+        self.add_widget_to_type_dep_layout(
+            self.loss_type_cbx, 'loss_type_cbx', self.typeDepHLayout2)
+
+    def create_tag_name_selector(self, values=None, preselect_first=True):
+        self.multivalue_tag_lbl = QLabel('Multivalue tag')
+        self.multivalue_tag_cbx = QComboBox(self)
+        self.add_widget_to_type_dep_layout(
+            self.multivalue_tag_lbl, "multivalue_tag_lbl", self.typeDepVLayout)
+        self.add_widget_to_type_dep_layout(
+            self.multivalue_tag_cbx, "multivalue_tag_cbx", self.typeDepVLayout)
+        if values:
+            self.multivalue_tag_cbx.addItems(self.tags.keys())
+        self.multivalue_tag_cbx.currentIndexChanged.connect(
+            self.on_multivalue_tag_name_changed)
+        if preselect_first:
+            self.multivalue_tag_cbx.setCurrentIndex(0)
+
+    def create_tag_values_selector(
+            self, tag_name, tag_values=None, monovalue=False,
+            preselect_first=False):
+        setattr(self, "%s_lbl" % tag_name, QLabel(tag_name))
+        setattr(self, "%s_values_multiselect" % tag_name,
+                MultiSelectComboBox(self, mono=monovalue))
+        lbl = getattr(self, "%s_lbl" % tag_name)
+        cbx = getattr(self, "%s_values_multiselect" % tag_name)
+        if tag_values is not None:
+            cbx.addItems(tag_values)
+        self.add_widget_to_type_dep_layout(
+            lbl, "%s_lbl" % tag_name, self.typeDepVLayout)
+        self.add_widget_to_type_dep_layout(
+            cbx, "%s_values_multiselect" % tag_name, self.typeDepVLayout)
+        if monovalue:
+            cbx.currentIndexChanged.connect(
+                lambda idx: self.update_selected_tag_values(tag_name))
+            if preselect_first:
+                cbx.setCurrentIndex(0)
+        else:
+            cbx.selection_changed.connect(
+                lambda: self.update_selected_tag_values(tag_name))
+            if preselect_first:
+                cbx.set_idxs_selection([0], checked=True)
 
     def create_imt_selector(self):
         self.imt_lbl = QLabel('Intensity Measure Type')
@@ -213,8 +256,10 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.imt_cbx = QComboBox()
         self.imt_cbx.currentIndexChanged['QString'].connect(
             self.on_imt_changed)
-        self.typeDepHLayout1.addWidget(self.imt_lbl)
-        self.typeDepHLayout1.addWidget(self.imt_cbx)
+        self.add_widget_to_type_dep_layout(
+            self.imt_lbl, 'imt_lbl', self.typeDepHLayout1)
+        self.add_widget_to_type_dep_layout(
+            self.imt_cbx, 'imt_cbx', self.typeDepHLayout1)
 
     def create_poe_selector(self):
         self.poe_lbl = QLabel('Probability of Exceedance')
@@ -223,8 +268,10 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.poe_cbx = QComboBox()
         self.poe_cbx.currentIndexChanged['QString'].connect(
             self.on_poe_changed)
-        self.typeDepHLayout1.addWidget(self.poe_lbl)
-        self.typeDepHLayout1.addWidget(self.poe_cbx)
+        self.add_widget_to_type_dep_layout(
+            self.poe_lbl, 'poe_lbl', self.typeDepHLayout1)
+        self.add_widget_to_type_dep_layout(
+            self.poe_cbx, 'poe_cbx', self.typeDepHLayout1)
 
     def create_rlz_selector(self):
         self.rlz_lbl = QLabel('Realization')
@@ -233,8 +280,10 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.rlz_cbx = QComboBox()
         self.rlz_cbx.currentIndexChanged['QString'].connect(
             self.on_rlz_changed)
-        self.typeDepHLayout1.addWidget(self.rlz_lbl)
-        self.typeDepHLayout1.addWidget(self.rlz_cbx)
+        self.add_widget_to_type_dep_layout(
+            self.rlz_lbl, 'rlz_lbl', self.typeDepHLayout1)
+        self.add_widget_to_type_dep_layout(
+            self.rlz_cbx, 'rlz_cbx', self.typeDepHLayout1)
 
     def create_exclude_no_dmg_ckb(self):
         self.exclude_no_dmg_ckb = QCheckBox('Exclude "no damage"')
@@ -244,6 +293,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.exclude_no_dmg_ckb.stateChanged[int].connect(
             self.on_exclude_no_dmg_ckb_state_changed)
         self.plot_layout.insertWidget(0, self.exclude_no_dmg_ckb)
+        # NOTE: this widget has to be inserted and handled differently with
+        # respect to the other type dependent widgets
+        self.type_dep_widget_names.append('exclude_no_dmg_ckb')
 
     def create_approach_selector(self):
         self.approach_lbl = QLabel('Recovery time approach')
@@ -259,8 +311,14 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.approach_cbx.addItems(['Disaggregate', 'Aggregate'])
         self.approach_cbx.currentIndexChanged['QString'].connect(
             self.on_approach_changed)
-        self.typeDepHLayout1.addWidget(self.approach_lbl)
-        self.typeDepHLayout1.addWidget(self.approach_cbx)
+        self.add_widget_to_type_dep_layout(
+            self.approach_lbl, 'approach_lbl', self.typeDepHLayout1)
+        self.add_widget_to_type_dep_layout(
+            self.approach_cbx, 'approach_cbx', self.typeDepHLayout1)
+
+    def add_widget_to_type_dep_layout(self, widget, widget_name, layout):
+        layout.addWidget(widget)
+        self.type_dep_widget_names.append(widget_name)
 
     def create_n_simulations_spinbox(self):
         simulations_explanation = (
@@ -277,30 +335,40 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.n_simulations_sbx.setValue(n_simulations)
         self.n_simulations_sbx.valueChanged['int'].connect(
             self.on_n_simulations_changed)
-        self.typeDepHLayout2.addWidget(self.n_simulations_lbl)
-        self.typeDepHLayout2.addWidget(self.n_simulations_sbx)
+        self.add_widget_to_type_dep_layout(
+            self.n_simulations_lbl, 'n_simulations_lbl', self.typeDepHLayout2)
+        self.add_widget_to_type_dep_layout(
+            self.n_simulations_lbl, 'n_simulations_sbx', self.typeDepHLayout2)
         self.warning_n_simulations_lbl = QLabel(
             'Warning: increasing the number of simulations per building,'
             ' the application might become irresponsive or run out of memory')
         self.warning_n_simulations_lbl.setWordWrap(True)
-        self.typeDepVLayout.addWidget(self.warning_n_simulations_lbl)
+        self.add_widget_to_type_dep_layout(
+            self.warning_n_simulations_lbl, 'warning_n_simulations_lbl',
+            self.typeDepVLayout)
 
     def create_select_assets_at_same_site_chk(self):
         self.select_assets_at_same_site_chk = QCheckBox(
             'Select all assets at the same site')
         self.select_assets_at_same_site_chk.setChecked(True)
-        self.typeDepVLayout.addWidget(self.select_assets_at_same_site_chk)
+        self.add_widget_to_type_dep_layout(
+            self.select_assets_at_same_site_chk,
+            'select_assets_at_same_site_chk', self.typeDepVLayout)
 
     def create_recalculate_on_the_fly_chk(self):
         self.recalculate_on_the_fly_chk = QCheckBox('Recalculate on-the-fly')
         self.recalculate_on_the_fly_chk.setChecked(True)
-        self.typeDepVLayout.addWidget(self.recalculate_on_the_fly_chk)
+        self.add_widget_to_type_dep_layout(
+            self.recalculate_on_the_fly_chk, 'recalculate_on_the_fly_chk',
+            self.typeDepVLayout)
         self.recalculate_on_the_fly_chk.toggled.connect(
             self.on_recalculate_on_the_fly_chk_toggled)
 
     def create_recalculate_curve_btn(self):
         self.recalculate_curve_btn = QPushButton('Calculate recovery curve')
-        self.typeDepVLayout.addWidget(self.recalculate_curve_btn)
+        self.add_widget_to_type_dep_layout(
+            self.recalculate_curve_btn, 'recalculate_curve_btn',
+            self.typeDepVLayout)
         self.recalculate_curve_btn.clicked.connect(
             self.on_recalculate_curve_btn_clicked)
 
@@ -308,56 +376,78 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.fields_lbl = QLabel(
             'Fields containing loss-based damage state probabilities')
         self.fields_multiselect = MultiSelectComboBox(self)
-        self.typeDepVLayout.addWidget(self.fields_lbl)
-        self.typeDepVLayout.addWidget(self.fields_multiselect)
+        self.add_widget_to_type_dep_layout(
+            self.fields_lbl, 'fields_lbl', self.typeDepVLayout)
+        self.add_widget_to_type_dep_layout(
+            self.fields_multiselect, 'fields_multiselect', self.typeDepVLayout)
         fill_fields_multiselect(
             self.fields_multiselect, self.iface.activeLayer())
 
     def create_rlzs_multiselect(self):
         self.rlzs_lbl = QLabel('Realizations')
         self.rlzs_multiselect = MultiSelectComboBox(self)
-        hlayout = QHBoxLayout()
-        hlayout.addWidget(self.rlzs_lbl)
-        hlayout.addWidget(self.rlzs_multiselect)
-        self.typeDepVLayout.addLayout(hlayout)
+        self.add_widget_to_type_dep_layout(
+            self.rlzs_lbl, 'rlzs_lbl', self.typeDepVLayout)
+        self.add_widget_to_type_dep_layout(
+            self.rlzs_multiselect, 'rlzs_multiselect', self.typeDepVLayout)
 
     def create_stats_multiselect(self):
         self.stats_lbl = QLabel('Statistics')
         self.stats_multiselect = MultiSelectComboBox(self)
-        hlayout = QHBoxLayout()
-        hlayout.addWidget(self.stats_lbl)
-        hlayout.addWidget(self.stats_multiselect)
-        self.typeDepVLayout.addLayout(hlayout)
+        self.add_widget_to_type_dep_layout(
+            self.stats_lbl, 'stats_lbl', self.typeDepVLayout)
+        self.add_widget_to_type_dep_layout(
+            self.stats_multiselect, 'stats_multiselect', self.typeDepVLayout)
 
-    def create_tag_names_multiselect(self):
+    def create_tag_names_multiselect(self, mononame=False, monovalue=False):
         self.tag_names_lbl = QLabel('Tag names')
-        self.tag_names_multiselect = MultiSelectComboBox(self)
-        self.typeDepVLayout.addWidget(self.tag_names_lbl)
-        self.typeDepVLayout.addWidget(self.tag_names_multiselect)
+        self.tag_names_multiselect = MultiSelectComboBox(self, mono=mononame)
+        self.tag_values_tab_widget = QTabWidget(self)
+        self.add_widget_to_type_dep_layout(
+            self.tag_names_lbl, 'tag_names_lbl', self.typeDepVLayout)
+        self.add_widget_to_type_dep_layout(
+            self.tag_names_multiselect, 'tag_names_multiselect',
+            self.typeDepVLayout)
+        self.add_widget_to_type_dep_layout(
+            self.tag_values_tab_widget, 'tag_values_tab_widget',
+            self.typeDepVLayout)
+        self.tag_values_tab_widget.setSizePolicy(
+            QSizePolicy.Minimum, QSizePolicy.Minimum)
+        self.tag_values_tab_widget.resize(
+            self.tag_values_tab_widget.minimumSizeHint())
         self.tag_names_multiselect.item_was_clicked.connect(
-            self.toggle_tag_values_multiselect)
+            lambda tag_name, tag_name_is_checked:
+            self.toggle_tag_values_multiselect_tab(
+                tag_name, tag_name_is_checked, monovalue=monovalue))
         self.tag_names_multiselect.selection_changed.connect(
             self.update_selected_tag_names)
 
-    def toggle_tag_values_multiselect(
-            self, tag_name, tag_name_is_checked, mono=True):  # FIXME
+    def toggle_tag_values_multiselect_tab(
+            self, tag_name, tag_name_is_checked, monovalue=False):
         lbl = getattr(self, "%s_values_lbl" % tag_name, None)
         cbx = getattr(self, "%s_values_multiselect" % tag_name, None)
         # NOTE: removing widgets anyway, then re-adding them if needed
+        try:
+            self.tag_values_tab_widget.removeTab(
+                self.tag_values_tab_widget.indexOf(cbx))
+        except RuntimeError:
+            # NOTE: this is needed for ebrisk but not for scenario_damage
+            # otherwise it might cause:
+            # wrapped C/C++ object of type MultiSelectComboBox has been deleted
+            pass
         if lbl is not None:
-            lbl.setParent(None)
+            delattr(self, "%s_values_lbl" % tag_name)
         if cbx is not None:
-            cbx.setParent(None)
+            delattr(self, "%s_values_multiselect" % tag_name)
         if tag_name_is_checked:
             setattr(self, "%s_values_lbl" % tag_name,
-                    QLabel('%s values' % tag_name))
+                    tag_name + ' value' + ('' if monovalue else 's'))
             setattr(self, "%s_values_multiselect" % tag_name,
-                    MultiSelectComboBox(self, mono=mono))
-            self.typeDepVLayout.addWidget(
-                getattr(self, "%s_values_lbl" % tag_name))
-            self.typeDepVLayout.addWidget(
-                getattr(self, "%s_values_multiselect" % tag_name))
-            if mono:
+                    MultiSelectComboBox(self, mono=monovalue))
+            label = getattr(self, "%s_values_lbl" % tag_name)
+            widget = getattr(self, "%s_values_multiselect" % tag_name)
+            self.tag_values_tab_widget.addTab(widget, label)
+            if monovalue:
                 getattr(self, "%s_values_multiselect"
                         % tag_name).currentIndexChanged.connect(
                             lambda idx: self.update_selected_tag_values(
@@ -389,6 +479,28 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             tag_name in self.tag_names_multiselect.get_selected_items())
 
     def filter_dmg_by_asset_aggr(self):
+        # NOTE: self.tags is structured like:
+        # {'taxonomy': {
+        #     'selected': True,
+        #     'values': {
+        #         'Wood': False,
+        #         'Adobe': False,
+        #         'Stone-Masonry': False,
+        #         'Unreinforced-Brick-Masonry': False,
+        #         'Concrete': True
+        #     }
+        #  },
+        #  'NAME_1': {
+        #      'selected': False,
+        #      'values': {
+        #          'Mid-Western': False,
+        #          'Far-Western': False,
+        #          'West': False,
+        #          'East': False,
+        #          'Central': False
+        #      }
+        #  },
+        # }
         params = {}
         for tag_name in self.tags:
             if self.tags[tag_name]['selected']:
@@ -414,43 +526,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.draw_dmg_by_asset_aggr()
 
     def filter_agg_curves(self):
-        params = {}
-        # NOTE: self.tags is structured like:
-        # {'taxonomy': {
-        #     'selected': True,
-        #     'values': {
-        #         'Wood': False,
-        #         'Adobe': False,
-        #         'Stone-Masonry': False,
-        #         'Unreinforced-Brick-Masonry': False,
-        #         'Concrete': True
-        #     }
-        #  },
-        #  'NAME_1': {
-        #      'selected': False,
-        #      'values': {
-        #          'Mid-Western': False,
-        #          'Far-Western': False,
-        #          'West': False,
-        #          'East': False,
-        #          'Central': False
-        #      }
-        #  },
-        # }
-        for tag_name in self.tags:
-            if self.tags[tag_name]['selected']:
-                for value in self.tags[tag_name]['values']:
-                    if self.tags[tag_name]['values'][value]:
-                        if tag_name in params:
-                            params[tag_name].append(value)
-                        else:
-                            params[tag_name] = [value]
-        to_extract = 'agg_curves'
-        with WaitCursorManager(
-                'Extracting...', message_bar=self.iface.messageBar()):
-            self.agg_curves = extract_npz(
-                self.session, self.hostname, self.calc_id, to_extract,
-                message_bar=self.iface.messageBar(), params=params)
+        # NOTE: we do not need to call another extract here, because the full
+        # data was already downloaded and it is filtered while building the
+        # plot
         self.draw_agg_curves(self.output_type)
 
     def filter_losses_by_asset_aggr(self):
@@ -484,17 +562,17 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         for tag_name in self.tag_names_multiselect.get_unselected_items():
             self.tags[tag_name]['selected'] = False
             # deselect all tag values for tags that are unselected
-            for value in self.tags[tag_name]['values']:
-                self.tags[tag_name]['values'][value] = False
-                if self.tag_with_all_values == tag_name:
-                    self.tag_with_all_values = None
+            # for value in self.tags[tag_name]['values']:
+            #     self.tags[tag_name]['values'][value] = False
+            #     if self.tag_with_all_values == tag_name:
+            #         self.tag_with_all_values = None
         if self.output_type == 'dmg_by_asset_aggr':
             self.filter_dmg_by_asset_aggr()
         elif self.output_type in ('losses_by_asset_aggr',
                                   'avg_losses-stats_aggr'):
             self.filter_losses_by_asset_aggr()
-        # elif self.output_type == 'agg_curves-stats':
-        #     self.filter_agg_curves()
+        elif self.output_type in ['agg_curves-rlzs', 'agg_curves-stats']:
+            self.filter_agg_curves()
 
     def update_selected_tag_values(self, tag_name):
         cbx = getattr(self, "%s_values_multiselect" % tag_name)
@@ -506,6 +584,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.filter_dmg_by_asset_aggr()
         elif self.output_type in ('losses_by_asset_aggr',
                                   'avg_losses-stats_aggr',
+                                  'agg_curves-rlzs',
                                   'agg_curves-stats'):
             if "*" in cbx.get_selected_items():
                 self.tag_with_all_values = tag_name
@@ -515,8 +594,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             if self.output_type in ('losses_by_asset_aggr',
                                     'avg_losses-stats_aggr'):
                 self.filter_losses_by_asset_aggr()
-            # elif self.output_type == 'agg_curves-stats':
-            #     self.filter_agg_curves()
+            elif self.output_type in ['agg_curves-rlzs', 'agg_curves-stats']:
+                self.filter_agg_curves()
 
     def get_list_selected_tags_str(self):
         selected_tags_str = ''
@@ -539,19 +618,31 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         layer.blockSignals(False)
         layer.selectByIds(selected_feats)
 
+    def remove_type_dep_attrs(self):
+        for widget_name in self.type_dep_widget_names:
+            if widget_name == 'exclude_no_dmg_ckb':
+                if hasattr(self, widget_name):
+                    widget = getattr(self, widget_name)
+                    for i in reversed(list(range(self.plot_layout.count()))):
+                        if self.plot_layout.itemAt(i).widget() == widget:
+                            widget.setParent(None)
+                            break
+            if hasattr(self, widget_name):
+                delattr(self, widget_name)
+
     def set_output_type_and_its_gui(self, new_output_type):
         # clear type dependent widgets
         # NOTE: typeDepVLayout contains typeDepHLayout1 and typeDepHLayout2,
         #       that will be cleared recursively
         clear_widgets_from_layout(self.typeDepVLayout)
         clear_widgets_from_layout(self.table_layout)
+        # NOTE: even after removing widgets from layouts, the viewer dock
+        # widget might still keep references to some of its children widgets
+        self.remove_type_dep_attrs()
         if hasattr(self, 'plot'):
             self.plot.clear()
             self.plot_canvas.show()
             self.plot_canvas.draw()
-        if hasattr(self, 'exclude_no_dmg_ckb'):
-            self.exclude_no_dmg_ckb.setParent(None)
-
         if new_output_type == 'hcurves':
             self.create_imt_selector()
             self.create_stats_multiselect()
@@ -565,22 +656,19 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         elif new_output_type == 'agg_curves-stats':
             self.create_loss_type_selector()
             self.create_stats_multiselect()
-            # FIXME: do we need tags?
-            # self.create_tag_names_multiselect()
-            # self.create_tag_values_multiselect()
-            # self.create_list_selected_edt()
+            # NOTE: tag_names_multiselect is created dynamically afterwards
             self.stats_multiselect.selection_changed.connect(
-                # self.filter_agg_curves)
-                lambda: self.draw_agg_curves(new_output_type))
+                # lambda: self.draw_agg_curves(new_output_type))
+                self.filter_agg_curves)
         elif new_output_type == 'dmg_by_asset_aggr':
             self.create_loss_type_selector()
             self.create_rlz_selector()
-            self.create_tag_names_multiselect()
+            self.create_tag_names_multiselect(monovalue=True)
             self.create_exclude_no_dmg_ckb()
         elif new_output_type in ('losses_by_asset_aggr',
                                  'avg_losses-stats_aggr'):
             self.create_loss_type_selector()
-            self.create_tag_names_multiselect()
+            self.create_tag_names_multiselect(monovalue=True)
         elif new_output_type == 'uhs':
             self.create_stats_multiselect()
             self.stats_multiselect.selection_changed.connect(
@@ -664,6 +752,21 @@ class ViewerDock(QDockWidget, FORM_CLASS):
 
         self.filter_dmg_by_asset_aggr()
 
+    def _build_tags(self):
+        # NOTE: shape_descr is like:
+        # array([b'return_periods', b'stats', b'loss_types', b'NAME_1'],
+        # dtype='|S14')
+        tag_names = [str(tag_name, encoding='utf8')
+                     for tag_name in self.agg_curves['shape_descr'][3:]]
+        self.tags = {}
+        for tag_idx, tag_name in enumerate(tag_names):
+            self.tags[tag_name] = {
+                'selected': True if tag_idx == 0 else False,
+                'values': {
+                    value.decode('utf8'): True if value_idx == 0 else False
+                    for value_idx, value in enumerate(
+                        self.agg_curves[tag_name])}}
+
     def clear_tag_values_multiselects(self, tag_names):
         for tag_name in tag_names:
             lbl_name = '%s_values_lbl' % tag_name
@@ -672,10 +775,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             cbx = getattr(self, cbx_name, None)
             if lbl is not None:
                 delattr(self, lbl_name)
-                lbl.setParent(None)
             if cbx is not None:
                 delattr(self, cbx_name)
-                cbx.setParent(None)
 
     def _get_tags(self, session, hostname, calc_id, message_bar, with_star):
         with WaitCursorManager(
@@ -687,7 +788,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             return
         tags_list = []
         for tag_name in tags_npz:
-            if tag_name in ['id', 'array']:
+            # if tag_name in ['id', 'array']:
+            if tag_name == 'array':
                 continue
             for tag in tags_npz[tag_name]:
                 tag = tag.decode('utf8')
@@ -755,10 +857,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.agg_curves = extract_npz(
                 session, hostname, calc_id, output_type,
                 message_bar=self.iface.messageBar())
-        if self.agg_curves is None:
-            return
-        loss_types = get_loss_types(
-            session, hostname, calc_id, self.iface.messageBar())
+        loss_types = [loss_type.decode('utf8')
+                      for loss_type in self.agg_curves['loss_types']]
         self.loss_type_cbx.blockSignals(True)
         self.loss_type_cbx.clear()
         self.loss_type_cbx.addItems(loss_types)
@@ -766,29 +866,88 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         if output_type == 'agg_curves-stats':
             self.stats = [stat.decode('utf8')
                           for stat in self.agg_curves['stats']]
-            # FIXME: check if we need tags here
+            self.stats_multiselect.blockSignals(True)
+            self.stats_multiselect.clear()
             self.stats_multiselect.add_selected_items(self.stats)
-            # self._get_tags(session,
-            #                hostname,
-            #                calc_id,
-            #                self.iface.messageBar(),
-            #                with_star=False)
-            # self.tag_names_multiselect.clear()
-            # tag_names = sorted(self.tags.keys())
-            # self.tag_names_multiselect.add_unselected_items(tag_names)
-            # self.clear_tag_values_multiselects(tag_names)
-
-            # self.filter_agg_curves()
-            self.draw_agg_curves(output_type)
+            self.stats_multiselect.blockSignals(False)
         elif output_type == 'agg_curves-rlzs':
-            rlzs = ["Rlz %3d" % rlz
+            rlzs = ["Rlz %s" % rlz
                     for rlz in range(self.agg_curves['array'].shape[1])]
+            self.rlzs_multiselect.blockSignals(True)
+            self.rlzs_multiselect.clear()
             self.rlzs_multiselect.add_selected_items(rlzs)
-            self.draw_agg_curves(output_type)
+            self.rlzs_multiselect.blockSignals(False)
         else:
             raise NotImplementedError(
-                'Can not draw outputs of type %s' % output_type)
+                'Unable to draw outputs of type %s' % output_type)
             return
+        if ('aggregate_by' in self.agg_curves
+                and len(self.agg_curves['aggregate_by']) > 0):
+            if output_type == 'agg_curves-rlzs':
+                self._build_tags()
+                for tag_name in self.tags:
+                    self.create_tag_values_selector(
+                        tag_name,
+                        tag_values=self.tags[tag_name]['values'].keys(),
+                        monovalue=True, preselect_first=True)
+            else:  # 'agg_curves-stats'
+                self._build_tags()
+                self.create_tag_name_selector(values=self.tags.keys())
+                for tag_name in self.tags:
+                    self.create_tag_values_selector(
+                        tag_name,
+                        tag_values=self.tags[tag_name]['values'].keys(),
+                        monovalue=False, preselect_first=True)
+        self.filter_agg_curves()
+
+    def _get_idxs(self):
+        if self.output_type == 'agg_curves-rlzs':
+            rlzs_or_stats = list(
+                self.rlzs_multiselect.get_selected_items())
+        else:  # agg_curves-stats
+            rlzs_or_stats = list(
+                self.stats_multiselect.get_selected_items())
+        loss_type_idx = self.loss_type_cbx.currentIndex()
+        rlzs_or_stats_idxs = []
+        if self.output_type == 'agg_curves-rlzs':
+            for rlz_idx in range(self.agg_curves['array'].shape[1]):
+                if "Rlz %s" % rlz_idx in rlzs_or_stats:
+                    rlzs_or_stats_idxs.append(rlz_idx)
+        else:  # agg_curves-stats
+            for stat_idx, stat in enumerate(self.agg_curves['stats']):
+                if stat.decode('utf8') in rlzs_or_stats:
+                    rlzs_or_stats_idxs.append(stat_idx)
+        if ('aggregate_by' in self.agg_curves
+                and len(self.agg_curves['aggregate_by']) > 0):
+            tag_name_idxs = {}
+            tag_value_idxs = {}
+            if hasattr(self, 'tags'):
+                for tag_name in self.tags:
+                    tag_name_idx = list(self.agg_curves['aggregate_by']).index(
+                        tag_name.encode('utf8'))
+                    tag_name_idxs[tag_name] = tag_name_idx
+                    tag_value_idxs[tag_name] = []
+                    # if not self.tags[tag_name]['selected']:
+                    #     continue
+                    for tag_value in self.tags[tag_name]['values']:
+                        if self.tags[tag_name]['values'][tag_value]:
+                            # (if it is selected)
+                            tag_value_idx = list(
+                                self.agg_curves[tag_name]).index(
+                                    tag_value.encode('utf8'))
+                            tag_value_idxs[tag_name].append(tag_value_idx)
+            else:
+                for tag in self.agg_curves['aggregate_by']:
+                    tag_name = tag.decode('utf8')
+                    # FIXME: check if currentIndex is ok
+                    tag_value_idx = getattr(
+                        self,
+                        "%s_values_multiselect" % tag_name).currentIndex()
+                    tag_value_idxs[tag_name] = tag_value_idx
+        else:
+            tag_name_idxs = None
+            tag_value_idxs = None
+        return rlzs_or_stats_idxs, loss_type_idx, tag_name_idxs, tag_value_idxs
 
     def draw_agg_curves(self, output_type):
         if output_type == 'agg_curves-rlzs':
@@ -798,11 +957,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 rlzs_or_stats = list(
                     self.rlzs_multiselect.get_selected_items())
         elif output_type == 'agg_curves-stats':
-            if self.stats_multiselect is None:
-                rlzs_or_stats = []
-            else:
-                rlzs_or_stats = list(
-                    self.stats_multiselect.get_selected_items())
+            rlzs_or_stats = list(
+                self.stats_multiselect.get_selected_items())
         else:
             raise NotImplementedError(
                 'Can not draw outputs of type %s' % output_type)
@@ -811,7 +967,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         loss_type_idx = self.loss_type_cbx.currentIndex()
         abscissa = self.agg_curves['return_periods']
         if output_type in ['agg_curves-rlzs', 'agg_curves-stats']:
-            ordinates = self.agg_curves['array'][:, :, loss_type_idx]
+            (rlzs_or_stats_idxs, loss_type_idx, tag_name_idxs,
+             tag_value_idxs) = self._get_idxs()
+            ordinates = self.agg_curves['array']
             unit = self.agg_curves['units'][loss_type_idx]
         self.plot.clear()
         if not ordinates.any():  # too much filtering
@@ -820,40 +978,99 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         marker = dict()
         line_style = dict()
         color_hex = dict()
-        for idx, rlz_or_stat in enumerate(rlzs_or_stats):
-            marker[idx] = self.markers[idx % len(self.markers)]
+        for rlz_or_stat_idx, rlz_or_stat in enumerate(rlzs_or_stats):
+            marker[rlz_or_stat_idx] = self.markers[
+                rlz_or_stat_idx % len(self.markers)]
             if self.bw_chk.isChecked():
-                line_styles_whole_cycles = idx // len(self.line_styles)
+                line_styles_whole_cycles = (
+                    rlz_or_stat_idx // len(self.line_styles))
                 # NOTE: 85 is approximately 256 / 3
                 r = g = b = format(
                     (85 * line_styles_whole_cycles) % 256, '02x')
                 color_hex_str = "#%s%s%s" % (r, g, b)
                 color = QColor(color_hex_str)
-                color_hex[idx] = color.darker(120).name()
+                color_hex[rlz_or_stat_idx] = color.darker(120).name()
                 # here I am using i in order to cycle through all the
                 # line styles, regardless from the feature id
                 # (otherwise I might easily repeat styles, that are a
                 # small set of 4 items)
-                line_style[idx] = self.line_styles[
-                    idx % len(self.line_styles)]
+                line_style[rlz_or_stat_idx] = self.line_styles[
+                    rlz_or_stat_idx % len(self.line_styles)]
             else:
                 # here I am using the feature id in order to keep a
                 # matching between a curve and the corresponding point
                 # in the map
-                color_name = self.color_names[idx % len(self.color_names)]
+                color_name = self.color_names[
+                    rlz_or_stat_idx % len(self.color_names)]
                 color = QColor(color_name)
-                color_hex[idx] = color.darker(120).name()
-                line_style[idx] = "-"  # solid
-            if output_type in ['agg_curves-rlzs', 'agg_curves-stats']:
-                ords = ordinates[:, idx]
-            self.plot.plot(
-                abscissa,
-                ords,
-                color=color_hex[idx],
-                linestyle=line_style[idx],
-                marker=marker[idx],
-                label=rlz_or_stat,
-            )
+                color_hex[rlz_or_stat_idx] = color.darker(120).name()
+                line_style[rlz_or_stat_idx] = "-"  # solid
+        if output_type == 'agg_curves-rlzs':
+            tup = (slice(None), rlzs_or_stats_idxs, loss_type_idx)
+            if tag_value_idxs is not None:
+                value_idxs = tag_value_idxs.values()
+                tup += tuple(value_idxs)
+            ordinates = self.agg_curves['array'][tup]
+            for ys, rlz_or_stat in zip(
+                    ordinates.T, rlzs_or_stats):
+                rlz_or_stat_idx = rlzs_or_stats.index(rlz_or_stat)
+                self.plot.plot(
+                    abscissa,
+                    ys,
+                    # color=color_hex[rlz_or_stat_idx],
+                    linestyle=line_style[rlz_or_stat_idx],
+                    marker=marker[rlz_or_stat_idx],
+                    label="Rlz_%s" % rlz_or_stat_idx
+                )
+        elif output_type == 'agg_curves-stats':
+            if tag_value_idxs is None:
+                tup = (slice(None), rlzs_or_stats_idxs, loss_type_idx)
+                ordinates = self.agg_curves['array'][tup]
+                for ys, rlz_or_stat in zip(
+                        ordinates.T, rlzs_or_stats):
+                    rlz_or_stat_idx = rlzs_or_stats.index(rlz_or_stat)
+                    self.plot.plot(
+                        abscissa,
+                        ys,
+                        # color=color_hex[rlz_or_stat_idx],
+                        linestyle=line_style[rlz_or_stat_idx],
+                        marker=marker[rlz_or_stat_idx],
+                        label=rlz_or_stat,
+                    )
+            else:
+                for tag_name in tag_value_idxs:
+                    if not self.tags[tag_name]['selected']:
+                        continue
+                    for value_idx in tag_value_idxs[tag_name]:
+                        tag_value = self.agg_curves[
+                            tag_name][value_idx].decode('utf8')
+                        tup = (slice(None), rlzs_or_stats_idxs, loss_type_idx)
+                        tag_name_idx = tag_name_idxs[tag_name]
+                        for t_name in tag_name_idxs:
+                            if tag_name_idxs[t_name] == tag_name_idx:
+                                tup += (value_idx,)
+                            else:
+                                tup += (tag_value_idxs[t_name],)
+                        try:
+                            curr_ordinates = ordinates[tup]
+                        except IndexError:
+                            log_msg('For each unselected tag, one and only one'
+                                    ' value must be selected.', level='C',
+                                    message_bar=self.iface.messageBar())
+                            self.plot_canvas.draw()
+                            return
+                        for ys, rlz_or_stat in zip(
+                                curr_ordinates.T, rlzs_or_stats):
+                            rlz_or_stat_idx = rlzs_or_stats.index(rlz_or_stat)
+                            self.plot.plot(
+                                abscissa,
+                                ys,
+                                # color=color_hex[rlz_or_stat_idx],
+                                linestyle=line_style[rlz_or_stat_idx],
+                                marker=marker[rlz_or_stat_idx],
+                                # label=rlz_or_stat,
+                                label="%s (%s)" % (tag_value, rlz_or_stat)
+                            )
         self.plot.set_xscale('log')
         self.plot.set_yscale('linear')
         self.plot.set_xlabel('Return period (years)')
@@ -964,7 +1181,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
     def draw(self):
         self.plot.clear()
         gids = dict()
-        if self.stats_multiselect is not None:
+        if (hasattr(self, 'stats_multiselect')
+                and self.stats_multiselect is not None):
             selected_rlzs_or_stats = list(
                 self.stats_multiselect.get_selected_items())
         else:
@@ -1104,7 +1322,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         if not self.output_type:
             return
 
-        if self.stats_multiselect is not None:
+        if (hasattr(self, 'stats_multiselect')
+                and self.stats_multiselect is not None):
             selected_rlzs_or_stats = list(
                 self.stats_multiselect.get_selected_items())
         else:
@@ -1365,7 +1584,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.vertex_marker.hide()
 
     def clear_imt_cbx(self):
-        if self.imt_cbx is not None:
+        if hasattr(self, 'imt_cbx') and self.imt_cbx is not None:
             try:
                 self.imt_cbx.blockSignals(True)
                 self.imt_cbx.clear()
@@ -1380,7 +1599,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 log_msg(msg, level='W')
 
     def clear_loss_type_cbx(self):
-        if self.loss_type_cbx is not None:
+        if hasattr(self, 'loss_type_cbx') and self.loss_type_cbx is not None:
             try:
                 self.loss_type_cbx.blockSignals(True)
                 self.loss_type_cbx.clear()
@@ -1434,14 +1653,26 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 self.vertex_marker.hide()
         return False
 
+    def on_multivalue_tag_name_changed(self):
+        selected_tag_name = self.multivalue_tag_cbx.currentText()
+        for tag_name in self.tags:
+            self.tags[tag_name]['selected'] = (tag_name == selected_tag_name)
+            cbx = getattr(self, "%s_values_multiselect" % tag_name)
+            if tag_name != selected_tag_name:
+                cbx.set_idxs_selection([0], checked=True)
+        self.filter_agg_curves()
+
     def on_imt_changed(self):
         self.was_imt_switched = True
         self.redraw_current_selection()
 
     @pyqtSlot(str)
     def on_loss_type_changed(self, loss_type):
-        if self.output_type in ['agg_curves-rlzs', 'agg_curves-stats']:
-            self.draw_agg_curves(self.output_type)
+        if self.output_type == 'agg_curves-rlzs':
+            self.filter_agg_curves()
+            # self.draw_agg_curves(self.output_type)
+        elif self.output_type == 'agg_curves-stats':
+            self.filter_agg_curves()
         elif self.output_type == 'dmg_by_asset_aggr':
             self.filter_dmg_by_asset_aggr()
         elif self.output_type in ('losses_by_asset_aggr',
@@ -1617,40 +1848,74 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                         row.extend(values)
                     writer.writerow(row)
             elif self.output_type == 'agg_curves-rlzs':
-                # the expected shape is (P, R), where P is the number of return
-                # periods and R is the number of realizations
-                num_rlzs = self.agg_curves['array'].shape[1]
+                (rlzs_idxs, loss_type_idx, tag_name_idxs,
+                    tag_value_idxs) = self._get_idxs()
+                if ('aggregate_by' in self.agg_curves
+                        and len(self.agg_curves['aggregate_by']) > 0):
+                    csv_file.write(
+                        "# Tags: %s\r\n" % (
+                            self.get_list_selected_tags_str() or 'None'))
+                rlzs = list(self.rlzs_multiselect.get_selected_items())
                 headers = ['return_period']
-                headers.extend(['rlz-%s' % rlz for rlz in range(num_rlzs)])
+                headers.extend(rlzs)
                 writer.writerow(headers)
-                loss_type_idx = self.loss_type_cbx.currentIndex()
+                # loss_type_idx = self.loss_type_cbx.currentIndex()
                 for i, return_period in enumerate(
                         self.agg_curves['return_periods']):
-                    values = self.agg_curves['array'][:, loss_type_idx]
+                    tup = (slice(None), rlzs_idxs, loss_type_idx)
+                    if tag_value_idxs is not None:
+                        tup += tuple(tag_value_idxs.values())
+                    values = self.agg_curves['array'][tup]
                     row = [return_period]
                     row.extend([value for value in values[i]])
                     writer.writerow(row)
             elif self.output_type == 'agg_curves-stats':
-                # the expected shape is (P, S), where P is the number of return
-                # periods and S is the number of statistics
-                stats = [stat.decode('utf8')
-                         for stat in self.agg_curves['stats']]
+                stats = list(self.stats_multiselect.get_selected_items())
                 loss_type = self.loss_type_cbx.currentText()
                 loss_type_idx = self.loss_type_cbx.currentIndex()
-                csv_file.write("# Loss type: %s\r\n" % loss_type)
-                # csv_file.write(
-                #     "# Tags: %s\r\n" % (
-                #         self.get_list_selected_tags_str() or 'None'))
+                csv_file.write(
+                    "# Loss type: %s\r\n" % loss_type)
+                if ('aggregate_by' in self.agg_curves
+                        and len(self.agg_curves['aggregate_by']) > 0):
+                    csv_file.write(
+                        "# Tags: %s\r\n" % (
+                            self.get_list_selected_tags_str() or 'None'))
                 headers = ['return_period']
-                headers.extend(stats)
+                (rlzs_or_stats_idxs, loss_type_idx, tag_name_idxs,
+                    tag_value_idxs) = self._get_idxs()
+                # FIXME: we should probably produce a zipped file containing N
+                # csv files, one per tag value
+                has_single_tag_value = None
+                if tag_value_idxs:
+                    has_single_tag_value = True
+                    for tag_name in tag_value_idxs:
+                        if len(tag_value_idxs[tag_name]) > 1:
+                            has_single_tag_value = False
+                            # FIXME: using only the first stat
+                            for tval_idx in tag_value_idxs[tag_name]:
+                                tval = self.agg_curves[tag_name][tval_idx]
+                                headers.append(tval.decode('utf8'))
+                            break
+                if has_single_tag_value or has_single_tag_value is None:
+                    headers.extend(stats)
                 writer.writerow(headers)
                 for return_period_idx, return_period in enumerate(
                         self.agg_curves['return_periods']):
                     row = [return_period]
-                    for stat_idx, stat in enumerate(stats):
-                        row.append(self.agg_curves['array'][return_period_idx,
-                                                            stat_idx,
-                                                            loss_type_idx])
+                    if has_single_tag_value or has_single_tag_value is None:
+                        tup = (return_period_idx, rlzs_or_stats_idxs,
+                               loss_type_idx)
+                    else:
+                        # FIXME: using only the first stat
+                        tup = (return_period_idx, rlzs_or_stats_idxs[0],
+                               loss_type_idx)
+                    if tag_value_idxs is not None:
+                        tup += tuple(tag_value_idxs.values())
+                    values = self.agg_curves['array'][tup]
+                    try:
+                        row.extend(values)
+                    except TypeError:  # it is a single value instead of list
+                        row.append(values)
                     writer.writerow(row)
             elif self.output_type == 'dmg_by_asset_aggr':
                 csv_file.write(
@@ -1712,6 +1977,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         if self.output_type == 'agg_curves-rlzs':
             self.draw_agg_curves(self.output_type)
         elif self.output_type == 'agg_curves-stats':
+            # self.draw_agg_curves(self.output_type)
             self.filter_agg_curves()
         elif self.output_type == 'dmg_by_asset_aggr':
             self.filter_dmg_by_asset_aggr()
@@ -1735,14 +2001,17 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         event.accept()
 
     def change_output_type(self, output_type):
-        current_index = self.output_type_cbx.currentIndex()
         if output_type not in self.output_types_names:
             output_type = ''
+        prev_index = self.output_type_cbx.currentIndex()
         # get the index of the item that has the given string
         # and set the combobox to that item
         target_index = self.output_type_cbx.findText(
             self.output_types_names[output_type])
         if target_index != -1:
             self.output_type_cbx.setCurrentIndex(target_index)
-        if target_index == current_index:
-            self.output_type_cbx.currentIndexChanged.emit(current_index)
+            if prev_index == target_index:
+                # NOTE: if the cbx does not change the selected item, the
+                # signal currentIndexChanged is not emitted, but we need to
+                # reset the GUI anyway
+                self.on_output_type_cbx_currentIndexChanged(target_index)
