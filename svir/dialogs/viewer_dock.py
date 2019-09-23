@@ -842,7 +842,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 # NOTE: writing 'mean' instead of 'rlz-0' would be equivalent
                 self.stats = ['rlz-0']
             else:
-                self.stats = [str(stat, 'utf8') for stat in npz['stats']]
+                self.stats = npz['stats']
 
         self.tag_names_multiselect.clear()
         tag_names = sorted(self.tags.keys())
