@@ -648,8 +648,12 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 self._handle_exception(exc)
                 return
         if resp.ok:
+            resp_dict = resp.json()
+            job_id = resp_dict['job_id']
+            self.pointed_calc_id = job_id
             self.refresh_calc_list()
-            return resp.json()
+            self.update_output_list(self.pointed_calc_id)
+            return resp_dict
         else:
             log_msg(resp.text, level='C', message_bar=self.message_bar)
 

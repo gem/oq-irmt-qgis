@@ -40,6 +40,7 @@ changelog=
     * Moving the mouse over recovery curves, a dynamic annotation is displayed, showing the coordinates of the pointed element
     * Widgets to select multiple items have been replaced by more compact selectors that also allow text searching
     * Selectors for tag values are added to the GUI as tabs, each containing a multiselector for values of a different tag
+    * When a new OQ-Engine calculation is successfully launched, the corresponding row is highlighted in the list of calculations, and the list of its outputs is loaded
     3.7.1
     * Instead of the 'sourcegroups' output (that was removed from the OQ-Engine), the plugin can now load the new output 'events'
     * The user can choose if selecting the '.ini' file to run a OQ-Engine calculation, or letting the OQ-Engine automatically pick one from the list of input files.
