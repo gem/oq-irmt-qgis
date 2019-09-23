@@ -157,7 +157,7 @@ def log_msg(message, tag='GEM OpenQuake IRMT plugin', level='I',
             elif level == 'C':
                 title = 'Error'
                 duration = duration if duration is not None else 0
-            max_msg_len = 200
+            max_msg_len = 100
             if len(message) > max_msg_len:
                 display_text = ("%s[...]" % message[:max_msg_len])
                 show_more = "[...]%s" % message[max_msg_len:]
