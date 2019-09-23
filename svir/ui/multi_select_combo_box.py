@@ -1,9 +1,8 @@
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import (
+from qgis.PyQt.QtWidgets import (
     QLineEdit, QCheckBox, QComboBox, QListWidget, QListWidgetItem,
     QApplication, QMainWindow, QWidget, QVBoxLayout)
-from PyQt5.QtCore import pyqtSignal
-from PyQt5.QtGui import QCursor
+from qgis.PyQt.QtCore import pyqtSignal, Qt
+from qgis.PyQt.QtGui import QCursor
 from svir.ui.complex_line_edit import ComplexLineEdit
 
 
