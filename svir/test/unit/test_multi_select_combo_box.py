@@ -38,50 +38,53 @@ class MultiSelectComboBoxMultiTestCase(unittest.TestCase):
         self.mscb.clear()
 
     def test_addItem(self):
-        self.mscb.addItem('first name', selected=True)
-        self.mscb.addItem('second name', selected=False)
-        self.assertEqual(self.mscb.get_selected_items(), ['first name'])
-        self.assertEqual(self.mscb.get_unselected_items(), ['second name'])
+        self.mscb.addItem('first', selected=True)
+        self.mscb.addItem('second', selected=False)
+        self.assertEqual(self.mscb.get_selected_items(), ['first'])
+        self.assertEqual(self.mscb.get_unselected_items(), ['second'])
 
     def test_addItems(self):
-        self.mscb.addItems(['first name', 'second name'], selected=True)
+        self.mscb.addItems(['first', 'second'], selected=True)
         self.assertEqual(
-            self.mscb.get_selected_items(), ['first name', 'second name'])
+            self.mscb.get_selected_items(), ['first', 'second'])
         self.assertEqual(self.mscb.count(), 2)
-        self.mscb.addItems(['third name', 'fourth name'], selected=False)
+        self.mscb.addItems(['third', 'fourth'], selected=False)
         self.assertEqual(
-            self.mscb.get_selected_items(), ['first name', 'second name'])
+            self.mscb.get_selected_items(), ['first', 'second'])
         self.assertEqual(
-            self.mscb.get_unselected_items(), ['third name', 'fourth name'])
+            self.mscb.get_unselected_items(), ['third', 'fourth'])
         self.assertEqual(self.mscb.count(), 4)
 
     def test_add_selected_items(self):
-        self.mscb.add_selected_items(['first name', 'second name'])
+        self.mscb.add_selected_items(['first', 'second'])
         self.assertEqual(
-            self.mscb.get_selected_items(), ['first name', 'second name'])
+            self.mscb.get_selected_items(), ['first', 'second'])
         self.assertEqual(self.mscb.count(), 2)
 
     def test_add_unselected_items(self):
-        self.mscb.add_unselected_items(['third name', 'fourth name'])
+        self.mscb.add_unselected_items(['third', 'fourth'])
         self.assertEqual(
-            self.mscb.get_unselected_items(), ['third name', 'fourth name'])
+            self.mscb.get_unselected_items(), ['third', 'fourth'])
         self.assertEqual(self.mscb.count(), 2)
 
     def test_clear(self):
-        self.mscb.add_selected_items(['first name', 'second name'])
-        self.mscb.add_unselected_items(['third name', 'fourth name'])
+        self.mscb.add_selected_items(['first', 'second'])
+        self.mscb.add_unselected_items(['third', 'fourth'])
         self.assertEqual(self.mscb.count(), 4)
         self.mscb.clear()
         self.assertEqual(self.mscb.count(), 0)
 
     def test_count(self):
         self.assertEqual(self.mscb.count(), 0)
-        self.mscb.add_selected_items(['first name', 'second name'])
-        self.mscb.add_unselected_items(['third name', 'fourth name'])
+        self.mscb.add_selected_items(['first', 'second'])
+        self.mscb.add_unselected_items(['third', 'fourth'])
         self.assertEqual(self.mscb.count(), 4)
 
     def test_currentText(self):
-        pass
+        self.mscb.add_selected_items(['first', 'second'])
+        self.mscb.add_unselected_items(['third', 'fourth'])
+        self.mscb.add_selected_items(['fifth'])
+        self.assertEqual(self.mscb.currentText(), ['first', 'second', 'fifth'])
 
     def test_get_selected_items(self):
         pass
