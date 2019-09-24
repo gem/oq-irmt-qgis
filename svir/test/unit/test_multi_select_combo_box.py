@@ -202,13 +202,15 @@ class MultiSelectComboBoxMonoTestCase(unittest.TestCase):
         self.mscb.add_selected_items(['fifth'])
         self.assertEqual(self.mscb.currentText(), 'first')
 
-    # def test_get_selected_items(self):
-    #     # NOTE: tested in test_addItems
-    #     pass
+    def test_get_selected_items(self):
+        self.mscb.add_selected_items(['first', 'second'])
+        self.assertEqual(self.mscb.get_selected_items(), ['first'])
 
-    # def test_get_unselected_items(self):
-    #     # NOTE: tested in test_addItems
-    #     pass
+    def test_get_unselected_items(self):
+        self.mscb.add_selected_items(['first', 'second'])
+        self.mscb.add_unselected_items(['third', 'fourth'])
+        self.assertEqual(
+            self.mscb.get_unselected_items(), ['second', 'third', 'fourth'])
 
     def test_resetSelection(self):
         self.mscb.add_selected_items(['first', 'second'])
