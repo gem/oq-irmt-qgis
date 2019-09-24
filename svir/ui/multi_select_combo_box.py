@@ -276,7 +276,7 @@ class MultiSelectComboBox(QComboBox):
 
     def resetSelection(self):
         if self.mono:
-            return self.resetSelection()
+            return super().setCurrentIndex(-1)
         for i in range(self.RESERVED_IDXS_COUNT, self.mlist.count()):
             checkbox = self.mlist.itemWidget(self.mlist.item(i))
             checkbox.setChecked(False)
