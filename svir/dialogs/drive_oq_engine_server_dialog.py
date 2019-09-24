@@ -1099,8 +1099,13 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.run_calc_btn.setEnabled(enabled)
         self.calc_list_tbl.setEnabled(enabled)
         self.output_list_tbl.setEnabled(enabled)
-        self.download_datastore_btn.setEnabled(enabled)
-        self.show_calc_params_btn.setEnabled(enabled)
+        if enabled:
+            if self.current_calc_id is not None:
+                self.download_datastore_btn.setEnabled(enabled)
+                self.show_calc_params_btn.setEnabled(enabled)
+        else:
+            self.download_datastore_btn.setEnabled(enabled)
+            self.show_calc_params_btn.setEnabled(enabled)
         self.is_gui_enabled = enabled
 
     def reject(self):
