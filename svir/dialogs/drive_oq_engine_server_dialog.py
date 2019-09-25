@@ -197,6 +197,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                     # it attempts to login after the timeout is triggered
                     return
             self._handle_exception(exc)
+            return exc
         else:
             if self.is_logged_in:
                 self.set_gui_enabled(True)
@@ -266,7 +267,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                             resp.status_code, resp.url, resp.reason))
             except HANDLED_EXCEPTIONS as exc:
                 self._handle_exception(exc)
-                return
+                return exc
             return resp.text
 
     def refresh_calc_list(self):
@@ -519,7 +520,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                     calc_log_url, timeout=10, verify=False, stream=True)
             except HANDLED_EXCEPTIONS as exc:
                 self._handle_exception(exc)
-                return
+                return exc
             calc_log = json.loads(resp.text)
             self.calc_log_line[calc_id] = start + len(calc_log)
             return '\n'.join([','.join(row) for row in calc_log])
@@ -533,7 +534,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                     calc_status_url, timeout=10, verify=False, stream=True)
             except HANDLED_EXCEPTIONS as exc:
                 self._handle_exception(exc)
-                return
+                return exc
             calc_status = json.loads(resp.text)
         return calc_status
 
@@ -546,7 +547,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 resp = self.session.post(url, timeout=10, stream=True)
             except HANDLED_EXCEPTIONS as exc:
                 self._handle_exception(exc)
-                return
+                return exc
         if resp.ok:
             verb = 'aborted' if abort else 'removed'
             msg = 'Calculation %s successfully %s' % (calc_id, verb)
@@ -650,7 +651,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                     stream=True)
             except HANDLED_EXCEPTIONS as exc:
                 self._handle_exception(exc)
-                return
+                return exc
         if resp.ok:
             resp_dict = resp.json()
             job_id = resp_dict['job_id']
@@ -744,7 +745,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                                         verify=False, stream=True)
             except HANDLED_EXCEPTIONS as exc:
                 self._handle_exception(exc)
-                return
+                return exc
             json_params = json.loads(resp.text)
         return json_params
 
@@ -757,7 +758,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                                         verify=False, stream=True)
             except HANDLED_EXCEPTIONS as exc:
                 self._handle_exception(exc)
-                return
+                return exc
         if resp.ok:
             output_list = json.loads(resp.text)
             self.current_calc_id = calc_id
