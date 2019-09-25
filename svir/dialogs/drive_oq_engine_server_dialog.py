@@ -300,6 +300,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             'Description', 'Job ID', 'Calculation Mode', 'Owner', 'Status']
         col_widths = [340, 60, 135, 70, 80]
         if not self.calc_list:
+            self.calc_list_tbl.blockSignals(True)
             if self.calc_list_tbl.rowCount() > 0:
                 self.calc_list_tbl.clearContents()
                 self.calc_list_tbl.setRowCount(0)
@@ -310,6 +311,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 self.calc_list_tbl.horizontalHeader().setStyleSheet(
                     "font-weight: bold;")
                 self.set_calc_list_widths(col_widths)
+            self.calc_list_tbl.blockSignals(False)
             return False
         actions = [
             {'label': 'Console', 'bg_color': '#3cb3c5', 'txt_color': 'white'},
@@ -318,6 +320,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             {'label': 'Continue', 'bg_color': 'white', 'txt_color': 'black'},
             {'label': 'Abort', 'bg_color': '#d9534f', 'txt_color': 'white'},
         ]
+        self.calc_list_tbl.blockSignals(True)
         self.calc_list_tbl.clearContents()
         self.calc_list_tbl.setRowCount(len(self.calc_list))
         self.calc_list_tbl.setColumnCount(len(selected_keys) + len(actions))
@@ -388,6 +391,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         if (self.pointed_calc_id and
                 self.output_list_tbl.rowCount() == 0):
             self.update_output_list(self.pointed_calc_id)
+        self.calc_list_tbl.blockSignals(False)
         return True
 
     def get_row_by_calc_id(self, calc_id):
@@ -675,12 +679,13 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         else:
             return result
 
-    @pyqtSlot(int, int)
-    def on_calc_list_tbl_cellClicked(self, row, column):
-        self.calc_list_tbl.selectRow(row)
+    @pyqtSlot(int, int, int, int)
+    def on_calc_list_tbl_currentCellChanged(
+            self, curr_row, curr_column, prev_row, prev_col):
+        self.calc_list_tbl.selectRow(curr_row)
         # find QTableItem corresponding to that calc_id
         calc_id_col_idx = 1
-        item_calc_id = self.calc_list_tbl.item(row, calc_id_col_idx)
+        item_calc_id = self.calc_list_tbl.item(curr_row, calc_id_col_idx)
         calc_id = int(item_calc_id.text())
         if self.pointed_calc_id == calc_id:
             # if you click again on the row that was selected, it unselects it
