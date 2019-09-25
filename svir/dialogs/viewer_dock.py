@@ -788,8 +788,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             return
         tags_list = []
         for tag_name in tags_npz:
-            # if tag_name in ['id', 'array']:
-            if tag_name == 'array':
+            # if tag_name == 'array':
+            if tag_name in ['id', 'array']:
                 continue
             for tag in tags_npz[tag_name]:
                 tag = tag.decode('utf8')
