@@ -87,21 +87,22 @@ class ComplexLineEdit(QLineEdit):
         # add container
         path.addRoundedRect(rect, 4, 4)
         if self.isEnabled():
-            qp.setPen(QPen(self.settings['highlight'], 2))
-            qp.fillPath(path, self.settings['bg'])
+            highlight_color, bg_color, text_color = (
+                self.settings['highlight'],
+                self.settings['bg'],
+                self.settings['text'])
         else:
-            qp.setPen(QPen(self.settings['highlight_disabled'], 2))
-            qp.fillPath(path, self.settings['bg_disabled'])
+            highlight_color, bg_color, text_color = (
+                self.settings['highlight_disabled'],
+                self.settings['bg_disabled'],
+                self.settings['text_disabled'])
+        qp.setPen(QPen(highlight_color, 2))
+        qp.fillPath(path, bg_color)
 
         # add close button
         circle_size = rect.height() / 1.8
         pen_size = 2
-        if self.isEnabled():
-            qp.setPen(
-                QPen(self.settings['text'], pen_size, Qt.SolidLine))
-        else:
-            qp.setPen(
-                QPen(self.settings['text_disabled'], pen_size, Qt.SolidLine))
+        qp.setPen(QPen(text_color, pen_size, Qt.SolidLine))
         rect = QRectF(
             rect.right() - circle_size - self.settings['padding-x']/2,
             rect.top() + (rect.height() - circle_size)/2,
@@ -119,10 +120,9 @@ class ComplexLineEdit(QLineEdit):
         self.close_rectangles[text] = rect
 
     def draw_text(self, qp, rect, text):
-        if self.isEnabled():
-            qp.setPen(self.settings['text'])
-        else:
-            qp.setPen(self.settings['text_disabled'])
+        text_color = (self.settings['text'] if self.isEnabled()
+                      else self.settings['text_disabled'])
+        qp.setPen(text_color)
         # start text one padding in
         left = rect.left() + self.settings['padding-x']
         rect.setLeft(left)
