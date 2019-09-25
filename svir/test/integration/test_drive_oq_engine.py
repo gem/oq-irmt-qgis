@@ -192,7 +192,12 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         self.irmt.drive_oq_engine_server_dlg.remove_calc(hazard_calc_id)
 
     def get_calc_status(self, calc_id):
-        return self.irmt.drive_oq_engine_server_dlg.get_calc_status(calc_id)
+        calc_status = self.irmt.drive_oq_engine_server_dlg.get_calc_status(
+            calc_id)
+        if isinstance(calc_status, Exception):
+            raise calc_status
+        else:
+            return calc_status
 
     def refresh_calc_log(self, calc_id):
         calc_status = self.get_calc_status(calc_id)
