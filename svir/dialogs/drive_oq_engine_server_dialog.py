@@ -441,6 +441,9 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
 
     def update_output_list(self, calc_id):
         calc_status = self.get_calc_status(calc_id)
+        if isinstance(calc_status, Exception):
+            # NOTE: the exception is managed by self._handle_exception
+            return
         self.clear_output_list()
         if calc_status['status'] != 'complete':
             return
