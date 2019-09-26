@@ -524,6 +524,9 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             except HANDLED_EXCEPTIONS as exc:
                 self._handle_exception(exc)
                 return exc
+            except Exception as exc:
+                log_msg('Unhandled exception: %s' % exc,
+                        level='C', exception=exc)
             calc_log = json.loads(resp.text)
             self.calc_log_line[calc_id] = start + len(calc_log)
             return '\n'.join([','.join(row) for row in calc_log])

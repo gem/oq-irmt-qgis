@@ -210,6 +210,9 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         if calc_status['status'] in ('complete', 'failed'):
             self.timer.stop()
         calc_log = self.irmt.drive_oq_engine_server_dlg.get_calc_log(calc_id)
+        if isinstance(calc_log, Exception):
+            print("An exception occurred: %s" % calc_log)
+            return
         if calc_log:
             print(calc_log)
 
