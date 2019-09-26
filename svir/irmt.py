@@ -161,12 +161,6 @@ class Irmt(object):
         self.iface.initializationCompleted.connect(
             self.on_iface_initialization_completed)
 
-        # get or create directory to store input files for the OQ-Engine
-        self.ipt_dir = self.get_ipt_dir()
-
-        self.provider = None
-
-    def on_iface_initialization_completed(self):
         self.iface.currentLayerChanged.connect(self.current_layer_changed)
         self.iface.newProjectCreated.connect(self.current_layer_changed)
         self.iface.projectRead.connect(self.current_layer_changed)
@@ -183,6 +177,17 @@ class Irmt(object):
             'Gui', '/SelectionColorBluePart')[0]
         self.initial_selection_color_alpha_part = p.readNumEntry(
             'Gui', '/SelectionColorAlphaPart')[0]
+
+        # get or create directory to store input files for the OQ-Engine
+        self.ipt_dir = self.get_ipt_dir()
+
+        self.provider = None
+
+    def on_iface_initialization_completed(self):
+        # NOTE: if we connect signals/slots here, the connection will not be
+        # made when the plugin is reloaded, because the iface was already
+        # initialized, so iface.initializationCompleted is not emitted anymore
+        pass
 
     def initProcessing(self):
         self.provider = Provider()
@@ -655,13 +660,11 @@ class Irmt(object):
         except TypeError:
             pass
         try:
-            QgsProject.instance().layersAdded.disconnect(
-                self.layers_added)
+            QgsProject.instance().layersAdded.disconnect(self.layers_added)
         except TypeError:
             pass
         try:
-            QgsProject.instance().layersRemoved.disconnect(
-                self.layers_removed)
+            QgsProject.instance().layersRemoved.disconnect(self.layers_removed)
         except TypeError:
             pass
 
