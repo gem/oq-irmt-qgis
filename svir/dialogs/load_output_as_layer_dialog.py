@@ -142,6 +142,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.file_browser_tbn = QToolButton()
         self.file_browser_tbn.setText('...')
         self.file_browser_tbn.clicked.connect(self.on_file_browser_tbn_clicked)
+        self.file_browser_tbn.setEnabled(False)
         self.path_le = QLineEdit()
         self.path_le.setEnabled(False)
         self.file_hlayout.addWidget(self.file_lbl)

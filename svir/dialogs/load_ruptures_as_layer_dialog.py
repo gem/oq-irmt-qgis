@@ -58,7 +58,6 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
         self.setWindowTitle('Load ruptures from CSV, as layer')
         self.adjustSize()
         self.set_ok_button()
-        self.file_browser_tbn.setEnabled(True)
         if self.path:
             self.path_le.setText(self.path)
         self.show()
@@ -76,10 +75,6 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
             self.style_by_cbx.addItem(item, self.style_by_items[item])
 
     def load_from_csv(self):
-        if self.mode == 'testing':
-            dest_shp = tempfile.mkstemp(suffix='.shp')[1]
-        else:
-            dest_shp = None  # the destination file will be selected via GUI
         csv_path = self.path_le.text()
         # extract the investigation_time from the heading commented line
         with open(csv_path, 'r', newline='') as f:
@@ -106,8 +101,7 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
                 self, csv_path, layer_name, self.iface,
                 wkt_field='boundary', delimiter='\\t',
                 lines_to_skip_count=n_lines_to_skip,
-                save_as_shp=self.save_as_shp_ckb.isChecked(),
-                dest_shp=dest_shp)
+                save_as_shp=self.save_as_shp_ckb.isChecked())
         except RuntimeError as exc:
             log_msg(str(exc), level='C', message_bar=self.iface.messageBar(),
                     exception=exc)

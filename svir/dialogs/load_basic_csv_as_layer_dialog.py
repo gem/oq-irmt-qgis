@@ -50,7 +50,6 @@ class LoadBasicCsvAsLayerDialog(LoadOutputAsLayerDialog):
         self.populate_out_dep_widgets()
         self.adjustSize()
         self.set_ok_button()
-        self.file_browser_tbn.setEnabled(True)
         if self.path:
             self.path_le.setText(self.path)
         # TODO: add a warning in case the file size exceeds a threshold
