@@ -1618,6 +1618,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             if hasattr(self.legend, 'get_lines'):
                 self.on_container_hover(event, self.legend)
         if self.output_type == 'recovery_curves':
+            if not hasattr(self, 'annot'):
+                return
             vis = self.annot.get_visible()
             if event.inaxes == self.plot:
                 if not hasattr(self, 'line'):
