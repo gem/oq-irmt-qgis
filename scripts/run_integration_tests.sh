@@ -21,6 +21,7 @@ docker run -d --name qgis -v /tmp/.X11-unix:/tmp/.X11-unix \
  -e OQ_ENGINE_HOST='http://172.17.0.1:8800' \
  -e BRANCH="$BRANCH" \
  -e SELECTED_CALC_ID="$SELECTED_CALC_ID" \
+ -e GEM_QGIS_TEST=y \
  qgis/qgis:final-3_8_3
 
 docker exec -it qgis sh -c "apt update; DEBIAN_FRONTEND=noninteractive apt install -y python3-scipy python3-matplotlib python3-pyqt5.qtwebkit"
@@ -29,4 +30,4 @@ docker exec -it qgis sh -c "git clone -q -b $BRANCH --depth=1 https://github.com
 
 docker exec -it qgis sh -c "qgis_setup.sh svir"
 
-docker exec -it qgis sh -c "cd /tests_directory && SELECTED_CALC_ID=$SELECTED_CALC_ID qgis_testrunner.sh svir.test.integration.test_drive_oq_engine"
+docker exec -it qgis sh -c "cd /tests_directory && qgis_testrunner.sh svir.test.integration.test_drive_oq_engine"

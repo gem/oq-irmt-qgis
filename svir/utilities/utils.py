@@ -129,8 +129,8 @@ def log_msg(message, tag='GEM OpenQuake IRMT plugin', level='I',
             exception.__class__, exception, exception.__traceback__)
         tb_text = '\n' + ''.join(tb_lines)
 
-    # if we are running nosetests, exit on critical errors
-    if 'nose' in sys.modules and level == 'C':
+    # if we are running tests, exit on critical errors
+    if 'GEM_QGIS_TEST' in os.environ and level == 'C':
         raise RuntimeError(message + tb_text)
     else:
         log_verbosity = QSettings().value('irmt/log_level', 'W')
