@@ -23,7 +23,6 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
-import tempfile
 from collections import OrderedDict
 from svir.utilities.utils import (import_layer_from_csv,
                                   get_params_from_comment_line,
@@ -99,7 +98,7 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
         try:
             self.layer = import_layer_from_csv(
                 self, csv_path, layer_name, self.iface,
-                wkt_field='boundary', delimiter='\\t',
+                wkt_field='boundary', delimiter=',',
                 lines_to_skip_count=n_lines_to_skip,
                 save_as_shp=self.save_as_shp_ckb.isChecked())
         except RuntimeError as exc:
