@@ -49,7 +49,6 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
             ('Tectonic region type', 'trt'),
             ('Magnitude', 'mag'),
         ])
-        self.create_file_hlayout()
         self.create_file_size_indicator()
         self.create_save_as_shp_ckb()
         self.create_style_by_selector()
@@ -57,8 +56,6 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
         self.setWindowTitle('Load ruptures from CSV, as layer')
         self.adjustSize()
         self.set_ok_button()
-        if self.path:
-            self.path_le.setText(self.path)
         self.show()
 
     def set_ok_button(self):
@@ -74,7 +71,7 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
             self.style_by_cbx.addItem(item, self.style_by_items[item])
 
     def load_from_csv(self):
-        csv_path = self.path_le.text()
+        csv_path = self.path
         # extract the investigation_time from the heading commented line
         with open(csv_path, 'r', newline='') as f:
             comment_line = f.readline()

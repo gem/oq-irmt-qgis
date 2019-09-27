@@ -47,8 +47,7 @@ from qgis.core import (QgsVectorLayer,
                        QgsSimpleMarkerSymbolLayerBase,
                        )
 from qgis.gui import QgsSublayersDialog
-from qgis.PyQt.QtCore import (
-    pyqtSlot, pyqtSignal, QDir, QSettings, QFileInfo, Qt)
+from qgis.PyQt.QtCore import pyqtSignal, QDir, QSettings, QFileInfo, Qt
 from qgis.PyQt.QtWidgets import (
                                  QDialogButtonBox,
                                  QDialog,
@@ -61,7 +60,6 @@ from qgis.PyQt.QtWidgets import (
                                  QVBoxLayout,
                                  QToolButton,
                                  QGroupBox,
-                                 QLineEdit,
                                  )
 from qgis.PyQt.QtGui import QColor
 from svir.calculations.process_layer import ProcessLayer
@@ -135,20 +133,6 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.set_ok_button()
         self.show()
         self.init_done.emit()
-
-    def create_file_hlayout(self):
-        self.file_hlayout = QHBoxLayout()
-        self.file_lbl = QLabel('File to load')
-        self.file_browser_tbn = QToolButton()
-        self.file_browser_tbn.setText('...')
-        self.file_browser_tbn.clicked.connect(self.on_file_browser_tbn_clicked)
-        self.file_browser_tbn.setEnabled(False)
-        self.path_le = QLineEdit()
-        self.path_le.setEnabled(False)
-        self.file_hlayout.addWidget(self.file_lbl)
-        self.file_hlayout.addWidget(self.file_browser_tbn)
-        self.file_hlayout.addWidget(self.path_le)
-        self.vlayout.addLayout(self.file_hlayout)
 
     def create_num_sites_indicator(self):
         self.num_sites_msg = 'Number of sites: %s'
@@ -377,13 +361,6 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             self.create_save_as_shp_ckb()
         self.set_ok_button()
 
-    @pyqtSlot()
-    def on_file_browser_tbn_clicked(self):
-        path = self.open_file_dialog()
-        if path:
-            self.populate_out_dep_widgets()
-        self.set_ok_button()
-
     def on_rlz_or_stat_changed(self):
         self.dataset = self.npz_file[self.rlz_or_stat_cbx.currentText()]
         self.set_ok_button()
@@ -402,27 +379,6 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
 
     def on_dmg_state_changed(self):
         self.set_ok_button()
-
-    def open_file_dialog(self):
-        """
-        Open a file dialog to select the data file to be loaded
-        """
-        text = self.tr('Select the OQ-Engine output file to import')
-        if self.output_type in OQ_CSV_TO_LAYER_TYPES:
-            filters = self.tr('CSV files (*.csv)')
-        else:
-            raise NotImplementedError(self.output_type)
-        default_dir = QSettings().value('irmt/load_as_layer_dir',
-                                        QDir.homePath())
-        path, _ = QFileDialog.getOpenFileName(
-            self, text, default_dir, filters)
-        if not path:
-            return
-        selected_dir = QFileInfo(path).dir().path()
-        QSettings().setValue('irmt/load_as_layer_dir', selected_dir)
-        self.path = path
-        self.path_le.setText(self.path)
-        return path
 
     def populate_out_dep_widgets(self):
         self.populate_rlz_or_stat_cbx()
