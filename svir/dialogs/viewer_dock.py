@@ -528,7 +528,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             msg = 'No data corresponds to the current selection'
             log_msg(msg, level='W', message_bar=self.iface.messageBar(),
                     duration=5)
-            self.plot.clear()
+            self.clear_plot()
             return
         self.draw_dmg_by_asset_aggr()
 
