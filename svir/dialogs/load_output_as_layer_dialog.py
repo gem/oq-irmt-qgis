@@ -866,6 +866,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 log_msg(msg, level='C', message_bar=self.iface.messageBar())
                 return None
         self.added_zonal_layer = zonal_layer
+        self.pre_populate_zonal_layer_cbx()
         return zonal_layer
 
     def populate_zonal_layer_cbx(self, zonal_layer):
