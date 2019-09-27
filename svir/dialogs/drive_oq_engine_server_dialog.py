@@ -566,7 +566,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 self.clear_output_list()
             self.refresh_calc_list()
         else:
-            msg = 'Unable to %s calculation %s' % (method, calc_id)
+            msg = 'Unable to %s calculation %s: %s' % (method, calc_id, resp)
             log_msg(msg, level='C', message_bar=self.message_bar)
         return
 
