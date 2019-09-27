@@ -539,11 +539,23 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.draw_agg_curves(self.output_type)
 
     def filter_losses_by_asset_aggr(self):
+        star_count = 0
         params = {}
         for tag_name in self.tags:
             if self.tags[tag_name]['selected']:
                 for value in self.tags[tag_name]['values']:
                     if self.tags[tag_name]['values'][value]:
+                        if value == '*':
+                            star_count += 1
+                        if star_count > 1:
+                            msg = '"*" can be selected for only one tag'
+                            log_msg(msg, level='W',
+                                    message_bar=self.iface.messageBar(),
+                                    duration=5)
+                            self.table.clear()
+                            self.table.setRowCount(0)
+                            self.table.setColumnCount(0)
+                            return
                         if tag_name in params:
                             params[tag_name].append(value)
                         else:
