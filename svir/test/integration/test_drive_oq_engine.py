@@ -192,8 +192,9 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         demo_dir = demo_dir_list[0]
         filepaths = glob.glob(os.path.join(demo_dir, '*'))
         hazard_calc_id = self.run_calc(filepaths, 'hazard')
-        risk_calc_id = self.run_calc(filepaths, 'risk', hazard_calc_id)
-        self.irmt.drive_oq_engine_server_dlg.remove_calc(risk_calc_id)
+        # FIXME: we should re-enable testing a risk calc on top of hazard
+        # risk_calc_id = self.run_calc(filepaths, 'risk', hazard_calc_id)
+        # self.irmt.drive_oq_engine_server_dlg.remove_calc(risk_calc_id)
         self.irmt.drive_oq_engine_server_dlg.remove_calc(hazard_calc_id)
 
     def get_calc_status(self, calc_id):
