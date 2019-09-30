@@ -1177,6 +1177,18 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             #        'taxonomy=Concrete'], dtype='|S35')
             tag_values = [tag.split('=')[1] for tag in tags]
             self.table.setVerticalHeaderLabels(tag_values)
+        else:
+            tag_values = []
+            for tag in self.tags:
+                if self.tags[tag]['selected']:
+                    values = [
+                        tag_value for tag_value in self.tags[tag]['values']
+                        if self.tags[tag]['values'][tag_value]]
+                    tag_values.extend(values)
+            if tag_values:
+                self.table.setVerticalHeaderLabels([', '.join(tag_values)])
+            else:
+                self.table.setVerticalHeaderLabels(['Total'])
         for row in range(nrows):
             for col in range(ncols):
                 self.table.setItem(
