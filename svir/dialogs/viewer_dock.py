@@ -547,11 +547,12 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.tags[tag_name]['selected'] = True
         for tag_name in self.tag_names_multiselect.get_unselected_items():
             self.tags[tag_name]['selected'] = False
-            # deselect all tag values for tags that are unselected
-            # for value in self.tags[tag_name]['values']:
-            #     self.tags[tag_name]['values'][value] = False
-            #     if self.tag_with_all_values == tag_name:
-            #         self.tag_with_all_values = None
+            if self.output_type != 'ebrisk':
+                # deselect all tag values for tags that are unselected
+                for value in self.tags[tag_name]['values']:
+                    self.tags[tag_name]['values'][value] = False
+                    if self.tag_with_all_values == tag_name:
+                        self.tag_with_all_values = None
         if self.output_type == 'dmg_by_asset_aggr':
             self.filter_dmg_by_asset_aggr()
         elif self.output_type in ('losses_by_asset_aggr',
