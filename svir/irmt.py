@@ -436,8 +436,6 @@ class Irmt(object):
         if self.drive_oq_engine_server_dlg is None:
             self.drive_oq_engine_server_dlg = DriveOqEngineServerDialog(
                 self.iface, self.viewer_dock, hostname=hostname)
-        else:
-            self.drive_oq_engine_server_dlg.attempt_login()
         if show:
             self.drive_oq_engine_server_dlg.show()
             self.drive_oq_engine_server_dlg.raise_()

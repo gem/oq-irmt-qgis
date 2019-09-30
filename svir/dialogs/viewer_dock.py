@@ -42,7 +42,6 @@ from qgis.PyQt.QtWidgets import (
                                  QDockWidget,
                                  QFileDialog,
                                  QAbstractItemView,
-                                 QTabWidget,
                                  QTableWidget,
                                  QTableWidgetItem,
                                  )
@@ -409,60 +408,47 @@ class ViewerDock(QDockWidget, FORM_CLASS):
     def create_tag_names_multiselect(self, mononame=False, monovalue=False):
         self.tag_names_lbl = QLabel('Tag names')
         self.tag_names_multiselect = MultiSelectComboBox(self, mono=mononame)
-        self.tag_values_tab_widget = QTabWidget(self)
         self.add_widget_to_type_dep_layout(
             self.tag_names_lbl, 'tag_names_lbl', self.typeDepVLayout)
         self.add_widget_to_type_dep_layout(
             self.tag_names_multiselect, 'tag_names_multiselect',
             self.typeDepVLayout)
-        self.add_widget_to_type_dep_layout(
-            self.tag_values_tab_widget, 'tag_values_tab_widget',
-            self.typeDepVLayout)
-        self.tag_values_tab_widget.setSizePolicy(
-            QSizePolicy.Minimum, QSizePolicy.Minimum)
-        self.tag_values_tab_widget.resize(
-            self.tag_values_tab_widget.minimumSizeHint())
         self.tag_names_multiselect.item_was_clicked.connect(
             lambda tag_name, tag_name_is_checked:
-            self.toggle_tag_values_multiselect_tab(
+            self.toggle_tag_values_multiselect(
                 tag_name, tag_name_is_checked, monovalue=monovalue))
         self.tag_names_multiselect.selection_changed.connect(
             self.update_selected_tag_names)
 
-    def toggle_tag_values_multiselect_tab(
+    def toggle_tag_values_multiselect(
             self, tag_name, tag_name_is_checked, monovalue=False):
-        lbl = getattr(self, "%s_values_lbl" % tag_name, None)
-        cbx = getattr(self, "%s_values_multiselect" % tag_name, None)
-        # NOTE: removing widgets anyway, then re-adding them if needed
-        try:
-            self.tag_values_tab_widget.removeTab(
-                self.tag_values_tab_widget.indexOf(cbx))
-        except RuntimeError:
-            # NOTE: this is needed for ebrisk but not for scenario_damage
-            # otherwise it might cause:
-            # wrapped C/C++ object of type MultiSelectComboBox has been deleted
-            pass
+        lbl_name = "%s_values_lbl" % tag_name
+        cbx_name = "%s_values_multiselect" % tag_name
+        lbl = getattr(self, lbl_name, None)
+        cbx = getattr(self, cbx_name, None)
         if lbl is not None:
-            delattr(self, "%s_values_lbl" % tag_name)
+            delattr(self, lbl_name)
+            lbl.setParent(None)
         if cbx is not None:
-            delattr(self, "%s_values_multiselect" % tag_name)
+            delattr(self, cbx_name)
+            cbx.setParent(None)
         if tag_name_is_checked:
-            setattr(self, "%s_values_lbl" % tag_name,
-                    tag_name + ' value' + ('' if monovalue else 's'))
-            setattr(self, "%s_values_multiselect" % tag_name,
+            setattr(self, lbl_name,
+                    QLabel('%s value' % tag_name + ('' if monovalue else 's')))
+            setattr(self, cbx_name,
                     MultiSelectComboBox(self, mono=monovalue))
-            label = getattr(self, "%s_values_lbl" % tag_name)
-            widget = getattr(self, "%s_values_multiselect" % tag_name)
-            self.tag_values_tab_widget.addTab(widget, label)
+            lbl = getattr(self, lbl_name)
+            cbx = getattr(self, cbx_name)
+            self.add_widget_to_type_dep_layout(
+                lbl, lbl_name, self.typeDepVLayout)
+            self.add_widget_to_type_dep_layout(
+                cbx, cbx_name, self.typeDepVLayout)
             if monovalue:
-                getattr(self, "%s_values_multiselect"
-                        % tag_name).currentIndexChanged.connect(
-                            lambda idx: self.update_selected_tag_values(
-                                tag_name))
+                cbx.currentIndexChanged.connect(
+                    lambda idx: self.update_selected_tag_values(tag_name))
             else:
-                getattr(self, "%s_values_multiselect"
-                        % tag_name).selection_changed.connect(
-                            lambda: self.update_selected_tag_values(tag_name))
+                cbx.selection_changed.connect(
+                    lambda: self.update_selected_tag_values(tag_name))
             self.populate_tag_values_multiselect(tag_name)
 
     def populate_tag_values_multiselect(self, tag_name):
@@ -582,11 +568,12 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.tags[tag_name]['selected'] = True
         for tag_name in self.tag_names_multiselect.get_unselected_items():
             self.tags[tag_name]['selected'] = False
-            # deselect all tag values for tags that are unselected
-            # for value in self.tags[tag_name]['values']:
-            #     self.tags[tag_name]['values'][value] = False
-            #     if self.tag_with_all_values == tag_name:
-            #         self.tag_with_all_values = None
+            if self.output_type != 'ebrisk':
+                # deselect all tag values for tags that are unselected
+                for value in self.tags[tag_name]['values']:
+                    self.tags[tag_name]['values'][value] = False
+                    if self.tag_with_all_values == tag_name:
+                        self.tag_with_all_values = None
         if self.output_type == 'dmg_by_asset_aggr':
             self.filter_dmg_by_asset_aggr()
         elif self.output_type in ('losses_by_asset_aggr',
@@ -1170,9 +1157,11 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         losses_array = self._to_2d(losses_array)
         tags = None
         try:
+            # NOTE: case with '*'
             tags = [tag.decode('utf8')
                     for tag in self.losses_by_asset_aggr['tags']]
         except KeyError:
+            # NOTE: case without '*'
             pass
         nrows, ncols = losses_array.shape
         self.table.setRowCount(nrows)
@@ -1181,7 +1170,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.table.setHorizontalHeaderLabels(self.rlzs)
         else:  # self.output_type == 'avg_losses-stats_aggr'
             self.table.setHorizontalHeaderLabels(self.stats)
-        if tags is not None:
+        if tags is not None:  # NOTE: case with '*'
             # tags are like
             # array(['taxonomy=Wood',
             #        'taxonomy=Adobe',
@@ -1190,6 +1179,18 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             #        'taxonomy=Concrete'], dtype='|S35')
             tag_values = [tag.split('=')[1] for tag in tags]
             self.table.setVerticalHeaderLabels(tag_values)
+        else:  # NOTE: case without '*'
+            tag_values = []
+            for tag in self.tags:
+                if self.tags[tag]['selected']:
+                    values = [
+                        tag_value for tag_value in self.tags[tag]['values']
+                        if self.tags[tag]['values'][tag_value]]
+                    tag_values.extend(values)
+            if tag_values:
+                self.table.setVerticalHeaderLabels([', '.join(tag_values)])
+            else:
+                self.table.setVerticalHeaderLabels(['Total'])
         for row in range(nrows):
             for col in range(ncols):
                 self.table.setItem(
