@@ -182,6 +182,13 @@ class ViewerDock(QDockWidget, FORM_CLASS):
 
         self.plot_canvas.mpl_connect('motion_notify_event', self.on_plot_hover)
 
+        self.table = QTableWidget()
+        self.table.setSizePolicy(
+            QSizePolicy.Preferred, QSizePolicy.MinimumExpanding)
+        self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.table_layout.addWidget(self.table)
+        self.table.hide()
+
     def create_annot(self):
         self.annot = self.plot.annotate(
             "", xy=(0, 0), xytext=(-20, 20), textcoords="offset points",
@@ -507,7 +514,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             msg = 'No data corresponds to the current selection'
             log_msg(msg, level='W', message_bar=self.iface.messageBar(),
                     duration=5)
-            self.plot.clear()
+            self.clear_plot()
             return
         self.draw_dmg_by_asset_aggr()
 
@@ -518,11 +525,23 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.draw_agg_curves(self.output_type)
 
     def filter_losses_by_asset_aggr(self):
+        star_count = 0
         params = {}
         for tag_name in self.tags:
             if self.tags[tag_name]['selected']:
                 for value in self.tags[tag_name]['values']:
                     if self.tags[tag_name]['values'][value]:
+                        if value == '*':
+                            star_count += 1
+                        if star_count > 1:
+                            msg = '"*" can be selected for only one tag'
+                            log_msg(msg, level='W',
+                                    message_bar=self.iface.messageBar(),
+                                    duration=5)
+                            self.table.clear()
+                            self.table.setRowCount(0)
+                            self.table.setColumnCount(0)
+                            return
                         if tag_name in params:
                             params[tag_name].append(value)
                         else:
@@ -538,7 +557,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             msg = 'No data corresponds to the current selection'
             log_msg(msg, level='W', message_bar=self.iface.messageBar(),
                     duration=5)
-            self.plot.clear()
+            self.table.clear()
+            self.table.setRowCount(0)
+            self.table.setColumnCount(0)
             return
         self.draw_losses_by_asset_aggr()
 
@@ -622,7 +643,6 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         # NOTE: typeDepVLayout contains typeDepHLayout1 and typeDepHLayout2,
         #       that will be cleared recursively
         clear_widgets_from_layout(self.typeDepVLayout)
-        clear_widgets_from_layout(self.table_layout)
         # NOTE: even after removing widgets from layouts, the viewer dock
         # widget might still keep references to some of its children widgets
         self.remove_type_dep_attrs()
@@ -630,6 +650,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.plot.clear()
             self.plot_canvas.show()
             self.plot_canvas.draw()
+            self.table.hide()
         if new_output_type == 'hcurves':
             self.create_imt_selector()
             self.create_stats_multiselect()
@@ -1131,7 +1152,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
 
     def draw_losses_by_asset_aggr(self):
         self.plot_canvas.hide()
-        clear_widgets_from_layout(self.table_layout)
+        self.table.show()
         losses_array = self.losses_by_asset_aggr['array']
         losses_array = self._to_2d(losses_array)
         tags = None
@@ -1141,13 +1162,12 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         except KeyError:
             pass
         nrows, ncols = losses_array.shape
-        table = QTableWidget(nrows, ncols)
-        table.setSizePolicy(
-            QSizePolicy.Preferred, QSizePolicy.MinimumExpanding)
+        self.table.setRowCount(nrows)
+        self.table.setColumnCount(ncols)
         if self.output_type == 'losses_by_asset_aggr':
-            table.setHorizontalHeaderLabels(self.rlzs)
+            self.table.setHorizontalHeaderLabels(self.rlzs)
         else:  # self.output_type == 'avg_losses-stats_aggr'
-            table.setHorizontalHeaderLabels(self.stats)
+            self.table.setHorizontalHeaderLabels(self.stats)
         if tags is not None:
             # tags are like
             # array(['taxonomy=Wood',
@@ -1156,14 +1176,12 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             #        'taxonomy=Unreinforced-Brick-Masonry',
             #        'taxonomy=Concrete'], dtype='|S35')
             tag_values = [tag.split('=')[1] for tag in tags]
-            table.setVerticalHeaderLabels(tag_values)
-        table.setEditTriggers(QAbstractItemView.NoEditTriggers)
+            self.table.setVerticalHeaderLabels(tag_values)
         for row in range(nrows):
             for col in range(ncols):
-                table.setItem(
+                self.table.setItem(
                     row, col, QTableWidgetItem(str(losses_array[row, col])))
-        table.resizeColumnsToContents()
-        self.table_layout.addWidget(table)
+        self.table.resizeColumnsToContents()
 
     def draw(self):
         self.plot.clear()
