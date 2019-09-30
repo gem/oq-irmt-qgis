@@ -435,6 +435,9 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         if calc_status['status'] != 'complete':
             return
         output_list = self.get_output_list(calc_id)
+        if isinstance(output_list, Exception):
+            # NOTE: the exception is managed by self._handle_exception
+            return
         self.list_of_outputs_lbl.setText(
             'List of outputs for calculation %s' % calc_id)
         # from engine2.5 to engine2.6, job_type was changed into
