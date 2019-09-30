@@ -1157,9 +1157,11 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         losses_array = self._to_2d(losses_array)
         tags = None
         try:
+            # NOTE: case with '*'
             tags = [tag.decode('utf8')
                     for tag in self.losses_by_asset_aggr['tags']]
         except KeyError:
+            # NOTE: case without '*'
             pass
         nrows, ncols = losses_array.shape
         self.table.setRowCount(nrows)
@@ -1168,7 +1170,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.table.setHorizontalHeaderLabels(self.rlzs)
         else:  # self.output_type == 'avg_losses-stats_aggr'
             self.table.setHorizontalHeaderLabels(self.stats)
-        if tags is not None:
+        if tags is not None:  # NOTE: case with '*'
             # tags are like
             # array(['taxonomy=Wood',
             #        'taxonomy=Adobe',
@@ -1177,7 +1179,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             #        'taxonomy=Concrete'], dtype='|S35')
             tag_values = [tag.split('=')[1] for tag in tags]
             self.table.setVerticalHeaderLabels(tag_values)
-        else:
+        else:  # NOTE: case without '*'
             tag_values = []
             for tag in self.tags:
                 if self.tags[tag]['selected']:
