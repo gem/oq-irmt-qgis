@@ -62,6 +62,7 @@ from svir.utilities.shared import (OQ_TO_LAYER_TYPES,
                                    OQ_EXTRACT_TO_VIEW_TYPES,
                                    OQ_ZIPPED_TYPES,
                                    OQ_BASIC_CSV_TO_LAYER_TYPES,
+                                   DEFAULT_SETTINGS,
                                    )
 from svir.utilities.utils import (WaitCursorManager,
                                   engine_login,
@@ -788,6 +789,10 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
 
         self.output_list_tbl.setRowCount(len(output_list))
         self.output_list_tbl.setColumnCount(len(selected_keys) + max_actions)
+        experimental_enabled = QSettings().value(
+            '/irmt/experimental_enabled',
+            DEFAULT_SETTINGS['experimental_enabled'],
+            type=bool)
         for row, output in enumerate(output_list):
             for col, key in enumerate(selected_keys):
                 item = QTableWidgetItem()
@@ -834,6 +839,12 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                                            'dmg_by_event',
                                            'losses_by_event']
                             and calculation_mode == 'event_based'):
+                        continue
+                    if (output['type'] in ['agg_curves-rlzs',
+                                           'agg_curves-stats',
+                                           'avg_losses-stats']
+                            and calculation_mode == 'ebrisk'
+                            and not experimental_enabled):
                         continue
                     button = QPushButton()
                     self.connect_button_to_action(
