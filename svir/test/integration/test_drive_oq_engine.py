@@ -146,6 +146,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 print('\t%s' % output)
 
     def run_calc(self, input_files, job_type='hazard', calc_id=None):
+        if hasattr(self, 'timer'):
+            self.timer.timeout.disconnect()
         resp = self.irmt.drive_oq_engine_server_dlg.run_calc(
             calc_id=calc_id, file_names=input_files, use_default_ini=True)
         calc_id = resp['job_id']
