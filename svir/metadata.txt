@@ -27,7 +27,7 @@ changelog=
     * The management of profiles for the connection to the OpenQuake Platform was fixed.
     * The output type selector in the Data Viewer was disabled, so it still shows the output type but it can not be modified by the user.
     * OQ-Engine outputs to be loaded as tables from csv are loaded directly with a single click, instead of prior displaying a dialog showing the file size.
-    * OQ-Engine outputs agg_curves-rlzs and agg_curves-stats for event_based_risk and ebrisk calculations can be visualized in the Data Viewer.
+    * OQ-Engine outputs agg_curves-rlzs and agg_curves-stats for event_based_risk and ebrisk calculations can be visualized in the Data Viewer if experimental features of the plugin are enabled.
     * OQ-Engine input files can be downloaded as zip.
     * Added loader for OQ-Engine outputs 'agglosses'
     * The plugin is also a Processing Toolbox algorithm provider, offering an extensible set of field transformation functions
@@ -39,9 +39,10 @@ changelog=
     * The color for selected features is red for layers that use a cross symbol in the map (e.g. hazard curves and uniform hazard spectra)
     * Moving the mouse over recovery curves, a dynamic annotation is displayed, showing the coordinates of the pointed element
     * Widgets to select multiple items have been replaced by more compact selectors that also allow text searching
-    * Selectors for tag values are added to the GUI as tabs, each containing a multiselector for values of a different tag
+    * Selectors for tag values are added to the GUI, each containing a multiselector for values of a different tag
     * When a new OQ-Engine calculation is successfully launched, the corresponding row is highlighted in the list of calculations, and the list of its outputs is loaded
-    * Moving the cursor through the list of available OQ-Engine calculations, the calculation corresponding to the highlighted cell is automatically selected and its list of outputs is displayed
+    * Moving the cursor through the list of available OQ-Engine calculations (using mouse or keystrokes), the calculation corresponding to the highlighted cell
+      is automatically selected and its list of outputs is displayed
     3.7.1
     * Instead of the 'sourcegroups' output (that was removed from the OQ-Engine), the plugin can now load the new output 'events'
     * The user can choose if selecting the '.ini' file to run a OQ-Engine calculation, or letting the OQ-Engine automatically pick one from the list of input files.
@@ -179,7 +180,7 @@ tracker=https://github.com/gem/oq-irmt-qgis/issues
 repository=https://github.com/gem/oq-irmt-qgis
 icon=resources/icon.svg
 # experimental flag
-experimental=True
+experimental=False
 
 # deprecated flag (applies to the whole plugin, not just a single version
 deprecated=False
