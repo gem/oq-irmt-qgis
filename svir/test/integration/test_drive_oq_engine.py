@@ -157,8 +157,6 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         self.timer.timeout.connect(
             lambda: self.refresh_calc_log(calc_id))
         self.timer.start(3000)  # refresh time in milliseconds
-        # show the log before the first iteration of the timer
-        self.refresh_calc_log(calc_id)
         timeout = 240
         start_time = time.time()
         while time.time() - start_time < timeout:
