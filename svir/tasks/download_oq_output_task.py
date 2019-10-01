@@ -44,7 +44,7 @@ class DownloadOqOutputTask(QgsTask):
     def __init__(
             self, description, flags, output_id, outtype,
             output_type, dest_folder, session, hostname, on_success, on_error,
-            del_task, task_id, current_calc_id=None):
+            del_task, task_id, calc_id=None):
         super().__init__(description, flags)
         self.output_id = output_id
         self.outtype = outtype
@@ -56,12 +56,11 @@ class DownloadOqOutputTask(QgsTask):
         self.on_error = on_error
         self.del_task = del_task
         self.task_id = task_id
-        self.current_calc_id = current_calc_id
         self.exception = None
 
-        if self.current_calc_id:
+        if calc_id:
             self.download_url = "%s/v1/calc/%s/datastore" % (
-                self.hostname, self.current_calc_id)
+                self.hostname, calc_id)
         else:
             self.download_url = (
                 "%s/v1/calc/result/%s?export_type=%s&dload=true" % (

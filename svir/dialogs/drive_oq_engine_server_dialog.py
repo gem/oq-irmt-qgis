@@ -157,7 +157,6 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             self.forced_hostname = False
         self.calc_list = None
         self.current_calc_id = None  # list of outputs refers to this calc_id
-        self.pointed_calc_id = None  # we will scroll to it
         self.is_logged_in = False
         self.is_polling = False
         self.reconnect_btn.setEnabled(True)
@@ -201,9 +200,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         else:
             if self.is_logged_in:
                 self.set_gui_enabled(True)
-                self.refresh_calc_list()
-                self.current_calc_id = None
-                self.pointed_calc_id = None
+                self._set_current_calc_id(None)
                 self.check_engine_compatibility()
                 self.setWindowTitle(
                     'Drive the OpenQuake Engine v%s (%s)' % (
@@ -387,11 +384,6 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.calc_list_tbl.horizontalHeader().setStyleSheet(
             "font-weight: bold;")
         self.set_calc_list_widths(col_widths)
-        # if a running calculation is selected, the corresponding outputs will
-        # be displayed (once) automatically at completion
-        if (self.pointed_calc_id and
-                self.output_list_tbl.rowCount() == 0):
-            self.update_output_list(self.pointed_calc_id)
         self.calc_list_tbl.blockSignals(False)
         return True
 
@@ -445,7 +437,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         # calculation_mode. This check prevents the plugin to break wnen
         # using an old version of the engine.
         self.show_output_list(
-            output_list, calc_status.get('calculation_mode', 'unknown'))
+            output_list, calc_status.get('calculation_mode', 'unknown'),
+            calc_id)
         calc_info = self.get_calc_info(calc_id)
         size_mb = calc_info['size_mb']
         btn_text = 'Download HDF5 datastore'
@@ -463,7 +456,6 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         # scrolling.  But if you click on any button, at the next refresh, the
         # view is scrolled to the top. Therefore we need to keep track of which
         # line was selected, in order to scroll to that line.
-        self.current_calc_id = self.pointed_calc_id = calc_id
         self._set_show_calc_params_btn()
         self.highlight_and_scroll_to_calc_id(calc_id)
         if action == 'Console':
@@ -480,8 +472,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 QMessageBox.Yes | QMessageBox.No)
             if confirmed == QMessageBox.Yes:
                 self.remove_calc(calc_id, abort=True)
-                if self.current_calc_id == calc_id:
-                    self.clear_output_list()
+                self.clear_output_list()
         elif action == 'Remove':
             confirmed = QMessageBox.question(
                 self,
@@ -490,8 +481,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 QMessageBox.Yes | QMessageBox.No)
             if confirmed == QMessageBox.Yes:
                 self.remove_calc(calc_id)
-                if self.current_calc_id == calc_id:
-                    self.clear_output_list()
+                self.clear_output_list()
         elif action == 'Outputs':
             self.update_output_list(calc_id)
         elif action == 'Continue':
@@ -549,13 +539,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             verb = 'aborted' if abort else 'removed'
             msg = 'Calculation %s successfully %s' % (calc_id, verb)
             log_msg(msg, level='S', message_bar=self.message_bar)
-            if self.current_calc_id == calc_id:
-                self.current_calc_id = None
-                self.clear_output_list()
-            if self.pointed_calc_id == calc_id:
-                self.pointed_calc_id = None
-                self.clear_output_list()
-            self.refresh_calc_list()
+            self._set_current_calc_id(None)
         else:
             msg = 'Unable to %s calculation %s: %s' % (method, calc_id, resp)
             log_msg(msg, level='C', message_bar=self.message_bar)
@@ -652,12 +636,19 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         if resp.ok:
             resp_dict = resp.json()
             job_id = resp_dict['job_id']
-            self.pointed_calc_id = job_id
-            self.refresh_calc_list()
-            self.update_output_list(self.pointed_calc_id)
+            self._set_current_calc_id(job_id)
             return resp_dict
         else:
             log_msg(resp.text, level='C', message_bar=self.message_bar)
+
+    def _set_current_calc_id(self, calc_id):
+        self.current_calc_id = calc_id
+        self.refresh_calc_list()
+        if calc_id is None:
+            self.clear_output_list()
+        else:
+            self.update_output_list(calc_id)
+        self._set_show_calc_params_btn()
 
     def on_same_fs(self, checksum_file_path, ipt_checksum):
         on_same_fs_url = "%s/v1/on_same_fs" % self.hostname
@@ -686,11 +677,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         if not item_calc_id:
             return
         calc_id = int(item_calc_id.text())
-        self.current_calc_id = calc_id
-        self.pointed_calc_id = calc_id
-        self._set_show_calc_params_btn()
-        self.update_output_list(calc_id)
-        self._set_show_calc_params_btn()
+        self._set_current_calc_id(calc_id)
 
     def _set_show_calc_params_btn(self):
         self.show_calc_params_btn.setEnabled(
@@ -713,7 +700,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             msg, QgsTask.CanCancel,
             None, None, None, dest_folder, self.session, self.hostname,
             self.notify_downloaded, self.notify_error, self.del_task, task_id,
-            current_calc_id=self.current_calc_id)
+            calc_id=self.current_calc_id)
         log_msg('%s starting. Watch progress in QGIS task bar' % msg,
                 level='I', message_bar=self.message_bar)
         QgsApplication.taskManager().addTask(self.download_tasks[task_id])
@@ -723,14 +710,14 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.params_dlg = ShowParamsDialog()
         self.params_dlg.setWindowTitle(
             'Parameters of calculation %s' % self.current_calc_id)
-        json_params = self.get_oqparam()
+        json_params = self.get_oqparam(self.current_calc_id)
         indented_params = json.dumps(json_params, indent=4)
         self.params_dlg.text_browser.setText(indented_params)
         self.params_dlg.show()
 
-    def get_oqparam(self):
+    def get_oqparam(self, calc_id):
         get_calc_params_url = "%s/v1/calc/%s/oqparam" % (
-            self.hostname, self.current_calc_id)
+            self.hostname, calc_id)
         with WaitCursorManager('Getting calculation parameters...',
                                self.message_bar):
             try:
@@ -755,12 +742,11 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 return exc
         if resp.ok:
             output_list = json.loads(resp.text)
-            self.current_calc_id = calc_id
             return output_list
         else:
             return []
 
-    def show_output_list(self, output_list, calculation_mode):
+    def show_output_list(self, output_list, calculation_mode, calc_id):
         if not output_list:
             self.clear_output_list()
             self.download_datastore_btn.setEnabled(False)
@@ -823,7 +809,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                             action = 'Download'
                             button = QPushButton()
                             self.connect_button_to_action(
-                                button, action, output, outtype)
+                                button, action, output, outtype, calc_id)
                             self.output_list_tbl.setCellWidget(
                                 row, additional_cols, button)
                             self.calc_list_tbl.setColumnWidth(
@@ -848,7 +834,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                         continue
                     button = QPushButton()
                     self.connect_button_to_action(
-                        button, action, output, outtype)
+                        button, action, output, outtype, calc_id)
                     self.output_list_tbl.setCellWidget(
                         row, additional_cols, button)
                     additional_cols += 1
@@ -857,7 +843,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                     mod_output['type'] = "%s_aggr" % output['type']
                     button = QPushButton()
                     self.connect_button_to_action(
-                        button, 'Aggregate', mod_output, outtype)
+                        button, 'Aggregate', mod_output, outtype, calc_id)
                     self.output_list_tbl.setCellWidget(
                         row, additional_cols, button)
                     additional_cols += 1
@@ -865,7 +851,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 # (like in the webui)
                 action = 'Download'
                 button = QPushButton()
-                self.connect_button_to_action(button, action, output, outtype)
+                self.connect_button_to_action(
+                    button, action, output, outtype, calc_id)
                 self.output_list_tbl.setCellWidget(
                     row, additional_cols, button)
                 self.calc_list_tbl.setColumnWidth(
@@ -879,7 +866,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.output_list_tbl.resizeColumnsToContents()
         self.output_list_tbl.resizeRowsToContents()
 
-    def connect_button_to_action(self, button, action, output, outtype):
+    def connect_button_to_action(
+            self, button, action, output, outtype, calc_id):
         if action in ('Load layer', 'Load from zip', 'Load table',
                       'Show', 'Aggregate'):
             style = 'background-color: blue; color: white;'
@@ -898,9 +886,10 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             button.setText("%s %s" % (action, outtype))
         button.setStyleSheet(style)
         button.clicked.connect(lambda checked=False, output=output, action=action, outtype=outtype: (  # NOQA
-            self.on_output_action_btn_clicked(output, action, outtype)))
+            self.on_output_action_btn_clicked(
+                output, action, outtype, calc_id)))
 
-    def on_output_action_btn_clicked(self, output, action, outtype):
+    def on_output_action_btn_clicked(self, output, action, outtype, calc_id):
         output_id = output['id']
         output_type = output['type']
         if action in ['Show', 'Aggregate']:
@@ -910,11 +899,10 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                         ' visualize data',
                         level='I', message_bar=self.message_bar)
                 self.viewer_dock.load_no_map_output(
-                    self.current_calc_id, self.session,
+                    calc_id, self.session,
                     self.hostname, output_type, self.engine_version)
             elif outtype == 'rst':
-                descr = ('Download full report for calculation %s'
-                         % self.current_calc_id)
+                descr = ('Download full report for calculation %s' % calc_id)
                 task_id = uuid4()
                 self.download_tasks[task_id] = DownloadOqOutputTask(
                     descr, QgsTask.CanCancel, output_id, outtype,
@@ -937,7 +925,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             elif outtype == 'csv':
                 dest_folder = tempfile.gettempdir()
                 descr = 'Download %s for calculation %s' % (
-                    output_type, self.current_calc_id)
+                    output_type, calc_id)
                 task_id = uuid4()
                 self.download_tasks[task_id] = DownloadOqOutputTask(
                     descr, QgsTask.CanCancel, output_id, outtype,
@@ -957,8 +945,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 dest_folder = ask_for_download_destination_folder(self)
             if not dest_folder:
                 return
-            descr = 'Download %s for calculation %s' % (
-                output_type, self.current_calc_id)
+            descr = 'Download %s for calculation %s' % (output_type, calc_id)
             task_id = uuid4()
             if action == 'Download':
                 success_callback = self.notify_downloaded
@@ -1060,7 +1047,6 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.is_polling = False
         self.calc_list_tbl.clearContents()
         self.clear_output_list()
-        self.pointed_calc_id = None
         self.current_calc_id = None
         self.reconnect_btn.setEnabled(True)
 
