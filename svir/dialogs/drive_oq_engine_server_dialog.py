@@ -39,6 +39,7 @@ from qgis.PyQt.QtCore import (QDir,
 
 from qgis.PyQt.QtWidgets import (QDialog,
                                  QTableWidgetItem,
+                                 QAbstractItemView,
                                  QPushButton,
                                  QFileDialog,
                                  QInputDialog,
@@ -202,8 +203,6 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             if self.is_logged_in:
                 self.set_gui_enabled(True)
                 self.refresh_calc_list()
-                self.current_calc_id = None
-                self.pointed_calc_id = None
                 self.check_engine_compatibility()
                 self.setWindowTitle(
                     'Drive the OpenQuake Engine v%s (%s)' % (
@@ -387,6 +386,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.calc_list_tbl.horizontalHeader().setStyleSheet(
             "font-weight: bold;")
         self.set_calc_list_widths(col_widths)
+        if self.pointed_calc_id:
+            self.highlight_and_scroll_to_calc_id(self.pointed_calc_id)
         # if a running calculation is selected, the corresponding outputs will
         # be displayed (once) automatically at completion
         if (self.pointed_calc_id and
@@ -403,6 +404,18 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             if int(item_calc_id.text()) == calc_id:
                 return row
         return None
+
+    def highlight_and_scroll_to_calc_id(self, calc_id):
+        row = self.get_row_by_calc_id(calc_id)
+        if row is not None:
+            self.calc_list_tbl.selectRow(row)
+            calc_id_col_idx = 1
+            item_calc_id = self.calc_list_tbl.item(row, calc_id_col_idx)
+            self.calc_list_tbl.scrollToItem(
+                item_calc_id, QAbstractItemView.PositionAtCenter)
+        else:
+            self.pointed_calc_id = None
+            self.calc_list_tbl.clearSelection()
 
     def set_calc_list_widths(self, widths):
         for i, width in enumerate(widths):
@@ -680,15 +693,18 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
     @pyqtSlot(int, int, int, int)
     def on_calc_list_tbl_currentCellChanged(
             self, curr_row, curr_column, prev_row, prev_col):
+        self.calc_list_tbl.selectRow(curr_row)
         # find QTableItem corresponding to that calc_id
         calc_id_col_idx = 1
         item_calc_id = self.calc_list_tbl.item(curr_row, calc_id_col_idx)
-        if not item_calc_id:
-            return
         calc_id = int(item_calc_id.text())
-        self.current_calc_id = calc_id
-        self.pointed_calc_id = calc_id
-        self._set_show_calc_params_btn()
+        if self.pointed_calc_id == calc_id:
+            # if you click again on the row that was selected, it unselects it
+            self.pointed_calc_id = None
+            self.calc_list_tbl.clearSelection()
+        else:
+            self.pointed_calc_id = calc_id
+            self._set_show_calc_params_btn()
         self.update_output_list(calc_id)
         self._set_show_calc_params_btn()
 
@@ -1058,10 +1074,6 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             self.timer.stop()
         # QObject.disconnect(self.timer, SIGNAL('timeout()'))
         self.is_polling = False
-        self.calc_list_tbl.clearContents()
-        self.clear_output_list()
-        self.pointed_calc_id = None
-        self.current_calc_id = None
         self.reconnect_btn.setEnabled(True)
 
     @pyqtSlot()
