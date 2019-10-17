@@ -762,7 +762,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
 
     def _build_tags(self):
         # NOTE: shape_descr is like:
-        # array([b'return_periods', b'stats', b'loss_types', b'NAME_1'],
+        # array(['return_periods', 'stats', 'loss_types', 'NAME_1'],
         # dtype='|S14')
         tag_names = [str(tag_name, encoding='utf8')
                      for tag_name in self.agg_curves['shape_descr'][3:]]
@@ -771,7 +771,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.tags[tag_name] = {
                 'selected': True if tag_idx == 0 else False,
                 'values': {
-                    value.decode('utf8'): True if value_idx == 0 else False
+                    value: True if value_idx == 0 else False
                     for value_idx, value in enumerate(
                         self.agg_curves[tag_name])}}
 
@@ -941,8 +941,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                         if self.tags[tag_name]['values'][tag_value]:
                             # (if it is selected)
                             tag_value_idx = list(
-                                self.agg_curves[tag_name]).index(
-                                    tag_value.encode('utf8'))
+                                self.agg_curves[tag_name]).index(tag_value)
                             tag_value_idxs[tag_name].append(tag_value_idx)
             else:
                 for tag in self.agg_curves['aggregate_by']:
@@ -1050,8 +1049,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                     if not self.tags[tag_name]['selected']:
                         continue
                     for value_idx in tag_value_idxs[tag_name]:
-                        tag_value = self.agg_curves[
-                            tag_name][value_idx].decode('utf8')
+                        tag_value = self.agg_curves[tag_name][value_idx]
                         tup = (slice(None), rlzs_or_stats_idxs, loss_type_idx)
                         tag_name_idx = tag_name_idxs[tag_name]
                         for t_name in tag_name_idxs:
