@@ -1049,8 +1049,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                     if not self.tags[tag_name]['selected']:
                         continue
                     for value_idx in tag_value_idxs[tag_name]:
-                        tag_value = self.agg_curves[
-                            tag_name][value_idx].decode('utf8')
+                        tag_value = self.agg_curves[tag_name][value_idx]
                         tup = (slice(None), rlzs_or_stats_idxs, loss_type_idx)
                         tag_name_idx = tag_name_idxs[tag_name]
                         for t_name in tag_name_idxs:
