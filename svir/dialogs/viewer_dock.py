@@ -941,8 +941,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                         if self.tags[tag_name]['values'][tag_value]:
                             # (if it is selected)
                             tag_value_idx = list(
-                                self.agg_curves[tag_name]).index(
-                                    tag_value.encode('utf8'))
+                                self.agg_curves[tag_name]).index(tag_value)
                             tag_value_idxs[tag_name].append(tag_value_idx)
             else:
                 for tag in self.agg_curves['aggregate_by']:
