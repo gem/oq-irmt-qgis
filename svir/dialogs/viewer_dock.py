@@ -762,7 +762,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
 
     def _build_tags(self):
         # NOTE: shape_descr is like:
-        # array([b'return_periods', b'stats', b'loss_types', b'NAME_1'],
+        # array(['return_periods', 'stats', 'loss_types', 'NAME_1'],
         # dtype='|S14')
         tag_names = [str(tag_name, encoding='utf8')
                      for tag_name in self.agg_curves['shape_descr'][3:]]
@@ -771,7 +771,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.tags[tag_name] = {
                 'selected': True if tag_idx == 0 else False,
                 'values': {
-                    value.decode('utf8'): True if value_idx == 0 else False
+                    value: True if value_idx == 0 else False
                     for value_idx, value in enumerate(
                         self.agg_curves[tag_name])}}
 
