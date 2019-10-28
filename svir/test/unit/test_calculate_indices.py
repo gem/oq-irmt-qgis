@@ -36,7 +36,7 @@ from svir.calculations.calculate_utils import (calculate_node,
 from svir.calculations.process_layer import ProcessLayer
 from svir.utilities.utils import (set_operator,
                                   get_node,
-                                  save_layer_as_shapefile,
+                                  save_layer_as,
                                   )
 from svir.utilities.shared import OPERATORS_DICT, DiscardedFeature
 from qgis.testing import start_app
@@ -321,13 +321,13 @@ class CalculateCompositeVariableTestCase(unittest.TestCase):
         # res_layer_name = 'svi_calculation_first_round'
         # write_output(self.layer, self.data_dir_name, res_layer_name)
 
-        _, out_layer_shp_path = tempfile.mkstemp(suffix='.shp')
-        save_layer_as_shapefile(self.layer, out_layer_shp_path)
+        _, out_layer_path = tempfile.mkstemp(suffix='.gpkg')
+        save_layer_as(self.layer, out_layer_path, 'GPKG')
         out_layer = QgsVectorLayer(
-            out_layer_shp_path, 'svi_calculation_first_round', 'ogr')
+            out_layer_path, 'svi_calculation_first_round', 'ogr')
 
         expected_layer_path = os.path.join(
-            self.data_dir_name, 'svi_calculation_first_round.shp')
+            self.data_dir_name, 'svi_calculation_first_round.gpkg')
         expected_layer = QgsVectorLayer(
             expected_layer_path, 'svi_calculation_first_round', 'ogr')
         res = ProcessLayer(out_layer).has_same_content_as(expected_layer)
@@ -352,10 +352,10 @@ class CalculateCompositeVariableTestCase(unittest.TestCase):
         self.assertEqual(any_change, True)
         self.assertEqual(proj_def, proj_def_svi_calc_first_round)
 
-        _, out_layer_shp_path = tempfile.mkstemp(suffix='.shp')
-        save_layer_as_shapefile(self.layer, out_layer_shp_path)
+        _, out_layer_path = tempfile.mkstemp(suffix='.gpkg')
+        save_layer_as(self.layer, out_layer_path, 'GPKG')
         out_layer = QgsVectorLayer(
-            out_layer_shp_path, 'svi_calculation_second_round', 'ogr')
+            out_layer_path, 'svi_calculation_second_round', 'ogr')
 
         res = ProcessLayer(out_layer).has_same_content_as(expected_layer)
         if not res:
@@ -384,12 +384,12 @@ def calculate_education_node(proj_def, operator, layer):
 
 
 def write_output(res_layer, data_dir_name, res_layer_name):
-    res_layer_path = os.path.join(data_dir_name, res_layer_name + '.shp')
-    writer_error, error_msg = save_layer_as_shapefile(
-        res_layer, res_layer_path)
+    res_layer_path = os.path.join(data_dir_name, res_layer_name + '.gpkg')
+    writer_error, error_msg = save_layer_as(
+        res_layer, res_layer_path, 'GPKG')
     if writer_error:
-        raise RuntimeError('Could not save shapefile. %s: %s' % (writer_error,
-                                                                 error_msg))
+        raise RuntimeError('Could not save geopackage. %s: %s' % (writer_error,
+                                                                  error_msg))
 
 
 proj_def_svi_calc_first_round = {
