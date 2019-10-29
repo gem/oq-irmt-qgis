@@ -146,6 +146,9 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 print('\t%s' % output)
 
     def run_calc(self, input_files, job_type='hazard', calc_id=None):
+        if hasattr(self, 'timer'):
+            self.timer.stop()
+            delattr(self, 'timer')
         resp = self.irmt.drive_oq_engine_server_dlg.run_calc(
             calc_id=calc_id, file_names=input_files, use_default_ini=True)
         calc_id = resp['job_id']
@@ -154,8 +157,6 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         self.timer.timeout.connect(
             lambda: self.refresh_calc_log(calc_id))
         self.timer.start(3000)  # refresh time in milliseconds
-        # show the log before the first iteration of the timer
-        self.refresh_calc_log(calc_id)
         timeout = 240
         start_time = time.time()
         while time.time() - start_time < timeout:
@@ -192,9 +193,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         demo_dir = demo_dir_list[0]
         filepaths = glob.glob(os.path.join(demo_dir, '*'))
         hazard_calc_id = self.run_calc(filepaths, 'hazard')
-        # FIXME: we should re-enable testing a risk calc on top of hazard
-        # risk_calc_id = self.run_calc(filepaths, 'risk', hazard_calc_id)
-        # self.irmt.drive_oq_engine_server_dlg.remove_calc(risk_calc_id)
+        risk_calc_id = self.run_calc(filepaths, 'risk', hazard_calc_id)
+        self.irmt.drive_oq_engine_server_dlg.remove_calc(risk_calc_id)
         self.irmt.drive_oq_engine_server_dlg.remove_calc(hazard_calc_id)
 
     def get_calc_status(self, calc_id):
