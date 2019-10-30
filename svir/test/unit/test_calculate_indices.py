@@ -36,7 +36,7 @@ from svir.calculations.calculate_utils import (calculate_node,
 from svir.calculations.process_layer import ProcessLayer
 from svir.utilities.utils import (set_operator,
                                   get_node,
-                                  save_layer_as_shapefile,
+                                  save_layer_as,
                                   )
 from svir.utilities.shared import OPERATORS_DICT, DiscardedFeature
 from qgis.testing import start_app
@@ -131,6 +131,9 @@ class CalculateCompositeVariableTestCase(unittest.TestCase):
     # NOTE: uncomment to enable displaying long diffs
     # maxDiff = None
 
+    # NOTE: set to True to rebuild the reference outputs
+    REBUILD_OUTPUTS = False
+
     def setUp(self):
 
         self.project_definition = PROJ_DEF_STD_OPERATORS
@@ -140,7 +143,7 @@ class CalculateCompositeVariableTestCase(unittest.TestCase):
         self.data_dir_name = os.path.join(
             curr_dir_name, os.pardir, 'data', 'calculate_indices')
         layer_path = os.path.join(
-            self.data_dir_name, 'socioeconomic_data.shp')
+            self.data_dir_name, 'socioeconomic_data.gpkg')
         orig_layer = QgsVectorLayer(layer_path, 'Zonal Layer', 'ogr')
         # Avoid modifying the original files
         self.layer = ProcessLayer(orig_layer).duplicate_in_memory()
@@ -157,12 +160,12 @@ class CalculateCompositeVariableTestCase(unittest.TestCase):
         node_attr_id, node_attr_name, discarded_feats = \
             calculate_education_node(proj_def, operator, self.layer)
 
-        # # to rebuild the outputs
-        # res_layer_name = 'custom_operator'
-        # write_output(self.layer, self.data_dir_name, res_layer_name)
+        if self.REBUILD_OUTPUTS:
+            res_layer_name = 'custom_operator'
+            write_output(self.layer, self.data_dir_name, res_layer_name)
 
         expected_layer_path = os.path.join(
-            self.data_dir_name, 'custom_operator.shp')
+            self.data_dir_name, 'custom_operator.gpkg')
         expected_layer = QgsVectorLayer(
             expected_layer_path, 'custom_operator', 'ogr')
         res = ProcessLayer(self.layer).has_same_content_as(expected_layer)
@@ -172,7 +175,7 @@ class CalculateCompositeVariableTestCase(unittest.TestCase):
             sys.stderr.write("The resulting layer is different than expected")
             sys.stderr.write("\n\n\nCalculated EDUCATION as EDUEOCSAF+1:\n")
             ProcessLayer(self.layer).pprint(usage='testing')
-            sys.stderr.write("\n\n\nExpected layer (custom_operator.shp):\n")
+            sys.stderr.write("\n\n\nExpected layer (custom_operator.gpkg):\n")
             ProcessLayer(expected_layer).pprint(usage='testing')
             raise
 
@@ -182,12 +185,12 @@ class CalculateCompositeVariableTestCase(unittest.TestCase):
         node_attr_id, node_attr_name, discarded_feats = \
             calculate_education_node(proj_def, operator, self.layer)
 
-        # # to rebuild the outputs
-        # res_layer_name = 'simple_sum'
-        # write_output(self.layer, self.data_dir_name, res_layer_name)
+        if self.REBUILD_OUTPUTS:
+            res_layer_name = 'simple_sum'
+            write_output(self.layer, self.data_dir_name, res_layer_name)
 
         expected_layer_path = os.path.join(
-            self.data_dir_name, 'simple_sum.shp')
+            self.data_dir_name, 'simple_sum.gpkg')
         expected_layer = QgsVectorLayer(
             expected_layer_path, 'simple_sum', 'ogr')
         res = ProcessLayer(self.layer).has_same_content_as(expected_layer)
@@ -199,12 +202,12 @@ class CalculateCompositeVariableTestCase(unittest.TestCase):
         node_attr_id, node_attr_name, discarded_feats = \
             calculate_education_node(proj_def, operator, self.layer)
 
-        # to rebuild the outputs
-        # res_layer_name = 'weighted_sum'
-        # write_output(self.layer, self.data_dir_name, res_layer_name)
+        if self.REBUILD_OUTPUTS:
+            res_layer_name = 'weighted_sum'
+            write_output(self.layer, self.data_dir_name, res_layer_name)
 
         expected_layer_path = os.path.join(
-            self.data_dir_name, 'weighted_sum.shp')
+            self.data_dir_name, 'weighted_sum.gpkg')
         expected_layer = QgsVectorLayer(
             expected_layer_path, 'weighted_sum', 'ogr')
         res = ProcessLayer(self.layer).has_same_content_as(expected_layer)
@@ -216,12 +219,12 @@ class CalculateCompositeVariableTestCase(unittest.TestCase):
         node_attr_id, node_attr_name, discarded_feats = \
             calculate_education_node(proj_def, operator, self.layer)
 
-        # # to rebuild the outputs
-        # res_layer_name = 'simple_multiplication'
-        # write_output(self.layer, self.data_dir_name, res_layer_name)
+        if self.REBUILD_OUTPUTS:
+            res_layer_name = 'simple_multiplication'
+            write_output(self.layer, self.data_dir_name, res_layer_name)
 
         expected_layer_path = os.path.join(
-            self.data_dir_name, 'simple_multiplication.shp')
+            self.data_dir_name, 'simple_multiplication.gpkg')
         expected_layer = QgsVectorLayer(
             expected_layer_path, 'simple_multiplication', 'ogr')
         res = ProcessLayer(self.layer).has_same_content_as(expected_layer)
@@ -233,12 +236,12 @@ class CalculateCompositeVariableTestCase(unittest.TestCase):
         node_attr_id, node_attr_name, discarded_feats = \
             calculate_education_node(proj_def, operator, self.layer)
 
-        # # to rebuild the outputs
-        # res_layer_name = 'weighted_multiplication'
-        # write_output(self.layer, self.data_dir_name, res_layer_name)
+        if self.REBUILD_OUTPUTS:
+            res_layer_name = 'weighted_multiplication'
+            write_output(self.layer, self.data_dir_name, res_layer_name)
 
         expected_layer_path = os.path.join(
-            self.data_dir_name, 'weighted_multiplication.shp')
+            self.data_dir_name, 'weighted_multiplication.gpkg')
         expected_layer = QgsVectorLayer(
             expected_layer_path, 'weighted_multiplication', 'ogr')
         res = ProcessLayer(self.layer).has_same_content_as(expected_layer)
@@ -250,12 +253,12 @@ class CalculateCompositeVariableTestCase(unittest.TestCase):
         node_attr_id, node_attr_name, discarded_feats = \
             calculate_education_node(proj_def, operator, self.layer)
 
-        # # to rebuild the outputs
-        # res_layer_name = 'average'
-        # write_output(self.layer, self.data_dir_name, res_layer_name)
+        if self.REBUILD_OUTPUTS:
+            res_layer_name = 'average'
+            write_output(self.layer, self.data_dir_name, res_layer_name)
 
         expected_layer_path = os.path.join(
-            self.data_dir_name, 'average.shp')
+            self.data_dir_name, 'average.gpkg')
         expected_layer = QgsVectorLayer(
             expected_layer_path, 'average', 'ogr')
         res = ProcessLayer(self.layer).has_same_content_as(expected_layer)
@@ -267,12 +270,12 @@ class CalculateCompositeVariableTestCase(unittest.TestCase):
         node_attr_id, node_attr_name, discarded_feats = \
             calculate_education_node(proj_def, operator, self.layer)
 
-        # # to rebuild the outputs
-        # res_layer_name = 'geometric_mean_positive_argument'
-        # write_output(self.layer, self.data_dir_name, res_layer_name)
+        if self.REBUILD_OUTPUTS:
+            res_layer_name = 'geometric_mean_positive_argument'
+            write_output(self.layer, self.data_dir_name, res_layer_name)
 
         expected_layer_path = os.path.join(
-            self.data_dir_name, 'geometric_mean_positive_argument.shp')
+            self.data_dir_name, 'geometric_mean_positive_argument.gpkg')
         expected_layer = QgsVectorLayer(
             expected_layer_path, 'geometric_mean_positive_argument', 'ogr')
         res = ProcessLayer(self.layer).has_same_content_as(expected_layer)
@@ -292,12 +295,12 @@ class CalculateCompositeVariableTestCase(unittest.TestCase):
         node_attr_id, node_attr_name, discarded_feats = \
             calculate_education_node(proj_def, operator, self.layer)
 
-        # # to rebuild the outputs
-        # res_layer_name = 'geometric_mean_negative_argument'
-        # write_output(self.layer, self.data_dir_name, res_layer_name)
+        if self.REBUILD_OUTPUTS:
+            res_layer_name = 'geometric_mean_negative_argument'
+            write_output(self.layer, self.data_dir_name, res_layer_name)
 
         expected_layer_path = os.path.join(
-            self.data_dir_name, 'geometric_mean_negative_argument.shp')
+            self.data_dir_name, 'geometric_mean_negative_argument.gpkg')
         expected_layer = QgsVectorLayer(
             expected_layer_path, 'geometric_mean_negative_argument', 'ogr')
         res = ProcessLayer(self.layer).has_same_content_as(expected_layer)
@@ -309,7 +312,7 @@ class CalculateCompositeVariableTestCase(unittest.TestCase):
         added_attrs_ids, discarded_feats, edited_node, any_change = \
             calculate_composite_variable(IFACE, self.layer, svi_node)
         proj_def['children'][1] = edited_node
-        self.assertEqual(added_attrs_ids, set([9, 10, 11]))
+        self.assertEqual(added_attrs_ids, set([10, 11, 12]))
         expected_discarded_feats = set([DiscardedFeature(1, 'Missing value'),
                                         DiscardedFeature(2, 'Missing value')])
         self.assertEqual(discarded_feats,
@@ -317,17 +320,17 @@ class CalculateCompositeVariableTestCase(unittest.TestCase):
         self.assertEqual(any_change, True)
         self.assertEqual(proj_def, proj_def_svi_calc_first_round)
 
-        # # to rebuild the outputs
-        # res_layer_name = 'svi_calculation_first_round'
-        # write_output(self.layer, self.data_dir_name, res_layer_name)
+        if self.REBUILD_OUTPUTS:
+            res_layer_name = 'svi_calculation_first_round'
+            write_output(self.layer, self.data_dir_name, res_layer_name)
 
-        _, out_layer_shp_path = tempfile.mkstemp(suffix='.shp')
-        save_layer_as_shapefile(self.layer, out_layer_shp_path)
+        _, out_layer_path = tempfile.mkstemp(suffix='.gpkg')
+        save_layer_as(self.layer, out_layer_path, 'GPKG')
         out_layer = QgsVectorLayer(
-            out_layer_shp_path, 'svi_calculation_first_round', 'ogr')
+            out_layer_path, 'svi_calculation_first_round', 'ogr')
 
         expected_layer_path = os.path.join(
-            self.data_dir_name, 'svi_calculation_first_round.shp')
+            self.data_dir_name, 'svi_calculation_first_round.gpkg')
         expected_layer = QgsVectorLayer(
             expected_layer_path, 'svi_calculation_first_round', 'ogr')
         res = ProcessLayer(out_layer).has_same_content_as(expected_layer)
@@ -352,10 +355,10 @@ class CalculateCompositeVariableTestCase(unittest.TestCase):
         self.assertEqual(any_change, True)
         self.assertEqual(proj_def, proj_def_svi_calc_first_round)
 
-        _, out_layer_shp_path = tempfile.mkstemp(suffix='.shp')
-        save_layer_as_shapefile(self.layer, out_layer_shp_path)
+        _, out_layer_path = tempfile.mkstemp(suffix='.gpkg')
+        save_layer_as(self.layer, out_layer_path, 'GPKG')
         out_layer = QgsVectorLayer(
-            out_layer_shp_path, 'svi_calculation_second_round', 'ogr')
+            out_layer_path, 'svi_calculation_second_round', 'ogr')
 
         res = ProcessLayer(out_layer).has_same_content_as(expected_layer)
         if not res:
@@ -384,12 +387,12 @@ def calculate_education_node(proj_def, operator, layer):
 
 
 def write_output(res_layer, data_dir_name, res_layer_name):
-    res_layer_path = os.path.join(data_dir_name, res_layer_name + '.shp')
-    writer_error, error_msg = save_layer_as_shapefile(
-        res_layer, res_layer_path)
+    res_layer_path = os.path.join(data_dir_name, res_layer_name + '.gpkg')
+    writer_error, error_msg = save_layer_as(
+        res_layer, res_layer_path, 'GPKG')
     if writer_error:
-        raise RuntimeError('Could not save shapefile. %s: %s' % (writer_error,
-                                                                 error_msg))
+        raise RuntimeError('Could not save geopackage. %s: %s' % (writer_error,
+                                                                  error_msg))
 
 
 proj_def_svi_calc_first_round = {

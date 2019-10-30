@@ -278,10 +278,11 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.show_return_period_chk.setChecked(False)
         self.vlayout.addWidget(self.show_return_period_chk)
 
-    def create_save_as_shp_ckb(self):
-        self.save_as_shp_ckb = QCheckBox("Save the loaded layer as shapefile")
-        self.save_as_shp_ckb.setChecked(False)
-        self.vlayout.addWidget(self.save_as_shp_ckb)
+    def create_save_as_gpkg_ckb(self):
+        self.save_as_gpkg_ckb = QCheckBox(
+            "Save the loaded layer as geopackage")
+        self.save_as_gpkg_ckb.setChecked(False)
+        self.vlayout.addWidget(self.save_as_gpkg_ckb)
 
     def create_aggregate_by_site_ckb(self):
         self.aggregate_by_site_ckb = QCheckBox("Aggregate by site")
@@ -358,7 +359,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         if self.output_type in OQ_TO_LAYER_TYPES:
             self.create_load_selected_only_ckb()
         elif self.output_type in OQ_COMPLEX_CSV_TO_LAYER_TYPES:
-            self.create_save_as_shp_ckb()
+            self.create_save_as_gpkg_ckb()
         self.set_ok_button()
 
     def on_rlz_or_stat_changed(self):

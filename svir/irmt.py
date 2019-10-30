@@ -24,7 +24,7 @@
 
 import qgis  # NOQA: it loads the environment
 
-import os.path
+import os
 import tempfile
 import uuid
 import fileinput
@@ -54,7 +54,6 @@ from qgis.PyQt.QtCore import (
                               qVersion,
                               QUrl,
                               Qt,
-                              QUrlQuery,
                               )
 from qgis.PyQt.QtWidgets import QAction, QFileDialog, QApplication, QMenu
 from qgis.PyQt.QtGui import QIcon, QDesktopServices, QColor
@@ -86,16 +85,16 @@ from svir.utilities.utils import (tr,
                                   assign_default_weights,
                                   clear_progress_message_bar,
                                   SvNetworkError,
-                                  count_heading_commented_lines,
                                   replace_fields,
                                   toggle_select_features_widget,
                                   read_layer_suppl_info_from_qgs,
                                   write_layer_suppl_info_to_qgs,
                                   log_msg,
-                                  save_layer_as_shapefile,
+                                  save_layer_as,
                                   get_style,
                                   get_checksum,
                                   warn_missing_package,
+                                  import_layer_from_csv,
                                   )
 from svir.utilities.shared import (DEBUG,
                                    PROJECT_TEMPLATE,
@@ -683,10 +682,10 @@ class Irmt(object):
                     dlg,
                     'Download destination',
                     os.path.expanduser("~"),
-                    'Shapefiles (*.shp)')
+                    'Geopackages (*.gpkg)')
                 if dest_filename:
-                    if dest_filename[-4:] != ".shp":
-                        dest_filename += ".shp"
+                    if os.path.splitext(dest_filename)[1] != ".gpkg":
+                        dest_filename += ".gpkg"
                 else:
                     return
                 # TODO: We should fix the workflow in case no geometries are
@@ -785,37 +784,23 @@ class Irmt(object):
             # input file, overwriting the original line
             print(line)
 
-        # count top lines in the csv starting with '#'
-        lines_to_skip_count = count_heading_commented_lines(fname)
+        layer = import_layer_from_csv(
+            self, fname, 'socioeconomic_data_export', self.iface,
+            has_geom=load_geometries, wkt_field='geometry',
+            add_to_legend=False)
 
-        url = QUrl.fromLocalFile(fname)
-        url_query = QUrlQuery()
-        url_query.addQueryItem('delimiter', ',')
-        url_query.addQueryItem('skipLines', str(lines_to_skip_count))
-        url_query.addQueryItem('trimFields', 'yes')
-        if load_geometries:
-            url_query.addQueryItem('crs', 'epsg:4326')
-            url_query.addQueryItem('wktField', 'geometry')
-        url.setQuery(url_query)
-        layer_uri = url.toString()
-        # create vector layer from the csv file exported by the
-        # platform (it is still not editable!)
-        vlayer_csv = QgsVectorLayer(layer_uri,
-                                    'socioeconomic_data_export',
-                                    'delimitedtext')
         if not load_geometries:
-            if vlayer_csv.isValid():
-                QgsProject.instance().addMapLayer(vlayer_csv)
+            if layer.isValid():
+                QgsProject.instance().addMapLayer(layer)
             else:
                 raise RuntimeError('Layer invalid')
-            layer = vlayer_csv
         else:
-            writer_error, error_msg = save_layer_as_shapefile(
-                vlayer_csv, dest_filename)
+            writer_error, error_msg = save_layer_as(
+                layer, dest_filename, 'GPKG')
             if writer_error:
                 raise RuntimeError(
-                    'Could not save shapefile. %s: %s' % (writer_error,
-                                                          error_msg))
+                    'Could not save geopackage. %s: %s' % (writer_error,
+                                                           error_msg))
             layer = QgsVectorLayer(
                 dest_filename, 'Socioeconomic data', 'ogr')
             if layer.isValid():
