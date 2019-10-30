@@ -837,13 +837,13 @@ def get_layer_setting(layer, setting):
     return None
 
 
-def save_layer_as_shapefile(orig_layer, dest_path, crs=None):
+def save_layer_as(orig_layer, dest_path, save_format, crs=None):
     if crs is None:
         crs = orig_layer.crs()
     old_lc_numeric = locale.getlocale(locale.LC_NUMERIC)
     locale.setlocale(locale.LC_NUMERIC, 'C')
     writer_error = QgsVectorFileWriter.writeAsVectorFormat(
-        orig_layer, dest_path, 'utf-8', crs, 'ESRI Shapefile')
+        orig_layer, dest_path, 'utf-8', crs, save_format)
     locale.setlocale(locale.LC_NUMERIC, old_lc_numeric)
     return writer_error
 
@@ -964,8 +964,8 @@ def import_layer_from_csv(parent,
                           quote='"',
                           lines_to_skip_count=0,
                           wkt_field=None,
-                          save_as_shp=False,
-                          dest_shp=None,
+                          save_format=None,
+                          save_dest=None,
                           zoom_to_layer=True,
                           has_geom=True,
                           subset=None,
@@ -996,24 +996,32 @@ def import_layer_from_csv(parent,
     url.setQuery(url_query)
     layer_uri = url.toString()
     layer = QgsVectorLayer(layer_uri, layer_name, "delimitedtext")
-    if save_as_shp:
-        dest_filename = dest_shp
+    if save_format:
+        if save_format == 'ESRI Shapefile':
+            fmt = '.shp'
+            fmt_text = 'Shapefiles (*.shp)'
+        elif save_format == 'GPKG':
+            fmt = '.gpkg'
+            fmt_text = 'Geopackages (*.gpkg)'
+        else:
+            raise NotImplementedError(
+                'Only shapefiles and geopackages are supported. Got %s' %
+                save_format)
+        dest_filename = save_dest
         if not dest_filename:
             dest_filename, file_filter = QFileDialog.getSaveFileName(
-                parent,
-                'Save shapefile as...',
-                os.path.expanduser("~"),
-                'Shapefiles (*.shp)')
+                parent, 'Save as...', os.path.expanduser("~"), fmt_text)
         if dest_filename:
-            if dest_filename[-4:] != ".shp":
-                dest_filename += ".shp"
+            if os.path.splitext(dest_filename)[1] != fmt:
+                dest_filename += fmt
         else:
             return
-        writer_error, error_msg = save_layer_as_shapefile(layer, dest_filename)
+        writer_error, error_msg = save_layer_as(
+            layer, dest_filename, save_format)
         if writer_error:
             raise RuntimeError(
-                'Could not save shapefile. %s: %s' % (writer_error,
-                                                      error_msg))
+                'Could not save layer. %s: %s' % (writer_error,
+                                                  error_msg))
         layer = QgsVectorLayer(dest_filename, layer_name, 'ogr')
     if layer.isValid():
         if add_to_legend:

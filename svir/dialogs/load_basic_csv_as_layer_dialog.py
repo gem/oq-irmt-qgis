@@ -64,16 +64,18 @@ class LoadBasicCsvAsLayerDialog(LoadOutputAsLayerDialog):
 
     def load_from_csv(self):
         if self.mode == 'testing':
-            dest_shp = tempfile.mkstemp(suffix='.shp')[1]
+            save_dest = tempfile.mkstemp(suffix='.gpkg')[1]
+            save_format = 'GPKG'
         else:
-            dest_shp = None  # the destination file will be selected via GUI
+            save_dest = None  # the destination file will be selected via GUI
+            save_format = None
         csv_path = self.path
         # extract the name of the csv file and remove the extension
         layer_name = os.path.splitext(os.path.basename(csv_path))[0]
         try:
             self.layer = import_layer_from_csv(
                 self, csv_path, layer_name, self.iface,
-                save_as_shp=False, dest_shp=dest_shp,
+                save_format=save_format, save_dest=save_dest,
                 zoom_to_layer=False, has_geom=False)
         except RuntimeError as exc:
             log_msg(str(exc), level='C', message_bar=self.iface.messageBar(),

@@ -50,7 +50,7 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
             ('Magnitude', 'mag'),
         ])
         self.create_file_size_indicator()
-        self.create_save_as_shp_ckb()
+        self.create_save_as_gpkg_ckb()
         self.create_style_by_selector()
         self.populate_out_dep_widgets()
         self.setWindowTitle('Load ruptures from CSV, as layer')
@@ -93,11 +93,15 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
         layer_name += '_%sy' % investigation_time
         n_lines_to_skip = count_heading_commented_lines(csv_path)
         try:
+            if self.save_as_gpkg_ckb.isChecked():
+                save_format = 'GPKG'
+            else:
+                save_format = None
             self.layer = import_layer_from_csv(
                 self, csv_path, layer_name, self.iface,
                 wkt_field='boundary', delimiter=',',
                 lines_to_skip_count=n_lines_to_skip,
-                save_as_shp=self.save_as_shp_ckb.isChecked())
+                save_format=save_format)
         except RuntimeError as exc:
             log_msg(str(exc), level='C', message_bar=self.iface.messageBar(),
                     exception=exc)

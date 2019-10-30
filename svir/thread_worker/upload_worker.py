@@ -31,7 +31,7 @@ from qgis.core import QgsCoordinateReferenceSystem
 from svir.thread_worker.abstract_worker import AbstractWorker
 from svir.utilities.utils import (
                                   tr,
-                                  save_layer_as_shapefile,
+                                  save_layer_as,
                                   )
 
 
@@ -70,8 +70,9 @@ class UploadWorker(AbstractWorker):
             # we need to build a shapefile from it
             self.set_message.emit(tr(
                 'Writing the shapefile to be uploaded...'))
-            writer_error, error_msg = save_layer_as_shapefile(
+            writer_error, error_msg = save_layer_as(
                 self.current_layer, data_file,
+                'ESRI Shapefile',
                 crs=QgsCoordinateReferenceSystem(
                     4326, QgsCoordinateReferenceSystem.EpsgCrsId))
             if writer_error:

@@ -531,6 +531,11 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             except Exception as exc:
                 log_msg('Unhandled exception: %s' % exc,
                         level='C', exception=exc)
+                return exc
+            if resp is None or not resp.ok:
+                raise RuntimeError(
+                    'Unable to retrieve the log for calc #%s: %s'
+                    % (calc_id, resp))
             calc_log = json.loads(resp.text)
             self.calc_log_line[calc_id] = start + len(calc_log)
             return '\n'.join([','.join(row) for row in calc_log])
@@ -545,6 +550,10 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             except HANDLED_EXCEPTIONS as exc:
                 self._handle_exception(exc)
                 return exc
+            if resp is None or not resp.ok:
+                raise RuntimeError(
+                    'Unable to retrieve the status for calc #%s: %s'
+                    % (calc_id, resp))
             calc_status = json.loads(resp.text)
         return calc_status
 
