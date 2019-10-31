@@ -13,7 +13,7 @@ Detailed information for earthquake analyses is available in the
 
 .. figure:: images/craveListOutputs.png
     :align: center
-    :scale: 60%
+    :width: 90%
 
     List of outputs for a multi_risk calculation.
 
@@ -72,13 +72,13 @@ will be styled automatically.
 
 .. figure:: images/mapExposure.png
     :align: center
-    :scale: 60%
+    :width: 90%
 
     An example of exposure map in terms of number of buildings.
 
 .. figure:: images/mapAggregated.png
     :align: center
-    :scale: 60%
+    :width: 90%
 
     An example displaying the estimated number of buildings per region that would collapse due to wet ash fall.
 
@@ -101,7 +101,7 @@ points.
 
 .. figure:: images/mapCraveInputs.png
     :align: center
-    :scale: 60%
+    :width: 90%
 
     An example of volcano footprint input.
 
