@@ -26,11 +26,11 @@ import os
 import tempfile
 from svir.utilities.utils import (
     import_layer_from_csv, log_msg, write_metadata_to_layer)
-from svir.utilities.shared import OQ_BASIC_CSV_TO_LAYER_TYPES
+from svir.utilities.shared import OQ_CSV_TO_LAYER_TYPES
 from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
 
 
-class LoadBasicCsvAsLayerDialog(LoadOutputAsLayerDialog):
+class LoadCsvAsLayerDialog(LoadOutputAsLayerDialog):
     """
     Dialog to load as layer a basic csv with no geometries, to be
     browsed through its attribute table
@@ -39,7 +39,7 @@ class LoadBasicCsvAsLayerDialog(LoadOutputAsLayerDialog):
     def __init__(self, drive_engine_dlg, iface, viewer_dock, session, hostname,
                  calc_id, output_type, path=None, mode=None,
                  engine_version=None):
-        assert output_type in OQ_BASIC_CSV_TO_LAYER_TYPES, output_type
+        assert output_type in OQ_CSV_TO_LAYER_TYPES, output_type
         LoadOutputAsLayerDialog.__init__(
             self, drive_engine_dlg, iface, viewer_dock, session, hostname,
             calc_id, output_type=output_type, path=path, mode=mode,

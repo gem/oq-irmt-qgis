@@ -66,7 +66,6 @@ from svir.calculations.process_layer import ProcessLayer
 from svir.calculations.aggregate_loss_by_zone import (
     calculate_zonal_stats)
 from svir.utilities.shared import (OQ_CSV_TO_LAYER_TYPES,
-                                   OQ_COMPLEX_CSV_TO_LAYER_TYPES,
                                    OQ_TO_LAYER_TYPES,
                                    OQ_EXTRACT_TO_LAYER_TYPES,
                                    RAMP_EXTREME_COLORS,
@@ -358,8 +357,6 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
     def on_output_type_changed(self):
         if self.output_type in OQ_TO_LAYER_TYPES:
             self.create_load_selected_only_ckb()
-        elif self.output_type in OQ_COMPLEX_CSV_TO_LAYER_TYPES:
-            self.create_save_as_gpkg_ckb()
         self.set_ok_button()
 
     def on_rlz_or_stat_changed(self):
