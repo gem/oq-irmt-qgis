@@ -22,7 +22,7 @@ Visualizing Exposure + Risk
 
 By pressing the :guilabel:`Load layer` button corresponding to the
 :guilabel:`Exposure + Risk` row in the list of outputs for the :guilabel:`multi_risk`
-calculation, the dialog in figures :ref:`_fig-viewExposure` and :ref:`_fig-viewRisk`
+calculation, the dialog in figures :ref:`fig-viewExposure` and :ref:`fig-viewRisk`
 will be displayed:
 
 .. _fig-viewExposure:
