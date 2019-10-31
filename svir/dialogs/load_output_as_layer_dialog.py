@@ -428,7 +428,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         raise NotImplementedError()
 
     def get_investigation_time(self):
-        if self.output_type in ('hcurves', 'uhs', 'hmaps'):
+        if self.output_type in ('hcurves', 'uhs', 'hmaps', 'ruptures'):
             try:
                 investigation_time = self.npz_file['investigation_time']
             except KeyError as exc:
@@ -456,10 +456,14 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             loss_type=loss_type, dmg_state=dmg_state, imt=imt)
 
         # create layer
-        self.layer = QgsVectorLayer(
-            "Point?crs=epsg:4326", layer_name, "memory")
+        if self.output_type == 'ruptures':
+            self.layer = QgsVectorLayer(
+                "Polygon?crs=epsg:4326", layer_name, "memory")
+        else:
+            self.layer = QgsVectorLayer(
+                "Point?crs=epsg:4326", layer_name, "memory")
         for field_name in field_names:
-            if field_name in ['lon', 'lat']:
+            if field_name in ['lon', 'lat', 'boundary']:
                 continue
             added_field_name = self.add_field_to_layer(field_name)
             if field_name != added_field_name:
