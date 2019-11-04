@@ -22,17 +22,11 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
-import os
 from collections import OrderedDict
 from qgis.core import (
-    QgsFeature, QgsGeometry, QgsPointXY, edit, QgsTask, QgsApplication)
+    QgsFeature, QgsGeometry, edit, QgsTask, QgsApplication)
 from svir.calculations.calculate_utils import add_numeric_attribute
-from svir.utilities.utils import (import_layer_from_csv,
-                                  get_params_from_comment_line,
-                                  count_heading_commented_lines,
-                                  log_msg,
-                                  WaitCursorManager,
-                                  )
+from svir.utilities.utils import log_msg, WaitCursorManager
 from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
 from svir.tasks.extract_npz_task import ExtractNpzTask
 
