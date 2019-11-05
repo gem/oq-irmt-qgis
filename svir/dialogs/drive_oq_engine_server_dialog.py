@@ -56,7 +56,7 @@ from requests.exceptions import (ConnectionError,
                                  SSLError,
                                  )
 from http.client import RemoteDisconnected
-from urrlib3.exceptions import ProtocolError
+from urllib3.exceptions import ProtocolError
 from requests.packages.urllib3.exceptions import (
     LocationParseError)
 from svir.utilities.shared import (OQ_TO_LAYER_TYPES,
