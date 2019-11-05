@@ -1125,10 +1125,12 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                     ' spelled correctly and that you are using the right'
                     ' url and port in the host setting)')
             exception = exc
+            level = 'C'
             if isinstance(exc, (ConnectionError, ProtocolError,
                                 RemoteDisconnected)):
                 exception = None
-            log_msg(err_msg, level='C', message_bar=self.message_bar,
+                level = 'W'
+            log_msg(err_msg, level=level, message_bar=self.message_bar,
                     exception=exception)
         else:
             # sanity check (it should never occur)
