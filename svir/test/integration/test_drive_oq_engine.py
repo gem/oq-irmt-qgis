@@ -89,6 +89,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         cls.irmt.drive_oq_engine_server(show=False, hostname=cls.hostname)
         # NOTE: calc_list must be retrieved BEFORE starting any test
         cls.calc_list = cls.irmt.drive_oq_engine_server_dlg.calc_list
+        if isinstance(cls.calc_list, Exception):
+            raise cls.calc_list
         cls.output_list = {}
         try:
             selected_calc_id = int(os.environ.get('SELECTED_CALC_ID'))
@@ -216,6 +218,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             return
         if calc_status['status'] in ('complete', 'failed'):
             self.timer.stop()
+            if calc_status['status'] == 'falied':
+                print('Calculation #%s failed' % calc_id)
         calc_log = self.irmt.drive_oq_engine_server_dlg.get_calc_log(calc_id)
         if isinstance(calc_log, Exception):
             print("An exception occurred: %s" % calc_log)
