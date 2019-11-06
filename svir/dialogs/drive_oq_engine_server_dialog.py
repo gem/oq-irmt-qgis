@@ -55,6 +55,8 @@ from requests.exceptions import (ConnectionError,
                                  ReadTimeout,
                                  SSLError,
                                  )
+from http.client import RemoteDisconnected
+from urllib3.exceptions import ProtocolError
 from requests.packages.urllib3.exceptions import (
     LocationParseError)
 from svir.utilities.shared import (OQ_TO_LAYER_TYPES,
@@ -1095,6 +1097,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             err_msg += ' (you could try prepending http:// or https://)'
             log_msg(err_msg, level='C', message_bar=self.message_bar)
         elif isinstance(exc, (ConnectionError,
+                              ProtocolError,
+                              RemoteDisconnected,
                               InvalidSchema,
                               MissingSchema,
                               ReadTimeout,
@@ -1120,8 +1124,14 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                     ' (please make sure the username and password are'
                     ' spelled correctly and that you are using the right'
                     ' url and port in the host setting)')
-            log_msg(err_msg, level='C', message_bar=self.message_bar,
-                    exception=exc)
+            exception = exc
+            level = 'C'
+            if isinstance(exc, (ConnectionError, ProtocolError,
+                                RemoteDisconnected)):
+                exception = None
+                level = 'W'
+            log_msg(err_msg, level=level, message_bar=self.message_bar,
+                    exception=exception)
         else:
             # sanity check (it should never occur)
             raise TypeError(
