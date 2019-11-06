@@ -66,7 +66,6 @@ from svir.calculations.process_layer import ProcessLayer
 from svir.calculations.aggregate_loss_by_zone import (
     calculate_zonal_stats)
 from svir.utilities.shared import (OQ_CSV_TO_LAYER_TYPES,
-                                   OQ_COMPLEX_CSV_TO_LAYER_TYPES,
                                    OQ_TO_LAYER_TYPES,
                                    OQ_EXTRACT_TO_LAYER_TYPES,
                                    RAMP_EXTREME_COLORS,
@@ -358,8 +357,6 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
     def on_output_type_changed(self):
         if self.output_type in OQ_TO_LAYER_TYPES:
             self.create_load_selected_only_ckb()
-        elif self.output_type in OQ_COMPLEX_CSV_TO_LAYER_TYPES:
-            self.create_save_as_gpkg_ckb()
         self.set_ok_button()
 
     def on_rlz_or_stat_changed(self):
@@ -428,7 +425,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         raise NotImplementedError()
 
     def get_investigation_time(self):
-        if self.output_type in ('hcurves', 'uhs', 'hmaps'):
+        if self.output_type in ('hcurves', 'uhs', 'hmaps', 'ruptures'):
             try:
                 investigation_time = self.npz_file['investigation_time']
             except KeyError as exc:
@@ -456,10 +453,14 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             loss_type=loss_type, dmg_state=dmg_state, imt=imt)
 
         # create layer
-        self.layer = QgsVectorLayer(
-            "Point?crs=epsg:4326", layer_name, "memory")
+        if self.output_type == 'ruptures':
+            self.layer = QgsVectorLayer(
+                "Polygon?crs=epsg:4326", layer_name, "memory")
+        else:
+            self.layer = QgsVectorLayer(
+                "Point?crs=epsg:4326", layer_name, "memory")
         for field_name in field_names:
-            if field_name in ['lon', 'lat']:
+            if field_name in ['lon', 'lat', 'boundary']:
                 continue
             added_field_name = self.add_field_to_layer(field_name)
             if field_name != added_field_name:
