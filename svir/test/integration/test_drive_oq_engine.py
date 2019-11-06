@@ -167,17 +167,21 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             time.sleep(0.1)
         calc_status = self.get_calc_status(calc_id)
         if isinstance(calc_status, Exception):
+            print('Removing calculation #%s' % calc_id)
             resp = self.irmt.drive_oq_engine_server_dlg.remove_calc(calc_id)
             print('After reaching the timeout of %s seconds, the %s'
                   ' calculation raised the exception "%s", and it was deleted'
                   % (timeout, job_type, calc_status))
             raise calc_status
         if not calc_status['status'] == 'complete':
+            print('Removing calculation #%s' % calc_id)
             resp = self.irmt.drive_oq_engine_server_dlg.remove_calc(calc_id)
             raise TimeoutError(
                 'After reaching the timeout of %s seconds, the %s'
                 ' calculation was in the state "%s", and it was deleted'
                 % (timeout, job_type, calc_status))
+        else:
+            print('Calculation #%s was completed' % calc_id)
         return calc_id
 
     def test_run_calculation(self):
@@ -194,7 +198,9 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         filepaths = glob.glob(os.path.join(demo_dir, '*'))
         hazard_calc_id = self.run_calc(filepaths, 'hazard')
         risk_calc_id = self.run_calc(filepaths, 'risk', hazard_calc_id)
+        print('Removing calculation #%s' % risk_calc_id)
         self.irmt.drive_oq_engine_server_dlg.remove_calc(risk_calc_id)
+        print('Removing calculation #%s' % hazard_calc_id)
         self.irmt.drive_oq_engine_server_dlg.remove_calc(hazard_calc_id)
 
     def get_calc_status(self, calc_id):
