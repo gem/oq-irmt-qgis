@@ -1912,6 +1912,12 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                     writer.writerow(row)
             elif self.output_type == 'agg_curves-rlzs':
                 rlzs_idxs, tag_name_idxs, tag_value_idxs = self._get_idxs()
+                loss_type = self.loss_type_cbx.currentText()
+                abs_rel = self.abs_rel_cbx.currentText()
+                unit = 'FIXME'  # self.agg_curves['unit']
+                csv_file.write("# Loss type: %s\r\n" % loss_type)
+                csv_file.write("# Absolute or relative: %s\r\n" % abs_rel)
+                csv_file.write("# Measurement unit: %s\r\n" % unit)
                 if ('aggregate_by' in self.agg_curves
                         and len(self.agg_curves['aggregate_by']) > 0):
                     csv_file.write(
@@ -1922,7 +1928,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 headers.extend(rlzs)
                 writer.writerow(headers)
                 for i, return_period in enumerate(
-                        self.agg_curves['return_periods']):
+                        self.agg_curves['return_period']):
                     tup = (slice(None), rlzs_idxs)
                     if tag_value_idxs is not None:
                         tup += tuple(tag_value_idxs.values())
@@ -1933,8 +1939,11 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             elif self.output_type == 'agg_curves-stats':
                 stats = list(self.stats_multiselect.get_selected_items())
                 loss_type = self.loss_type_cbx.currentText()
-                csv_file.write(
-                    "# Loss type: %s\r\n" % loss_type)
+                abs_rel = self.abs_rel_cbx.currentText()
+                unit = 'FIXME'  # self.agg_curves['unit']
+                csv_file.write("# Loss type: %s\r\n" % loss_type)
+                csv_file.write("# Absolute or relative: %s\r\n" % abs_rel)
+                csv_file.write("# Measurement unit: %s\r\n" % unit)
                 if ('aggregate_by' in self.agg_curves
                         and len(self.agg_curves['aggregate_by']) > 0):
                     csv_file.write(
@@ -1960,7 +1969,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                     headers.extend(stats)
                 writer.writerow(headers)
                 for return_period_idx, return_period in enumerate(
-                        self.agg_curves['return_periods']):
+                        self.agg_curves['return_period']):
                     row = [return_period]
                     if has_single_tag_value or has_single_tag_value is None:
                         tup = (return_period_idx, rlzs_or_stats_idxs)
