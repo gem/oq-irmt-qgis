@@ -57,7 +57,6 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
         self.adjustSize()
         self.set_ok_button()
         self.show()
-        self.init_done.emit()
 
     def accept(self):
         self.hide()
@@ -72,8 +71,8 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
     def on_ruptures_extracted(self, extracted_npz):
         self.npz_file = extracted_npz
         self.load_from_npz()
-        self.loading_completed.emit()
         QDialog.accept(self)
+        self.loading_completed.emit()
 
     def set_ok_button(self):
         self.ok_button.setEnabled(True)
