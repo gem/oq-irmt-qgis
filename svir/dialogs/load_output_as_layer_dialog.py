@@ -455,7 +455,8 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             return None
 
     def build_layer(self, rlz_or_stat=None, taxonomy=None, poe=None,
-                    loss_type=None, dmg_state=None, gsim=None, imt=None):
+                    loss_type=None, dmg_state=None, gsim=None, imt=None,
+                    boundaries=None):
         layer_name = self.build_layer_name(
             rlz_or_stat=rlz_or_stat, taxonomy=taxonomy, poe=poe,
             loss_type=loss_type, dmg_state=dmg_state, gsim=gsim, imt=imt)
@@ -484,7 +485,8 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
 
         self.read_npz_into_layer(
             field_names, rlz_or_stat=rlz_or_stat, taxonomy=taxonomy, poe=poe,
-            loss_type=loss_type, dmg_state=dmg_state, imt=imt)
+            loss_type=loss_type, dmg_state=dmg_state, imt=imt,
+            boundaries=boundaries)
         if (self.output_type == 'dmg_by_asset' and
                 not self.aggregate_by_site_ckb.isChecked()):
             self.layer.setCustomProperty('output_type', 'recovery_curves')

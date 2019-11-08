@@ -22,6 +22,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
+import gzip
 from collections import OrderedDict
 from qgis.PyQt.QtWidgets import QDialog
 from qgis.core import (
@@ -95,9 +96,10 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
         return field_names
 
     def load_from_npz(self):
+        boundaries = gzip.decompress(self.npz_file['boundaries']).split(b'\n')
         with WaitCursorManager(
                 'Creating layer for ruptures...', self.iface.messageBar()):
-            self.build_layer()
+            self.build_layer(boundaries=boundaries)
         style_by = self.style_by_cbx.itemData(self.style_by_cbx.currentIndex())
         if style_by == 'mag':
             self.style_maps(self.layer, style_by,
@@ -111,22 +113,16 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
         added_field_name = add_numeric_attribute(field_name, self.layer)
         return added_field_name
 
-    def read_npz_into_layer(self, field_names, rlz_or_stat, **kwargs):
+    def read_npz_into_layer(
+            self, field_names, rlz_or_stat, boundaries, **kwargs):
         with edit(self.layer):
             feats = []
             fields = self.layer.fields()
-            layer_field_names = [field.name() for field in fields]
-            dataset_field_names = self.get_field_names()
-            # FIXME
-            d2l_field_names = dict(
-                list(zip(dataset_field_names[:-1], layer_field_names)))
-            for row in self.npz_file['array']:
+            field_names = [field.name() for field in fields]
+            for row_idx, row in enumerate(self.npz_file['array']):
                 # add a feature
                 feat = QgsFeature(fields)
-                for field_name in dataset_field_names:
-                    if field_name in ['boundary']:
-                        continue
-                    layer_field_name = d2l_field_names[field_name]
+                for field_name in field_names:
                     try:
                         value = float(row[field_name])
                     except ValueError:
@@ -134,9 +130,9 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
                             value = row[field_name].decode('utf8')
                         except AttributeError:
                             value = row[field_name]
-                    feat.setAttribute(layer_field_name, value)
+                    feat.setAttribute(field_name, value)
                 feat.setGeometry(QgsGeometry.fromWkt(
-                    row['boundary'].decode('utf8')))
+                    boundaries[row_idx].decode('utf8')))
                 feats.append(feat)
             added_ok = self.layer.addFeatures(feats)
             if not added_ok:
