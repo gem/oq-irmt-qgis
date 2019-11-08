@@ -51,6 +51,7 @@ from qgis.PyQt.QtCore import pyqtSignal, QDir, QSettings, QFileInfo, Qt
 from qgis.PyQt.QtWidgets import (
                                  QDialogButtonBox,
                                  QDialog,
+                                 QDoubleSpinBox,
                                  QFileDialog,
                                  QComboBox,
                                  QSpinBox,
@@ -147,6 +148,16 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.load_multicol_ckb = QCheckBox(
             'Load one layer per realization or statistic')
         self.vlayout.addWidget(self.load_multicol_ckb)
+
+    def create_min_mag_dsb(self):
+        self.min_mag_lbl = QLabel('Minimum magnitude')
+        self.min_mag_dsb = QDoubleSpinBox(self)
+        self.min_mag_dsb.setRange(0, 10)
+        self.min_mag_dsb.setDecimals(1)
+        self.min_mag_dsb.setSingleStep(0.1)
+        self.min_mag_dsb.setValue(4.0)
+        self.vlayout.addWidget(self.min_mag_lbl)
+        self.vlayout.addWidget(self.min_mag_dsb)
 
     def create_rlz_or_stat_selector(self, all_ckb=False, label='Realization'):
         self.rlz_or_stat_lbl = QLabel(label)

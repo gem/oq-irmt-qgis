@@ -23,6 +23,7 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 from collections import OrderedDict
+from qgis.PyQt.QtWidgets import QDialog
 from qgis.core import (
     QgsFeature, QgsGeometry, edit, QgsTask, QgsApplication)
 from svir.calculations.calculate_utils import add_numeric_attribute
@@ -50,13 +51,28 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
         ])
         self.setWindowTitle('Load ruptures as layer')
         # self.create_save_as_gpkg_ckb()
+        self.create_min_mag_dsb()
         self.create_style_by_selector()
+        self.populate_out_dep_widgets()
+        self.adjustSize()
+        self.set_ok_button()
+        self.show()
+        self.init_done.emit()
 
+    def accept(self):
+        self.hide()
+        min_mag = self.min_mag_dsb.value()
         self.extract_npz_task = ExtractNpzTask(
             'Extract ruptures', QgsTask.CanCancel, self.session,
-            self.hostname, self.calc_id, 'rupture_info', self.finalize_init,
-            self.on_extract_error)
+            self.hostname, self.calc_id, 'rupture_info',
+            self.on_ruptures_extracted,
+            self.on_extract_error, params={'min_mag': min_mag})
         QgsApplication.taskManager().addTask(self.extract_npz_task)
+
+    def on_ruptures_extracted(self, extracted_npz):
+        self.npz_file = extracted_npz
+        self.load_from_npz()
+        QDialog.accept(self)
 
     def set_ok_button(self):
         self.ok_button.setEnabled(True)
