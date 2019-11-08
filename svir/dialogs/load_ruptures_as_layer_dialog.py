@@ -72,6 +72,7 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
     def on_ruptures_extracted(self, extracted_npz):
         self.npz_file = extracted_npz
         self.load_from_npz()
+        self.loading_completed.emit()
         QDialog.accept(self)
 
     def set_ok_button(self):
