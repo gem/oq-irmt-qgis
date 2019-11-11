@@ -456,7 +456,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
 
     def build_layer(self, rlz_or_stat=None, taxonomy=None, poe=None,
                     loss_type=None, dmg_state=None, gsim=None, imt=None,
-                    boundaries=None):
+                    boundaries=None, geometry_type='Point'):
         layer_name = self.build_layer_name(
             rlz_or_stat=rlz_or_stat, taxonomy=taxonomy, poe=poe,
             loss_type=loss_type, dmg_state=dmg_state, gsim=gsim, imt=imt)
@@ -465,12 +465,8 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             loss_type=loss_type, dmg_state=dmg_state, imt=imt)
 
         # create layer
-        if self.output_type == 'ruptures':
-            self.layer = QgsVectorLayer(
-                "Polygon?crs=epsg:4326", layer_name, "memory")
-        else:
-            self.layer = QgsVectorLayer(
-                "Point?crs=epsg:4326", layer_name, "memory")
+        self.layer = QgsVectorLayer(
+            "%s?crs=epsg:4326" % geometry_type, layer_name, "memory")
         for field_name in field_names:
             if field_name in ['lon', 'lat', 'boundary']:
                 continue

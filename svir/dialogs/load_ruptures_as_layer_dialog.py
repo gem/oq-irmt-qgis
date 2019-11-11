@@ -99,7 +99,7 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
         boundaries = gzip.decompress(self.npz_file['boundaries']).split(b'\n')
         with WaitCursorManager(
                 'Creating layer for ruptures...', self.iface.messageBar()):
-            self.build_layer(boundaries=boundaries)
+            self.build_layer(boundaries=boundaries, geometry_type='Polygon')
         style_by = self.style_by_cbx.itemData(self.style_by_cbx.currentIndex())
         if style_by == 'mag':
             self.style_maps(self.layer, style_by,

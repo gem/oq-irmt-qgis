@@ -532,22 +532,26 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.draw_dmg_by_asset_aggr()
 
     def filter_agg_curves(self):
-        loss_type = self.loss_type_cbx.currentText()
-        absolute = (True if self.abs_rel_cbx.currentText() == 'Absolute'
-                    else False)
+        params = {}
+        params['loss_type'] = self.loss_type_cbx.currentText()
+        params['absolute'] = (
+            True if self.abs_rel_cbx.currentText() == 'Absolute' else False)
         if self.output_type == 'agg_curves-stats':
-            kind = 'stats'
+            params['kind'] = 'stats'
         elif self.output_type == 'agg_curves-rlzs':
-            kind = 'rlzs'
+            params['kind'] = 'rlzs'
         else:
             raise NotImplementedError(self.output_type)
+        if self.aggregate_by is not None and len(self.aggregate_by):
+            for tag_name in self.aggregate_by:
+                tag_value = [val for val in self.tags[tag_name]['values']
+                             if self.tags[tag_name]['values'][val]][0]
+                params[tag_name] = tag_value
         with WaitCursorManager(
                 'Extracting...', message_bar=self.iface.messageBar()):
             self.agg_curves = extract_npz(
                 self.session, self.hostname, self.calc_id, 'agg_curves',
-                message_bar=self.iface.messageBar(),
-                params={'kind': kind, 'loss_type': loss_type,
-                        'absolute': absolute})
+                message_bar=self.iface.messageBar(), params=params)
         self.draw_agg_curves(self.output_type)
 
     def filter_losses_by_asset_aggr(self):
@@ -789,19 +793,19 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.filter_dmg_by_asset_aggr()
 
     def _build_tags(self):
-        # NOTE: shape_descr is like:
-        # array(['return_periods', 'stats', 'loss_types', 'NAME_1'],
-        # dtype='|S14')
-        tag_names = [str(tag_name, encoding='utf8')
-                     for tag_name in self.agg_curves['shape_descr'][3:]]
+        tag_names = sorted(self.exposure_metadata['tagnames'])
         self.tags = {}
         for tag_idx, tag_name in enumerate(tag_names):
+            tag_values = sorted([
+                value for value in self.exposure_metadata[tag_name]
+                if value != '?'])
             self.tags[tag_name] = {
                 'selected': True if tag_idx == 0 else False,
                 'values': {
                     value: True if value_idx == 0 else False
-                    for value_idx, value in enumerate(
-                        self.agg_curves[tag_name])}}
+                    for value_idx, value in enumerate(tag_values)
+                }
+            }
 
     def clear_tag_values_multiselects(self, tag_names):
         for tag_name in tag_names:
@@ -888,10 +892,11 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.filter_losses_by_asset_aggr()
 
     def load_agg_curves(self, calc_id, session, hostname, output_type):
+        params = {}
         if output_type == 'agg_curves-stats':
-            kind = 'stats'
+            params['kind'] = 'stats'
         elif output_type == 'agg_curves-rlzs':
-            kind = 'rlzs'
+            params['kind'] = 'rlzs'
         else:
             raise NotImplementedError(output_type)
         with WaitCursorManager(
@@ -901,21 +906,45 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 message_bar=self.iface.messageBar())
         if composite_risk_model_attrs is None:
             return
+        with WaitCursorManager(
+                'Extracting...', message_bar=self.iface.messageBar()):
+            self.exposure_metadata = extract_npz(
+                session, hostname, calc_id, 'exposure_metadata',
+                message_bar=self.iface.messageBar())
+        if self.exposure_metadata is None:
+            return
+        with WaitCursorManager(
+                'Extracting...', message_bar=self.iface.messageBar()):
+            oqparam = extract_npz(
+                session, hostname, calc_id, 'oqparam',
+                message_bar=self.iface.messageBar())
+        if oqparam is None:
+            return
+        self.aggregate_by = None
+        if 'aggregate_by' in oqparam and len(oqparam['aggregate_by']):
+            self._build_tags()
+            self.aggregate_by = oqparam['aggregate_by']
+            for tag_name in self.aggregate_by:
+                self.create_tag_values_selector(
+                    tag_name,
+                    tag_values=self.tags[tag_name]['values'].keys(),
+                    monovalue=True, preselect_first=True)
+                tag_value = [val for val in self.tags[tag_name]['values']
+                             if self.tags[tag_name]['values'][val]][0]
+                params[tag_name] = tag_value
         loss_types = composite_risk_model_attrs['loss_types']
         self.loss_type_cbx.blockSignals(True)
         self.loss_type_cbx.clear()
         self.loss_type_cbx.addItems(loss_types)
         self.loss_type_cbx.blockSignals(False)
-        loss_type = self.loss_type_cbx.currentText()  # FIXME
-        absolute = (True if self.abs_rel_cbx.currentText() == 'Absolute'
-                    else False)
+        params['loss_type'] = self.loss_type_cbx.currentText()
+        params['absolute'] = (
+            True if self.abs_rel_cbx.currentText() == 'Absolute' else False)
         with WaitCursorManager(
                 'Extracting...', message_bar=self.iface.messageBar()):
             self.agg_curves = extract_npz(
                 session, hostname, calc_id, 'agg_curves',
-                message_bar=self.iface.messageBar(),
-                params={'kind': kind, 'loss_type': loss_type,
-                        'absolute': absolute})
+                message_bar=self.iface.messageBar(), params=params)
         if output_type == 'agg_curves-stats':
             self.stats = self.agg_curves['kind']
             self.stats_multiselect.blockSignals(True)
@@ -932,23 +961,6 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             raise NotImplementedError(
                 'Unable to draw outputs of type %s' % output_type)
             return
-        if ('aggregate_by' in self.agg_curves
-                and len(self.agg_curves['aggregate_by']) > 0):
-            if output_type == 'agg_curves-rlzs':
-                self._build_tags()
-                for tag_name in self.tags:
-                    self.create_tag_values_selector(
-                        tag_name,
-                        tag_values=self.tags[tag_name]['values'].keys(),
-                        monovalue=True, preselect_first=True)
-            else:  # 'agg_curves-stats'
-                self._build_tags()
-                self.create_tag_name_selector(values=self.tags.keys())
-                for tag_name in self.tags:
-                    self.create_tag_values_selector(
-                        tag_name,
-                        tag_values=self.tags[tag_name]['values'].keys(),
-                        monovalue=False, preselect_first=True)
         self.filter_agg_curves()
 
     def _get_idxs(self):
@@ -967,14 +979,14 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             for stat_idx, stat in enumerate(self.agg_curves['kind']):
                 if stat in rlzs_or_stats:
                     rlzs_or_stats_idxs.append(stat_idx)
-        if ('aggregate_by' in self.agg_curves
-                and len(self.agg_curves['aggregate_by']) > 0):
+        if self.aggregate_by is not None and len(self.aggregate_by):
             tag_name_idxs = {}
             tag_value_idxs = {}
             if hasattr(self, 'tags'):
                 for tag_name in self.tags:
-                    tag_name_idx = list(self.agg_curves['aggregate_by']).index(
-                        tag_name.encode('utf8'))
+                    if tag_name not in self.aggregate_by:
+                        continue
+                    tag_name_idx = list(self.aggregate_by).index(tag_name)
                     tag_name_idxs[tag_name] = tag_name_idx
                     tag_value_idxs[tag_name] = []
                     # if not self.tags[tag_name]['selected']:
@@ -986,7 +998,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                                 self.agg_curves[tag_name]).index(tag_value)
                             tag_value_idxs[tag_name].append(tag_value_idx)
             else:
-                for tag in self.agg_curves['aggregate_by']:
+                for tag in self.aggregate_by:
                     tag_name = tag.decode('utf8')
                     # FIXME: check if currentIndex is ok
                     tag_value_idx = getattr(
@@ -1000,11 +1012,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
 
     def draw_agg_curves(self, output_type):
         if output_type == 'agg_curves-rlzs':
-            if self.rlzs_multiselect is None:
-                rlzs_or_stats = []
-            else:
-                rlzs_or_stats = list(
-                    self.rlzs_multiselect.get_selected_items())
+            rlzs_or_stats = list(
+                self.rlzs_multiselect.get_selected_items())
         elif output_type == 'agg_curves-stats':
             rlzs_or_stats = list(
                 self.stats_multiselect.get_selected_items())
@@ -1013,12 +1022,11 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 'Can not draw outputs of type %s' % output_type)
             return
         abscissa = self.agg_curves['return_period']
-        if output_type in ['agg_curves-rlzs', 'agg_curves-stats']:
-            rlzs_or_stats_idxs, tag_name_idxs, tag_value_idxs = \
-                self._get_idxs()
-            ordinates = self.agg_curves['array']
-            # FIXME unit = self.agg_curves['units']
-            unit = b'FIXME'
+        rlzs_or_stats_idxs, tag_name_idxs, tag_value_idxs = \
+            self._get_idxs()
+        ordinates = self.agg_curves['array']
+        loss_type_idx = self.loss_type_cbx.currentIndex()
+        unit = self.agg_curves['units'][loss_type_idx]
         self.plot.clear()
         if not ordinates.any():  # too much filtering
             self.plot_canvas.draw()
@@ -1914,12 +1922,12 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 rlzs_idxs, tag_name_idxs, tag_value_idxs = self._get_idxs()
                 loss_type = self.loss_type_cbx.currentText()
                 abs_rel = self.abs_rel_cbx.currentText()
-                unit = 'FIXME'  # self.agg_curves['unit']
+                loss_type_idx = self.loss_type_cbx.currentIndex()
+                unit = self.agg_curves['units'][loss_type_idx]
                 csv_file.write("# Loss type: %s\r\n" % loss_type)
                 csv_file.write("# Absolute or relative: %s\r\n" % abs_rel)
                 csv_file.write("# Measurement unit: %s\r\n" % unit)
-                if ('aggregate_by' in self.agg_curves
-                        and len(self.agg_curves['aggregate_by']) > 0):
+                if self.aggregate_by is not None and len(self.aggregate_by):
                     csv_file.write(
                         "# Tags: %s\r\n" % (
                             self.get_list_selected_tags_str() or 'None'))
@@ -1940,12 +1948,12 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 stats = list(self.stats_multiselect.get_selected_items())
                 loss_type = self.loss_type_cbx.currentText()
                 abs_rel = self.abs_rel_cbx.currentText()
-                unit = 'FIXME'  # self.agg_curves['unit']
+                loss_type_idx = self.loss_type_cbx.currentIndex()
+                unit = self.agg_curves['units'][loss_type_idx]
                 csv_file.write("# Loss type: %s\r\n" % loss_type)
                 csv_file.write("# Absolute or relative: %s\r\n" % abs_rel)
                 csv_file.write("# Measurement unit: %s\r\n" % unit)
-                if ('aggregate_by' in self.agg_curves
-                        and len(self.agg_curves['aggregate_by']) > 0):
+                if self.aggregate_by is not None and len(self.aggregate_by):
                     csv_file.write(
                         "# Tags: %s\r\n" % (
                             self.get_list_selected_tags_str() or 'None'))
