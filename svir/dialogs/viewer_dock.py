@@ -637,11 +637,10 @@ class ViewerDock(QDockWidget, FORM_CLASS):
 
     def get_list_selected_tags_str(self):
         selected_tags_str = ''
-        for tag_name in self.tags:
-            if self.tags[tag_name]['selected']:
-                for tag_value in self.tags[tag_name]['values']:
-                    if self.tags[tag_name]['values'][tag_value]:
-                        selected_tags_str += '%s="%s" ' % (tag_name, tag_value)
+        for tag_name in self.aggregate_by:
+            for tag_value in self.tags[tag_name]['values']:
+                if self.tags[tag_name]['values'][tag_value]:
+                    selected_tags_str += '%s="%s" ' % (tag_name, tag_value)
         return selected_tags_str
 
     def refresh_feature_selection(self):
@@ -1878,7 +1877,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 loss_type = self.loss_type_cbx.currentText()
                 abs_rel = self.abs_rel_cbx.currentText()
                 loss_type_idx = self.loss_type_cbx.currentIndex()
-                unit = self.agg_curves['units'][loss_type_idx]
+                unit = self.agg_curves['units'][loss_type_idx].decode('utf8')
                 csv_file.write("# Loss type: %s\r\n" % loss_type)
                 csv_file.write("# Absolute or relative: %s\r\n" % abs_rel)
                 csv_file.write("# Measurement unit: %s\r\n" % unit)
@@ -1904,7 +1903,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 loss_type = self.loss_type_cbx.currentText()
                 abs_rel = self.abs_rel_cbx.currentText()
                 loss_type_idx = self.loss_type_cbx.currentIndex()
-                unit = self.agg_curves['units'][loss_type_idx]
+                unit = self.agg_curves['units'][loss_type_idx].decode('utf8')
                 csv_file.write("# Loss type: %s\r\n" % loss_type)
                 csv_file.write("# Absolute or relative: %s\r\n" % abs_rel)
                 csv_file.write("# Measurement unit: %s\r\n" % unit)
