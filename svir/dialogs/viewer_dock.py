@@ -637,6 +637,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
 
     def get_list_selected_tags_str(self):
         selected_tags_str = ''
+        if self.aggregate_by is None:
+            return selected_tags_str 
         for tag_name in self.aggregate_by:
             for tag_value in self.tags[tag_name]['values']:
                 if self.tags[tag_name]['values'][tag_value]:
