@@ -64,7 +64,7 @@ from svir.utilities.shared import (OQ_TO_LAYER_TYPES,
                                    OQ_EXTRACT_TO_LAYER_TYPES,
                                    OQ_EXTRACT_TO_VIEW_TYPES,
                                    OQ_ZIPPED_TYPES,
-                                   OQ_BASIC_CSV_TO_LAYER_TYPES,
+                                   OQ_CSV_TO_LAYER_TYPES,
                                    DEFAULT_SETTINGS,
                                    )
 from svir.utilities.utils import (WaitCursorManager,
@@ -81,8 +81,8 @@ from svir.utilities.utils import (WaitCursorManager,
                                   )
 from svir.dialogs.load_ruptures_as_layer_dialog import (
     LoadRupturesAsLayerDialog)
-from svir.dialogs.load_basic_csv_as_layer_dialog import (
-    LoadBasicCsvAsLayerDialog)
+from svir.dialogs.load_csv_as_layer_dialog import (
+    LoadCsvAsLayerDialog)
 from svir.dialogs.load_dmg_by_asset_as_layer_dialog import (
     LoadDmgByAssetAsLayerDialog)
 from svir.dialogs.load_gmf_data_as_layer_dialog import (
@@ -115,12 +115,12 @@ BUTTON_WIDTH = 75
 
 OUTPUT_TYPE_LOADERS = {
     'ruptures': LoadRupturesAsLayerDialog,
-    'realizations': LoadBasicCsvAsLayerDialog,
-    'events': LoadBasicCsvAsLayerDialog,
-    'dmg_by_event': LoadBasicCsvAsLayerDialog,
-    'losses_by_event': LoadBasicCsvAsLayerDialog,
-    'agglosses': LoadBasicCsvAsLayerDialog,
-    'agg_risk': LoadBasicCsvAsLayerDialog,
+    'realizations': LoadCsvAsLayerDialog,
+    'events': LoadCsvAsLayerDialog,
+    'dmg_by_event': LoadCsvAsLayerDialog,
+    'losses_by_event': LoadCsvAsLayerDialog,
+    'agglosses': LoadCsvAsLayerDialog,
+    'agg_risk': LoadCsvAsLayerDialog,
     'dmg_by_asset': LoadDmgByAssetAsLayerDialog,
     'gmf_data': LoadGmfDataAsLayerDialog,
     'hmaps': LoadHazardMapsAsLayerDialog,
@@ -816,10 +816,11 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
 
         self.output_list_tbl.setRowCount(len(output_list))
         self.output_list_tbl.setColumnCount(len(selected_keys) + max_actions)
-        experimental_enabled = QSettings().value(
-            '/irmt/experimental_enabled',
-            DEFAULT_SETTINGS['experimental_enabled'],
-            type=bool)
+        # NOTE: uncomment if some buttons need to be set as experimental
+        # experimental_enabled = QSettings().value(
+        #     '/irmt/experimental_enabled',
+        #     DEFAULT_SETTINGS['experimental_enabled'],
+        #     type=bool)
         for row, output in enumerate(output_list):
             for col, key in enumerate(selected_keys):
                 item = QTableWidgetItem()
@@ -856,7 +857,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                             self.calc_list_tbl.setColumnWidth(
                                 additional_cols, BUTTON_WIDTH)
                             continue
-                    elif output['type'] in OQ_BASIC_CSV_TO_LAYER_TYPES:
+                    elif output['type'] in OQ_CSV_TO_LAYER_TYPES:
                         action = 'Load table'
                     else:
                         action = 'Load layer'
@@ -866,12 +867,6 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                                            'dmg_by_event',
                                            'losses_by_event']
                             and calculation_mode == 'event_based'):
-                        continue
-                    if (output['type'] in ['agg_curves-rlzs',
-                                           'agg_curves-stats',
-                                           'avg_losses-stats']
-                            and calculation_mode == 'ebrisk'
-                            and not experimental_enabled):
                         continue
                     button = QPushButton()
                     self.connect_button_to_action(
