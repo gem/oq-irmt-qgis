@@ -51,7 +51,6 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
             ('Magnitude', 'mag'),
         ])
         self.setWindowTitle('Load ruptures as layer')
-        # self.create_save_as_gpkg_ckb()
         self.create_min_mag_dsb()
         self.create_style_by_selector()
         self.populate_out_dep_widgets()
