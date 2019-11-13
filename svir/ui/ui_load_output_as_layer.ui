@@ -20,6 +20,15 @@
   <layout class="QVBoxLayout" name="verticalLayout_2">
    <item>
     <widget class="QScrollArea" name="scrollArea">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="sizeAdjustPolicy">
+      <enum>QAbstractScrollArea::AdjustToContentsOnFirstShow</enum>
+     </property>
      <property name="widgetResizable">
       <bool>true</bool>
      </property>
@@ -29,7 +38,7 @@
         <x>0</x>
         <y>0</y>
         <width>188</width>
-        <height>68</height>
+        <height>70</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_5">
