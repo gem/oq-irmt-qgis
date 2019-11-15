@@ -150,7 +150,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.vlayout.addWidget(self.load_multicol_ckb)
 
     def create_min_mag_dsb(self):
-        self.min_mag_lbl = QLabel('Minimum magnitude')
+        self.min_mag_lbl = QLabel()
         self.min_mag_dsb = QDoubleSpinBox(self)
         self.min_mag_dsb.setRange(0, 10)
         self.min_mag_dsb.setDecimals(1)
@@ -158,6 +158,10 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.min_mag_dsb.setValue(4.0)
         self.vlayout.addWidget(self.min_mag_lbl)
         self.vlayout.addWidget(self.min_mag_dsb)
+        # NOTE: if we don't modify the text of the label after adding the
+        # widget to the layout, the adjustSize does not work properly, for some
+        # unknown reason
+        self.min_mag_lbl.setText('Minimum magnitude')
 
     def create_rlz_or_stat_selector(self, all_ckb=False, label='Realization'):
         self.rlz_or_stat_lbl = QLabel(label)
