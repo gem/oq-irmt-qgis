@@ -65,7 +65,6 @@ from svir.utilities.shared import (OQ_TO_LAYER_TYPES,
                                    OQ_EXTRACT_TO_VIEW_TYPES,
                                    OQ_ZIPPED_TYPES,
                                    OQ_CSV_TO_LAYER_TYPES,
-                                   DEFAULT_SETTINGS,
                                    )
 from svir.utilities.utils import (WaitCursorManager,
                                   engine_login,
