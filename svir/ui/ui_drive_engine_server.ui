@@ -25,6 +25,9 @@
        <property name="text">
         <string>Run Calculation</string>
        </property>
+       <property name="autoDefault">
+        <bool>false</bool>
+       </property>
       </widget>
      </item>
      <item>
@@ -44,6 +47,9 @@
       <widget class="QPushButton" name="reconnect_btn">
        <property name="text">
         <string>Reconnect</string>
+       </property>
+       <property name="autoDefault">
+        <bool>false</bool>
        </property>
       </widget>
      </item>
@@ -188,6 +194,9 @@
        <property name="text">
         <string>Download HDF5 datastore</string>
        </property>
+       <property name="autoDefault">
+        <bool>false</bool>
+       </property>
       </widget>
      </item>
      <item>
@@ -197,6 +206,9 @@
        </property>
        <property name="text">
         <string>Show calculation parameters</string>
+       </property>
+       <property name="autoDefault">
+        <bool>false</bool>
        </property>
       </widget>
      </item>
