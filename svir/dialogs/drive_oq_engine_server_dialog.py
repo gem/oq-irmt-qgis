@@ -289,7 +289,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             # returns True if the list is correctly retrieved
             calc_list_url = "%s/v1/calc/list?relevant=true" % self.hostname
         else:
-            calc_list_url = "%s/v1/calc/%s" % (self.hostname, job_id)
+            calc_list_url = "%s/v1/calc/%s/status" % (self.hostname, job_id)
         try:
             # FIXME: enable the user to set verify=True
             resp = self.session.get(
@@ -312,6 +312,10 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         if not self.is_gui_enabled:
             self.set_gui_enabled(True)
         self.calc_list = json.loads(resp.text)
+        if job_id != '':
+            self.calc_list = [self.calc_list]
+            self.current_calc_id = job_id
+            self.pointed_calc_id = job_id
         selected_keys = [
             'description', 'id', 'calculation_mode', 'owner', 'status']
         col_names = [
