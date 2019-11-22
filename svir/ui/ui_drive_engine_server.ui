@@ -89,14 +89,14 @@
           </spacer>
          </item>
          <item>
-          <widget class="QLabel" name="filter_by_job_id_lbl">
+          <widget class="QLabel" name="retrieve_job_by_id_lbl">
            <property name="text">
-            <string>Filter by job id</string>
+            <string>Retrieve job by id</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QLineEdit" name="lineEdit">
+          <widget class="QLineEdit" name="retrieve_job_by_id_le">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
              <horstretch>0</horstretch>

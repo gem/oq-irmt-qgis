@@ -44,7 +44,7 @@ from qgis.PyQt.QtWidgets import (QDialog,
                                  QFileDialog,
                                  QInputDialog,
                                  QMessageBox)
-from qgis.PyQt.QtGui import QColor, QBrush
+from qgis.PyQt.QtGui import QColor, QBrush, QIntValidator
 from qgis.gui import QgsMessageBar
 from qgis.core import QgsTask, QgsApplication
 
@@ -146,6 +146,11 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         QDialog.__init__(self)
         # Set up the user interface from Designer.
         self.setupUi(self)
+
+        int_validator = QIntValidator(self)
+        self.retrieve_job_by_id_le.setValidator(int_validator)
+        self.retrieve_job_by_id_le.returnPressed.connect(self.on_job_id_chosen)
+
         self.params_dlg = None
         self.console_dlg = None
         self.full_report_dlg = None
@@ -182,6 +187,12 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
 
         self.is_gui_enabled = False
         self.attempt_login()
+
+    def on_job_id_chosen(self):
+        job_id = self.retrieve_job_by_id_le.text()
+        self.current_calc_id = job_id
+        self.pointed_calc_id = job_id
+        self.refresh_calc_list()
 
     def on_reconnect_btn_clicked(self):
         self.attempt_login()
@@ -273,8 +284,12 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             return resp.text
 
     def refresh_calc_list(self):
-        # returns True if the list is correctly retrieved
-        calc_list_url = "%s/v1/calc/list?relevant=true" % self.hostname
+        job_id = self.retrieve_job_by_id_le.text()
+        if job_id == '':
+            # returns True if the list is correctly retrieved
+            calc_list_url = "%s/v1/calc/list?relevant=true" % self.hostname
+        else:
+            calc_list_url = "%s/v1/calc/%s" % (self.hostname, job_id)
         try:
             # FIXME: enable the user to set verify=True
             resp = self.session.get(
