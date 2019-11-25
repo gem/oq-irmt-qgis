@@ -35,6 +35,7 @@ from qgis.PyQt.QtCore import (QDir,
                               QTimer,
                               pyqtSlot,
                               QFileInfo,
+                              QRegExp,
                               QSettings)
 
 from qgis.PyQt.QtWidgets import (QDialog,
@@ -44,7 +45,7 @@ from qgis.PyQt.QtWidgets import (QDialog,
                                  QFileDialog,
                                  QInputDialog,
                                  QMessageBox)
-from qgis.PyQt.QtGui import QColor, QBrush, QIntValidator
+from qgis.PyQt.QtGui import QColor, QBrush, QRegExpValidator
 from qgis.gui import QgsMessageBar
 from qgis.core import QgsTask, QgsApplication
 
@@ -147,8 +148,9 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         # Set up the user interface from Designer.
         self.setupUi(self)
 
-        int_validator = QIntValidator(self)
-        self.retrieve_job_by_id_le.setValidator(int_validator)
+        int_or_empty_validator = QRegExpValidator(
+            QRegExp("(^[0-9]+$|^$)"), self)
+        self.retrieve_job_by_id_le.setValidator(int_or_empty_validator)
         self.retrieve_job_by_id_le.returnPressed.connect(self.on_job_id_chosen)
 
         self.params_dlg = None
@@ -189,7 +191,13 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.attempt_login()
 
     def on_job_id_chosen(self):
-        job_id = int(self.retrieve_job_by_id_le.text())
+        try:
+            job_id = int(self.retrieve_job_by_id_le.text())
+        except ValueError:
+            self.current_calc_id = None
+            self.pointed_calc_id = None
+            self.refresh_calc_list()
+            return
         self.current_calc_id = job_id
         self.pointed_calc_id = job_id
         self.refresh_calc_list()
@@ -295,6 +303,9 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             resp = self.session.get(
                 calc_list_url, timeout=10, verify=False,
                 allow_redirects=False, stream=True)
+            if resp.status_code == 404:
+                raise FileNotFoundError(
+                    "Calculation with job id %s was not found" % job_id)
             if resp.status_code == 302:
                 raise RedirectionError(
                     "Error %s loading %s: please check the url" % (
@@ -303,11 +314,14 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 raise ServerError(
                     "Error %s loading %s: %s" % (
                         resp.status_code, resp.url, resp.reason))
+        except FileNotFoundError as exc:
+            log_msg(str(exc), level='C', message_bar=self.message_bar)
+            return False
+        except ServerError as exc:
+            log_msg('The OQ-Engine server retured an error', level='C',
+                    exception=exc, message_bar=self.message_bar)
+            return False
         except HANDLED_EXCEPTIONS as exc:
-            if isinstance(exc, ServerError):
-                log_msg('The OQ-Engine server retured an error', level='C',
-                        exception=exc, message_bar=self.message_bar)
-                return False
             if self.num_login_attempts < 3:
                 self.attempt_login()
             else:
