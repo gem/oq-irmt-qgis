@@ -1056,8 +1056,6 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         if output_type not in OUTPUT_TYPE_LOADERS:
             raise NotImplementedError(output_type)
         dlg_id = uuid4()
-        log_msg('Loading output started. Watch progress in QGIS task bar',
-                level='I', message_bar=self.message_bar)
         open_output_dlg = OUTPUT_TYPE_LOADERS[output_type](
             self, self.iface, self.viewer_dock,
             self.session, self.hostname, self.current_calc_id,

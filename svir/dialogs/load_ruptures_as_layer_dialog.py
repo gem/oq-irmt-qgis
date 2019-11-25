@@ -59,6 +59,8 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
         self.show()
 
     def accept(self):
+        log_msg('Loading output started. Watch progress in QGIS task bar',
+                level='I', message_bar=self.iface.messageBar())
         self.hide()
         min_mag = self.min_mag_dsb.value()
         self.extract_npz_task = ExtractNpzTask(
