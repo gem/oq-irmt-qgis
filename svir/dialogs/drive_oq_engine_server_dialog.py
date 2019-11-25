@@ -189,7 +189,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.attempt_login()
 
     def on_job_id_chosen(self):
-        job_id = self.retrieve_job_by_id_le.text()
+        job_id = int(self.retrieve_job_by_id_le.text())
         self.current_calc_id = job_id
         self.pointed_calc_id = job_id
         self.refresh_calc_list()
@@ -304,6 +304,10 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                     "Error %s loading %s: %s" % (
                         resp.status_code, resp.url, resp.reason))
         except HANDLED_EXCEPTIONS as exc:
+            if isinstance(exc, ServerError):
+                log_msg('The OQ-Engine server retured an error', level='C',
+                        exception=exc, message_bar=self.message_bar)
+                return False
             if self.num_login_attempts < 3:
                 self.attempt_login()
             else:
@@ -314,9 +318,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.calc_list = json.loads(resp.text)
         if job_id != '':
             self.calc_list = [self.calc_list]
-            self.current_calc_id = job_id
-            self.pointed_calc_id = job_id
-            self.update_output_list(job_id)
+            self.current_calc_id = self.pointed_calc_id = int(job_id)
+            self.update_output_list(int(job_id))
         selected_keys = [
             'description', 'id', 'calculation_mode', 'owner', 'status']
         col_names = [
@@ -695,7 +698,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         if resp.ok:
             resp_dict = resp.json()
             job_id = resp_dict['job_id']
-            self.pointed_calc_id = job_id
+            self.pointed_calc_id = int(job_id)
             self.refresh_calc_list()
             self.update_output_list(self.pointed_calc_id)
             return resp_dict
