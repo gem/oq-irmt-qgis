@@ -51,6 +51,9 @@ class LoadUhsAsLayerDialog(LoadOutputAsLayerDialog):
         self.create_load_selected_only_ckb()
         self.create_poe_selector()
 
+        log_msg('Extracting uniform hazard spectra.'
+                ' Watch progress in QGIS task bar',
+                level='I', message_bar=self.iface.messageBar())
         self.extract_npz_task = ExtractNpzTask(
             'Extract uniform hazard spectra', QgsTask.CanCancel, self.session,
             self.hostname, self.calc_id, self.output_type, self.finalize_init,
