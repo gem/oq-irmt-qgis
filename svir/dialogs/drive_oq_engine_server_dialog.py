@@ -316,6 +316,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             self.calc_list = [self.calc_list]
             self.current_calc_id = job_id
             self.pointed_calc_id = job_id
+            self.update_output_list(job_id)
         selected_keys = [
             'description', 'id', 'calculation_mode', 'owner', 'status']
         col_names = [
