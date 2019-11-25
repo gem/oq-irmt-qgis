@@ -847,6 +847,8 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.file_size_lbl.setText(self.file_size_msg % file_size)
 
     def accept(self):
+        log_msg('Loading output started. Watch progress in QGIS task bar',
+                level='I', message_bar=self.iface.messageBar())
         try:
             self.iface.layerTreeView().currentLayerChanged.disconnect(
                 self.on_currentLayerChanged)

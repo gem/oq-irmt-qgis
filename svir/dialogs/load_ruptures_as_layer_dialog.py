@@ -59,6 +59,8 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
         self.show()
 
     def accept(self):
+        log_msg('Loading output started. Watch progress in QGIS task bar',
+                level='I', message_bar=self.iface.messageBar())
         self.hide()
         min_mag = self.min_mag_dsb.value()
         self.extract_npz_task = ExtractNpzTask(
@@ -70,6 +72,11 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
 
     def on_ruptures_extracted(self, extracted_npz):
         self.npz_file = extracted_npz
+        if 'array' not in self.npz_file:
+            log_msg("No ruptures were found above magnitude %s"
+                    % self.min_mag_dsb.text(), level='C',
+                    message_bar=self.iface.messageBar())
+            return
         self.load_from_npz()
         QDialog.accept(self)
         self.loading_completed.emit()
