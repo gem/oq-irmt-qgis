@@ -65,6 +65,8 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
         self.zonal_layer_gbx.toggled[bool].connect(
             self.on_zonal_layer_gbx_toggled)
 
+        log_msg('Extracting output data. Watch progress in QGIS task bar',
+                level='I', message_bar=self.iface.messageBar())
         self.extract_npz_task = ExtractNpzTask(
             'Extract damage by asset', QgsTask.CanCancel, self.session,
             self.hostname, self.calc_id, self.output_type, self.finalize_init,

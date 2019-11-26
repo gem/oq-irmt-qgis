@@ -56,6 +56,9 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
         self.load_multicol_ckb.stateChanged[int].connect(
             self.on_load_multicol_ckb_stateChanged)
 
+        log_msg('Extracting hazard maps.'
+                ' Watch progress in QGIS task bar',
+                level='I', message_bar=self.iface.messageBar())
         self.extract_npz_task = ExtractNpzTask(
             'Extract hazard maps', QgsTask.CanCancel, self.session,
             self.hostname, self.calc_id, self.output_type, self.finalize_init,

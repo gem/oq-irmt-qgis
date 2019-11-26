@@ -49,6 +49,9 @@ class LoadAssetRiskAsLayerDialog(LoadOutputAsLayerDialog):
 
         self.setWindowTitle(
             'Load Exposure/Risk as layer')
+        log_msg('Extracting exposure metadata.'
+                ' Watch progress in QGIS task bar',
+                level='I', message_bar=self.iface.messageBar())
         self.extract_npz_task = ExtractNpzTask(
             'Extract exposure metadata', QgsTask.CanCancel, self.session,
             self.hostname, self.calc_id, 'exposure_metadata',

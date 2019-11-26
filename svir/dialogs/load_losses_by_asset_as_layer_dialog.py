@@ -66,6 +66,9 @@ class LoadLossesByAssetAsLayerDialog(LoadOutputAsLayerDialog):
 
         # NOTE: it's correct to use 'losses_by_asset' instead of output_type,
         #       both in case of losses_by_asset and in case of avg_losses-stats
+        log_msg('Extracting output data.'
+                ' Watch progress in QGIS task bar',
+                level='I', message_bar=self.iface.messageBar())
         self.extract_npz_task = ExtractNpzTask(
             'Extract losses by asset', QgsTask.CanCancel, self.session,
             self.hostname, self.calc_id, 'losses_by_asset', self.finalize_init,
