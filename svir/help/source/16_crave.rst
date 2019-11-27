@@ -8,6 +8,8 @@ The volcano scenario calculator serves as a pilot case for using
 OpenQuake-engine to assess risk due to hazards different than earthquakes.
 Detailed information for earthquake analyses is available in the
 `user manual of the OpenQuake Engine <https://docs.openquake.org/oq-engine/stable/>`_.
+A video tutorial explaining how to use the OpenQuake engine and the plugin for volcano
+scenario calculations is available on `YouTube <https://www.youtube.com/watch?v=I2KEHUAZ-j8>`_.
 
 .. _fig-craveListOutputs:
 
