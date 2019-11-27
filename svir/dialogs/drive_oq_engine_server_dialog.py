@@ -35,6 +35,7 @@ from qgis.PyQt.QtCore import (QDir,
                               QTimer,
                               pyqtSlot,
                               QFileInfo,
+                              QRegExp,
                               QSettings)
 
 from qgis.PyQt.QtWidgets import (QDialog,
@@ -44,7 +45,7 @@ from qgis.PyQt.QtWidgets import (QDialog,
                                  QFileDialog,
                                  QInputDialog,
                                  QMessageBox)
-from qgis.PyQt.QtGui import QColor, QBrush
+from qgis.PyQt.QtGui import QColor, QBrush, QRegExpValidator
 from qgis.gui import QgsMessageBar
 from qgis.core import QgsTask, QgsApplication
 
@@ -65,7 +66,6 @@ from svir.utilities.shared import (OQ_TO_LAYER_TYPES,
                                    OQ_EXTRACT_TO_VIEW_TYPES,
                                    OQ_ZIPPED_TYPES,
                                    OQ_CSV_TO_LAYER_TYPES,
-                                   DEFAULT_SETTINGS,
                                    )
 from svir.utilities.utils import (WaitCursorManager,
                                   engine_login,
@@ -147,6 +147,12 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         QDialog.__init__(self)
         # Set up the user interface from Designer.
         self.setupUi(self)
+
+        int_or_empty_validator = QRegExpValidator(
+            QRegExp("(^[0-9]+$|^$)"), self)
+        self.retrieve_job_by_id_le.setValidator(int_or_empty_validator)
+        self.retrieve_job_by_id_le.returnPressed.connect(self.on_job_id_chosen)
+
         self.params_dlg = None
         self.console_dlg = None
         self.full_report_dlg = None
@@ -183,6 +189,18 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
 
         self.is_gui_enabled = False
         self.attempt_login()
+
+    def on_job_id_chosen(self):
+        try:
+            job_id = int(self.retrieve_job_by_id_le.text())
+        except ValueError:
+            self.current_calc_id = None
+            self.pointed_calc_id = None
+            self.refresh_calc_list()
+            return
+        self.current_calc_id = job_id
+        self.pointed_calc_id = job_id
+        self.refresh_calc_list()
 
     def on_reconnect_btn_clicked(self):
         self.attempt_login()
@@ -274,13 +292,20 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             return resp.text
 
     def refresh_calc_list(self):
-        # returns True if the list is correctly retrieved
-        calc_list_url = "%s/v1/calc/list?relevant=true" % self.hostname
+        job_id = self.retrieve_job_by_id_le.text()
+        if job_id == '':
+            # returns True if the list is correctly retrieved
+            calc_list_url = "%s/v1/calc/list?relevant=true" % self.hostname
+        else:
+            calc_list_url = "%s/v1/calc/%s/status" % (self.hostname, job_id)
         try:
             # FIXME: enable the user to set verify=True
             resp = self.session.get(
                 calc_list_url, timeout=10, verify=False,
                 allow_redirects=False, stream=True)
+            if resp.status_code == 404:
+                raise FileNotFoundError(
+                    "Calculation with job id %s was not found" % job_id)
             if resp.status_code == 302:
                 raise RedirectionError(
                     "Error %s loading %s: please check the url" % (
@@ -289,6 +314,13 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 raise ServerError(
                     "Error %s loading %s: %s" % (
                         resp.status_code, resp.url, resp.reason))
+        except FileNotFoundError as exc:
+            log_msg(str(exc), level='C', message_bar=self.message_bar)
+            return False
+        except ServerError as exc:
+            log_msg('The OQ-Engine server retured an error', level='C',
+                    exception=exc, message_bar=self.message_bar)
+            return False
         except HANDLED_EXCEPTIONS as exc:
             if self.num_login_attempts < 3:
                 self.attempt_login()
@@ -298,6 +330,10 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         if not self.is_gui_enabled:
             self.set_gui_enabled(True)
         self.calc_list = json.loads(resp.text)
+        if job_id != '':
+            self.calc_list = [self.calc_list]
+            self.current_calc_id = self.pointed_calc_id = int(job_id)
+            self.update_output_list(int(job_id))
         selected_keys = [
             'description', 'id', 'calculation_mode', 'owner', 'status']
         col_names = [
@@ -676,7 +712,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         if resp.ok:
             resp_dict = resp.json()
             job_id = resp_dict['job_id']
-            self.pointed_calc_id = job_id
+            self.pointed_calc_id = int(job_id)
             self.refresh_calc_list()
             self.update_output_list(self.pointed_calc_id)
             return resp_dict
@@ -1020,8 +1056,6 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         if output_type not in OUTPUT_TYPE_LOADERS:
             raise NotImplementedError(output_type)
         dlg_id = uuid4()
-        log_msg('Loading output started. Watch progress in QGIS task bar',
-                level='I', message_bar=self.message_bar)
         open_output_dlg = OUTPUT_TYPE_LOADERS[output_type](
             self, self.iface, self.viewer_dock,
             self.session, self.hostname, self.current_calc_id,

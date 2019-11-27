@@ -24,7 +24,7 @@
 
 from qgis.PyQt.QtWidgets import (
     QGroupBox, QVBoxLayout, QHBoxLayout, QRadioButton, QCheckBox, QWidget,
-    QLabel)
+    QLabel, QDialog)
 from qgis.core import (
     QgsFeature, QgsGeometry, QgsPointXY, edit, QgsTask, QgsApplication,)
 from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
@@ -49,6 +49,9 @@ class LoadAssetRiskAsLayerDialog(LoadOutputAsLayerDialog):
 
         self.setWindowTitle(
             'Load Exposure/Risk as layer')
+        log_msg('Extracting exposure metadata.'
+                ' Watch progress in QGIS task bar',
+                level='I', message_bar=self.iface.messageBar())
         self.extract_npz_task = ExtractNpzTask(
             'Extract exposure metadata', QgsTask.CanCancel, self.session,
             self.hostname, self.calc_id, 'exposure_metadata',
@@ -224,6 +227,8 @@ class LoadAssetRiskAsLayerDialog(LoadOutputAsLayerDialog):
                 log_msg(msg, level='C', message_bar=self.iface.messageBar())
 
     def accept(self):
+        log_msg('Loading output started. Watch progress in QGIS task bar',
+                level='I', message_bar=self.iface.messageBar())
         self.iface.layerTreeView().currentLayerChanged.disconnect(
             self.on_currentLayerChanged)
         self.hide()
@@ -261,3 +266,4 @@ class LoadAssetRiskAsLayerDialog(LoadOutputAsLayerDialog):
             self.aggregate_by_zone()
         else:
             self.loading_completed.emit()
+        QDialog.accept(self)

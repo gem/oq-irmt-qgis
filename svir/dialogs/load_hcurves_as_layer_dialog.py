@@ -52,6 +52,9 @@ class LoadHazardCurvesAsLayerDialog(LoadOutputAsLayerDialog):
         self.load_all_rlzs_or_stats_chk.setChecked(True)
         self.load_all_imts_chk.setChecked(True)
 
+        log_msg('Extracting hazard curves.'
+                ' Watch progress in QGIS task bar',
+                level='I', message_bar=self.iface.messageBar())
         self.extract_npz_task = ExtractNpzTask(
             'Extract hazard curves', QgsTask.CanCancel, self.session,
             self.hostname, self.calc_id, self.output_type, self.finalize_init,

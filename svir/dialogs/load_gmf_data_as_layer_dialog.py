@@ -52,6 +52,9 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
         self.create_imt_selector()
         self.create_eid_selector()
 
+        log_msg('Extracting ground motion fields.'
+                ' Watch progress in QGIS task bar',
+                level='I', message_bar=self.iface.messageBar())
         self.extract_npz_task = ExtractNpzTask(
             'Extract ground motion fields', QgsTask.CanCancel, self.session,
             self.hostname, self.calc_id, self.output_type, self.finalize_init,
