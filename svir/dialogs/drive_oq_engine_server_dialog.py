@@ -841,7 +841,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                                OQ_EXTRACT_TO_VIEW_TYPES):
                 # TODO: remove check when gmf_data, dmg_by_event and
                 #       losses_by_event will be loadable also for event_based
-                if not (row['type'] in ['gmf_data',
+                if not (row['type'] in [  # 'gmf_data',
                                         'dmg_by_event',
                                         'losses_by_event']
                         and 'event_based' in calculation_mode):
@@ -899,7 +899,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                         action = 'Load layer'
                     # TODO: remove check when gmf_data, dmg_by_event and
                     # losses_by_event will be loadable also for event_based
-                    if (output['type'] in ['gmf_data',
+                    if (output['type'] in [  # 'gmf_data',
                                            'dmg_by_event',
                                            'losses_by_event']
                             and calculation_mode == 'event_based'):
