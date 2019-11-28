@@ -28,6 +28,7 @@ changelog=
     * Ruptures are loaded through the OQ-Engine extract api, instead of exporting and loading the corresponding csv file.
     * Ruptures can be filtered by minimum magnitude, and a clear error message is displayed if no ruptures of such a high magnitude are found.
     * Whenever the plugin consolidates a memory layer into a file or copies a csv-based layer into an editable one, it produces a geopackage instead of a shapefile.
+    * A section about the visualization of multi_risk OQ-Engine inputs and outputs has been added to the user manual.
     3.7.2
     * The management of profiles for the connection to the OpenQuake Platform was fixed.
     * The output type selector in the Data Viewer was disabled, so it still shows the output type but it can not be modified by the user.

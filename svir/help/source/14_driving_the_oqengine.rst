@@ -148,6 +148,12 @@ the corresponding aggregate loss with the same return period. This type of maps
 is simply providing the expected loss for a specified frequency of occurrence
 (or return period), for each asset.
 
+.. note:: All layers created loading data from OQ-Engine outputs
+   contain metadata that can be visualized within the "Layer Properties" panel.
+   The "Title" of the calculation can be found in the "Identification" tab.
+   Dozens of other parameters that are specific for each calculation type
+   are stored in the "Keywords" tab.
+
 Other kinds of outputs (e.g. hazard curves and uniform hazard spectra) can be
 visualized in the OpenQuake IRMT Data Viewer (see :ref:`chap-viewer-dock`).
 

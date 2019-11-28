@@ -32,6 +32,7 @@ Contents:
     13_recovery_modeling.rst
     14_driving_the_oqengine.rst
     15_viewer_dock.rst
+    16_crave.rst
 
 
 Links:
