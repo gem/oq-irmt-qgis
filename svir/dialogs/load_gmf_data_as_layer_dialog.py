@@ -63,8 +63,9 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
     def get_eid(self, num_events_npz):
         num_events = num_events_npz['num_events']
         self.eid, ok = QInputDialog.getInt(
-            self, "Select an event ID", "range (0 - %s)" % num_events,
-            0, 0, num_events)
+            self.drive_engine_dlg,
+            "Select an event ID", "range (0 - %s)" % (num_events - 1),
+            0, 0, num_events - 1)
         if not ok:
             self.reject()
             return
