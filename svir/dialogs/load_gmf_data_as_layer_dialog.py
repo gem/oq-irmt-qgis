@@ -62,9 +62,12 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
 
     def get_eid(self, num_events_npz):
         num_events = num_events_npz['num_events']
-        self.eid = QInputDialog.getInt(
-            self, "Select an event ID", "(range 0 - %s)" % num_events,
+        self.eid, ok = QInputDialog.getInt(
+            self, "Select an event ID", "range (0 - %s)" % num_events,
             0, 0, num_events)
+        if not ok:
+            self.reject()
+            return
         log_msg('Extracting ground motion fields.'
                 ' Watch progress in QGIS task bar',
                 level='I', message_bar=self.iface.messageBar())
@@ -175,7 +178,7 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
                     if field_name in ['lon', 'lat']:
                         continue
                     layer_field_name = d2l_field_names[field_name]
-                    value = float(row[field_name][self.eid])
+                    value = float(row[field_name])
                     feat.setAttribute(layer_field_name, value)
                 feat.setGeometry(QgsGeometry.fromPointXY(
                     QgsPointXY(row[0], row[1])))
