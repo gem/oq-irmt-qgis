@@ -51,6 +51,7 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
         self.create_num_sites_indicator()
         # NOTE: gmpe and gsim are synonyms
         self.create_rlz_or_stat_selector('Ground Motion Prediction Equation')
+        self.rlz_or_stat_cbx.setVisible(False)
         self.create_imt_selector()
 
         log_msg('Extracting number of events. Watch progress in QGIS task bar',
@@ -101,9 +102,13 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
         #       need to move this block of code inside on_rlz_or_stat_changed()
         rlz = self.rlz_or_stat_cbx.itemData(
             self.rlz_or_stat_cbx.currentIndex())
-        gmf_data = self.npz_file[rlz]
-        self.num_sites_lbl.setText(
-            self.num_sites_msg % gmf_data.shape)
+        try:
+            gmf_data = self.npz_file[rlz]
+        except AttributeError:
+            self.num_sites_lbl.setText(self.num_sites_msg % 0)
+            return
+        else:
+            self.num_sites_lbl.setText(self.num_sites_msg % gmf_data.shape)
 
     def populate_rlz_or_stat_cbx(self):
         self.rlzs_or_stats = [key for key in sorted(self.npz_file)
@@ -129,8 +134,6 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
         if not len(self.dataset):
             log_msg('No data corresponds to the chosen event and GMPE',
                     level='C', message_bar=self.iface.messageBar())
-            self.imt_cbx.clear()
-            self.set_ok_button()
             return
         imts = self.dataset.dtype.names[2:]  # discarding lon lat
         self.imt_cbx.clear()
