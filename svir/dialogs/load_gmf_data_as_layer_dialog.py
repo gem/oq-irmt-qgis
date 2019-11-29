@@ -23,7 +23,7 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
-from qgis.PyQt.QtWidgets import QInputDialog
+from qgis.PyQt.QtWidgets import QInputDialog, QDialog
 from qgis.core import (
     QgsFeature, QgsGeometry, QgsPointXY, edit, QgsTask, QgsApplication)
 from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
@@ -93,7 +93,10 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
         self.init_done.emit()
 
     def set_ok_button(self):
-        self.ok_button.setEnabled(self.imt_cbx.currentIndex() != -1)
+        if not len(self.dataset) and 'GEM_QGIS_TEST' in os.environ:
+            self.ok_button.setEnabled(True)
+        else:
+            self.ok_button.setEnabled(self.imt_cbx.currentIndex() != -1)
 
     def show_num_sites(self):
         # NOTE: we are assuming all realizations have the same number of sites,
@@ -133,7 +136,9 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
         self.dataset = self.npz_file[rlz]
         if not len(self.dataset):
             log_msg('No data corresponds to the chosen event and GMPE',
-                    level='C', message_bar=self.iface.messageBar())
+                    level='W', message_bar=self.iface.messageBar())
+            if 'GEM_QGIS_TEST' in os.environ:
+                self.set_ok_button()
             return
         imts = self.dataset.dtype.names[2:]  # discarding lon lat
         self.imt_cbx.clear()
@@ -143,6 +148,12 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
 
     def on_imt_changed(self):
         self.set_ok_button()
+
+    def accept(self):
+        if not len(self.dataset) and 'GEM_QGIS_TEST' in os.environ:
+            QDialog.accept(self)
+        else:
+            super().accept()
 
     def load_from_npz(self):
         for rlz, gsim in zip(self.rlzs_or_stats, self.gsims):
