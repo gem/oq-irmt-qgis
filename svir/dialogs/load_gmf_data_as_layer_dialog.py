@@ -22,6 +22,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
+import os
 from qgis.PyQt.QtWidgets import QInputDialog
 from qgis.core import (
     QgsFeature, QgsGeometry, QgsPointXY, edit, QgsTask, QgsApplication)
@@ -62,10 +63,13 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
 
     def get_eid(self, num_events_npz):
         num_events = num_events_npz['num_events']
-        self.eid, ok = QInputDialog.getInt(
-            self.drive_engine_dlg,
-            "Select an event ID", "range (0 - %s)" % (num_events - 1),
-            0, 0, num_events - 1)
+        if 'GEM_QGIS_TEST' in os.environ:
+            self.eid, ok = 0, True
+        else:
+            self.eid, ok = QInputDialog.getInt(
+                self.drive_engine_dlg,
+                "Select an event ID", "range (0 - %s)" % (num_events - 1),
+                0, 0, num_events - 1)
         if not ok:
             self.reject()
             return
