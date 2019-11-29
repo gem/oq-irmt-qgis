@@ -126,6 +126,12 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
         rlz = self.rlz_or_stat_cbx.itemData(
             self.rlz_or_stat_cbx.currentIndex())
         self.dataset = self.npz_file[rlz]
+        if not len(self.dataset):
+            log_msg('No data corresponds to the chosen event and GMPE',
+                    level='C', message_bar=self.iface.messageBar())
+            self.imt_cbx.clear()
+            self.set_ok_button()
+            return
         imts = self.dataset.dtype.names[2:]  # discarding lon lat
         self.imt_cbx.clear()
         self.imt_cbx.setEnabled(True)
