@@ -112,6 +112,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                                                  calc['description']))
             calc_output_list = \
                 cls.irmt.drive_oq_engine_server_dlg.get_output_list(calc['id'])
+            if isinstance(calc_output_list, Exception):
+                raise calc_output_list
             cls.output_list[calc['id']] = calc_output_list
             print('\t\tOutput types: %s' % ', '.join(
                 [output['type'] for output in calc_output_list]))
