@@ -510,6 +510,31 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             else:
                 raise RuntimeError('The ok button is disabled')
                 return 'ko'
+        elif output_type == 'ruptures':
+            dlg = OUTPUT_TYPE_LOADERS[output_type](
+                self.irmt.drive_oq_engine_server_dlg, self.irmt.iface,
+                self.irmt.viewer_dock,
+                self.irmt.drive_oq_engine_server_dlg.session,
+                self.hostname, calc_id, output_type)
+            self.loading_completed = False
+            self.loading_exception = None
+            dlg.loading_completed.connect(self.on_loading_completed)
+            dlg.loading_exception[Exception].connect(self.on_loading_exception)
+            timeout = 10
+            start_time = time.time()
+            dlg.accept()
+            while time.time() - start_time < timeout:
+                QGIS_APP.processEvents()
+                if self.loading_completed:
+                    print('\t\tok')
+                    return 'ok'
+                if self.loading_exception:
+                    raise self.loading_exception
+                    return 'ok'
+                time.sleep(0.1)
+            raise TimeoutError(
+                'Loading time exceeded %s seconds' % timeout)
+            return 'ko'
         elif output_type in OQ_EXTRACT_TO_LAYER_TYPES:
             self.irmt.iface.newProject()
             dlg = OUTPUT_TYPE_LOADERS[output_type](
