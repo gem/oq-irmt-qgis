@@ -323,7 +323,11 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         output_type = output_dict['output_type']
         if output_type in OQ_EXTRACT_TO_LAYER_TYPES:
             loaded_layer = self.irmt.iface.activeLayer()
-            if output_type != 'gmf_data':  # it could correctly produce no data
+            if output_type == 'gmf_data':
+                if loaded_layer is None:
+                    print('\t\tWARNING: no layer was loaded. It should mean '
+                          'that no data could be loaded for the chosen eid')
+            else:
                 self.assertIsNotNone(loaded_layer, 'No layer was loaded')
                 num_feats = loaded_layer.featureCount()
                 self.assertGreater(
