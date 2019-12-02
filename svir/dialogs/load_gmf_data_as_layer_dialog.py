@@ -140,7 +140,10 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
             if 'GEM_QGIS_TEST' in os.environ:
                 self.set_ok_button()
             return
-        imts = self.dataset.dtype.names[2:]  # discarding lon lat
+        try:
+            imts = list(self.oqparam['hazard_imtls'].keys())
+        except KeyError:
+            imts = list(self.oqparam['risk_imtls'].keys())
         self.imt_cbx.clear()
         self.imt_cbx.setEnabled(True)
         self.imt_cbx.addItems(imts)
