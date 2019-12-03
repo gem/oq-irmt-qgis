@@ -167,15 +167,7 @@ class Irmt(object):
         QgsProject.instance().layersRemoved.connect(
             self.layers_removed)
         # save the default selection color settings
-        p = QgsProject.instance()
-        self.initial_selection_color_red_part = p.readNumEntry(
-            'Gui', '/SelectionColorRedPart')[0]
-        self.initial_selection_color_green_part = p.readNumEntry(
-            'Gui', '/SelectionColorGreenPart')[0]
-        self.initial_selection_color_blue_part = p.readNumEntry(
-            'Gui', '/SelectionColorBluePart')[0]
-        self.initial_selection_color_alpha_part = p.readNumEntry(
-            'Gui', '/SelectionColorAlphaPart')[0]
+        self.initial_selection_color = self.iface.mapCanvas().selectionColor()
 
         # get or create directory to store input files for the OQ-Engine
         self.ipt_dir = self.get_ipt_dir()
@@ -487,33 +479,13 @@ class Irmt(object):
         output_type = ''
         if layer:
             output_type = layer.customProperty('output_type') or ''
-        p = QgsProject.instance()
         if output_type in OQ_XMARKER_TYPES:
             # set a darker color for selected features in the project
-            p.writeEntry('Gui', '/SelectionColorRedPart', 255)
-            p.writeEntry('Gui', '/SelectionColorGreenPart', 0)
-            p.writeEntry('Gui', '/SelectionColorBluePart', 0)
-            p.writeEntry('Gui', '/SelectionColorAlphaPart', 255)
             self.iface.mapCanvas().setSelectionColor(QColor(255, 0, 0, 255))
         else:
             # restore intial selection color
-            p.writeEntry(
-                'Gui', '/SelectionColorRedPart',
-                self.initial_selection_color_red_part)
-            p.writeEntry(
-                'Gui', '/SelectionColorGreenPart',
-                self.initial_selection_color_green_part)
-            p.writeEntry(
-                'Gui', '/SelectionColorBluePart',
-                self.initial_selection_color_blue_part)
-            p.writeEntry(
-                'Gui', '/SelectionColorAlphaPart',
-                self.initial_selection_color_alpha_part)
-            self.iface.mapCanvas().setSelectionColor(QColor(
-                self.initial_selection_color_red_part,
-                self.initial_selection_color_green_part,
-                self.initial_selection_color_blue_part,
-                self.initial_selection_color_alpha_part))
+            self.iface.mapCanvas().setSelectionColor(
+                self.initial_selection_color)
 
         self.viewer_dock.change_output_type(output_type)
 
