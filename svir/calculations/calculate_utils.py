@@ -69,7 +69,7 @@ def add_attribute(proposed_attr_name, dtype, layer):
     elif dtype in ('U', 'I'):  # FIXME: what for unsigned int?
         qtype = QVariant.Int
         qname = 'integer'
-    else:  # FIXME: treating everything else as numeric (it might be wrong)
+    else:  # FIXME: treating everything else as double (it might be wrong)
         qtype = QVariant.Double
         qname = 'double'
     field = QgsField(proposed_attr_name, qtype)

@@ -193,7 +193,8 @@ class LoadAssetRiskAsLayerDialog(LoadOutputAsLayerDialog):
     def get_field_types(self, **kwargs):
         field_types = {name: self.dataset[name].dtype.char
                        for name in self.dataset.dtype.names
-                       if name not in ['lon', 'lat'].extend(self.tag_names)}
+                       if name not in ['lon', 'lat']
+                       and name not in self.tag_names}
         return field_types
 
     def read_npz_into_layer(self, field_names, **kwargs):
