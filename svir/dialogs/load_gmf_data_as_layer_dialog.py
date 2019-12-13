@@ -25,7 +25,7 @@
 from qgis.core import (
     QgsFeature, QgsGeometry, QgsPointXY, edit, QgsTask, QgsApplication)
 from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
-from svir.calculations.calculate_utils import add_numeric_attribute
+from svir.calculations.calculate_utils import add_attribute
 from svir.utilities.utils import WaitCursorManager, log_msg, extract_npz
 from svir.tasks.extract_npz_task import ExtractNpzTask
 
@@ -136,17 +136,15 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
         layer_name = "scenario_gmfs_%s_eid-%s" % (gsim, self.eid)
         return layer_name
 
-    def get_field_names(self, **kwargs):
-        # NOTE: we need a list instead of a tuple, because we want to be able
-        #       to modify the list afterwards, to keep track of the actual
-        #       field names created in the layer, that might be laundered to be
-        #       compliant with shapefiles constraints
-        field_names = list(self.dataset.dtype.names)
-        return field_names
+    def get_field_types(self, **kwargs):
+        field_types = {name: self.dataset[name].dtype.char
+                       for name in self.dataset.dtype.names}
+        return field_types
 
-    def add_field_to_layer(self, field_name):
+    def add_field_to_layer(self, field_name, field_type):
+        # TODO: assuming all attributes are numeric (to be checked!)
         field_name = "%s-%s" % (field_name, self.eid)
-        added_field_name = add_numeric_attribute(field_name, self.layer)
+        added_field_name = add_attribute(field_name, field_type, self.layer)
         return added_field_name
 
     def read_npz_into_layer(self, field_names, rlz_or_stat, **kwargs):
@@ -154,7 +152,7 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
             feats = []
             fields = self.layer.fields()
             layer_field_names = [field.name() for field in fields]
-            dataset_field_names = self.get_field_names()
+            dataset_field_names = self.get_field_types().keys()
             d2l_field_names = dict(
                 list(zip(dataset_field_names[2:], layer_field_names)))
             for row in self.npz_file[rlz_or_stat]:

@@ -27,7 +27,6 @@ import collections
 from qgis.core import (
     QgsFeature, QgsGeometry, QgsPointXY, edit, QgsTask, QgsApplication)
 from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
-from svir.calculations.calculate_utils import add_numeric_attribute
 from svir.utilities.utils import (WaitCursorManager,
                                   log_msg,
                                   get_loss_types,
@@ -157,7 +156,7 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
             layer_name = "dmg_by_asset_%s_%s" % (rlz_or_stat, loss_type)
         return layer_name
 
-    def get_field_names(self, **kwargs):
+    def get_field_types(self, **kwargs):
         loss_type = kwargs['loss_type']
         dmg_state = kwargs['dmg_state']
         if self.aggregate_by_site_ckb.isChecked():
@@ -175,13 +174,9 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
             self.default_field_name = "%s_%s_mean" % (
                 self.loss_type_cbx.currentText(),
                 self.dmg_state_cbx.currentText())
-        return field_names
-
-    def add_field_to_layer(self, field_name):
-        # NOTE: add_numeric_attribute uses the native qgis editing manager
-        added_field_name = add_numeric_attribute(
-            field_name, self.layer)
-        return added_field_name
+        # FIXME: check if it's ok to have all numeric fields
+        field_types = {field_name: 'F' for field_name in field_names}
+        return field_types
 
     def read_npz_into_layer(self, field_names, **kwargs):
         if self.aggregate_by_site_ckb.isChecked():

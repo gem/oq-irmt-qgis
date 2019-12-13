@@ -27,7 +27,6 @@ import collections
 from qgis.core import (
     QgsFeature, QgsGeometry, QgsPointXY, edit, QgsTask, QgsApplication)
 from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
-from svir.calculations.calculate_utils import add_numeric_attribute
 from svir.utilities.utils import WaitCursorManager, log_msg, get_loss_types
 from svir.tasks.extract_npz_task import ExtractNpzTask
 
@@ -132,17 +131,11 @@ class LoadLossesByAssetAsLayerDialog(LoadOutputAsLayerDialog):
             raise NotImplementedError(self.output_type)
         return layer_name
 
-    def get_field_names(self, **kwargs):
+    def get_field_types(self, **kwargs):
         loss_type = kwargs['loss_type']
-        field_names = ['lon', 'lat', loss_type]
+        field_types = {'lon': 'F', 'lat': 'F', loss_type: 'S'}
         self.default_field_name = loss_type
-        return field_names
-
-    def add_field_to_layer(self, field_name):
-        # NOTE: add_numeric_attribute uses the native qgis editing manager
-        added_field_name = add_numeric_attribute(
-            field_name, self.layer)
-        return added_field_name
+        return field_types
 
     def read_npz_into_layer(self, field_names, **kwargs):
         rlz_or_stat = kwargs['rlz_or_stat']

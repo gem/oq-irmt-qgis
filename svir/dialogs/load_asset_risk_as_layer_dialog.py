@@ -28,7 +28,6 @@ from qgis.PyQt.QtWidgets import (
 from qgis.core import (
     QgsFeature, QgsGeometry, QgsPointXY, edit, QgsTask, QgsApplication,)
 from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
-from svir.calculations.calculate_utils import add_numeric_attribute
 from svir.utilities.utils import WaitCursorManager, log_msg
 from svir.ui.multi_select_combo_box import MultiSelectComboBox
 from svir.tasks.extract_npz_task import ExtractNpzTask
@@ -191,21 +190,11 @@ class LoadAssetRiskAsLayerDialog(LoadOutputAsLayerDialog):
                 self.category_cbx.currentText())
         return layer_name
 
-    def get_field_names(self, **kwargs):
-        field_names = [name for name in self.dataset.dtype.names
-                       if name not in self.tag_names and
-                       name not in ['lon', 'lat']]
-        return field_names
-
-    def add_field_to_layer(self, field_name):
-        try:
-            # NOTE: add_numeric_attribute uses the native qgis editing manager
-            added_field_name = add_numeric_attribute(field_name, self.layer)
-        except TypeError as exc:
-            log_msg(str(exc), level='C', message_bar=self.iface.messageBar(),
-                    exception=exc)
-            return
-        return added_field_name
+    def get_field_types(self, **kwargs):
+        field_types = {name: self.dataset[name].dtype.char
+                       for name in self.dataset.dtype.names
+                       if name not in ['lon', 'lat'].extend(self.tag_names)}
+        return field_types
 
     def read_npz_into_layer(self, field_names, **kwargs):
         with edit(self.layer):

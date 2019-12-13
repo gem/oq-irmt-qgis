@@ -25,7 +25,6 @@
 from qgis.core import (
     QgsFeature, QgsGeometry, QgsPointXY, edit, QgsTask, QgsApplication)
 from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
-from svir.calculations.calculate_utils import add_numeric_attribute
 from svir.utilities.utils import log_msg, WaitCursorManager
 from svir.tasks.extract_npz_task import ExtractNpzTask
 
@@ -97,8 +96,8 @@ class LoadHazardCurvesAsLayerDialog(LoadOutputAsLayerDialog):
         layer_name = "hcurves_%sy" % investigation_time
         return layer_name
 
-    def get_field_names(self, **kwargs):
-        field_names = []
+    def get_field_types(self, **kwargs):
+        field_types = {}
         for rlz_or_stat in self.rlzs_or_stats:
             if (not self.load_all_rlzs_or_stats_chk.isChecked()
                     and rlz_or_stat != self.rlz_or_stat_cbx.currentText()):
@@ -109,15 +108,11 @@ class LoadHazardCurvesAsLayerDialog(LoadOutputAsLayerDialog):
                     continue
                 for iml in self.dataset[rlz_or_stat][imt].dtype.names:
                     field_name = "%s_%s_%s" % (rlz_or_stat, imt, iml)
-                    field_names.append(field_name)
-        return field_names
+                    field_types[field_name] = 'F'  # FIXME: check if type is ok
+        return field_types
 
     def on_iml_changed(self):
         self.set_ok_button()
-
-    def add_field_to_layer(self, field_name):
-        added_field_name = add_numeric_attribute(field_name, self.layer)
-        return added_field_name
 
     def read_npz_into_layer(self, field_names, **kwargs):
         with edit(self.layer):

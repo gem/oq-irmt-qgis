@@ -26,7 +26,6 @@ from qgis.core import (
     QgsFeature, QgsGeometry, QgsPointXY, edit, QgsTask, QgsApplication)
 from qgis.PyQt.QtCore import Qt
 from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
-from svir.calculations.calculate_utils import add_numeric_attribute
 from svir.utilities.utils import WaitCursorManager, log_msg
 from svir.tasks.extract_npz_task import ExtractNpzTask
 
@@ -154,28 +153,19 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
                 rlz_or_stat, imt, poe, investigation_time)
         return layer_name
 
-    def get_field_names(self, **kwargs):
+    def get_field_types(self, **kwargs):
+        field_types = {}
         if self.load_multicol_ckb.isChecked():
-            field_names = []
             for imt in self.imts:
                 for poe in self.imts[imt]:
                     field_name = "%s-%s" % (imt, poe)
-                    field_names.append(field_name)
+                    field_types[field_name] = 'F'
         else:
             imt = kwargs['imt']
             poe = kwargs['poe']
-            field_names = ['%s-%s' % (imt, poe)]
-        return field_names
-
-    def add_field_to_layer(self, field_name):
-        try:
-            # NOTE: add_numeric_attribute uses the native qgis editing manager
-            added_field_name = add_numeric_attribute(field_name, self.layer)
-        except TypeError as exc:
-            log_msg(str(exc), level='C', message_bar=self.iface.messageBar(),
-                    exception=exc)
-            return
-        return added_field_name
+            field_name = '%s-%s' % (imt, poe)
+            field_types[field_name] = 'F'
+        return field_types
 
     def read_npz_into_layer(self, field_names, **kwargs):
         with edit(self.layer):
