@@ -465,7 +465,6 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         field_types = self.get_field_types(
             rlz_or_stat=rlz_or_stat, taxonomy=taxonomy, poe=poe,
             loss_type=loss_type, dmg_state=dmg_state, imt=imt)
-        field_names = field_types.keys()
 
         # create layer
         self.layer = QgsVectorLayer(
@@ -478,9 +477,9 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 if field_name == self.default_field_name:
                     self.default_field_name = added_field_name
                 # replace field_name with the actual added_field_name
-                field_name_idx = field_names.index(field_name)
-                field_names.remove(field_name)
-                field_names.insert(field_name_idx, added_field_name)
+                field_type = field_types[field_name]
+                del field_types[field_name]
+                field_types[added_field_name] = field_type
 
         self.read_npz_into_layer(
             field_types, rlz_or_stat=rlz_or_stat, taxonomy=taxonomy, poe=poe,

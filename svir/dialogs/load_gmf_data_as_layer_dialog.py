@@ -147,12 +147,12 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
         added_field_name = add_attribute(field_name, field_type, self.layer)
         return added_field_name
 
-    def read_npz_into_layer(self, field_names, rlz_or_stat, **kwargs):
+    def read_npz_into_layer(self, field_types, rlz_or_stat, **kwargs):
         with edit(self.layer):
             feats = []
             fields = self.layer.fields()
             layer_field_names = [field.name() for field in fields]
-            dataset_field_names = self.get_field_types().keys()
+            dataset_field_names = list(self.get_field_types().keys())
             d2l_field_names = dict(
                 list(zip(dataset_field_names[2:], layer_field_names)))
             for row in self.npz_file[rlz_or_stat]:
