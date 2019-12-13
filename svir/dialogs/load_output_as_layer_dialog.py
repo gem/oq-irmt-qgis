@@ -605,7 +605,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         if num_unique_values > 2:
             renderer = QgsGraduatedSymbolRenderer.createRenderer(
                 layer,
-                QgsExpression.quotedColumnRef(style_by),
+                style_by,
                 min(num_unique_values, style['classes']),
                 mode,
                 symbol.clone(),
@@ -631,8 +631,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                     unique_value, symbol, str(unique_value))
                 # entry for the list of category items
                 categories.append(category)
-            renderer = QgsCategorizedSymbolRenderer(
-                QgsExpression.quotedColumnRef(style_by), categories)
+            renderer = QgsCategorizedSymbolRenderer(style_by, categories)
         else:
             renderer = QgsSingleSymbolRenderer(symbol.clone())
         if add_null_class and NULL in unique_values:
@@ -719,8 +718,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             # entry for the list of category items
             categories.append(category)
         # create renderer object
-        renderer = QgsCategorizedSymbolRenderer(
-            QgsExpression.quotedColumnRef(style_by), categories)
+        renderer = QgsCategorizedSymbolRenderer(style_by, categories)
         # assign the created renderer to the layer
         if renderer is not None:
             layer.setRenderer(renderer)

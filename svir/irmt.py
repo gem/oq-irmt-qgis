@@ -1240,7 +1240,7 @@ class Irmt(object):
             style['color_from'], style['color_to'])
         graduated_renderer = QgsGraduatedSymbolRenderer.createRenderer(
             self.iface.activeLayer(),
-            QgsExpression.quotedColumnRef(target_field),
+            target_field,
             style['classes'],
             style['mode'],
             QgsSymbol.defaultSymbol(self.iface.activeLayer().geometryType()),
