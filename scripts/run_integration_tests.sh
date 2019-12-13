@@ -24,7 +24,7 @@ docker run -d --name qgis -v /tmp/.X11-unix:/tmp/.X11-unix \
  -e GEM_QGIS_TEST=y \
  qgis/qgis:release-3_10
 
-docker exec -it qgis sh -c "apt update; DEBIAN_FRONTEND=noninteractive apt install -y python3-scipy python3-matplotlib python3-pyqt5.qtwebkit"
+docker exec -it qgis sh -c "apt update --allow-releaseinfo-change; DEBIAN_FRONTEND=noninteractive apt install -y python3-scipy python3-matplotlib python3-pyqt5.qtwebkit"
 
 docker exec -it qgis sh -c "git clone -q -b $BRANCH --depth=1 https://github.com/gem/oq-engine.git && echo 'Running against oq-engine/$BRANCH'"
 
