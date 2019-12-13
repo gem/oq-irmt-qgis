@@ -22,7 +22,7 @@ docker run -d --name qgis -v /tmp/.X11-unix:/tmp/.X11-unix \
  -e BRANCH="$BRANCH" \
  -e SELECTED_CALC_ID="$SELECTED_CALC_ID" \
  -e GEM_QGIS_TEST=y \
- qgis/qgis:final-3_8_3
+ qgis/qgis:release-3_10
 
 docker exec -it qgis sh -c "apt update; DEBIAN_FRONTEND=noninteractive apt install -y python3-scipy python3-matplotlib python3-pyqt5.qtwebkit"
 
