@@ -133,7 +133,7 @@ class LoadLossesByAssetAsLayerDialog(LoadOutputAsLayerDialog):
 
     def get_field_types(self, **kwargs):
         loss_type = kwargs['loss_type']
-        field_types = {'lon': 'F', 'lat': 'F', loss_type: 'S'}
+        field_types = {'lon': 'F', 'lat': 'F', loss_type: 'F'}
         self.default_field_name = loss_type
         return field_types
 
