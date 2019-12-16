@@ -102,7 +102,7 @@ class LoadUhsAsLayerDialog(LoadOutputAsLayerDialog):
             field_names.extend([
                 "%s_%s" % (rlz_or_stat, imt)
                 for imt in self.dataset[rlz_or_stat][poe].dtype.names])
-        # FIXME: check that all fields are numeric
+        # NOTE: assuming that all fields are numeric
         field_types = {field_name: 'F' for field_name in field_names}
         return field_types
 

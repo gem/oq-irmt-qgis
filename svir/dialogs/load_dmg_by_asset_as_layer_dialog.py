@@ -174,7 +174,7 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
             self.default_field_name = "%s_%s_mean" % (
                 self.loss_type_cbx.currentText(),
                 self.dmg_state_cbx.currentText())
-        # FIXME: check if it's ok to have all numeric fields
+        # NOTE: assuming that all fields are numeric
         field_types = {field_name: 'F' for field_name in field_names}
         return field_types
 

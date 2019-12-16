@@ -108,7 +108,8 @@ class LoadHazardCurvesAsLayerDialog(LoadOutputAsLayerDialog):
                     continue
                 for iml in self.dataset[rlz_or_stat][imt].dtype.names:
                     field_name = "%s_%s_%s" % (rlz_or_stat, imt, iml)
-                    field_types[field_name] = 'F'  # FIXME: check if type is ok
+                    # NOTE: assuming that all fields are numeric
+                    field_types[field_name] = 'F'
         return field_types
 
     def on_iml_changed(self):
