@@ -25,7 +25,6 @@
 from qgis.core import (
     QgsFeature, QgsGeometry, QgsPointXY, edit, QgsTask, QgsApplication)
 from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
-from svir.calculations.calculate_utils import add_numeric_attribute
 from svir.utilities.utils import log_msg, WaitCursorManager
 from svir.tasks.extract_npz_task import ExtractNpzTask
 
@@ -96,20 +95,16 @@ class LoadUhsAsLayerDialog(LoadOutputAsLayerDialog):
         layer_name = "uhs_poe-%s_%sy" % (poe, investigation_time)
         return layer_name
 
-    def get_field_names(self, **kwargs):
+    def get_field_types(self, **kwargs):
         poe = kwargs['poe']
         field_names = []
         for rlz_or_stat in self.rlzs_or_stats:
             field_names.extend([
                 "%s_%s" % (rlz_or_stat, imt)
                 for imt in self.dataset[rlz_or_stat][poe].dtype.names])
-        return field_names
-
-    def add_field_to_layer(self, field_name):
-        # NOTE: add_numeric_attribute uses the native qgis editing manager
-        added_field_name = add_numeric_attribute(
-            field_name, self.layer)
-        return added_field_name
+        # NOTE: assuming that all fields are numeric
+        field_types = {field_name: 'F' for field_name in field_names}
+        return field_types
 
     def read_npz_into_layer(self, field_names, **kwargs):
         poe = kwargs['poe']
