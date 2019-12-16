@@ -50,7 +50,11 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
             'Load ground motion fields as layer')
         self.create_num_sites_indicator()
         # NOTE: gmpe and gsim are synonyms
-        self.create_rlz_or_stat_selector('Ground Motion Prediction Equation')
+        self.create_rlz_or_stat_selector(
+            label='Ground Motion Prediction Equation')
+        # NOTE: we do not display the selector for realizations, but we can
+        # still update and use its contents (e.g. to display the gmpe
+        # corresponding to the chosen event)
         self.rlz_or_stat_cbx.setVisible(False)
         self.create_imt_selector()
 
@@ -133,6 +137,8 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
     def on_rlz_or_stat_changed(self):
         rlz = self.rlz_or_stat_cbx.itemData(
             self.rlz_or_stat_cbx.currentIndex())
+        gmpe = self.rlz_or_stat_cbx.currentText()
+        self.rlz_or_stat_lbl.setText("GMPE: %s" % gmpe)
         self.dataset = self.npz_file[rlz]
         if not len(self.dataset):
             log_msg('No data corresponds to the chosen event and GMPE',
@@ -160,9 +166,7 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
 
     def load_from_npz(self):
         for rlz, gsim in zip(self.rlzs_or_stats, self.gsims):
-            if (not self.load_all_rlzs_or_stats_chk.isChecked()
-                    and gsim != self.rlz_or_stat_cbx.currentText()):
-                continue
+            # NOTE: selecting only 1 event, we have only 1 gsim
             with WaitCursorManager('Creating layer for "%s"...'
                                    % gsim, self.iface.messageBar()):
                 self.build_layer(rlz_or_stat=rlz, gsim=gsim)
