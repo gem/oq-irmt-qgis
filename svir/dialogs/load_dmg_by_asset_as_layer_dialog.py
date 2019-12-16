@@ -27,7 +27,6 @@ import collections
 from qgis.core import (
     QgsFeature, QgsGeometry, QgsPointXY, edit, QgsTask, QgsApplication)
 from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
-from svir.calculations.calculate_utils import add_numeric_attribute
 from svir.utilities.utils import (WaitCursorManager,
                                   log_msg,
                                   get_loss_types,
@@ -157,7 +156,7 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
             layer_name = "dmg_by_asset_%s_%s" % (rlz_or_stat, loss_type)
         return layer_name
 
-    def get_field_names(self, **kwargs):
+    def get_field_types(self, **kwargs):
         loss_type = kwargs['loss_type']
         dmg_state = kwargs['dmg_state']
         if self.aggregate_by_site_ckb.isChecked():
@@ -175,23 +174,19 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
             self.default_field_name = "%s_%s_mean" % (
                 self.loss_type_cbx.currentText(),
                 self.dmg_state_cbx.currentText())
-        return field_names
+        # NOTE: assuming that all fields are numeric
+        field_types = {field_name: 'F' for field_name in field_names}
+        return field_types
 
-    def add_field_to_layer(self, field_name):
-        # NOTE: add_numeric_attribute uses the native qgis editing manager
-        added_field_name = add_numeric_attribute(
-            field_name, self.layer)
-        return added_field_name
-
-    def read_npz_into_layer(self, field_names, **kwargs):
+    def read_npz_into_layer(self, field_types, **kwargs):
         if self.aggregate_by_site_ckb.isChecked():
-            self.read_npz_into_layer_aggr_by_site(field_names, **kwargs)
+            self.read_npz_into_layer_aggr_by_site(field_types, **kwargs)
         else:
             # do not aggregate by site, then aggregate by zone afterwards if
             # required
-            self.read_npz_into_layer_no_aggr(field_names, **kwargs)
+            self.read_npz_into_layer_no_aggr(field_types, **kwargs)
 
-    def read_npz_into_layer_no_aggr(self, field_names, **kwargs):
+    def read_npz_into_layer_no_aggr(self, field_types, **kwargs):
         rlz_or_stat = kwargs['rlz_or_stat']
         loss_type = kwargs['loss_type']
         with edit(self.layer):
@@ -200,19 +195,19 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
             for row in data:
                 # add a feature
                 feat = QgsFeature(self.layer.fields())
-                for field_name_idx, field_name in enumerate(field_names):
+                for field_name, field_type in field_types.items():
                     if field_name in ['lon', 'lat']:
                         continue
                     elif field_name in data.dtype.names:
                         value = row[field_name]
-                        try:
-                            value = float(value)
-                        except ValueError:
+                        if data[field_name].dtype.char == 'S':
                             value = str(value, encoding='utf8').strip('"')
+                        else:
+                            value = float(value)
                     else:
                         value = float(
                             row[loss_type][field_name[len(loss_type)+1:]])
-                    feat.setAttribute(field_names[field_name_idx], value)
+                    feat.setAttribute(field_name, value)
                 feat.setGeometry(QgsGeometry.fromPointXY(
                     QgsPointXY(row['lon'], row['lat'])))
                 feats.append(feat)
@@ -221,7 +216,7 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
                 msg = 'There was a problem adding features to the layer.'
                 log_msg(msg, level='C', message_bar=self.iface.messageBar())
 
-    def read_npz_into_layer_aggr_by_site(self, field_names, **kwargs):
+    def read_npz_into_layer_aggr_by_site(self, field_types, **kwargs):
         rlz_or_stat = kwargs['rlz_or_stat']
         loss_type = kwargs['loss_type']
         taxonomy = kwargs['taxonomy']
@@ -233,11 +228,14 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
             for row in grouped_by_site:
                 # add a feature
                 feat = QgsFeature(self.layer.fields())
-                for field_name_idx, field_name in enumerate(field_names):
+                field_idx = 0
+                for field_name, field_type in field_types.items():
                     if field_name in ['lon', 'lat']:
+                        field_idx += 1
                         continue
-                    value = float(row[field_name_idx])
-                    feat.setAttribute(field_names[field_name_idx], value)
+                    value = float(row[field_idx])
+                    feat.setAttribute(field_name, value)
+                    field_idx += 1
                 feat.setGeometry(QgsGeometry.fromPointXY(
                     QgsPointXY(row['lon'], row['lat'])))
                 feats.append(feat)

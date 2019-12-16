@@ -59,22 +59,18 @@ A mirror of this repository, hosted in Pavia (Italy), is available at
 `https://mirror.openquake.org/git/GEM/oq-irmt-qgis.git <https://mirror.openquake.org/git/GEM/oq-irmt-qgis.git>`_.
 
 
-How to run tests on Ubuntu 18.04 LTS
-====================================
+How to run tests and build the documentation
+============================================
 
-In order to run tests on Ubuntu 18.04 LTS and above, QGIS has to be installed
-as described above and the following additional packages are required:
-``python3-scipy``, ``python3-nose``, ``python3-coverage``, ``python3-mock``
-
-If the environment is not already set, run the script ``run-env-linux.sh``,
-providing the required argument (in most cases, specifying the directory `/usr`)
+Tests run on a QGIS docker container based on Ubuntu Xenial (16.04LTS), launching one of the following commands from the `svir` directory:
 
 .. code-block:: bash
 
-    $ source scripts/run-env-linux.sh /usr
+   $ ../scripts/run_unit_tests.sh
+   $ ../scripts/run_integration_tests.sh
 
-Then, move to the ``svir`` directory and run
+The user manual, both in the html and pdf versions can be built by the same QGIS docker container running the following command from the `svir` directory:
 
 .. code-block:: bash
 
-    $ make test
+   $ ../scripts/make_doc.sh

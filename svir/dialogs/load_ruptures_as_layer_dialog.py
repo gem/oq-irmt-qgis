@@ -27,7 +27,6 @@ from collections import OrderedDict
 from qgis.PyQt.QtWidgets import QDialog
 from qgis.core import (
     QgsFeature, QgsGeometry, edit, QgsTask, QgsApplication)
-from svir.calculations.calculate_utils import add_numeric_attribute
 from svir.utilities.utils import log_msg, WaitCursorManager
 from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
 from svir.tasks.extract_npz_task import ExtractNpzTask
@@ -97,9 +96,10 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
         self.layer_name = 'ruptures_%sy' % investigation_time
         return self.layer_name
 
-    def get_field_names(self, **kwargs):
-        field_names = list(self.npz_file['array'].dtype.names)
-        return field_names
+    def get_field_types(self, **kwargs):
+        field_types = {name: self.npz_file['array'][name].dtype.char
+                       for name in self.npz_file['array'].dtype.names}
+        return field_types
 
     def load_from_npz(self):
         boundaries = gzip.decompress(self.npz_file['boundaries']).split(b'\n')
@@ -115,12 +115,8 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
         log_msg('Layer %s was loaded successfully' % self.layer_name,
                 level='S', message_bar=self.iface.messageBar())
 
-    def add_field_to_layer(self, field_name):
-        added_field_name = add_numeric_attribute(field_name, self.layer)
-        return added_field_name
-
     def read_npz_into_layer(
-            self, field_names, rlz_or_stat, boundaries, **kwargs):
+            self, field_types, rlz_or_stat, boundaries, **kwargs):
         with edit(self.layer):
             feats = []
             fields = self.layer.fields()

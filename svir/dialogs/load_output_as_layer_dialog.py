@@ -63,6 +63,7 @@ from qgis.PyQt.QtWidgets import (
                                  QGroupBox,
                                  )
 from qgis.PyQt.QtGui import QColor
+from svir.calculations.calculate_utils import add_attribute
 from svir.calculations.process_layer import ProcessLayer
 from svir.calculations.aggregate_loss_by_zone import (
     calculate_zonal_stats)
@@ -422,17 +423,20 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
     def build_layer_name(self, *args, **kwargs):
         raise NotImplementedError()
 
-    def get_field_names(self, **kwargs):
+    def get_field_types(self, **kwargs):
         raise NotImplementedError()
 
-    def add_field_to_layer(self, field_name):
-        raise NotImplementedError()
-
-    def read_npz_into_layer(self, field_names, **kwargs):
+    def read_npz_into_layer(self, field_types, **kwargs):
         raise NotImplementedError()
 
     def load_from_npz(self):
         raise NotImplementedError()
+
+    def add_field_to_layer(self, field_name, field_type):
+        # NOTE: add_attribute use the native qgis editing manager
+        added_field_name = add_attribute(
+            field_name, field_type, self.layer)
+        return added_field_name
 
     def get_investigation_time(self):
         if self.output_type in ('hcurves', 'uhs', 'hmaps', 'ruptures'):
@@ -459,27 +463,27 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         layer_name = self.build_layer_name(
             rlz_or_stat=rlz_or_stat, taxonomy=taxonomy, poe=poe,
             loss_type=loss_type, dmg_state=dmg_state, gsim=gsim, imt=imt)
-        field_names = self.get_field_names(
+        field_types = self.get_field_types(
             rlz_or_stat=rlz_or_stat, taxonomy=taxonomy, poe=poe,
             loss_type=loss_type, dmg_state=dmg_state, imt=imt)
 
         # create layer
         self.layer = QgsVectorLayer(
             "%s?crs=epsg:4326" % geometry_type, layer_name, "memory")
-        for field_name in field_names:
+        for field_name, field_type in field_types.items():
             if field_name in ['lon', 'lat', 'boundary']:
                 continue
-            added_field_name = self.add_field_to_layer(field_name)
+            added_field_name = self.add_field_to_layer(field_name, field_type)
             if field_name != added_field_name:
                 if field_name == self.default_field_name:
                     self.default_field_name = added_field_name
                 # replace field_name with the actual added_field_name
-                field_name_idx = field_names.index(field_name)
-                field_names.remove(field_name)
-                field_names.insert(field_name_idx, added_field_name)
+                field_type = field_types[field_name]
+                del field_types[field_name]
+                field_types[added_field_name] = field_type
 
         self.read_npz_into_layer(
-            field_names, rlz_or_stat=rlz_or_stat, taxonomy=taxonomy, poe=poe,
+            field_types, rlz_or_stat=rlz_or_stat, taxonomy=taxonomy, poe=poe,
             loss_type=loss_type, dmg_state=dmg_state, imt=imt,
             boundaries=boundaries)
         if (self.output_type == 'dmg_by_asset' and
@@ -606,7 +610,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         if num_unique_values > 2:
             renderer = QgsGraduatedSymbolRenderer.createRenderer(
                 layer,
-                QgsExpression.quotedColumnRef(style_by),
+                style_by,
                 min(num_unique_values, style['classes']),
                 mode,
                 symbol.clone(),
@@ -632,8 +636,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                     unique_value, symbol, str(unique_value))
                 # entry for the list of category items
                 categories.append(category)
-            renderer = QgsCategorizedSymbolRenderer(
-                QgsExpression.quotedColumnRef(style_by), categories)
+            renderer = QgsCategorizedSymbolRenderer(style_by, categories)
         else:
             renderer = QgsSingleSymbolRenderer(symbol.clone())
         if add_null_class and NULL in unique_values:
@@ -720,8 +723,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             # entry for the list of category items
             categories.append(category)
         # create renderer object
-        renderer = QgsCategorizedSymbolRenderer(
-            QgsExpression.quotedColumnRef(style_by), categories)
+        renderer = QgsCategorizedSymbolRenderer(style_by, categories)
         # assign the created renderer to the layer
         if renderer is not None:
             layer.setRenderer(renderer)

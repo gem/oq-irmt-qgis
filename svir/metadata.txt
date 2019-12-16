@@ -26,6 +26,7 @@ changelog=
     3.8.0
     * Ground motion fields are loaded from the OQ-Engine after pre-filtering them by event id, thus dramatically reducing data transfer and visualization time. This improvement made
       it possible to enable the visualization of ground motion fields also for event-based calculations.
+    * Field data types of layers created from OQ-Engine outputs were fixed (they were wrongly all numeric before)
     * The list of calculation can be filtered by job id. This also makes possible to visualize old calculations that would not be listed among the most recent 100 calculations.
     * Ruptures are loaded through the OQ-Engine extract api, instead of exporting and loading the corresponding csv file.
     * Ruptures can be filtered by minimum magnitude, and a clear error message is displayed if no ruptures of such a high magnitude are found.
