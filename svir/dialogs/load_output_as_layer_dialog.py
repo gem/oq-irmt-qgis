@@ -459,10 +459,12 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
 
     def build_layer(self, rlz_or_stat=None, taxonomy=None, poe=None,
                     loss_type=None, dmg_state=None, gsim=None, imt=None,
-                    boundaries=None, geometry_type='Point'):
+                    boundaries=None, geometry_type='point', wkt_geom_type=None,
+                    row_wkt_geom_types=None):
         layer_name = self.build_layer_name(
             rlz_or_stat=rlz_or_stat, taxonomy=taxonomy, poe=poe,
-            loss_type=loss_type, dmg_state=dmg_state, gsim=gsim, imt=imt)
+            loss_type=loss_type, dmg_state=dmg_state, gsim=gsim, imt=imt,
+            geometry_type=geometry_type)
         field_types = self.get_field_types(
             rlz_or_stat=rlz_or_stat, taxonomy=taxonomy, poe=poe,
             loss_type=loss_type, dmg_state=dmg_state, imt=imt)
@@ -485,7 +487,9 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.read_npz_into_layer(
             field_types, rlz_or_stat=rlz_or_stat, taxonomy=taxonomy, poe=poe,
             loss_type=loss_type, dmg_state=dmg_state, imt=imt,
-            boundaries=boundaries)
+            boundaries=boundaries, geometry_type=geometry_type,
+            wkt_geom_type=wkt_geom_type,
+            row_wkt_geom_types=row_wkt_geom_types)
         if (self.output_type == 'dmg_by_asset' and
                 not self.aggregate_by_site_ckb.isChecked()):
             self.layer.setCustomProperty('output_type', 'recovery_curves')
