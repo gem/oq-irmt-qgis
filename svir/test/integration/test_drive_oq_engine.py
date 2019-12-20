@@ -112,6 +112,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                                                  calc['description']))
             calc_output_list = \
                 cls.irmt.drive_oq_engine_server_dlg.get_output_list(calc['id'])
+            if isinstance(calc_output_list, Exception):
+                raise calc_output_list
             cls.output_list[calc['id']] = calc_output_list
             print('\t\tOutput types: %s' % ', '.join(
                 [output['type'] for output in calc_output_list]))
@@ -318,12 +320,19 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             output_dict['loading_time'] = loading_time
             self.time_consuming_outputs.append(output_dict)
             self.global_time_consuming_outputs.append(output_dict)
-        if output_dict['output_type'] in OQ_EXTRACT_TO_LAYER_TYPES:
+        output_type = output_dict['output_type']
+        if output_type in OQ_EXTRACT_TO_LAYER_TYPES:
             loaded_layer = self.irmt.iface.activeLayer()
-            self.assertIsNotNone(loaded_layer, 'No layer was loaded')
-            num_feats = loaded_layer.featureCount()
-            self.assertGreater(
-                num_feats, 0, 'The loaded layer does not contain any feature!')
+            if output_type == 'gmf_data':
+                if loaded_layer is None:
+                    print('\t\tWARNING: no layer was loaded. It should mean '
+                          'that no data could be loaded for the chosen eid')
+            else:
+                self.assertIsNotNone(loaded_layer, 'No layer was loaded')
+                num_feats = loaded_layer.featureCount()
+                self.assertGreater(
+                    num_feats, 0,
+                    'The loaded layer does not contain any feature!')
 
     def load_calc_output(
             self, calc, selected_output_type,

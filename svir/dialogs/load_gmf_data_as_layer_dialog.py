@@ -22,6 +22,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
+import os
+from qgis.PyQt.QtWidgets import QInputDialog, QDialog
 from qgis.core import (
     QgsFeature, QgsGeometry, QgsPointXY, edit, QgsTask, QgsApplication)
 from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
@@ -48,21 +50,57 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
             'Load ground motion fields as layer')
         self.create_num_sites_indicator()
         # NOTE: gmpe and gsim are synonyms
-        self.create_rlz_or_stat_selector('Ground Motion Prediction Equation')
+        self.create_rlz_or_stat_selector(
+            label='Ground Motion Prediction Equation')
+        # NOTE: we do not display the selector for realizations, but we can
+        # still update and use its contents (e.g. to display the gmpe
+        # corresponding to the chosen event)
+        self.rlz_or_stat_cbx.setVisible(False)
         self.create_imt_selector()
-        self.create_eid_selector()
 
+        log_msg('Extracting number of events. Watch progress in QGIS task bar',
+                level='I', message_bar=self.iface.messageBar())
+        self.extract_npz_task = ExtractNpzTask(
+            'Extract number of events', QgsTask.CanCancel, self.session,
+            self.hostname, self.calc_id, 'num_events', self.get_eid,
+            self.on_extract_error)
+        QgsApplication.taskManager().addTask(self.extract_npz_task)
+
+    def get_eid(self, num_events_npz):
+        num_events = num_events_npz['num_events']
+        if 'GEM_QGIS_TEST' in os.environ:
+            self.eid, ok = 0, True
+        else:
+            self.eid, ok = QInputDialog.getInt(
+                self.drive_engine_dlg,
+                "Select an event ID", "range (0 - %s)" % (num_events - 1),
+                0, 0, num_events - 1)
+        if not ok:
+            self.reject()
+            return
         log_msg('Extracting ground motion fields.'
                 ' Watch progress in QGIS task bar',
                 level='I', message_bar=self.iface.messageBar())
         self.extract_npz_task = ExtractNpzTask(
             'Extract ground motion fields', QgsTask.CanCancel, self.session,
             self.hostname, self.calc_id, self.output_type, self.finalize_init,
-            self.on_extract_error)
+            self.on_extract_error, params={'event_id': self.eid})
         QgsApplication.taskManager().addTask(self.extract_npz_task)
 
+    def finalize_init(self, gmf_data_npz):
+        self.npz_file = gmf_data_npz
+        self.populate_rlz_or_stat_cbx()
+        self.show_num_sites()
+        self.adjustSize()
+        self.set_ok_button()
+        self.show()
+        self.init_done.emit()
+
     def set_ok_button(self):
-        self.ok_button.setEnabled(self.imt_cbx.currentIndex() != -1)
+        if not len(self.dataset) and 'GEM_QGIS_TEST' in os.environ:
+            self.ok_button.setEnabled(True)
+        else:
+            self.ok_button.setEnabled(self.imt_cbx.currentIndex() != -1)
 
     def show_num_sites(self):
         # NOTE: we are assuming all realizations have the same number of sites,
@@ -71,9 +109,13 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
         #       need to move this block of code inside on_rlz_or_stat_changed()
         rlz = self.rlz_or_stat_cbx.itemData(
             self.rlz_or_stat_cbx.currentIndex())
-        gmf_data = self.npz_file[rlz]
-        self.num_sites_lbl.setText(
-            self.num_sites_msg % gmf_data.shape)
+        try:
+            gmf_data = self.npz_file[rlz]
+        except AttributeError:
+            self.num_sites_lbl.setText(self.num_sites_msg % 0)
+            return
+        else:
+            self.num_sites_lbl.setText(self.num_sites_msg % gmf_data.shape)
 
     def populate_rlz_or_stat_cbx(self):
         self.rlzs_or_stats = [key for key in sorted(self.npz_file)
@@ -95,31 +137,36 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
     def on_rlz_or_stat_changed(self):
         rlz = self.rlz_or_stat_cbx.itemData(
             self.rlz_or_stat_cbx.currentIndex())
+        gmpe = self.rlz_or_stat_cbx.currentText()
+        self.rlz_or_stat_lbl.setText("GMPE: %s" % gmpe)
         self.dataset = self.npz_file[rlz]
-        imts = self.dataset.dtype.names[2:]
+        if not len(self.dataset):
+            log_msg('No data corresponds to the chosen event and GMPE',
+                    level='W', message_bar=self.iface.messageBar())
+            if 'GEM_QGIS_TEST' in os.environ:
+                self.set_ok_button()
+            return
+        try:
+            imts = list(self.oqparam['hazard_imtls'].keys())
+        except KeyError:
+            imts = list(self.oqparam['risk_imtls'].keys())
         self.imt_cbx.clear()
         self.imt_cbx.setEnabled(True)
         self.imt_cbx.addItems(imts)
         self.set_ok_button()
 
     def on_imt_changed(self):
-        imt = self.imt_cbx.currentText()
-        if imt:
-            min_eid = 0
-            max_eid = (self.dataset[imt].shape[1] - 1)
-            self.eid_sbx.cleanText()
-            self.eid_sbx.setEnabled(True)
-            self.eid_lbl.setText(
-                'Event ID (used for default styling) (range %d-%d)' % (
-                    min_eid, max_eid))
-            self.eid_sbx.setRange(min_eid, max_eid)
         self.set_ok_button()
+
+    def accept(self):
+        if not len(self.dataset) and 'GEM_QGIS_TEST' in os.environ:
+            QDialog.accept(self)
+        else:
+            super().accept()
 
     def load_from_npz(self):
         for rlz, gsim in zip(self.rlzs_or_stats, self.gsims):
-            if (not self.load_all_rlzs_or_stats_chk.isChecked()
-                    and gsim != self.rlz_or_stat_cbx.currentText()):
-                continue
+            # NOTE: selecting only 1 event, we have only 1 gsim
             with WaitCursorManager('Creating layer for "%s"...'
                                    % gsim, self.iface.messageBar()):
                 self.build_layer(rlz_or_stat=rlz, gsim=gsim)
@@ -130,7 +177,6 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
 
     def build_layer_name(self, gsim=None, **kwargs):
         self.imt = self.imt_cbx.currentText()
-        self.eid = self.eid_sbx.value()
         self.default_field_name = '%s-%s' % (self.imt, self.eid)
         # NOTE: assuming it's a scenario calculation
         layer_name = "scenario_gmfs_%s_eid-%s" % (gsim, self.eid)
@@ -162,7 +208,7 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
                     if field_name in ['lon', 'lat']:
                         continue
                     layer_field_name = d2l_field_names[field_name]
-                    value = float(row[field_name][self.eid])
+                    value = float(row[field_name])
                     feat.setAttribute(layer_field_name, value)
                 feat.setGeometry(QgsGeometry.fromPointXY(
                     QgsPointXY(row[0], row[1])))

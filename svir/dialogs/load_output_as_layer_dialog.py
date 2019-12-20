@@ -117,6 +117,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         # Disable ok_button until all user options are set
         self.ok_button = self.buttonBox.button(QDialogButtonBox.Ok)
         self.ok_button.setDisabled(True)
+        self.oqparam = self.drive_engine_dlg.get_oqparam()
 
     def on_extract_error(self, exception):
         if isinstance(exception, TaskCanceled):
