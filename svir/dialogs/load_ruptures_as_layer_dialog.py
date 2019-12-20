@@ -117,6 +117,8 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
             elif wkt_geom_type == QgsWkbTypes.PointGeometry:
                 layer_geom_type = 'point'
             else:
+                # TODO: we might consider handling also multipoint,
+                # multilinestring and multipolygon
                 raise ValueError(
                     'Unexpected geometry type: %s' % wkt_geom_type)
             with WaitCursorManager(
