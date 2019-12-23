@@ -24,6 +24,7 @@ email=staff.it@globalquakemodel.org
 # Uncomment the following line and add your changelog entries:
 changelog=
     3.8.0
+    * The visualization of dmg_by_event and losses_by_event is enabled also for event-based calculations
     * Ground motion fields are loaded from the OQ-Engine after pre-filtering them by event id, thus dramatically reducing data transfer and visualization time. This improvement made
       it possible to enable the visualization of ground motion fields also for event-based calculations.
     * Field data types of layers created from OQ-Engine outputs were fixed (they were wrongly all numeric before)
