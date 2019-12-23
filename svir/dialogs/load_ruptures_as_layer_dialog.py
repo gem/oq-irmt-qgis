@@ -107,7 +107,7 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
     def load_from_npz(self):
         boundaries = gzip.decompress(self.npz_file['boundaries']).split(b'\n')
         row_wkt_geom_types = {
-            row_idx: QgsGeometry.fromWkt(boundary.decode('utf8')).type()
+            row_idx: QgsGeometry.fromWkt(boundary.decode('utf8')).wkbType()
             for row_idx, boundary in enumerate(boundaries)}
         wkt_geom_types = set(row_wkt_geom_types.values())
         if len(wkt_geom_types) > 1:
@@ -116,15 +116,19 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
         else:
             rup_group = None
         for wkt_geom_type in wkt_geom_types:
-            if wkt_geom_type == QgsWkbTypes.PolygonGeometry:
-                layer_geom_type = 'polygon'
-            elif wkt_geom_type == QgsWkbTypes.LineGeometry:
-                layer_geom_type = 'linestring'
-            elif wkt_geom_type == QgsWkbTypes.PointGeometry:
-                layer_geom_type = 'point'
+            if wkt_geom_type == QgsWkbTypes.Point:
+                layer_geom_type = "point"
+            elif wkt_geom_type == QgsWkbTypes.LineString:
+                layer_geom_type = "linestring"
+            elif wkt_geom_type == QgsWkbTypes.Polygon:
+                layer_geom_type = "polygon"
+            elif wkt_geom_type == QgsWkbTypes.MultiPoint:
+                layer_geom_type = "multipoint"
+            elif wkt_geom_type == QgsWkbTypes.MultiLineString:
+                layer_geom_type = "multilinestring"
+            elif wkt_geom_type == QgsWkbTypes.MultiPolygon:
+                layer_geom_type = "multipolygon"
             else:
-                # TODO: we might consider handling also multipoint,
-                # multilinestring and multipolygon
                 raise ValueError(
                     'Unexpected geometry type: %s' % wkt_geom_type)
             with WaitCursorManager(
