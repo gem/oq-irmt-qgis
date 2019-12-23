@@ -839,12 +839,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             if row['type'] in (OQ_TO_LAYER_TYPES |
                                OQ_RST_TYPES |
                                OQ_EXTRACT_TO_VIEW_TYPES):
-                # TODO: remove check when dmg_by_event and losses_by_event
-                #       will be loadable also for event_based
-                if not (row['type'] in ['dmg_by_event',
-                                        'losses_by_event']
-                        and 'event_based' in calculation_mode):
-                    num_actions += 1  # needs additional column for loader btn
+                num_actions += 1  # needs additional column for loader btn
             if "%s_aggr" % row['type'] in OQ_EXTRACT_TO_VIEW_TYPES:
                 num_actions += 1
             max_actions = max(max_actions, num_actions)
@@ -896,12 +891,6 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                         action = 'Load table'
                     else:
                         action = 'Load layer'
-                    # TODO: remove check when dmg_by_event and losses_by_event
-                    #       will be loadable also for event_based
-                    if (output['type'] in ['dmg_by_event',
-                                           'losses_by_event']
-                            and calculation_mode == 'event_based'):
-                        continue
                     button = QPushButton()
                     self.connect_button_to_action(
                         button, action, output, outtype)
