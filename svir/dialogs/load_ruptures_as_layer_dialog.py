@@ -26,8 +26,9 @@ import gzip
 from collections import OrderedDict
 from qgis.PyQt.QtWidgets import QDialog
 from qgis.core import (
-    QgsFeature, QgsGeometry, QgsWkbTypes, edit, QgsTask, QgsApplication)
-from svir.utilities.utils import log_msg, WaitCursorManager
+    QgsFeature, QgsGeometry, QgsWkbTypes, edit, QgsTask, QgsApplication,
+    QgsProject)
+from svir.utilities.utils import log_msg, WaitCursorManager, zoom_to_group
 from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
 from svir.tasks.extract_npz_task import ExtractNpzTask
 
@@ -109,6 +110,11 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
             row_idx: QgsGeometry.fromWkt(boundary.decode('utf8')).type()
             for row_idx, boundary in enumerate(boundaries)}
         wkt_geom_types = set(row_wkt_geom_types.values())
+        if len(wkt_geom_types) > 1:
+            root = QgsProject.instance().layerTreeRoot()
+            rup_group = root.insertGroup(0, "Earthquake Ruptures")
+        else:
+            rup_group = None
         for wkt_geom_type in wkt_geom_types:
             if wkt_geom_type == QgsWkbTypes.PolygonGeometry:
                 layer_geom_type = 'polygon'
@@ -127,7 +133,8 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
                 self.build_layer(boundaries=boundaries,
                                  geometry_type=layer_geom_type,
                                  wkt_geom_type=wkt_geom_type,
-                                 row_wkt_geom_types=row_wkt_geom_types)
+                                 row_wkt_geom_types=row_wkt_geom_types,
+                                 add_to_group=rup_group)
             style_by = self.style_by_cbx.itemData(
                 self.style_by_cbx.currentIndex())
             if style_by == 'mag':
@@ -137,6 +144,8 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
                 self.style_categorized(layer=self.layer, style_by=style_by)
             log_msg('Layer %s was loaded successfully' % self.layer_name,
                     level='S', message_bar=self.iface.messageBar())
+        if rup_group:
+            zoom_to_group(rup_group)
 
     def read_npz_into_layer(
             self, field_types, rlz_or_stat, boundaries,

@@ -460,7 +460,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
     def build_layer(self, rlz_or_stat=None, taxonomy=None, poe=None,
                     loss_type=None, dmg_state=None, gsim=None, imt=None,
                     boundaries=None, geometry_type='point', wkt_geom_type=None,
-                    row_wkt_geom_types=None):
+                    row_wkt_geom_types=None, add_to_group=None):
         layer_name = self.build_layer_name(
             rlz_or_stat=rlz_or_stat, taxonomy=taxonomy, poe=poe,
             loss_type=loss_type, dmg_state=dmg_state, gsim=gsim, imt=imt,
@@ -522,11 +522,19 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         except AttributeError:
             # the aggregation stuff might not exist for some loaders
             pass
-        root = QgsProject.instance().layerTreeRoot()
         QgsProject.instance().addMapLayer(self.layer, False)
-        root.insertLayer(0, self.layer)
+        if add_to_group:
+            tree_node = add_to_group
+        else:
+            tree_node = QgsProject.instance().layerTreeRoot()
+        tree_node.insertLayer(0, self.layer)
         self.iface.setActiveLayer(self.layer)
-        self.iface.zoomToActiveLayer()
+        if add_to_group:
+            # NOTE: zooming to group from caller function, to avoid repeating
+            #       it once per layer
+            pass
+        else:
+            self.iface.zoomToActiveLayer()
         log_msg('Layer %s was created successfully' % layer_name, level='S',
                 message_bar=self.iface.messageBar())
 

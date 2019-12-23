@@ -43,6 +43,8 @@ from qgis.core import (
                        QgsVectorLayer,
                        QgsVectorFileWriter,
                        Qgis,
+                       QgsRectangle,
+                       QgsLayerTreeLayer,
                        )
 from qgis.gui import QgsMessageBar, QgsMessageBarItem
 from qgis.utils import iface
@@ -1237,3 +1239,14 @@ def write_metadata_to_layer(
         if value is not None:
             lm.addKeywords("oquser:%s" % param, [str(value)])
     layer.setMetadata(lm)
+
+
+def zoom_to_group(group):
+    extent = QgsRectangle()
+    extent.setMinimal()
+    # Iterate through layers from group and combine their extent
+    for child in group.children():
+        if isinstance(child, QgsLayerTreeLayer):
+            extent.combineExtentWith(child.layer().extent())
+    iface.mapCanvas().setExtent(extent)
+    iface.mapCanvas().refresh()
