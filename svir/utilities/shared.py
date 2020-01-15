@@ -271,6 +271,10 @@ DEFAULT_PLATFORM_PROFILES = (
     '{"OpenQuake Platform": {'
     '"username": "", "password": "",'
     '"hostname": "https://platform.openquake.org"}}')
+DEFAULT_GEOVIEWER_PROFILES = (
+    '{"Local OpenQuake GeoViewer": {'
+    '"username": "", "password": "",'
+    '"hostname": "http://localhost:8000"}}')
 DEFAULT_ENGINE_PROFILES = (
     '{"Local OpenQuake Engine Server": {'
     '"username": "", "password": "",'
