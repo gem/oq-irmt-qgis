@@ -37,7 +37,6 @@ from pygments.formatters import HtmlFormatter
 from copy import deepcopy
 from time import time
 from pprint import pformat
-from requests.auth import HTTPBasicAuth
 from qgis.core import (
                        QgsProject,
                        QgsMessageLog,
@@ -536,10 +535,10 @@ def geoviewer_login(host, username, password, session):
     :param session: The session to be autenticated
     :type session: Session
     """
+    session.auth = (username, password)
     login_url = host + '/api/authenticate/'
     try:
         session_resp = session.post(login_url,
-                                    auth=HTTPBasicAuth(username, password),
                                     timeout=10)
     except Exception:
         msg = "Unable to login. %s" % traceback.format_exc()
