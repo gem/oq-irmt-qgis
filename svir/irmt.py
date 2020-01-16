@@ -30,9 +30,12 @@ import uuid
 import fileinput
 import re
 import processing
+import json
+import traceback
 
 from copy import deepcopy
 from math import floor, ceil
+from requests import Session
 from qgis.core import (
                        QgsVectorLayer,
                        QgsMapLayer,
@@ -95,12 +98,14 @@ from svir.utilities.utils import (tr,
                                   get_checksum,
                                   warn_missing_package,
                                   import_layer_from_csv,
+                                  geoviewer_login,
                                   )
 from svir.utilities.shared import (DEBUG,
                                    PROJECT_TEMPLATE,
                                    THEME_TEMPLATE,
                                    INDICATOR_TEMPLATE,
                                    OQ_XMARKER_TYPES,
+                                   DEFAULT_GEOVIEWER_PROFILES,
                                    OPERATORS_DICT)
 from svir.ui.tool_button_with_help_link import QToolButtonWithHelpLink
 from svir.processing_provider.provider import Provider
@@ -201,6 +206,15 @@ class Irmt(object):
 
         self.menu_action = menu_bar.insertMenu(
             self.iface.firstRightStandardMenu().menuAction(), self.menu)
+
+        # Action to list OQ GeoViewer projects
+        self.add_menu_item("import_geoviewer_project",
+                           ":/plugins/irmt/load_layer.svg",
+                           u"Import project from the OpenQuake &GeoViewer",
+                           self.import_geoviewer_project,
+                           enable=True,
+                           add_to_layer_actions=False,
+                           submenu='OQ GeoViewer')
 
         # Action to activate the modal dialog to import socioeconomic
         # data from the platform
@@ -797,6 +811,45 @@ class Irmt(object):
             elif field.name() == 'COUNTRY_NA':
                 layer.setFieldAlias(
                     field_idx, 'Country name')
+
+    def import_geoviewer_project(self):
+        """
+        FIXME
+        """
+        mySettings = QSettings()
+        profiles = json.loads(mySettings.value(
+            'irmt/geoviewer_profiles', DEFAULT_GEOVIEWER_PROFILES))
+        # FIXME: make a utility function to retrieve credentials from settings
+        profile = profiles['Local OpenQuake GeoViewer']
+        session = Session()
+        hostname, username, password = (profile['hostname'],
+                                        profile['username'],
+                                        profile['password'])
+        session.auth = (username, password)
+        try:
+            geoviewer_login(hostname, username, password, session)
+        except Exception as exc:
+            err_msg = "Unable to connect (see Log Message Panel for details)"
+            log_msg(err_msg, level='C', message_bar=self.iface.messageBar(),
+                    exception=exc)
+        else:
+            msg = 'Able to connect'
+            log_msg(msg, level='S', message_bar=self.iface.messageBar(),
+                    duration=3)
+        project_list_url = hostname + '/api/project_list/'
+        try:
+            resp = session.get(project_list_url, timeout=10)
+        except Exception:
+            msg = "Unable to retrieve the list of projects.\n%s" % (
+                traceback.format_exc())
+            raise SvNetworkError(msg)
+        if resp.status_code != 200:  # 200 means successful:OK
+            error_message = ('Unable to retrieve the list of projects: %s' %
+                             resp.text)
+            raise SvNetworkError(error_message)
+        project_list = json.loads(resp.text)
+        # TODO: open a dialog with a list of projects showing chosen properties
+        # TODO: download the selected project
 
     def download_layer(self):
         """
