@@ -34,7 +34,7 @@ from svir.utilities.defaults import DEFAULTS
 from svir.calculations.process_layer import ProcessLayer
 from svir.utilities.shared import (IRMT_PLUGIN_VERSION,
                                    SUPPLEMENTAL_INFORMATION_VERSION,
-                                   DEBUG,
+                                   DEBUG, LICENSES, DEFAULT_LICENSE,
                                    )
 from svir.utilities.utils import (reload_attrib_cbx,
                                   tr,
@@ -48,17 +48,6 @@ from svir.utilities.utils import (reload_attrib_cbx,
                                   get_ui_class,
                                   get_credentials,
                                   )
-
-LICENSES = (
-    ('CC0', 'http://creativecommons.org/about/cc0'),
-    ('CC BY 3.0 ', 'http://creativecommons.org/licenses/by/3.0/'),
-    ('CC BY-SA 3.0', 'http://creativecommons.org/licenses/by-sa/3.0/'),
-    ('CC BY-NC-SA 3.0', 'http://creativecommons.org/licenses/by-nc-sa/3.0/'),
-    ('CC BY 4.0', 'https://creativecommons.org/licenses/by/4.0/'),
-    ('CC BY-SA 4.0', 'https://creativecommons.org/licenses/by-sa/4.0/'),
-    ('CC BY-NC-SA 4.0', 'https://creativecommons.org/licenses/by-nc-sa/4.0/')
-)
-DEFAULT_LICENSE = LICENSES[5]  # CC BY-SA 4.0
 
 FORM_CLASS = get_ui_class('ui_upload_settings.ui')
 

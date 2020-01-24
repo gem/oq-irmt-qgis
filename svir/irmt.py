@@ -30,12 +30,9 @@ import uuid
 import fileinput
 import re
 import processing
-import json
-import traceback
 
 from copy import deepcopy
 from math import floor, ceil
-from requests import Session
 from qgis.core import (
                        QgsVectorLayer,
                        QgsMapLayer,
@@ -64,6 +61,8 @@ from qgis.PyQt.QtGui import QIcon, QDesktopServices, QColor
 from svir.dialogs.viewer_dock import ViewerDock
 from svir.utilities.import_sv_data import get_loggedin_downloader
 from svir.dialogs.download_layer_dialog import DownloadLayerDialog
+from svir.dialogs.import_gv_proj_dialog import ImportGvProjDialog
+from svir.dialogs.upload_gv_proj_dialog import UploadGvProjDialog
 from svir.dialogs.projects_manager_dialog import ProjectsManagerDialog
 from svir.dialogs.select_sv_variables_dialog import SelectSvVariablesDialog
 from svir.dialogs.settings_dialog import SettingsDialog
@@ -98,14 +97,12 @@ from svir.utilities.utils import (tr,
                                   get_checksum,
                                   warn_missing_package,
                                   import_layer_from_csv,
-                                  geoviewer_login,
                                   )
 from svir.utilities.shared import (DEBUG,
                                    PROJECT_TEMPLATE,
                                    THEME_TEMPLATE,
                                    INDICATOR_TEMPLATE,
                                    OQ_XMARKER_TYPES,
-                                   DEFAULT_GEOVIEWER_PROFILES,
                                    OPERATORS_DICT)
 from svir.ui.tool_button_with_help_link import QToolButtonWithHelpLink
 from svir.processing_provider.provider import Provider
@@ -212,6 +209,15 @@ class Irmt(object):
                            ":/plugins/irmt/load_layer.svg",
                            u"Import project from the OpenQuake &GeoViewer",
                            self.import_geoviewer_project,
+                           enable=True,
+                           add_to_layer_actions=False,
+                           submenu='OQ GeoViewer')
+
+        # Action to upload a project to the OQ GeoViewer
+        self.add_menu_item("upload_project_to_geoviewer",
+                           ":/plugins/irmt/upload.svg",
+                           u"Upload project to the OpenQuake &GeoViewer",
+                           self.upload_project_to_geoviewer,
                            enable=True,
                            add_to_layer_actions=False,
                            submenu='OQ GeoViewer')
@@ -816,40 +822,17 @@ class Irmt(object):
         """
         FIXME
         """
-        mySettings = QSettings()
-        profiles = json.loads(mySettings.value(
-            'irmt/geoviewer_profiles', DEFAULT_GEOVIEWER_PROFILES))
-        # FIXME: make a utility function to retrieve credentials from settings
-        profile = profiles['Local OpenQuake GeoViewer']
-        session = Session()
-        hostname, username, password = (profile['hostname'],
-                                        profile['username'],
-                                        profile['password'])
-        session.auth = (username, password)
-        try:
-            geoviewer_login(hostname, username, password, session)
-        except Exception as exc:
-            err_msg = "Unable to connect (see Log Message Panel for details)"
-            log_msg(err_msg, level='C', message_bar=self.iface.messageBar(),
-                    exception=exc)
-        else:
-            msg = 'Able to connect'
-            log_msg(msg, level='S', message_bar=self.iface.messageBar(),
-                    duration=3)
-        project_list_url = hostname + '/api/project_list/'
-        try:
-            resp = session.get(project_list_url, timeout=10)
-        except Exception:
-            msg = "Unable to retrieve the list of projects.\n%s" % (
-                traceback.format_exc())
-            raise SvNetworkError(msg)
-        if resp.status_code != 200:  # 200 means successful:OK
-            error_message = ('Unable to retrieve the list of projects: %s' %
-                             resp.text)
-            raise SvNetworkError(error_message)
-        project_list = json.loads(resp.text)
-        # TODO: open a dialog with a list of projects showing chosen properties
-        # TODO: download the selected project
+        self.download_gv_proj_dlg = ImportGvProjDialog(
+            self.iface.messageBar())
+        self.download_gv_proj_dlg.exec_()
+
+    def upload_project_to_geoviewer(self):
+        """
+        FIXME
+        """
+        self.upload_gv_proj_dlg = UploadGvProjDialog(
+            self.iface.messageBar())
+        self.upload_gv_proj_dlg.exec_()
 
     def download_layer(self):
         """
