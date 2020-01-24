@@ -22,18 +22,23 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
+import os
+import re
 import json
 import traceback
+import tempfile
 from requests import Session
 from qgis.core import (
     QgsApplication, QgsProcessingContext, QgsProcessingFeedback, QgsProject,
     QgsProcessingUtils, QgsField, QgsFields, QgsFeature, QgsGeometry,
-    QgsWkbTypes, QgsMemoryProviderUtils, QgsCoordinateReferenceSystem)
-from qgis.PyQt.QtCore import QSettings, QVariant
+    QgsWkbTypes, QgsMemoryProviderUtils, QgsCoordinateReferenceSystem,
+    QgsTask)
+from qgis.PyQt.QtCore import QSettings, QVariant, QDir, QFile
 from qgis.PyQt.QtWidgets import (
     QDialog, QDialogButtonBox)
 from processing.gui.AlgorithmExecutor import execute
-from svir.utilities.utils import get_ui_class, log_msg, geoviewer_login
+from svir.tasks.consolidate_task import ConsolidateTask
+from svir.utilities.utils import get_ui_class, log_msg, geoviewer_login, tr
 from svir.utilities.shared import (
     DEFAULT_GEOVIEWER_PROFILES, LICENSES, DEFAULT_LICENSE)
 
@@ -62,10 +67,6 @@ class UploadGvProjDialog(QDialog, FORM_CLASS):
         self.check_geometries()
         self.check_crs()
         self.populate_license_cbx()
-        if not self.consolidate():
-            self.reject()
-            return
-        self.upload_to_geoviewer()
 
     def set_ok_btn_status(self, proj_name):
         self.ok_button.setEnabled(bool(proj_name))
@@ -138,8 +139,78 @@ class UploadGvProjDialog(QDialog, FORM_CLASS):
                        " reference system" % layer.name())
                 log_msg(msg, level='C', message_bar=self.message_bar)
 
+    def accept(self):
+        self.consolidate()
+        self.upload_to_geoviewer()
+        super().accept()
+
     def consolidate(self):
-        pass
+        project_name = self.proj_name_le.text()
+        if project_name.endswith('.qgs'):
+            project_name = project_name[:-4]
+        if not project_name:
+            msg = tr("Please specify the project name")
+            log_msg(msg, level='C', message_bar=self.message_bar)
+            return
+
+        outputDir = tempfile.mkdtemp()
+        outputDir = os.path.join(outputDir,
+                                 get_valid_filename(project_name))
+
+        # create main directory if not exists
+        d = QDir(outputDir)
+        if not d.exists():
+            if not d.mkpath("."):
+                msg = tr("Can't create directory to store the project.")
+                log_msg(msg, level='C', message_bar=self.message_bar)
+                return
+
+        # create directory for layers if not exists
+        if not d.mkdir("layers"):
+            msg = tr("Can't create directory for layers.")
+            log_msg(msg, level='C', message_bar=self.message_bar)
+            return
+
+        # copy project file
+        projectFile = QgsProject.instance().fileName()
+        try:
+            if projectFile:
+                f = QFile(projectFile)
+                newProjectFile = os.path.join(outputDir,
+                                              '%s.qgs' % project_name)
+                f.copy(newProjectFile)
+            else:
+                newProjectFile = os.path.join(
+                    outputDir, '%s.qgs' % project_name)
+                p = QgsProject.instance()
+                p.write(newProjectFile)
+        except Exception as exc:
+            log_msg(str(exc), level='C',
+                    message_bar=self.message_bar,
+                    exception=exc)
+            return
+
+        # start consolidate task that does all real work
+        self.consolidateTask = ConsolidateTask(
+            'Consolidation', QgsTask.CanCancel, outputDir, newProjectFile,
+            True)
+        self.consolidateTask.begun.connect(self.on_consolidation_begun)
+        self.consolidateTask.taskCompleted.connect(
+            lambda: self.on_consolidation_completed(
+                newProjectFile))
+
+        QgsApplication.taskManager().addTask(self.consolidateTask)
+        super().accept()
+
+    def on_consolidation_begun(self):
+        log_msg("Consolidation started.", level='I', duration=4,
+                message_bar=self.message_bar)
+
+    def on_consolidation_completed(self, project_file):
+        zipped_project = "%s.zip" % os.path.splitext(project_file)[0]
+        log_msg("Uploading '%s' to geoviewer" % zipped_project, level='I',
+                message_bar=self.message_bar)
+        self.upload_to_geoviewer()
 
     def upload_to_geoviewer(self):
         pass
@@ -174,3 +245,17 @@ class MessageBarFeedback(QgsProcessingFeedback):
 
     def setProgressText(self, text):
         self.message_bar.pushInfo('Info', text)
+
+
+# from https://github.com/django/django/blob/master/django/utils/text.py#L223
+def get_valid_filename(s):
+    """
+    Return the given string converted to a string that can be used for a clean
+    filename. Remove leading and trailing spaces; convert other spaces to
+    underscores; and remove anything that is not an alphanumeric, dash,
+    underscore, or dot.
+    >>> get_valid_filename("john's portrait in 2004.jpg")
+    'johns_portrait_in_2004.jpg'
+    """
+    s = str(s).strip().replace(' ', '_')  # FIXME: str
+    return re.sub(r'(?u)[^-\w.]', '', s)
