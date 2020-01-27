@@ -38,7 +38,8 @@ from qgis.PyQt.QtWidgets import (
     QDialog, QDialogButtonBox)
 from processing.gui.AlgorithmExecutor import execute
 from svir.tasks.consolidate_task import ConsolidateTask
-from svir.utilities.utils import get_ui_class, log_msg, geoviewer_login, tr
+from svir.utilities.utils import (
+    get_ui_class, log_msg, get_credentials, tr, geoviewer_login)
 from svir.utilities.shared import (
     DEFAULT_GEOVIEWER_PROFILES, LICENSES, DEFAULT_LICENSE)
 
@@ -67,6 +68,12 @@ class UploadGvProjDialog(QDialog, FORM_CLASS):
         self.check_geometries()
         self.check_crs()
         self.populate_license_cbx()
+        self.session = Session()
+        self.authenticate()
+
+    def authenticate(self):
+        self.hostname, username, password = get_credentials('geoviewer')
+        geoviewer_login(self.hostname, username, password, self.session)
 
     def set_ok_btn_status(self, proj_name):
         self.ok_button.setEnabled(bool(proj_name))
@@ -103,6 +110,10 @@ class UploadGvProjDialog(QDialog, FORM_CLASS):
 
     def check_geometries(self):
         layers = list(QgsProject.instance().mapLayers().values())
+        if len(layers) == 0:
+            log_msg("The project has no layers",
+                    level='C', message_bar=self.message_bar)
+            return
         registry = QgsApplication.instance().processingRegistry()
         feedback = MessageBarFeedback(self.message_bar)
         # feedback = ConsoleFeedBack()
@@ -146,7 +157,6 @@ class UploadGvProjDialog(QDialog, FORM_CLASS):
     def accept(self):
         super().accept()
         self.consolidate()
-        self.upload_to_geoviewer()
 
     def consolidate(self):
         project_name = self.proj_name_le.text()
@@ -213,10 +223,19 @@ class UploadGvProjDialog(QDialog, FORM_CLASS):
         zipped_project = "%s.zip" % os.path.splitext(project_file)[0]
         log_msg("The project was consolidated and saved to '%s'"
                 % zipped_project, level='S')
-        self.upload_to_geoviewer()
+        self.upload_to_geoviewer(zipped_project)
 
-    def upload_to_geoviewer(self):
-        pass
+    def upload_to_geoviewer(self, zipped_project):
+        # FIXME: add license (to data?)
+        files = {'file': open(zipped_project, 'rb')}
+        r = self.session.post(
+            self.hostname + '/api/project/upload', files=files)
+        if r.ok:
+            msg = ("The project was successfully uploaded to the"
+                   " OpenQuake GeoViewer")
+            log_msg(msg, level='S', message_bar=self.message_bar)
+        else:
+            log_msg(r.reason, level='C', message_bar=self.message_bar)
 
 
 class ConsoleFeedBack(QgsProcessingFeedback):
