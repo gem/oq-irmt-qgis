@@ -117,6 +117,7 @@ class UploadGvProjDialog(QDialog, FORM_CLASS):
         # GEOS method
         parameters['METHOD'] = 2
         alg = registry.createAlgorithmById('qgis:checkvalidity')
+        invalid_features_found = False
         for layer in layers:
             parameters['INPUT_LAYER'] = layer.id()
             ok, results = execute(
@@ -126,10 +127,13 @@ class UploadGvProjDialog(QDialog, FORM_CLASS):
             if invalid_layer.featureCount():
                 feedback.reportError(
                     "Layer '%s' contains features with invalid geometries."
-                    " Please run Vector -> Geometry Tools -> Check Validity"
-                    " for further information" % layer.name())
-        feedback.pushInfo(
-            'All features in all layers in the project are valid')
+                    " A layer containing these invalid geometries was added"
+                    " to the project." % layer.name())
+                QgsProject.instance().addMapLayer(invalid_layer)
+                invalid_features_found = True
+        if not invalid_features_found:
+            feedback.pushInfo(
+                'All features in all layers in the project are valid')
 
     def check_crs(self):
         layers = list(QgsProject.instance().mapLayers().values())
@@ -140,9 +144,9 @@ class UploadGvProjDialog(QDialog, FORM_CLASS):
                 log_msg(msg, level='C', message_bar=self.message_bar)
 
     def accept(self):
+        super().accept()
         self.consolidate()
         self.upload_to_geoviewer()
-        super().accept()
 
     def consolidate(self):
         project_name = self.proj_name_le.text()
@@ -203,13 +207,12 @@ class UploadGvProjDialog(QDialog, FORM_CLASS):
         super().accept()
 
     def on_consolidation_begun(self):
-        log_msg("Consolidation started.", level='I', duration=4,
-                message_bar=self.message_bar)
+        log_msg("Consolidation started.", level='I', duration=4)
 
     def on_consolidation_completed(self, project_file):
         zipped_project = "%s.zip" % os.path.splitext(project_file)[0]
-        log_msg("Uploading '%s' to geoviewer" % zipped_project, level='I',
-                message_bar=self.message_bar)
+        log_msg("The project was consolidated and saved to '%s'"
+                % zipped_project, level='S')
         self.upload_to_geoviewer()
 
     def upload_to_geoviewer(self):

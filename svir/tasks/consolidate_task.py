@@ -70,7 +70,7 @@ class ConsolidateTask(QgsTask):
     def finished(self, success):
         if success:
             msg = 'Consolidation to "%s" complete.' % self.outputDir
-            log_msg(msg, level='S', message_bar=iface.messageBar())
+            log_msg(msg, level='S')
         else:
             if self.exception is not None:
                 if isinstance(self.exception, TaskCanceled):
