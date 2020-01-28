@@ -32,7 +32,7 @@ from qgis.core import (
     QgsApplication, QgsProcessingContext, QgsProcessingFeedback, QgsProject,
     QgsProcessingUtils, QgsField, QgsFields, QgsFeature, QgsGeometry,
     QgsWkbTypes, QgsMemoryProviderUtils, QgsCoordinateReferenceSystem,
-    QgsTask)
+    QgsTask, QgsMapLayerType)
 from qgis.PyQt.QtCore import QSettings, QVariant, QDir, QFile
 from qgis.PyQt.QtWidgets import (
     QDialog, QDialogButtonBox)
@@ -130,6 +130,8 @@ class UploadGvProjDialog(QDialog, FORM_CLASS):
         alg = registry.createAlgorithmById('qgis:checkvalidity')
         invalid_features_found = False
         for layer in layers:
+            if layer.type() != QgsMapLayerType.VectorLayer:
+                continue
             parameters['INPUT_LAYER'] = layer.id()
             ok, results = execute(
                 alg, parameters, context=context, feedback=feedback)
