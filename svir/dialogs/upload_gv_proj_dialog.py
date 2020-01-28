@@ -155,6 +155,10 @@ class UploadGvProjDialog(QDialog, FORM_CLASS):
                 msg = ("Layer '%s' does not have a valid coordinate"
                        " reference system" % layer.name())
                 log_msg(msg, level='C', message_bar=self.message_bar)
+        if not QgsProject.instance().crs().isValid():
+            msg = ("The current project does not have a valid coordinate"
+                   " reference system")
+            log_msg(msg, level='C', message_bar=self.message_bar)
 
     def accept(self):
         super().accept()
