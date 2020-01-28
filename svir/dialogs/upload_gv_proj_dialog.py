@@ -131,6 +131,18 @@ class UploadGvProjDialog(QDialog, FORM_CLASS):
         invalid_features_found = False
         for layer in layers:
             if layer.type() != QgsMapLayerType.VectorLayer:
+                # If it is not in a group for basemaps, give a warning
+                root = QgsProject.instance().layerTreeRoot()
+                tree_layer = root.findLayer(layer.id())
+                assert tree_layer
+                layer_parent = tree_layer.parent()
+                if (not layer_parent or
+                        layer_parent.name().lower().strip().replace(
+                            ' ', '') not in ('basemap', 'basemaps')):
+                    msg = ("Layer %s looks like a basemap, and it should"
+                           " probably be added to a group called"
+                           " 'Basemaps'" % layer.name())
+                    log_msg(msg, level='W', message_bar=self.message_bar)
                 continue
             parameters['INPUT_LAYER'] = layer.id()
             ok, results = execute(
@@ -247,7 +259,7 @@ class UploadGvProjDialog(QDialog, FORM_CLASS):
 class ConsoleFeedBack(QgsProcessingFeedback):
 
     def reportError(self, error, fatalError=False):
-            print(error)
+        print(error)
 
 
 class MessageBarFeedback(QgsProcessingFeedback):
