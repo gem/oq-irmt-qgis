@@ -244,10 +244,10 @@ class UploadGvProjDialog(QDialog, FORM_CLASS):
         self.upload_to_geoviewer(zipped_project)
 
     def upload_to_geoviewer(self, zipped_project):
-        data = {'license': self.license_cbx.currentText()}
+        # FIXME: add license (to data?)
         files = {'file': open(zipped_project, 'rb')}
         r = self.session.post(
-            self.hostname + '/api/project/upload', data=data, files=files)
+            self.hostname + '/api/project/upload', files=files)
         if r.ok:
             msg = ("The project was successfully uploaded to the"
                    " OpenQuake GeoViewer")
