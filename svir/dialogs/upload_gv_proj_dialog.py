@@ -28,6 +28,7 @@ import json
 import traceback
 import tempfile
 from requests import Session
+from qgis.server import QgsServerProjectUtils
 from qgis.core import (
     QgsApplication, QgsProcessingContext, QgsProcessingFeedback, QgsProject,
     QgsProcessingUtils, QgsField, QgsFields, QgsFeature, QgsGeometry,
@@ -65,6 +66,7 @@ class UploadGvProjDialog(QDialog, FORM_CLASS):
         self.ok_button.setEnabled(False)
         self.proj_name_le.textEdited.connect(self.set_ok_btn_status)
         # self.add_layer_with_invalid_geometries()  # useful to test validity
+        self.check_capabilities()
         self.check_geometries()
         self.check_crs()
         self.populate_license_cbx()
@@ -108,6 +110,15 @@ class UploadGvProjDialog(QDialog, FORM_CLASS):
         polygon_layer.rollBack()
         QgsProject.instance().addMapLayers([polygon_layer])
 
+    def check_capabilities(self):
+        p = QgsProject.instance()
+        if not QgsServerProjectUtils.owsServiceCapabilities(p):
+            log_msg("Project capabilities are disabled", level='W',
+                    message_bar=self.message_bar)
+        if QgsServerProjectUtils.wmsExtent(p).isEmpty():
+            log_msg("Project extent is not advertised", level='W',
+                    message_bar=self.message_bar)
+
     def check_geometries(self):
         layers = list(QgsProject.instance().mapLayers().values())
         if len(layers) == 0:
@@ -128,7 +139,6 @@ class UploadGvProjDialog(QDialog, FORM_CLASS):
         # GEOS method
         parameters['METHOD'] = 2
         alg = registry.createAlgorithmById('qgis:checkvalidity')
-        invalid_features_found = False
         for layer in layers:
             if layer.type() != QgsMapLayerType.VectorLayer:
                 # If it is not in a group for basemaps, give a warning
@@ -155,10 +165,6 @@ class UploadGvProjDialog(QDialog, FORM_CLASS):
                     " A layer containing these invalid geometries was added"
                     " to the project." % layer.name())
                 QgsProject.instance().addMapLayer(invalid_layer)
-                invalid_features_found = True
-        if not invalid_features_found:
-            feedback.pushInfo(
-                'All features in all layers in the project are valid')
 
     def check_crs(self):
         layers = list(QgsProject.instance().mapLayers().values())
