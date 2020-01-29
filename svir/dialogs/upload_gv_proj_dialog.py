@@ -57,21 +57,21 @@ class UploadGvProjDialog(QDialog, FORM_CLASS):
     4. consolidate layers into .gpkg files and project into a .qgs
     5. use "api/project/upload" to upload the consolidated project
     """
-    def __init__(self, message_bar):
+    def __init__(self, message_bar, parent=None):
         self.message_bar = message_bar
-        QDialog.__init__(self)
+        super().__init__(parent)
         # Set up the user interface from Designer.
         self.setupUi(self)
         self.ok_button = self.buttonBox.button(QDialogButtonBox.Ok)
         self.ok_button.setEnabled(False)
         self.proj_name_le.textEdited.connect(self.set_ok_btn_status)
         # self.add_layer_with_invalid_geometries()  # useful to test validity
+        self.populate_license_cbx()
         self.check_capabilities()
         self.check_geometries()
         self.check_crs()
-        self.populate_license_cbx()
         self.session = Session()
-        self.authenticate()
+        # self.authenticate()  # FIXME
 
     def authenticate(self):
         self.hostname, username, password = get_credentials('geoviewer')
@@ -81,6 +81,8 @@ class UploadGvProjDialog(QDialog, FORM_CLASS):
         self.ok_button.setEnabled(bool(proj_name))
 
     def populate_license_cbx(self):
+        # FIXME: licenses should be retrieved from those available in the
+        # GeoViewer
         for license_name, license_link in LICENSES:
             self.license_cbx.addItem(license_name, license_link)
         self.license_cbx.setCurrentIndex(
@@ -113,11 +115,15 @@ class UploadGvProjDialog(QDialog, FORM_CLASS):
     def check_capabilities(self):
         p = QgsProject.instance()
         if not QgsServerProjectUtils.owsServiceCapabilities(p):
-            log_msg("Project capabilities are disabled", level='W',
+            log_msg("Project capabilities are disabled", level='C',
                     message_bar=self.message_bar)
+            self.reject()
+            return
         if QgsServerProjectUtils.wmsExtent(p).isEmpty():
-            log_msg("Project extent is not advertised", level='W',
+            log_msg("Project extent is not advertised", level='C',
                     message_bar=self.message_bar)
+            self.reject()
+            return
 
     def check_geometries(self):
         layers = list(QgsProject.instance().mapLayers().values())

@@ -831,7 +831,7 @@ class Irmt(object):
         FIXME
         """
         self.upload_gv_proj_dlg = UploadGvProjDialog(
-            self.iface.messageBar())
+            self.iface.messageBar(), parent=self.iface.mainWindow())
         self.upload_gv_proj_dlg.exec_()
 
     def download_layer(self):
