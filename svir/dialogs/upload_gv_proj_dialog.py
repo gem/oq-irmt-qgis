@@ -244,7 +244,8 @@ class UploadGvProjDialog(QDialog, FORM_CLASS):
         self.upload_to_geoviewer(zipped_project)
 
     def upload_to_geoviewer(self, zipped_project):
-        # FIXME: add license (to data?)
+        # FIXME: probably the license should be added to the project properties
+        # and it should be read GeoViewer-side through an api
         files = {'file': open(zipped_project, 'rb')}
         r = self.session.post(
             self.hostname + '/api/project/upload', files=files)
