@@ -1153,7 +1153,8 @@ def extract_npz(
     if not resp_content:
         log_msg(msg, level='C', message_bar=message_bar, print_to_stderr=True)
         return
-    extracted_content = numpy.load(io.BytesIO(resp_content), allow_pickle=True)
+    extracted_content = numpy.load(io.BytesIO(resp_content),
+                                   allow_pickle=False)
     if not extracted_content:
         log_msg(msg, level='C', message_bar=message_bar, print_to_stderr=True)
         return
