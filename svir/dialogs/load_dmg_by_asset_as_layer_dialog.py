@@ -170,8 +170,7 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
                 field_names.remove(lt)
             field_names.extend([
                 '%s_%s' % (loss_type, name)
-                for name in [name.decode('utf8')
-                             for name in self.dataset[loss_type].dtype.names]])
+                for name in self.dataset[loss_type].dtype.names])
         if self.zonal_layer_gbx.isChecked():
             self.default_field_name = "%s_%s_mean" % (
                 self.loss_type_cbx.currentText(),
