@@ -544,8 +544,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             raise NotImplementedError(self.output_type)
         if self.aggregate_by is not None and len(self.aggregate_by):
             for tag_name in self.aggregate_by:
-                tag_value = [val for val in self.tags[tag_name]['values']
-                             if self.tags[tag_name]['values'][val]][0]
+                tag_value = [
+                    val for val in self.tags[tag_name.encode('utf8')]['values']
+                    ][-1]
                 params[tag_name] = tag_value
         with WaitCursorManager(
                 'Extracting...', message_bar=self.iface.messageBar()):
@@ -638,7 +639,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
     def get_list_selected_tags_str(self):
         selected_tags_str = ''
         if self.aggregate_by is None:
-            return selected_tags_str 
+            return selected_tags_str
         for tag_name in self.aggregate_by:
             for tag_value in self.tags[tag_name]['values']:
                 if self.tags[tag_name]['values'][tag_value]:
@@ -780,7 +781,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.rlz_cbx.addItems(rlzs)
         self.rlz_cbx.blockSignals(False)
 
-        loss_types = composite_risk_model_attrs['loss_types']
+        loss_types = [lt.decode('utf8')
+                      for lt in composite_risk_model_attrs['loss_types']]
         self.loss_type_cbx.blockSignals(True)
         self.loss_type_cbx.clear()
         self.loss_type_cbx.addItems(loss_types)
@@ -798,7 +800,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.tags = {}
         for tag_idx, tag_name in enumerate(tag_names):
             tag_values = sorted([
-                value for value in self.exposure_metadata[tag_name]
+                value
+                for value in self.exposure_metadata[tag_name.decode('utf8')]
                 if value != '?'])
             self.tags[tag_name] = {
                 'selected': True if tag_idx == 0 else False,
@@ -926,14 +929,20 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self._build_tags()
             self.aggregate_by = oqparam['aggregate_by']
             for tag_name in self.aggregate_by:
+                tag_values = [
+                    tag_value.decode('utf8') for tag_value in
+                    self.tags[tag_name.encode('utf8')]['values'].keys()]
                 self.create_tag_values_selector(
                     tag_name,
-                    tag_values=self.tags[tag_name]['values'].keys(),
+                    tag_values=tag_values,
                     monovalue=True, preselect_first=True)
-                tag_value = [val for val in self.tags[tag_name]['values']
-                             if self.tags[tag_name]['values'][val]][0]
-                params[tag_name] = tag_value
-        loss_types = composite_risk_model_attrs['loss_types']
+                tag_value = [
+                    val for val in self.tags[tag_name.encode('utf8')]['values']
+                    ][-1]
+                params[tag_name] = tag_value.decode('utf8')
+        loss_types = [
+            loss_type.decode('utf8')
+            for loss_type in composite_risk_model_attrs['loss_types']]
         self.loss_type_cbx.blockSignals(True)
         self.loss_type_cbx.clear()
         self.loss_type_cbx.addItems(loss_types)

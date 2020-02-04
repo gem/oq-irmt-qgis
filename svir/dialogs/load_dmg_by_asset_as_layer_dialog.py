@@ -130,7 +130,9 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
         self.taxonomy_cbx.setEnabled(True)
 
     def on_loss_type_changed(self):
-        names = self.dataset[self.loss_type_cbx.currentText()].dtype.names
+        loss_type = self.loss_type_cbx.currentText().encode('utf8')
+        names = [name.decode('utf8')
+                 for name in self.dataset[loss_type].dtype.names]
         self.dmg_states = []
         for dmg_state_plus_stat in names:
             # each name looks like: no_damage_mean
@@ -164,12 +166,14 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
             field_names = ['lon', 'lat', ltds]
             self.default_field_name = ltds
         else:
-            field_names = list(self.dataset.dtype.names)
+            field_names = [name.decode('utf8')
+                           for name in self.dataset.dtype.names]
             for lt in self.loss_types:
                 field_names.remove(lt)
             field_names.extend([
                 '%s_%s' % (loss_type, name)
-                for name in self.dataset[loss_type].dtype.names])
+                for name in [name.decode('utf8')
+                             for name in self.dataset[loss_type].dtype.names]])
         if self.zonal_layer_gbx.isChecked():
             self.default_field_name = "%s_%s_mean" % (
                 self.loss_type_cbx.currentText(),
@@ -198,7 +202,8 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
                 for field_name, field_type in field_types.items():
                     if field_name in ['lon', 'lat']:
                         continue
-                    elif field_name in data.dtype.names:
+                    elif field_name in [name.decode('utf8')
+                                        for name in data.dtype.names]:
                         value = row[field_name]
                         if data[field_name].dtype.char == 'S':
                             value = str(value, encoding='utf8').strip('"')

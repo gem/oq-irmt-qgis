@@ -1219,7 +1219,7 @@ def get_loss_types(session, hostname, calc_id, message_bar):
     # array of zeros with data type as follows:
     # [('lon', F32), ('lat', F32), (loss_type, F32)])
     loss_types = [
-        str(loss_type)
+        loss_type.decode('utf8')
         for loss_type in composite_risk_model_attrs['loss_types']]
     return loss_types
 
