@@ -199,8 +199,7 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
                 for field_name, field_type in field_types.items():
                     if field_name in ['lon', 'lat']:
                         continue
-                    elif field_name in [name.decode('utf8')
-                                        for name in data.dtype.names]:
+                    elif field_name in data.dtype.names:
                         value = row[field_name]
                         if data[field_name].dtype.char == 'S':
                             value = str(value, encoding='utf8').strip('"')
