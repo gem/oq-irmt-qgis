@@ -130,9 +130,8 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
         self.taxonomy_cbx.setEnabled(True)
 
     def on_loss_type_changed(self):
-        loss_type = self.loss_type_cbx.currentText().encode('utf8')
-        names = [name.decode('utf8')
-                 for name in self.dataset[loss_type].dtype.names]
+        loss_type = self.loss_type_cbx.currentText()
+        names = self.dataset[loss_type].dtype.names
         self.dmg_states = []
         for dmg_state_plus_stat in names:
             # each name looks like: no_damage_mean
@@ -166,8 +165,7 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
             field_names = ['lon', 'lat', ltds]
             self.default_field_name = ltds
         else:
-            field_names = [name.decode('utf8')
-                           for name in self.dataset.dtype.names]
+            field_names = list(self.dataset.dtype.names)
             for lt in self.loss_types:
                 field_names.remove(lt)
             field_names.extend([

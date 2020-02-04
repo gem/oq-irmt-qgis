@@ -545,8 +545,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         if self.aggregate_by is not None and len(self.aggregate_by):
             for tag_name in self.aggregate_by:
                 tag_value = [
-                    val for val in self.tags[tag_name.encode('utf8')]['values']
-                    ][-1]
+                    val.decode('utf8')
+                    for val in self.tags[
+                        tag_name.encode('utf8')]['values']][-1]
                 params[tag_name] = tag_value
         with WaitCursorManager(
                 'Extracting...', message_bar=self.iface.messageBar()):
@@ -937,9 +938,10 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                     tag_values=tag_values,
                     monovalue=True, preselect_first=True)
                 tag_value = [
-                    val for val in self.tags[tag_name.encode('utf8')]['values']
-                    ][-1]
-                params[tag_name] = tag_value.decode('utf8')
+                    val.decode('utf8')
+                    for val in self.tags[
+                        tag_name.encode('utf8')]['values']][-1]
+                params[tag_name] = tag_value
         loss_types = [
             loss_type.decode('utf8')
             for loss_type in composite_risk_model_attrs['loss_types']]
