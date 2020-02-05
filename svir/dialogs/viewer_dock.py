@@ -544,10 +544,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             raise NotImplementedError(self.output_type)
         if self.aggregate_by is not None and len(self.aggregate_by):
             for tag_name in self.aggregate_by:
-                tag_value = [
-                    val.decode('utf8')
-                    for val in self.tags[
-                        tag_name.encode('utf8')]['values']][-1]
+                tag_value = [val for val in self.tags[tag_name]['values']
+                             if self.tags[tag_name]['values'][val]][0]
                 params[tag_name] = tag_value
         with WaitCursorManager(
                 'Extracting...', message_bar=self.iface.messageBar()):
@@ -797,13 +795,15 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.filter_dmg_by_asset_aggr()
 
     def _build_tags(self):
-        tag_names = sorted(self.exposure_metadata['tagnames'])
+        tag_names = sorted([
+            tag_name.decode('utf8')
+            for tag_name in self.exposure_metadata['tagnames']])
         self.tags = {}
         for tag_idx, tag_name in enumerate(tag_names):
             tag_values = sorted([
-                value
-                for value in self.exposure_metadata[tag_name.decode('utf8')]
-                if value != '?'])
+                value.decode('utf8')
+                for value in self.exposure_metadata[tag_name]
+                if value != b'?'])
             self.tags[tag_name] = {
                 'selected': True if tag_idx == 0 else False,
                 'values': {
@@ -930,17 +930,13 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self._build_tags()
             self.aggregate_by = oqparam['aggregate_by']
             for tag_name in self.aggregate_by:
-                tag_values = [
-                    tag_value.decode('utf8') for tag_value in
-                    self.tags[tag_name.encode('utf8')]['values'].keys()]
+                tag_values = self.tags[tag_name]['values'].keys()
                 self.create_tag_values_selector(
                     tag_name,
                     tag_values=tag_values,
                     monovalue=True, preselect_first=True)
-                tag_value = [
-                    val.decode('utf8')
-                    for val in self.tags[
-                        tag_name.encode('utf8')]['values']][-1]
+                tag_value = [val for val in self.tags[tag_name]['values']
+                             if self.tags[tag_name]['values'][val]][0]
                 params[tag_name] = tag_value
         loss_types = [
             loss_type.decode('utf8')
