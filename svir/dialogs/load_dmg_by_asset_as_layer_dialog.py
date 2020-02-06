@@ -130,7 +130,8 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
         self.taxonomy_cbx.setEnabled(True)
 
     def on_loss_type_changed(self):
-        names = self.dataset[self.loss_type_cbx.currentText()].dtype.names
+        loss_type = self.loss_type_cbx.currentText()
+        names = self.dataset[loss_type].dtype.names
         self.dmg_states = []
         for dmg_state_plus_stat in names:
             # each name looks like: no_damage_mean

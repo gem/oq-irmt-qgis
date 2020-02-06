@@ -169,14 +169,14 @@ class ExtractThread(QThread):
         #             f.write(data)
         #             progress = dl / tot_len * 100
         #             self.progress_sig.emit(progress)
-        # extracted_npz = numpy.load(filepath, allow_pickle=True)
+        # extracted_npz = numpy.load(filepath, allow_pickle=False)
         if not resp.content:
             self.exception_sig.emit(ExtractFailed(
                 "%s: returned an empty content" % err_msg))
             return
         try:
             extracted_npz = numpy.load(
-                io.BytesIO(resp.content), allow_pickle=True)
+                io.BytesIO(resp.content), allow_pickle=False)
         except Exception as exc:
             self.exception_sig.emit(exc)
             return

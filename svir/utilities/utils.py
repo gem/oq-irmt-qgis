@@ -1153,7 +1153,8 @@ def extract_npz(
     if not resp_content:
         log_msg(msg, level='C', message_bar=message_bar, print_to_stderr=True)
         return
-    extracted_content = numpy.load(io.BytesIO(resp_content), allow_pickle=True)
+    extracted_content = numpy.load(io.BytesIO(resp_content),
+                                   allow_pickle=False)
     if not extracted_content:
         log_msg(msg, level='C', message_bar=message_bar, print_to_stderr=True)
         return
@@ -1218,7 +1219,7 @@ def get_loss_types(session, hostname, calc_id, message_bar):
     # array of zeros with data type as follows:
     # [('lon', F32), ('lat', F32), (loss_type, F32)])
     loss_types = [
-        str(loss_type)
+        loss_type.decode('utf8')
         for loss_type in composite_risk_model_attrs['loss_types']]
     return loss_types
 
