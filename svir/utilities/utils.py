@@ -1158,7 +1158,46 @@ def extract_npz(
     if not extracted_content:
         log_msg(msg, level='C', message_bar=message_bar, print_to_stderr=True)
         return
-    return extracted_content
+    return decode_npz(extracted_content)
+
+
+def decode_npz(npz):
+    dnpz = dict(npz)
+    for key in dnpz:
+        dnpz[key] = array_of_bytes_to_string(dnpz[key], key)
+    return dnpz
+
+
+def array_of_bytes_to_string(arr, key):
+    """
+    :param arr: array or array-like object
+    :param key: string associated to the error (appear in the error message)
+
+    If `arr` is a numpy array with dtype object containing bytes, convert
+    it into a numpy array containing strings, unless it has more than 2
+    dimensions or contains non-strings (these are errors). Return `arr`
+    unchanged in the other cases.
+    """
+    if not isinstance(arr, numpy.ndarray) or arr.ndim == 0:
+        try:
+            return arr.decode('utf8')
+        except AttributeError:
+            return arr
+    if arr.ndim == 1:
+        try:
+            return numpy.array([s.decode('utf8') for s in arr])
+        except AttributeError:
+            return arr
+    elif arr.ndim == 2:
+        try:
+            return numpy.array([[col.decode('utf8') for col in row]
+                                for row in arr])
+        except AttributeError:
+            return arr
+    else:
+        # NOTE: it's not so bad to accept a multidimensional matrix as is
+        pass
+    return arr
 
 
 def convert_bytes(num):
@@ -1218,9 +1257,7 @@ def get_loss_types(session, hostname, calc_id, message_bar):
     # casting loss_types to string, otherwise numpy complains when creating
     # array of zeros with data type as follows:
     # [('lon', F32), ('lat', F32), (loss_type, F32)])
-    loss_types = [
-        loss_type.decode('utf8')
-        for loss_type in composite_risk_model_attrs['loss_types']]
+    loss_types = composite_risk_model_attrs['loss_types']
     return loss_types
 
 

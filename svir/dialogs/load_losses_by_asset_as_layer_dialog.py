@@ -101,9 +101,9 @@ class LoadLossesByAssetAsLayerDialog(LoadOutputAsLayerDialog):
 
     def on_rlz_or_stat_changed(self):
         self.dataset = self.npz_file[self.rlz_or_stat_cbx.currentText()]
-        self.taxonomies = numpy.unique(self.dataset['taxonomy']).tolist()
-        self.taxonomies = [taxonomy.decode('utf8')
-                           for taxonomy in self.taxonomies]
+        self.taxonomies = [
+            tax.decode('utf8').strip('"')
+            for tax in numpy.unique(self.dataset['taxonomy']).tolist()]
         self.populate_taxonomy_cbx(self.taxonomies)
         self.set_ok_button()
 
@@ -187,8 +187,6 @@ class LoadLossesByAssetAsLayerDialog(LoadOutputAsLayerDialog):
                         self.style_maps(self.layer,
                                         self.default_field_name,
                                         self.iface, self.output_type)
-        if self.npz_file is not None:
-            self.npz_file.close()
 
     def group_by_site(self, npz, rlz_or_stat, loss_type, taxonomy='All'):
         # example:
@@ -197,7 +195,8 @@ class LoadLossesByAssetAsLayerDialog(LoadOutputAsLayerDialog):
         F32 = numpy.float32
         loss_by_site = collections.defaultdict(float)  # lon, lat -> loss
         for rec in npz[rlz_or_stat]:
-            if taxonomy == 'All' or taxonomy.encode('utf8') == rec['taxonomy']:
+            if (taxonomy == 'All'
+                    or taxonomy == rec['taxonomy'].decode('utf8').strip('"')):
                 loss_by_site[rec['lon'], rec['lat']] += rec[loss_type]
         data = numpy.zeros(len(loss_by_site),
                            [('lon', F32), ('lat', F32), (loss_type, F32)])

@@ -29,7 +29,7 @@ from time import sleep
 from qgis.core import QgsTask
 from qgis.PyQt.QtCore import QThread, pyqtSignal, pyqtSlot
 from numpy.lib.npyio import NpzFile
-from svir.utilities.utils import log_msg
+from svir.utilities.utils import log_msg, decode_npz
 
 
 class TaskCanceled(Exception):
@@ -124,7 +124,7 @@ class ExtractNpzTask(QgsTask):
 class ExtractThread(QThread):
 
     progress_sig = pyqtSignal(float)
-    extracted_npz_sig = pyqtSignal(NpzFile)
+    extracted_npz_sig = pyqtSignal(dict)
     exception_sig = pyqtSignal(Exception)
 
     def __init__(self, session, url, params, dest_folder):
@@ -177,12 +177,13 @@ class ExtractThread(QThread):
         try:
             extracted_npz = numpy.load(
                 io.BytesIO(resp.content), allow_pickle=False)
+            extracted_npz = decode_npz(extracted_npz)
         except Exception as exc:
             self.exception_sig.emit(exc)
             return
-        if not isinstance(extracted_npz, NpzFile):
+        if not isinstance(extracted_npz, dict):
             self.exception_sig.emit(
-                ExtractFailed("%s: not a valid NPZ. Response: (%s) %s" % (
+                ExtractFailed("%s: failing to extract. Response: (%s) %s" % (
                     err_msg, resp.reason, resp.content)))
             return
 

@@ -112,9 +112,9 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
 
     def on_rlz_or_stat_changed(self):
         self.dataset = self.npz_file[self.rlz_or_stat_cbx.currentText()]
-        self.taxonomies = numpy.unique(self.dataset['taxonomy']).tolist()
-        self.taxonomies = [taxonomy.decode('utf8')
-                           for taxonomy in self.taxonomies]
+        self.taxonomies = [
+            tax.decode('utf8').strip('"')
+            for tax in numpy.unique(self.dataset['taxonomy']).tolist()]
         self.populate_taxonomy_cbx(self.taxonomies)
         self.set_ok_button()
 
@@ -250,7 +250,8 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
         F32 = numpy.float32
         dmg_by_site = collections.defaultdict(float)  # lon, lat -> dmg
         for rec in npz[rlz_or_stat]:
-            if taxonomy == 'All' or taxonomy.encode('utf8') == rec['taxonomy']:
+            if (taxonomy == 'All'
+                    or taxonomy == rec['taxonomy'].decode('utf8').strip('"')):
                 value = rec[loss_type]['%s_mean' % dmg_state]
                 dmg_by_site[rec['lon'], rec['lat']] += value
         data = numpy.zeros(
@@ -311,5 +312,3 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
                             rlz_or_stat, loss_type), self.iface.messageBar()):
                         self.build_layer(rlz_or_stat, loss_type=loss_type)
                         self.style_curves()
-        if self.npz_file is not None:
-            self.npz_file.close()

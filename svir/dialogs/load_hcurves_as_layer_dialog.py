@@ -138,5 +138,3 @@ class LoadHazardCurvesAsLayerDialog(LoadOutputAsLayerDialog):
         with WaitCursorManager('Creating layer...', self.iface.messageBar()):
             self.build_layer()
             self.style_curves()
-        if self.npz_file is not None:
-            self.npz_file.close()

@@ -780,8 +780,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.rlz_cbx.addItems(rlzs)
         self.rlz_cbx.blockSignals(False)
 
-        loss_types = [lt.decode('utf8')
-                      for lt in composite_risk_model_attrs['loss_types']]
+        loss_types = composite_risk_model_attrs['loss_types']
         self.loss_type_cbx.blockSignals(True)
         self.loss_type_cbx.clear()
         self.loss_type_cbx.addItems(loss_types)
@@ -795,15 +794,12 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.filter_dmg_by_asset_aggr()
 
     def _build_tags(self):
-        tag_names = sorted([
-            tag_name.decode('utf8')
-            for tag_name in self.exposure_metadata['tagnames']])
+        tag_names = sorted(self.exposure_metadata['tagnames'])
         self.tags = {}
         for tag_idx, tag_name in enumerate(tag_names):
             tag_values = sorted([
-                value.decode('utf8')
-                for value in self.exposure_metadata[tag_name]
-                if value != b'?'])
+                value for value in self.exposure_metadata[tag_name]
+                if value != '?'])
             self.tags[tag_name] = {
                 'selected': True if tag_idx == 0 else False,
                 'values': {
@@ -837,7 +833,6 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             if tag_name in ['id', 'array']:
                 continue
             for tag in tags_npz[tag_name]:
-                tag = tag.decode('utf8')
                 if tag[-1] != '?':
                     tags_list.append(tag)
         self.tags = {}
@@ -864,7 +859,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                     message_bar=self.iface.messageBar())
             if rlzs_npz is None:
                 return
-            self.rlzs = [rlz[1].decode('utf-8')  # branch_path
+            self.rlzs = [rlz[1].decode('utf8')  # branch_path
                          for rlz in rlzs_npz['array']]
         self._get_tags(session, hostname, calc_id, self.iface.messageBar(),
                        with_star=True)
@@ -939,7 +934,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                              if self.tags[tag_name]['values'][val]][0]
                 params[tag_name] = tag_value
         loss_types = [
-            loss_type.decode('utf8')
+            loss_type
             for loss_type in composite_risk_model_attrs['loss_types']]
         self.loss_type_cbx.blockSignals(True)
         self.loss_type_cbx.clear()
@@ -1006,8 +1001,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                                 self.agg_curves[tag_name]).index(tag_value)
                             tag_value_idxs[tag_name].append(tag_value_idx)
             else:
-                for tag in self.aggregate_by:
-                    tag_name = tag.decode('utf8')
+                for tag_name in self.aggregate_by:
                     # FIXME: check if currentIndex is ok
                     tag_value_idx = getattr(
                         self,
@@ -1092,7 +1086,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.plot.set_xscale('log')
         self.plot.set_yscale('linear')
         self.plot.set_xlabel('Return period (years)')
-        self.plot.set_ylabel('Loss (%s)' % unit.decode('utf8'))
+        self.plot.set_ylabel('Loss (%s)' % unit)
         title = 'Loss type: %s' % self.loss_type_cbx.currentText()
         self.plot.set_title(title)
         self.plot.grid(which='both')
@@ -1168,8 +1162,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         tags = None
         try:
             # NOTE: case with '*'
-            tags = [tag.decode('utf8')
-                    for tag in self.losses_by_asset_aggr['tags']]
+            tags = self.losses_by_asset_aggr['tags']
         except KeyError:
             # NOTE: case without '*'
             pass
@@ -1886,7 +1879,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 loss_type = self.loss_type_cbx.currentText()
                 abs_rel = self.abs_rel_cbx.currentText()
                 loss_type_idx = self.loss_type_cbx.currentIndex()
-                unit = self.agg_curves['units'][loss_type_idx].decode('utf8')
+                unit = self.agg_curves['units'][loss_type_idx]
                 csv_file.write("# Loss type: %s\r\n" % loss_type)
                 csv_file.write("# Absolute or relative: %s\r\n" % abs_rel)
                 csv_file.write("# Measurement unit: %s\r\n" % unit)
@@ -1912,7 +1905,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 loss_type = self.loss_type_cbx.currentText()
                 abs_rel = self.abs_rel_cbx.currentText()
                 loss_type_idx = self.loss_type_cbx.currentIndex()
-                unit = self.agg_curves['units'][loss_type_idx].decode('utf8')
+                unit = self.agg_curves['units'][loss_type_idx]
                 csv_file.write("# Loss type: %s\r\n" % loss_type)
                 csv_file.write("# Absolute or relative: %s\r\n" % abs_rel)
                 csv_file.write("# Measurement unit: %s\r\n" % unit)
@@ -1934,7 +1927,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                             # FIXME: using only the first stat
                             for tval_idx in tag_value_idxs[tag_name]:
                                 tval = self.agg_curves[tag_name][tval_idx]
-                                headers.append(tval.decode('utf8'))
+                                headers.append(tval)
                             break
                 if has_single_tag_value or has_single_tag_value is None:
                     headers.extend(stats)
@@ -1976,8 +1969,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                     "# Tags: %s\r\n" % (
                         self.get_list_selected_tags_str() or 'None'))
                 try:
-                    tags = [tag.decode('utf8')
-                            for tag in self.losses_by_asset_aggr['tags']]
+                    tags = self.losses_by_asset_aggr['tags']
                     tag = tags[0]
                     # a tag is like 'taxonomy=Wood'
                     tag_name = tag.split('=')[0]
