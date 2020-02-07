@@ -128,8 +128,8 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                     message_bar=self.iface.messageBar(), exception=exception)
         self.reject()
 
-    def finalize_init(self, extracted_npz):
-        self.npz_file = extracted_npz
+    def finalize_init(self, extracted_dict):
+        self.extracted_dict = extracted_dict
         self.populate_out_dep_widgets()
         self.adjustSize()
         self.set_ok_button()
@@ -371,7 +371,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.set_ok_button()
 
     def on_rlz_or_stat_changed(self):
-        self.dataset = self.npz_file[self.rlz_or_stat_cbx.currentText()]
+        self.dataset = self.extracted_dict[self.rlz_or_stat_cbx.currentText()]
         self.set_ok_button()
 
     def on_loss_type_changed(self):
@@ -397,7 +397,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         raise NotImplementedError()
 
     def populate_rlz_or_stat_cbx(self):
-        self.rlzs_or_stats = [key for key in sorted(self.npz_file)
+        self.rlzs_or_stats = [key for key in sorted(self.extracted_dict)
                               if key not in ('imtls', 'array')]
         self.rlz_or_stat_cbx.clear()
         self.rlz_or_stat_cbx.setEnabled(True)
@@ -413,7 +413,8 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         #       which currently is always true.
         #       If different realizations have a different number of sites, we
         #       need to move this block of code inside on_rlz_or_stat_changed()
-        rlz_or_stat_data = self.npz_file[self.rlz_or_stat_cbx.currentText()]
+        rlz_or_stat_data = self.extracted_dict[
+            self.rlz_or_stat_cbx.currentText()]
         self.num_sites_lbl.setText(
             self.num_sites_msg % rlz_or_stat_data.shape)
 
@@ -426,10 +427,10 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
     def get_field_types(self, **kwargs):
         raise NotImplementedError()
 
-    def read_npz_into_layer(self, field_types, **kwargs):
+    def read_extracted_into_layer(self, field_types, **kwargs):
         raise NotImplementedError()
 
-    def load_from_npz(self):
+    def load_from_extracted_dict(self):
         raise NotImplementedError()
 
     def add_field_to_layer(self, field_name, field_type):
@@ -441,7 +442,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
     def get_investigation_time(self):
         if self.output_type in ('hcurves', 'uhs', 'hmaps', 'ruptures'):
             try:
-                investigation_time = self.npz_file['investigation_time']
+                investigation_time = self.extracted_dict['investigation_time']
             except KeyError as exc:
                 msg = ('investigation_time not found. It is mandatory for %s.'
                        ' Please check if the ouptut was produced by an'
@@ -484,7 +485,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 del field_types[field_name]
                 field_types[added_field_name] = field_type
 
-        self.read_npz_into_layer(
+        self.read_extracted_into_layer(
             field_types, rlz_or_stat=rlz_or_stat, taxonomy=taxonomy, poe=poe,
             loss_type=loss_type, dmg_state=dmg_state, imt=imt,
             boundaries=boundaries, geometry_type=geometry_type,
@@ -872,7 +873,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             pass
         self.hide()
         if self.output_type in OQ_EXTRACT_TO_LAYER_TYPES:
-            self.load_from_npz()
+            self.load_from_extracted_dict()
             if self.output_type in ('losses_by_asset',
                                     'dmg_by_asset',
                                     'avg_losses-stats'):

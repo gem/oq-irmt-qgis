@@ -768,13 +768,13 @@ class ViewerDock(QDockWidget, FORM_CLASS):
 
         with WaitCursorManager(
                 'Extracting...', message_bar=self.iface.messageBar()):
-            rlzs_npz = extract_npz(
+            rlzs_dict = extract_npz(
                 session, hostname, calc_id, 'realizations',
                 message_bar=self.iface.messageBar())
-        if rlzs_npz is None:
+        if rlzs_dict is None:
             return
         # rlz[1] is the branch-path field
-        rlzs = [rlz[1].decode('utf8').strip('"') for rlz in rlzs_npz['array']]
+        rlzs = [rlz[1].decode('utf8').strip('"') for rlz in rlzs_dict['array']]
         self.rlz_cbx.blockSignals(True)
         self.rlz_cbx.clear()
         self.rlz_cbx.addItems(rlzs)
@@ -822,17 +822,17 @@ class ViewerDock(QDockWidget, FORM_CLASS):
     def _get_tags(self, session, hostname, calc_id, message_bar, with_star):
         with WaitCursorManager(
                 'Extracting...', message_bar=self.iface.messageBar()):
-            tags_npz = extract_npz(
+            tags_dict = extract_npz(
                 session, hostname, calc_id, 'asset_tags',
                 message_bar=message_bar)
-        if tags_npz is None:
+        if tags_dict is None:
             return
         tags_list = []
-        for tag_name in tags_npz:
+        for tag_name in tags_dict:
             # if tag_name == 'array':
             if tag_name in ['id', 'array']:
                 continue
-            for tag in tags_npz[tag_name]:
+            for tag in tags_dict[tag_name]:
                 if tag[-1] != '?':
                     tags_list.append(tag)
         self.tags = {}
@@ -854,13 +854,13 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         if self.output_type == 'losses_by_asset_aggr':
             with WaitCursorManager(
                     'Extracting...', message_bar=self.iface.messageBar()):
-                rlzs_npz = extract_npz(
+                rlzs_dict = extract_npz(
                     session, hostname, calc_id, 'realizations',
                     message_bar=self.iface.messageBar())
-            if rlzs_npz is None:
+            if rlzs_dict is None:
                 return
             self.rlzs = [rlz[1].decode('utf8')  # branch_path
-                         for rlz in rlzs_npz['array']]
+                         for rlz in rlzs_dict['array']]
         self._get_tags(session, hostname, calc_id, self.iface.messageBar(),
                        with_star=True)
 
@@ -875,14 +875,15 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             to_extract = 'agg_losses/%s' % loss_types[0]
             with WaitCursorManager(
                     'Extracting...', message_bar=self.iface.messageBar()):
-                npz = extract_npz(session, hostname, calc_id, to_extract,
-                                  message_bar=self.iface.messageBar())
+                extracted_dict = extract_npz(
+                    session, hostname, calc_id, to_extract,
+                    message_bar=self.iface.messageBar())
             # stats might be unavailable in case of a single realization
-            if len(npz['stats']) == 0:
+            if len(extracted_dict['stats']) == 0:
                 # NOTE: writing 'mean' instead of 'rlz-0' would be equivalent
                 self.stats = ['rlz-0']
             else:
-                self.stats = npz['stats']
+                self.stats = extracted_dict['stats']
 
         self.tag_names_multiselect.clear()
         tag_names = sorted(self.tags.keys())

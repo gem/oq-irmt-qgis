@@ -99,14 +99,14 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
         # that has to be discarded too)
         self.rlzs_or_stats = [
             rlz_or_stat
-            for rlz_or_stat in self.npz_file['all'].dtype.names[2:]
+            for rlz_or_stat in self.extracted_dict['all'].dtype.names[2:]
             if rlz_or_stat != 'vs30']
         self.rlz_or_stat_cbx.clear()
         self.rlz_or_stat_cbx.setEnabled(True)
         self.rlz_or_stat_cbx.addItems(self.rlzs_or_stats)
 
     def on_rlz_or_stat_changed(self):
-        self.dataset = self.npz_file['all'][self.rlz_or_stat_cbx.currentText()]
+        self.dataset = self.extracted_dict['all'][self.rlz_or_stat_cbx.currentText()]
         self.imts = {imt: self.dataset[imt].dtype.names
                      for imt in self.dataset.dtype.names}
         self.imt_cbx.clear()
@@ -119,7 +119,7 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
         #       which currently is always true.
         #       If different realizations have a different number of sites, we
         #       need to move this block of code inside on_rlz_or_stat_changed()
-        rlz_or_stat_data = self.npz_file['all'][
+        rlz_or_stat_data = self.extracted_dict['all'][
             self.rlz_or_stat_cbx.currentText()]
         self.num_sites_lbl.setText(
             self.num_sites_msg % rlz_or_stat_data.shape)
@@ -167,10 +167,10 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
             field_types[field_name] = 'F'
         return field_types
 
-    def read_npz_into_layer(self, field_names, **kwargs):
+    def read_extracted_into_layer(self, field_names, **kwargs):
         with edit(self.layer):
-            lons = self.npz_file['all']['lon']
-            lats = self.npz_file['all']['lat']
+            lons = self.extracted_dict['all']['lon']
+            lats = self.extracted_dict['all']['lat']
             feats = []
             for row_idx, row in enumerate(self.dataset):
                 # add a feature
@@ -191,7 +191,7 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
                 msg = 'There was a problem adding features to the layer.'
                 log_msg(msg, level='C', message_bar=self.iface.messageBar())
 
-    def load_from_npz(self):
+    def load_from_extracted_dict(self):
         for rlz_or_stat in self.rlzs_or_stats:
             if (not self.load_all_rlzs_or_stats_chk.isChecked()
                     and rlz_or_stat != self.rlz_or_stat_cbx.currentText()):

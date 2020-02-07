@@ -72,8 +72,8 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
             self.on_extract_error)
         QgsApplication.taskManager().addTask(self.extract_npz_task)
 
-    def finalize_init(self, extracted_npz):
-        self.npz_file = extracted_npz
+    def finalize_init(self, extracted_dict):
+        self.extracted_dict = extracted_dict
 
         # NOTE: still running this synchronously, because it's small stuff
         with WaitCursorManager('Loading loss types...',
@@ -111,7 +111,7 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
             self.load_selected_only_ckb.setEnabled(True)
 
     def on_rlz_or_stat_changed(self):
-        self.dataset = self.npz_file[self.rlz_or_stat_cbx.currentText()]
+        self.dataset = self.extracted_dict[self.rlz_or_stat_cbx.currentText()]
         self.taxonomies = [
             tax.decode('utf8').strip('"')
             for tax in numpy.unique(self.dataset['taxonomy']).tolist()]
@@ -179,20 +179,20 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
         field_types = {field_name: 'F' for field_name in field_names}
         return field_types
 
-    def read_npz_into_layer(self, field_types, **kwargs):
+    def read_extracted_into_layer(self, field_types, **kwargs):
         if self.aggregate_by_site_ckb.isChecked():
-            self.read_npz_into_layer_aggr_by_site(field_types, **kwargs)
+            self.read_extracted_into_layer_aggr_by_site(field_types, **kwargs)
         else:
             # do not aggregate by site, then aggregate by zone afterwards if
             # required
-            self.read_npz_into_layer_no_aggr(field_types, **kwargs)
+            self.read_extracted_into_layer_no_aggr(field_types, **kwargs)
 
-    def read_npz_into_layer_no_aggr(self, field_types, **kwargs):
+    def read_extracted_into_layer_no_aggr(self, field_types, **kwargs):
         rlz_or_stat = kwargs['rlz_or_stat']
         loss_type = kwargs['loss_type']
         with edit(self.layer):
             feats = []
-            data = self.npz_file[rlz_or_stat]
+            data = self.extracted_dict[rlz_or_stat]
             for row in data:
                 # add a feature
                 feat = QgsFeature(self.layer.fields())
@@ -217,7 +217,7 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
                 msg = 'There was a problem adding features to the layer.'
                 log_msg(msg, level='C', message_bar=self.iface.messageBar())
 
-    def read_npz_into_layer_aggr_by_site(self, field_types, **kwargs):
+    def read_extracted_into_layer_aggr_by_site(self, field_types, **kwargs):
         rlz_or_stat = kwargs['rlz_or_stat']
         loss_type = kwargs['loss_type']
         taxonomy = kwargs['taxonomy']
@@ -225,7 +225,8 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
         with edit(self.layer):
             feats = []
             grouped_by_site = self.group_by_site(
-                self.npz_file, rlz_or_stat, loss_type, dmg_state, taxonomy)
+                self.extracted_dict, rlz_or_stat, loss_type, dmg_state,
+                taxonomy)
             for row in grouped_by_site:
                 # add a feature
                 feat = QgsFeature(self.layer.fields())
@@ -245,11 +246,11 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
                 msg = 'There was a problem adding features to the layer.'
                 log_msg(msg, level='C', message_bar=self.iface.messageBar())
 
-    def group_by_site(self, npz, rlz_or_stat, loss_type, dmg_state,
+    def group_by_site(self, extracted_dict, rlz_or_stat, loss_type, dmg_state,
                       taxonomy='All'):
         F32 = numpy.float32
         dmg_by_site = collections.defaultdict(float)  # lon, lat -> dmg
-        for rec in npz[rlz_or_stat]:
+        for rec in extracted_dict[rlz_or_stat]:
             if (taxonomy == 'All'
                     or taxonomy == rec['taxonomy'].decode('utf8').strip('"')):
                 value = rec[loss_type]['%s_mean' % dmg_state]
@@ -261,7 +262,7 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
             data[i] = (lon, lat, dmg_by_site[lon, lat])
         return data
 
-    def load_from_npz(self):
+    def load_from_extracted_dict(self):
         for rlz_or_stat in self.rlzs_or_stats:
             if (self.load_selected_only_ckb.isChecked()
                     and rlz_or_stat != self.rlz_or_stat_cbx.currentText()):

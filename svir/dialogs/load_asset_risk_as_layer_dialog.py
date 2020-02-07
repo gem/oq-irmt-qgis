@@ -57,8 +57,8 @@ class LoadAssetRiskAsLayerDialog(LoadOutputAsLayerDialog):
             self.finalize_init, self.on_extract_error)
         QgsApplication.taskManager().addTask(self.extract_npz_task)
 
-    def finalize_init(self, extracted_npz):
-        self.exposure_metadata = extracted_npz
+    def finalize_init(self, extracted_dict):
+        self.exposure_metadata = extracted_dict
         self.tag_names = sorted(self.exposure_metadata['tagnames'])
         self.exposure_categories = sorted(self.exposure_metadata['array'])
         self.risk_categories = sorted(self.exposure_metadata['multi_risk'])
@@ -197,7 +197,7 @@ class LoadAssetRiskAsLayerDialog(LoadOutputAsLayerDialog):
                        and name not in self.tag_names}
         return field_types
 
-    def read_npz_into_layer(self, field_names, **kwargs):
+    def read_extracted_into_layer(self, field_names, **kwargs):
         with edit(self.layer):
             lons = self.dataset['lon']
             lats = self.dataset['lat']
@@ -242,9 +242,9 @@ class LoadAssetRiskAsLayerDialog(LoadOutputAsLayerDialog):
             params=extract_params)
         QgsApplication.taskManager().addTask(self.extract_npz_task)
 
-    def on_asset_risk_downloaded(self, extracted_npz):
-        self.npz_file = extracted_npz
-        self.dataset = self.npz_file['array']
+    def on_asset_risk_downloaded(self, extracted_dict):
+        self.extracted_dict = extracted_dict
+        self.dataset = self.extracted_dict['array']
         with WaitCursorManager('Creating layer...', self.iface.messageBar()):
             self.build_layer()
             self.style_maps(

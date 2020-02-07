@@ -89,10 +89,10 @@ class ExtractNpzTask(QgsTask):
             raise TaskCanceled
         self.extract_thread = ExtractThread(
             session, extract_url, extract_params, self.dest_folder)
-        self.extract_thread.progress_sig[float].connect(self.set_progress)
-        self.extract_thread.extracted_npz_sig[NpzFile].connect(
+        self.extract_thread.progress_sig.connect(self.set_progress)
+        self.extract_thread.extracted_sig.connect(
             self.set_extracted_npz)
-        self.extract_thread.exception_sig[Exception].connect(
+        self.extract_thread.exception_sig.connect(
             self.on_exception)
         self.is_canceled_sig.connect(self.extract_thread.set_canceled)
         self.extract_thread.start()
@@ -124,7 +124,7 @@ class ExtractNpzTask(QgsTask):
 class ExtractThread(QThread):
 
     progress_sig = pyqtSignal(float)
-    extracted_npz_sig = pyqtSignal(dict)
+    extracted_sig = pyqtSignal(dict)
     exception_sig = pyqtSignal(Exception)
 
     def __init__(self, session, url, params, dest_folder):
@@ -177,17 +177,17 @@ class ExtractThread(QThread):
         try:
             extracted_npz = numpy.load(
                 io.BytesIO(resp.content), allow_pickle=False)
-            extracted_npz = decode_npz(extracted_npz)
+            extracted_dict = decode_npz(extracted_npz)
         except Exception as exc:
             self.exception_sig.emit(exc)
             return
-        if not isinstance(extracted_npz, dict):
+        if not isinstance(extracted_dict, dict):
             self.exception_sig.emit(
                 ExtractFailed("%s: failing to extract. Response: (%s) %s" % (
                     err_msg, resp.reason, resp.content)))
             return
 
-        self.extracted_npz_sig.emit(extracted_npz)
+        self.extracted_sig.emit(extracted_dict)
 
         # FIXME: use stream=True
         # os.remove(filepath)

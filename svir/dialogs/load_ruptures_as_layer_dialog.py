@@ -70,14 +70,14 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
             self.on_extract_error, params={'min_mag': min_mag})
         QgsApplication.taskManager().addTask(self.extract_npz_task)
 
-    def on_ruptures_extracted(self, extracted_npz):
-        self.npz_file = extracted_npz
-        if 'array' not in self.npz_file:
+    def on_ruptures_extracted(self, extracted_dict):
+        self.extracted_dict = extracted_dict
+        if 'array' not in self.extracted_dict:
             log_msg("No ruptures were found above magnitude %s"
                     % self.min_mag_dsb.text(), level='C',
                     message_bar=self.iface.messageBar())
             return
-        self.load_from_npz()
+        self.load_from_extracted_dict()
         QDialog.accept(self)
         self.loading_completed.emit()
 
@@ -100,12 +100,13 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
         return self.layer_name
 
     def get_field_types(self, **kwargs):
-        field_types = {name: self.npz_file['array'][name].dtype.char
-                       for name in self.npz_file['array'].dtype.names}
+        field_types = {name: self.extracted_dict['array'][name].dtype.char
+                       for name in self.extracted_dict['array'].dtype.names}
         return field_types
 
-    def load_from_npz(self):
-        boundaries = gzip.decompress(self.npz_file['boundaries']).split(b'\n')
+    def load_from_extracted_dict(self):
+        boundaries = gzip.decompress(
+            self.extracted_dict['boundaries']).split(b'\n')
         row_wkt_geom_types = {
             row_idx: QgsGeometry.fromWkt(boundary.decode('utf8')).wkbType()
             for row_idx, boundary in enumerate(boundaries)}
@@ -151,14 +152,14 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
         if rup_group:
             zoom_to_group(rup_group)
 
-    def read_npz_into_layer(
+    def read_extracted_into_layer(
             self, field_types, rlz_or_stat, boundaries,
             wkt_geom_type, row_wkt_geom_types, **kwargs):
         with edit(self.layer):
             feats = []
             fields = self.layer.fields()
             field_names = [field.name() for field in fields]
-            for row_idx, row in enumerate(self.npz_file['array']):
+            for row_idx, row in enumerate(self.extracted_dict['array']):
                 if row_wkt_geom_types[row_idx] != wkt_geom_type:
                     continue
                 # add a feature

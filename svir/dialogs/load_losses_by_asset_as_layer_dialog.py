@@ -74,8 +74,8 @@ class LoadLossesByAssetAsLayerDialog(LoadOutputAsLayerDialog):
             self.on_extract_error)
         QgsApplication.taskManager().addTask(self.extract_npz_task)
 
-    def finalize_init(self, extracted_npz):
-        self.npz_file = extracted_npz
+    def finalize_init(self, extracted_dict):
+        self.extracted_dict = extracted_dict
 
         # NOTE: still running this synchronously, because it's small stuff
         with WaitCursorManager('Loading loss types...',
@@ -100,7 +100,7 @@ class LoadLossesByAssetAsLayerDialog(LoadOutputAsLayerDialog):
         self.ok_button.setEnabled(True)
 
     def on_rlz_or_stat_changed(self):
-        self.dataset = self.npz_file[self.rlz_or_stat_cbx.currentText()]
+        self.dataset = self.extracted_dict[self.rlz_or_stat_cbx.currentText()]
         self.taxonomies = [
             tax.decode('utf8').strip('"')
             for tax in numpy.unique(self.dataset['taxonomy']).tolist()]
@@ -137,14 +137,14 @@ class LoadLossesByAssetAsLayerDialog(LoadOutputAsLayerDialog):
         self.default_field_name = loss_type
         return field_types
 
-    def read_npz_into_layer(self, field_types, **kwargs):
+    def read_extracted_into_layer(self, field_types, **kwargs):
         rlz_or_stat = kwargs['rlz_or_stat']
         loss_type = kwargs['loss_type']
         taxonomy = kwargs['taxonomy']
         with edit(self.layer):
             feats = []
             grouped_by_site = self.group_by_site(
-                self.npz_file, rlz_or_stat, loss_type, taxonomy)
+                self.extracted_dict, rlz_or_stat, loss_type, taxonomy)
             for row in grouped_by_site:
                 # add a feature
                 feat = QgsFeature(self.layer.fields())
@@ -164,7 +164,7 @@ class LoadLossesByAssetAsLayerDialog(LoadOutputAsLayerDialog):
                 msg = 'There was a problem adding features to the layer.'
                 log_msg(msg, level='C', message_bar=self.iface.messageBar())
 
-    def load_from_npz(self):
+    def load_from_extracted_dict(self):
         for rlz_or_stat in self.rlzs_or_stats:
             if (self.load_selected_only_ckb.isChecked()
                     and rlz_or_stat != self.rlz_or_stat_cbx.currentText()):
@@ -188,13 +188,11 @@ class LoadLossesByAssetAsLayerDialog(LoadOutputAsLayerDialog):
                                         self.default_field_name,
                                         self.iface, self.output_type)
 
-    def group_by_site(self, npz, rlz_or_stat, loss_type, taxonomy='All'):
-        # example:
-        # npz = numpy.load(npzfname, allow_pickle=False)
-        # print(group_by_site(npz, 'rlz-000', 'structural_ins', '"tax1"'))
+    def group_by_site(self, extracted_dict, rlz_or_stat, loss_type,
+                      taxonomy='All'):
         F32 = numpy.float32
         loss_by_site = collections.defaultdict(float)  # lon, lat -> loss
-        for rec in npz[rlz_or_stat]:
+        for rec in extracted_dict[rlz_or_stat]:
             if (taxonomy == 'All'
                     or taxonomy == rec['taxonomy'].decode('utf8').strip('"')):
                 loss_by_site[rec['lon'], rec['lat']] += rec[loss_type]

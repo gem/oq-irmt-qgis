@@ -64,16 +64,16 @@ class LoadHazardCurvesAsLayerDialog(LoadOutputAsLayerDialog):
         self.ok_button.setEnabled(True)
 
     def populate_dataset(self):
-        self.dataset = self.npz_file['all']
+        self.dataset = self.extracted_dict['all']
 
     def populate_rlz_or_stat_cbx(self):
-        self.rlzs_or_stats = self.npz_file['all'].dtype.names[2:]
+        self.rlzs_or_stats = self.extracted_dict['all'].dtype.names[2:]
         for rlz_or_stat in self.rlzs_or_stats:
             self.rlz_or_stat_cbx.addItem(rlz_or_stat)
 
     def on_rlz_or_stat_changed(self):
         rlz_or_stat = self.rlz_or_stat_cbx.currentText()
-        dataset = self.npz_file['all'][rlz_or_stat]
+        dataset = self.extracted_dict['all'][rlz_or_stat]
         self.imts = [imt for imt in dataset.dtype.names]
         self.imt_cbx.clear()
         for imt in self.imts:
@@ -115,10 +115,10 @@ class LoadHazardCurvesAsLayerDialog(LoadOutputAsLayerDialog):
     def on_iml_changed(self):
         self.set_ok_button()
 
-    def read_npz_into_layer(self, field_names, **kwargs):
+    def read_extracted_into_layer(self, field_names, **kwargs):
         with edit(self.layer):
-            lons = self.npz_file['all']['lon']
-            lats = self.npz_file['all']['lat']
+            lons = self.extracted_dict['all']['lon']
+            lats = self.extracted_dict['all']['lat']
             feats = []
             for row_idx, row in enumerate(self.dataset):
                 feat = QgsFeature(self.layer.fields())
@@ -134,7 +134,7 @@ class LoadHazardCurvesAsLayerDialog(LoadOutputAsLayerDialog):
                 msg = 'There was a problem adding features to the layer.'
                 log_msg(msg, level='C', message_bar=self.iface.messageBar())
 
-    def load_from_npz(self):
+    def load_from_extracted_dict(self):
         with WaitCursorManager('Creating layer...', self.iface.messageBar()):
             self.build_layer()
             self.style_curves()
