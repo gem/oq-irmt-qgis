@@ -24,6 +24,8 @@ email=staff.it@globalquakemodel.org
 # Uncomment the following line and add your changelog entries:
 changelog=
     3.9.0
+    * When pressing the button to run an OQ-Engine calculation or to continue from a previous one, the user can choose if selecting files from a zip file or from
+      a directory. In the latter case, also data available in nested directories will be sent to the OQ-Engine
     * The plugin uses `numpy.load(allow_pickle=False)` while extracting data from the OQ-Engine
     3.8.0
     * Ruptures are loaded from OQ-Engine outputs as separate layers, one for each geometry type (polygon, line or point), instead of representing lines as degenerate flat polygons.
