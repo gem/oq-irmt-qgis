@@ -675,6 +675,11 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 _, zipped_file_name = tempfile.mkstemp()
                 with zipfile.ZipFile(zipped_file_name, 'w') as zipped_file:
                     zipdir(selected_dir, zipped_file)
+        else:  # given filenames
+            _, zipped_file_name = tempfile.mkstemp()
+            with zipfile.ZipFile(zipped_file_name, 'w') as zipped_file:
+                for file_name in file_names:
+                    zipped_file.write(file_name)
         with zipfile.ZipFile(zipped_file_name, 'r') as f:
             input_file_names = f.namelist()
         ini_file_names = [file_name for file_name in input_file_names
