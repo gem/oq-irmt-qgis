@@ -671,10 +671,10 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                         'irmt/run_oqengine_calc_dir', selected_dir)
             else:
                 raise NotImplementedError(select_from)
-        if select_from == 'Directory':
-            _, zipped_file_name = tempfile.mkstemp()
-            with zipfile.ZipFile(zipped_file_name, 'w') as zipped_file:
-                zipdir(selected_dir, zipped_file)
+            if select_from == 'Directory':
+                _, zipped_file_name = tempfile.mkstemp()
+                with zipfile.ZipFile(zipped_file_name, 'w') as zipped_file:
+                    zipdir(selected_dir, zipped_file)
         with zipfile.ZipFile(zipped_file_name, 'r') as f:
             input_file_names = f.namelist()
         ini_file_names = [file_name for file_name in input_file_names
