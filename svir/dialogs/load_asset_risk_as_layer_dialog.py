@@ -200,7 +200,7 @@ class LoadAssetRiskAsLayerDialog(LoadOutputAsLayerDialog):
                        and name not in self.tag_names}
         return field_types
 
-    def read_npz_into_layer(self, field_names, **kwargs):
+    def read_npz_into_layer(self, field_types, **kwargs):
         with edit(self.layer):
             lons = self.dataset['lon']
             lats = self.dataset['lat']
@@ -208,8 +208,10 @@ class LoadAssetRiskAsLayerDialog(LoadOutputAsLayerDialog):
             for row_idx, row in enumerate(self.dataset):
                 # add a feature
                 feat = QgsFeature(self.layer.fields())
-                for field_name in field_names:
-                    value = float(row[field_name])
+                for field_name in field_types:
+                    field_type = field_types[field_name]
+                    value = self.numpy_data_to_qgis(
+                        field_type, row[field_name])
                     feat.setAttribute(field_name, value)
                 feat.setGeometry(QgsGeometry.fromPointXY(
                     QgsPointXY(lons[row_idx], lats[row_idx])))
