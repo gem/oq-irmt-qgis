@@ -124,8 +124,8 @@ class LoadHazardCurvesAsLayerDialog(LoadOutputAsLayerDialog):
                 feat = QgsFeature(self.layer.fields())
                 for field_name_idx, field_name in enumerate(field_names):
                     rlz_or_stat, imt, iml = field_name.split('_')
-                    poe = row[rlz_or_stat][imt][iml]
-                    feat.setAttribute(field_name, float(poe))
+                    poe = row[rlz_or_stat][imt][iml].item()
+                    feat.setAttribute(field_name, poe)
                 feat.setGeometry(QgsGeometry.fromPointXY(
                     QgsPointXY(lons[row_idx], lats[row_idx])))
                 feats.append(feat)
