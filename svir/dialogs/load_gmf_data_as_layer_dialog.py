@@ -208,7 +208,9 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
                     if field_name in ['lon', 'lat']:
                         continue
                     layer_field_name = d2l_field_names[field_name]
-                    value = float(row[field_name])
+                    value = row[field_name].item()
+                    if isinstance(value, bytes):
+                        value = value.decode('utf8')
                     feat.setAttribute(layer_field_name, value)
                 feat.setGeometry(QgsGeometry.fromPointXY(
                     QgsPointXY(row[0], row[1])))

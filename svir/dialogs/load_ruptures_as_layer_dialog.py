@@ -164,13 +164,9 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
                 # add a feature
                 feat = QgsFeature(fields)
                 for field_name in field_names:
-                    try:
-                        value = float(row[field_name])
-                    except ValueError:
-                        try:
-                            value = row[field_name].decode('utf8')
-                        except AttributeError:
-                            value = row[field_name]
+                    value = row[field_name].item()
+                    if isinstance(value, bytes):
+                        value = value.decode('utf8')
                     feat.setAttribute(field_name, value)
                 feat.setGeometry(QgsGeometry.fromWkt(
                     boundaries[row_idx].decode('utf8')))

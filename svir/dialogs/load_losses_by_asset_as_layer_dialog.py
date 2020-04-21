@@ -153,7 +153,9 @@ class LoadLossesByAssetAsLayerDialog(LoadOutputAsLayerDialog):
                     if field_name in ['lon', 'lat']:
                         field_idx += 1
                         continue
-                    value = float(row[field_idx])
+                    value = row[field_idx].item()
+                    if isinstance(value, bytes):
+                        value = value.decode('utf8')
                     feat.setAttribute(field_name, value)
                     field_idx += 1
                 feat.setGeometry(QgsGeometry.fromPointXY(

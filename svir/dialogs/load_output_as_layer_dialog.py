@@ -861,23 +861,6 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         file_size = get_file_size(self.path)
         self.file_size_lbl.setText(self.file_size_msg % file_size)
 
-    def numpy_data_to_qgis(self, field_type, numpy_value):
-        if field_type in ('S', 'b', 'B'):
-            qgis_value = numpy_value.decode('utf8')
-        elif field_type == 'U':
-            qgis_value = str(numpy_value)
-        elif field_type in ('I', 'u'):
-            qgis_value = int(numpy_value)
-        elif field_type in ('f', 'd'):
-            qgis_value = float(numpy_value)
-        else:
-            qgis_value = numpy_value
-            msg = "Unrecognized field type '%s' of value %s" % (
-                field_type, numpy_value)
-            log_msg(msg, level='W',
-                    message_bar=self.iface.messageBar())
-        return qgis_value
-
     def accept(self):
         log_msg('Loading output started. Watch progress in QGIS task bar',
                 level='I', message_bar=self.iface.messageBar())

@@ -176,12 +176,11 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
                 # add a feature
                 feat = QgsFeature(self.layer.fields())
                 for field_name in field_names:
-                    # NB: example field_name == 'PGA-0.01'
-                    # NOTE: without casting to float, it produces a
-                    #       null because it does not recognize the
-                    #       numpy type
+                    # NOTE: example field_name == 'PGA-0.01'
                     imt, poe = field_name.split('-')
-                    value = float(row[imt][poe])
+                    value = row[imt][poe].item()
+                    if isinstance(value, bytes):
+                        value = value.decode('utf8')
                     feat.setAttribute(field_name, value)
                 feat.setGeometry(QgsGeometry.fromPointXY(
                     QgsPointXY(lons[row_idx], lats[row_idx])))

@@ -209,9 +209,9 @@ class LoadAssetRiskAsLayerDialog(LoadOutputAsLayerDialog):
                 # add a feature
                 feat = QgsFeature(self.layer.fields())
                 for field_name in field_types:
-                    field_type = field_types[field_name]
-                    value = self.numpy_data_to_qgis(
-                        field_type, row[field_name])
+                    value = row[field_name].item()
+                    if isinstance(value, bytes):
+                        value = value.decode('utf8')
                     feat.setAttribute(field_name, value)
                 feat.setGeometry(QgsGeometry.fromPointXY(
                     QgsPointXY(lons[row_idx], lats[row_idx])))
