@@ -13,7 +13,7 @@ name=OpenQuake Integrated Risk Modelling Toolkit
 qgisMinimumVersion=3.0
 description=Tools to drive the OpenQuake Engine, to develop composite indicators and integrate them with physical risk estimations, and to predict building recovery times following an earthquake
 about=This plugin allows users to drive OpenQuake Engine calculations (https://github.com/gem/oq-engine) of physical hazard and risk, and to load the corresponding outputs as QGIS layers. For those outputs, data visualization tools are provided. The toolkit also enables users to develop composite indicators to measure and quantify social characteristics, and combine them with estimates of human or infrastructure loss. The plugin can interact with the OpenQuake Platform (https://platform.openquake.org), to browse and download socio-economic data or existing projects, edit projects locally in QGIS and upload and share them with the scientific community. A post-earthquake recovery modeling framework is incorporated into the toolkit, to produce building level and/or community level recovery functions.
-version=3.9.0
+version=3.9.1
 author=GEM Foundation
 email=staff.it@globalquakemodel.org
 
@@ -23,9 +23,12 @@ email=staff.it@globalquakemodel.org
 
 # Uncomment the following line and add your changelog entries:
 changelog=
-    3.9.0
+    3.9.1
+    * Fixed conversion of numpy data loaded from OQ Engine outputs into native python data types used in QGIS layers
+    * Fixed the wrong creation of additional empty fields while loading ground motion fields
     * When pressing the button to run an OQ-Engine calculation or to continue from a previous one, the user can choose if selecting files from a zip file or from
       a directory. In the latter case, also data available in nested directories will be sent to the OQ-Engine
+    3.9.0
     * The plugin uses `numpy.load(allow_pickle=False)` while extracting data from the OQ-Engine
     3.8.0
     * Ruptures are loaded from OQ-Engine outputs as separate layers, one for each geometry type (polygon, line or point), instead of representing lines as degenerate flat polygons.
