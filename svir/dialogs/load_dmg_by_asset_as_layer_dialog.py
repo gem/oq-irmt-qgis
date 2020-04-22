@@ -200,14 +200,12 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
                     if field_name in ['lon', 'lat']:
                         continue
                     elif field_name in data.dtype.names:
-                        value = row[field_name]
-                        if data[field_name].dtype.char == 'S':
-                            value = str(value, encoding='utf8').strip('"')
-                        else:
-                            value = float(value)
+                        value = row[field_name].item()
+                        if isinstance(value, bytes):
+                            value = value.decode('utf8').strip('"')
                     else:
-                        value = float(
-                            row[loss_type][field_name[len(loss_type)+1:]])
+                        value = row[
+                            loss_type][field_name[len(loss_type)+1:]].item()
                     feat.setAttribute(field_name, value)
                 feat.setGeometry(QgsGeometry.fromPointXY(
                     QgsPointXY(row['lon'], row['lat'])))
@@ -234,7 +232,9 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
                     if field_name in ['lon', 'lat']:
                         field_idx += 1
                         continue
-                    value = float(row[field_idx])
+                    value = row[field_idx].item()
+                    if isinstance(value, bytes):
+                        value = value.decode('utf8')
                     feat.setAttribute(field_name, value)
                     field_idx += 1
                 feat.setGeometry(QgsGeometry.fromPointXY(
