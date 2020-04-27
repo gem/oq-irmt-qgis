@@ -39,12 +39,12 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
 
     def __init__(self, drive_engine_dlg, iface, viewer_dock, session, hostname,
                  calc_id, output_type='gmf_data', path=None, mode=None,
-                 engine_version=None):
+                 engine_version=None, calculation_mode=None):
         assert output_type == 'gmf_data'
         LoadOutputAsLayerDialog.__init__(
             self, drive_engine_dlg, iface, viewer_dock, session, hostname,
             calc_id, output_type=output_type, path=path, mode=mode,
-            engine_version=engine_version)
+            engine_version=engine_version, calculation_mode=calculation_mode)
 
         self.setWindowTitle(
             'Load ground motion fields as layer')
@@ -178,8 +178,8 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
     def build_layer_name(self, gsim=None, **kwargs):
         self.imt = self.imt_cbx.currentText()
         self.default_field_name = '%s-%s' % (self.imt, self.eid)
-        # NOTE: assuming it's a scenario calculation
-        layer_name = "scenario_gmfs_%s_eid-%s" % (gsim, self.eid)
+        layer_name = "%s_gmfs_%s_eid-%s" % (
+            self.calculation_mode, gsim, self.eid)
         return layer_name
 
     def get_field_types(self, **kwargs):
