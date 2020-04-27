@@ -23,6 +23,7 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
+import copy
 from random import randrange
 from osgeo import ogr
 from qgis.core import (QgsVectorLayer,
@@ -472,6 +473,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         # create layer
         self.layer = QgsVectorLayer(
             "%s?crs=epsg:4326" % geometry_type, layer_name, "memory")
+        modified_field_types = copy.copy(field_types)
         for field_name, field_type in field_types.items():
             if field_name in ['lon', 'lat', 'boundary']:
                 continue
@@ -480,9 +482,9 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 if field_name == self.default_field_name:
                     self.default_field_name = added_field_name
                 # replace field_name with the actual added_field_name
-                field_type = field_types[field_name]
-                del field_types[field_name]
-                field_types[added_field_name] = field_type
+                del modified_field_types[field_name]
+                modified_field_types[added_field_name] = field_type
+        field_types = copy.copy(modified_field_types)
 
         self.read_npz_into_layer(
             field_types, rlz_or_stat=rlz_or_stat, taxonomy=taxonomy, poe=poe,
