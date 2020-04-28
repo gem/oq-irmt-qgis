@@ -40,12 +40,13 @@ class LoadLossesByAssetAsLayerDialog(LoadOutputAsLayerDialog):
     def __init__(self, drive_engine_dlg, iface, viewer_dock, session, hostname,
                  calc_id, output_type=None,
                  path=None, mode=None, zonal_layer_path=None,
-                 engine_version=None):
+                 engine_version=None, calculation_mode=None):
         assert output_type in ('losses_by_asset', 'avg_losses-stats')
         LoadOutputAsLayerDialog.__init__(
             self, drive_engine_dlg, iface, viewer_dock, session, hostname,
             calc_id, output_type=output_type, path=path, mode=mode,
-            zonal_layer_path=zonal_layer_path, engine_version=engine_version)
+            zonal_layer_path=zonal_layer_path, engine_version=engine_version,
+            calculation_mode=calculation_mode)
 
         if self.output_type == 'losses_by_asset':
             self.setWindowTitle(
