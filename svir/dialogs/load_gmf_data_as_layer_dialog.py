@@ -74,10 +74,23 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
         num_events = len(events_npz['array'])
         if 'GEM_QGIS_TEST' in os.environ:
             self.eid, ok = 0, True
+        elif 'scenario' in self.calculation_mode:
+            range_width = self.oqparam['number_of_ground_motion_fields']
+            ranges = {}
+            for gsim_idx, gsim in enumerate(self.gsims):
+                ranges[gsim] = (gsim_idx * range_width,
+                                gsim_idx * range_width + range_width - 1)
+            ranges_str = ''
+            for gsim in ranges:
+                ranges_str += '\n%s: %s' % (gsim, ranges[gsim])
+            self.eid, ok = QInputDialog.getInt(
+                self.drive_engine_dlg,
+                "Select an event ID", "Ranges:%s" % ranges_str,
+                0, 0, num_events - 1)
         else:
             self.eid, ok = QInputDialog.getInt(
                 self.drive_engine_dlg,
-                "Select an event ID", "range (0 - %s)" % (num_events - 1),
+                "Select an event ID", "Range (0 - %s)" % (num_events - 1),
                 0, 0, num_events - 1)
         if not ok:
             self.reject()
