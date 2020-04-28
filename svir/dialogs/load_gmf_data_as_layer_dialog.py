@@ -59,11 +59,7 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
         self.rlz_or_stat_cbx.setVisible(False)
         self.create_imt_selector()
 
-        with WaitCursorManager(
-                'Extracting...', message_bar=self.iface.messageBar()):
-            self.rlzs_npz = extract_npz(
-                self.session, self.hostname, self.calc_id, 'realizations',
-                message_bar=self.iface.messageBar(), params=None)
+        self.extract_realizations()
 
         log_msg('Extracting events. Watch progress in QGIS task bar',
                 level='I', message_bar=self.iface.messageBar())
@@ -126,7 +122,7 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
         else:
             self.num_sites_lbl.setText(self.num_sites_msg % gmf_data.shape)
 
-    def populate_rlz_or_stat_cbx(self):
+    def extract_realizations(self):
         with WaitCursorManager(
                 'Extracting...', message_bar=self.iface.messageBar()):
             self.rlzs_npz = extract_npz(
@@ -136,6 +132,8 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
             rlz_id for rlz_id in self.rlzs_npz['array']['rlz_id']]
         self.gsims = [branch_path.decode('utf8').strip("\"")
                       for branch_path in self.rlzs_npz['array']['branch_path']]
+
+    def populate_rlz_or_stat_cbx(self):
         self.rlz_or_stat_cbx.clear()
         self.rlz_or_stat_cbx.setEnabled(True)
         for gsim, rlz in zip(self.gsims, self.rlzs_or_stats):
