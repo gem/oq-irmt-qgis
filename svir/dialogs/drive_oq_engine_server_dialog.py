@@ -904,7 +904,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                             action = 'Download'
                             button = QPushButton()
                             self.connect_button_to_action(
-                                button, action, output, outtype)
+                                button, action, output, outtype,
+                                calculation_mode)
                             self.output_list_tbl.setCellWidget(
                                 row, additional_cols, button)
                             self.calc_list_tbl.setColumnWidth(
@@ -922,7 +923,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                         continue
                     button = QPushButton()
                     self.connect_button_to_action(
-                        button, action, output, outtype)
+                        button, action, output, outtype, calculation_mode)
                     self.output_list_tbl.setCellWidget(
                         row, additional_cols, button)
                     additional_cols += 1
@@ -931,7 +932,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                     mod_output['type'] = "%s_aggr" % output['type']
                     button = QPushButton()
                     self.connect_button_to_action(
-                        button, 'Aggregate', mod_output, outtype)
+                        button, 'Aggregate', mod_output, outtype,
+                        calculation_mode)
                     self.output_list_tbl.setCellWidget(
                         row, additional_cols, button)
                     additional_cols += 1
@@ -939,7 +941,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 # (like in the webui)
                 action = 'Download'
                 button = QPushButton()
-                self.connect_button_to_action(button, action, output, outtype)
+                self.connect_button_to_action(
+                    button, action, output, outtype, calculation_mode)
                 self.output_list_tbl.setCellWidget(
                     row, additional_cols, button)
                 self.calc_list_tbl.setColumnWidth(
@@ -953,7 +956,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.output_list_tbl.resizeColumnsToContents()
         self.output_list_tbl.resizeRowsToContents()
 
-    def connect_button_to_action(self, button, action, output, outtype):
+    def connect_button_to_action(self, button, action, output, outtype,
+                                 calculation_mode):
         if action in ('Load layer', 'Load from zip', 'Load table',
                       'Show', 'Aggregate'):
             style = 'background-color: blue; color: white;'
@@ -971,10 +975,12 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             style = 'background-color: #3cb3c5; color: white;'
             button.setText("%s %s" % (action, outtype))
         button.setStyleSheet(style)
-        button.clicked.connect(lambda checked=False, output=output, action=action, outtype=outtype: (  # NOQA
-            self.on_output_action_btn_clicked(output, action, outtype)))
+        button.clicked.connect(lambda checked=False, output=output, action=action, outtype=outtype, calculation_mode=calculation_mode: (  # NOQA
+            self.on_output_action_btn_clicked(
+                output, action, outtype, calculation_mode)))
 
-    def on_output_action_btn_clicked(self, output, action, outtype):
+    def on_output_action_btn_clicked(
+            self, output, action, outtype, calculation_mode):
         output_id = output['id']
         output_type = output['type']
         if action in ['Show', 'Aggregate']:
@@ -1007,7 +1013,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             # the asset_risk output type
             if outtype == 'npz' or output_type in (
                     OQ_EXTRACT_TO_LAYER_TYPES | OQ_EXTRACT_TO_VIEW_TYPES):
-                self.open_output(output_id, output_type)
+                self.open_output(
+                    output_id, output_type, calculation_mode=calculation_mode)
             elif outtype == 'csv':
                 dest_folder = tempfile.gettempdir()
                 descr = 'Download %s for calculation %s' % (
@@ -1067,7 +1074,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.full_report_dlg.show()
 
     def open_output(
-            self, output_id=None, output_type=None, filepath=None):
+            self, output_id=None, output_type=None, filepath=None,
+            calculation_mode=None):
         assert(output_type is not None)
         if output_type not in OUTPUT_TYPE_LOADERS:
             raise NotImplementedError(output_type)
@@ -1076,7 +1084,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             self, self.iface, self.viewer_dock,
             self.session, self.hostname, self.current_calc_id,
             output_type, path=filepath,
-            engine_version=self.engine_version)
+            engine_version=self.engine_version,
+            calculation_mode=calculation_mode)
         self.open_output_dlgs[dlg_id] = open_output_dlg
         open_output_dlg.finished[int].connect(
             lambda result: self.del_dlg(dlg_id))

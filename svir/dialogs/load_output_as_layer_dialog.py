@@ -97,7 +97,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
     def __init__(self, drive_engine_dlg, iface, viewer_dock,
                  session, hostname, calc_id, output_type=None,
                  path=None, mode=None, zonal_layer_path=None,
-                 engine_version=None):
+                 engine_version=None, calculation_mode=None):
         # sanity check
         if output_type not in OQ_TO_LAYER_TYPES:
             raise NotImplementedError(output_type)
@@ -112,6 +112,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.mode = mode  # if 'testing' it will avoid some user interaction
         self.zonal_layer_path = zonal_layer_path
         self.engine_version = engine_version
+        self.calculation_mode = calculation_mode
         QDialog.__init__(self)
         # Set up the user interface from Designer.
         self.setupUi(self)
