@@ -225,7 +225,8 @@ OQ_CSV_TO_LAYER_TYPES = set([
     'dmg_by_event',
     'losses_by_event',
     'agglosses',
-    'agg_risk'])
+    'agg_risk',
+])
 OQ_EXTRACT_TO_LAYER_TYPES = set([
     'hmaps',
     'hcurves',
@@ -235,7 +236,9 @@ OQ_EXTRACT_TO_LAYER_TYPES = set([
     'dmg_by_asset',
     'avg_losses-stats',
     'ruptures',
-    'asset_risk'])
+    'asset_risk',
+    'disagg',
+])
 OQ_ZIPPED_TYPES = set([
     'input'])
 OQ_TO_LAYER_TYPES = (OQ_CSV_TO_LAYER_TYPES |

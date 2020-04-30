@@ -1225,8 +1225,10 @@ def get_loss_types(session, hostname, calc_id, message_bar):
 
 
 def write_metadata_to_layer(
-        drive_engine_dlg, output_type, layer, user_params=None):
+        drive_engine_dlg, output_type, layer, user_params=None,
+        disagg_params=None):
     user_params = user_params or {}
+    disagg_params = disagg_params or {}
     json_params = drive_engine_dlg.get_oqparam()
     lm = layer.metadata()
     for param in json_params:
@@ -1239,6 +1241,10 @@ def write_metadata_to_layer(
         value = user_params[param]
         if value is not None:
             lm.addKeywords("oquser:%s" % param, [str(value)])
+    for param in disagg_params:
+        value = disagg_params[param]
+        if value is not None:
+            lm.addKeywords("oqdisagg:%s" % param, [str(value)])
     layer.setMetadata(lm)
 
 
