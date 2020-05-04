@@ -22,6 +22,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
+import os
 import copy
 import json
 from qgis.core import (
@@ -55,7 +56,8 @@ class LoadDisaggAsLayerDialog(LoadOutputAsLayerDialog):
         # self.populate_out_dep_widgets()
         # self.adjustSize()
         self.ok_button.setEnabled(True)
-        self.accept()
+        if 'GEM_QGIS_TEST' not in os.environ:
+            self.accept()
 
     def accept(self):
         imts = self.oqparam['hazard_imtls'].keys()
