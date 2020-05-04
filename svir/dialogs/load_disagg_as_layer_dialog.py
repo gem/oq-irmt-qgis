@@ -56,6 +56,7 @@ class LoadDisaggAsLayerDialog(LoadOutputAsLayerDialog):
         # self.populate_out_dep_widgets()
         # self.adjustSize()
         self.ok_button.setEnabled(True)
+        self.init_done.emit()
         if 'GEM_QGIS_TEST' not in os.environ:
             self.accept()
 
