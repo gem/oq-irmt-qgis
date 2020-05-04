@@ -551,6 +551,9 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 self.irmt.iface, self.irmt.viewer_dock,
                 self.irmt.drive_oq_engine_server_dlg.session,
                 self.hostname, calc_id, output_type)
+            if output_type == 'disagg':
+                print('\t\tok')
+                return 'ok'
             self.loading_completed = False
             self.loading_exception = None
             dlg.loading_completed.connect(self.on_loading_completed)
