@@ -90,7 +90,7 @@ class LoadDisaggAsLayerDialog(LoadOutputAsLayerDialog):
         return field_types
 
     def build_layer(self, kind, imt, poe, disagg, add_to_group=None):
-        layer_name = 'disagg_%s_%s_%s' % (kind, imt, poe)
+        layer_name = 'disagg__%s__%s__%s' % (kind, imt, poe)
         field_types = self.get_field_types(disagg)
         # create layer
         self.layer = QgsVectorLayer(
