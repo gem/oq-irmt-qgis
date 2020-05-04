@@ -22,22 +22,17 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
-import gzip
 import copy
 import json
-from collections import OrderedDict
-from qgis.PyQt.QtWidgets import QDialog
 from qgis.core import (
-    QgsFeature, QgsGeometry, QgsWkbTypes, edit, QgsTask, QgsApplication,
-    QgsProject, QgsVectorLayer, QgsPointXY)
+    QgsFeature, QgsGeometry, edit, QgsProject, QgsVectorLayer, QgsPointXY)
 from svir.utilities.utils import (
     log_msg, WaitCursorManager, extract_npz, get_irmt_version,
     write_metadata_to_layer)
 from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
 
 KINDS = (
-    'Mag', 'Dist', 'TRT',  # easier ones
-    'Mag_Dist', 'Mag_Dist_Eps',
+    'Mag', 'Dist', 'TRT', 'Mag_Dist', 'Mag_Dist_Eps',
     # FIXME currently broken engine-side
     # 'Lon_Lat', 'Mag_Lon_Lat', 'Lon_Lat_TRT',
 )
