@@ -121,6 +121,10 @@ class LoadDisaggAsLayerDialog(LoadOutputAsLayerDialog):
         for k, v in disagg.items():
             if k == 'array':
                 continue
+            v = [value.item().decode('utf8')
+                 if isinstance(value.item(), bytes)
+                 else value.item()
+                 for value in v]
             self.layer.setCustomProperty(k, v)
             disagg_params[k] = v
         write_metadata_to_layer(
