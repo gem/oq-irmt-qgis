@@ -22,7 +22,6 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
-import os
 import copy
 import json
 from qgis.core import (
@@ -31,12 +30,6 @@ from svir.utilities.utils import (
     log_msg, WaitCursorManager, extract_npz, get_irmt_version,
     write_metadata_to_layer)
 from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
-
-KINDS = (
-    'Mag', 'Dist', 'TRT', 'Mag_Dist', 'Mag_Dist_Eps',
-    # FIXME currently broken engine-side
-    # 'Lon_Lat', 'Mag_Lon_Lat', 'Lon_Lat_TRT',
-)
 
 
 class LoadDisaggAsLayerDialog(LoadOutputAsLayerDialog):
@@ -59,38 +52,36 @@ class LoadDisaggAsLayerDialog(LoadOutputAsLayerDialog):
         self.accept()
 
     def accept(self):
-        imts = self.oqparam['hazard_imtls'].keys()
-        poe_ids = self.oqparam['poes_disagg']
-        for kind in KINDS:
-            for imt in imts:
-                for poe in poe_ids:
-                    params = {'kind': kind,
-                              'imt': imt,
-                              'poe_id': poe}
-                    with WaitCursorManager(
-                            'Extracting disagg_layer...',
-                            message_bar=self.iface.messageBar()):
-                        disagg = extract_npz(
-                            self.session, self.hostname, self.calc_id,
-                            'disagg_layer',
-                            message_bar=self.iface.messageBar(),
-                            params=params)
-                    if disagg is None:
-                        return
-                    with WaitCursorManager(
-                            'Creating layer for '
-                            'kind: %s, imt: %s, poe: %s...'
-                            % (kind, imt, poe), self.iface.messageBar()):
-                        self.build_layer(kind, imt, poe, disagg)
-                        self.style_curves()
+        with WaitCursorManager(
+                'Extracting disagg_layer...',
+                message_bar=self.iface.messageBar()):
+            disagg = extract_npz(
+                self.session, self.hostname, self.calc_id,
+                'disagg_layer',
+                message_bar=self.iface.messageBar())
+        if disagg is None:
+            return
+        with WaitCursorManager(
+                'Creating disaggregation layer',
+                self.iface.messageBar()):
+            self.build_layer(disagg)
+            self.style_curves()
 
     def get_field_types(self, disagg):
-        field_types = {name: disagg['array'][name].dtype.char
-                       for name in disagg['array'].dtype.names}
+        # field_types = {name: disagg['array'][name].dtype.char
+        #                for name in disagg['array'].dtype.names}
+        field_types = {}
+        for field_name in disagg['array'].dtype.names:
+            field_type = disagg['array'][field_name].dtype.char
+            # FIXME: lists of floats are declared as 'f', but we need to store
+            # them as strings
+            if field_type == 'f':
+                field_type = 'S'
+            field_types[field_name] = field_type
         return field_types
 
-    def build_layer(self, kind, imt, poe, disagg, add_to_group=None):
-        layer_name = 'disagg__%s__%s__%s' % (kind, imt, poe)
+    def build_layer(self, disagg):
+        layer_name = '%s_%s' % (self.output_type, self.calc_id)
         field_types = self.get_field_types(disagg)
         # create layer
         self.layer = QgsVectorLayer(
@@ -99,9 +90,6 @@ class LoadDisaggAsLayerDialog(LoadOutputAsLayerDialog):
         for field_name, field_type in field_types.items():
             if field_name in ['lon', 'lat']:
                 continue
-            # FIXME: What are fields that need to be stored as json?
-            if field_name == 'poes':
-                field_type = 'S'
             added_field_name = self.add_field_to_layer(field_name, field_type)
             if field_name != added_field_name:
                 # replace field_name with the actual added_field_name
@@ -116,7 +104,6 @@ class LoadDisaggAsLayerDialog(LoadOutputAsLayerDialog):
         irmt_version = get_irmt_version()
         self.layer.setCustomProperty('irmt_version', irmt_version)
         self.layer.setCustomProperty('calc_id', self.calc_id)
-        self.layer.setCustomProperty('poe', poe)
         disagg_params = {}
         for k, v in disagg.items():
             if k == 'array':
@@ -131,35 +118,26 @@ class LoadDisaggAsLayerDialog(LoadOutputAsLayerDialog):
             self.drive_engine_dlg, self.output_type, self.layer,
             disagg_params=disagg_params)
         QgsProject.instance().addMapLayer(self.layer, False)
-        if add_to_group:
-            tree_node = add_to_group
-        else:
-            tree_node = QgsProject.instance().layerTreeRoot()
+        tree_node = QgsProject.instance().layerTreeRoot()
         tree_node.insertLayer(0, self.layer)
         self.iface.setActiveLayer(self.layer)
-        # if add_to_group:
-        #     # NOTE: zooming to group from caller function, to avoid repeating
-        #     #       it once per layer
-        #     pass
-        # else:
-        #     self.iface.zoomToActiveLayer()
         log_msg('Layer %s was created successfully' % layer_name, level='S',
                 message_bar=self.iface.messageBar())
 
-    def read_npz_into_layer(self, field_names, disagg):
+    def read_npz_into_layer(self, field_types, disagg):
         with edit(self.layer):
             lons = disagg['array']['lon']
             lats = disagg['array']['lat']
             feats = []
             for row_idx, row in enumerate(disagg['array']):
                 feat = QgsFeature(self.layer.fields())
-                for field_name_idx, field_name in enumerate(field_names):
+                for field_name_idx, field_name in enumerate(field_types):
                     if field_name in ('lon', 'lat'):
                         continue
                     try:
                         value = disagg['array'][field_name][row_idx].item()
                     except ValueError:
-                        # FIXME: array instead of single value
+                        # array instead of single value
                         value = disagg['array'][field_name][row_idx]
                         value = json.dumps(value.tolist())
                     feat.setAttribute(field_name, value)
