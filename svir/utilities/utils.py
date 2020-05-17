@@ -31,6 +31,7 @@ import traceback
 import locale
 import zlib
 import io
+from datetime import datetime
 from pygments import highlight
 from pygments.lexers import PythonLexer
 from pygments.formatters import HtmlFormatter
@@ -184,9 +185,11 @@ def log_msg(message, tag='GEM OpenQuake IRMT plugin', level='I',
                     duration)
                 message_bar.pushItem(mb_item)
         if print_to_stderr:
-            print('\t\t%s' % message + tb_text, file=sys.stderr)
+            print('\t\t%s: %s' % (datetime.now(), message + tb_text),
+                  file=sys.stderr)
         if print_to_stdout:
-            print('\t\t%s' % message + tb_text, file=sys.stdout)
+            print('\t\t%s: %s' % (datetime.now(), message + tb_text),
+                  file=sys.stdout)
 
 
 def _on_tb_btn_clicked(message, tb_text):

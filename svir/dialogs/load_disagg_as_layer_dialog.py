@@ -54,19 +54,20 @@ class LoadDisaggAsLayerDialog(LoadOutputAsLayerDialog):
     def accept(self):
         with WaitCursorManager(
                 'Extracting disagg_layer...',
-                message_bar=self.iface.messageBar(),
-                print_to_stdout=True):
+                message_bar=self.iface.messageBar()):
+            log_msg('Extracting disagg_layer', level='I',
+                    print_to_stdout=True)
             disagg = extract_npz(
                 self.session, self.hostname, self.calc_id,
                 'disagg_layer',
-                message_bar=self.iface.messageBar(),
-                print_to_stdout=True)
+                message_bar=self.iface.messageBar())
         if disagg is None:
             return
         with WaitCursorManager(
                 'Creating disaggregation layer',
-                self.iface.messageBar(),
-                print_to_stdout=True):
+                self.iface.messageBar()):
+            log_msg('Creating disagg_layer', level='I',
+                    print_to_stdout=True)
             self.build_layer(disagg)
             self.style_curves()
 
@@ -125,7 +126,8 @@ class LoadDisaggAsLayerDialog(LoadOutputAsLayerDialog):
         tree_node.insertLayer(0, self.layer)
         self.iface.setActiveLayer(self.layer)
         log_msg('Layer %s was created successfully' % layer_name, level='S',
-                message_bar=self.iface.messageBar())
+                message_bar=self.iface.messageBar(),
+                print_to_stdout=True)
 
     def read_npz_into_layer(self, field_types, disagg):
         with edit(self.layer):
@@ -154,7 +156,8 @@ class LoadDisaggAsLayerDialog(LoadOutputAsLayerDialog):
                 if not added_ok:
                     msg = 'There was a problem adding features to the layer.'
                     log_msg(msg, level='C',
-                            message_bar=self.iface.messageBar())
+                            message_bar=self.iface.messageBar(),
+                            print_to_stderr=True)
             # added_ok = self.layer.addFeatures(feats)
             # if not added_ok:
             #     msg = 'There was a problem adding features to the layer.'
