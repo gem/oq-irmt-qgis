@@ -75,7 +75,7 @@ class LoadDisaggAsLayerDialog(LoadOutputAsLayerDialog):
             field_type = disagg['array'][field_name].dtype.char
             # FIXME: lists of floats are declared as 'f', but we need to store
             # them as strings
-            if field_type == 'f':
+            if field_type == 'f' and field_name not in ('lon', 'lat'):
                 field_type = 'S'
             field_types[field_name] = field_type
         return field_types
