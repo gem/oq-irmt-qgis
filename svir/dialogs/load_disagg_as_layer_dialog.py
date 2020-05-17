@@ -54,16 +54,19 @@ class LoadDisaggAsLayerDialog(LoadOutputAsLayerDialog):
     def accept(self):
         with WaitCursorManager(
                 'Extracting disagg_layer...',
-                message_bar=self.iface.messageBar()):
+                message_bar=self.iface.messageBar(),
+                print_to_stdout=True):
             disagg = extract_npz(
                 self.session, self.hostname, self.calc_id,
                 'disagg_layer',
-                message_bar=self.iface.messageBar())
+                message_bar=self.iface.messageBar(),
+                print_to_stdout=True)
         if disagg is None:
             return
         with WaitCursorManager(
                 'Creating disaggregation layer',
-                self.iface.messageBar()):
+                self.iface.messageBar(),
+                print_to_stdout=True):
             self.build_layer(disagg)
             self.style_curves()
 
