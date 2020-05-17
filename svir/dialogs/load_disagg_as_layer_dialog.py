@@ -128,8 +128,11 @@ class LoadDisaggAsLayerDialog(LoadOutputAsLayerDialog):
         with edit(self.layer):
             lons = disagg['array']['lon']
             lats = disagg['array']['lat']
-            feats = []
+            # feats = []
+            tot_feats = len(disagg['array'])
             for row_idx, row in enumerate(disagg['array']):
+                log_msg('Site %s of %s' % (row_idx, tot_feats), level='I',
+                        print_to_stdout=True)
                 feat = QgsFeature(self.layer.fields())
                 for field_name_idx, field_name in enumerate(field_types):
                     if field_name in ('lon', 'lat'):
@@ -143,8 +146,13 @@ class LoadDisaggAsLayerDialog(LoadOutputAsLayerDialog):
                     feat.setAttribute(field_name, value)
                 feat.setGeometry(QgsGeometry.fromPointXY(
                     QgsPointXY(lons[row_idx], lats[row_idx])))
-                feats.append(feat)
-            added_ok = self.layer.addFeatures(feats)
-            if not added_ok:
-                msg = 'There was a problem adding features to the layer.'
-                log_msg(msg, level='C', message_bar=self.iface.messageBar())
+                # feats.append(feat)
+                added_ok = self.layer.addFeature(feat)
+                if not added_ok:
+                    msg = 'There was a problem adding features to the layer.'
+                    log_msg(msg, level='C',
+                            message_bar=self.iface.messageBar())
+            # added_ok = self.layer.addFeatures(feats)
+            # if not added_ok:
+            #     msg = 'There was a problem adding features to the layer.'
+            #     log_msg(msg, level='C', message_bar=self.iface.messageBar())
