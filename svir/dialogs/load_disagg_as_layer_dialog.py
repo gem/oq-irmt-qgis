@@ -24,6 +24,7 @@
 
 import copy
 import json
+import numpy as np
 from qgis.core import (
     QgsFeature, QgsGeometry, edit, QgsProject, QgsVectorLayer, QgsPointXY)
 from svir.utilities.utils import (
@@ -142,17 +143,25 @@ class LoadDisaggAsLayerDialog(LoadOutputAsLayerDialog):
                 for field_name_idx, field_name in enumerate(field_types):
                     if field_name in ('lon', 'lat'):
                         continue
-                    try:
-                        value = disagg['array'][field_name][row_idx].item()
-                    except ValueError:
-                        # array instead of single value
+                    if isinstance(disagg['array'][field_name][row_idx],
+                                  np.ndarray):
                         value = disagg['array'][field_name][row_idx]
+                        log_msg('\t\tDumping json', level='I',
+                                print_to_stdout=True)
                         value = json.dumps(value.tolist())
+                        log_msg('\t\tDone dumping json', level='I',
+                                print_to_stdout=True)
+                    else:  # scalar
+                        value = disagg['array'][field_name][row_idx].item()
                     feat.setAttribute(field_name, value)
                 feat.setGeometry(QgsGeometry.fromPointXY(
                     QgsPointXY(lons[row_idx], lats[row_idx])))
                 # feats.append(feat)
+                log_msg('\tAdding feature', level='I',
+                        print_to_stdout=True)
                 added_ok = self.layer.addFeature(feat)
+                log_msg('\tDone adding feature', level='I',
+                        print_to_stdout=True)
                 if not added_ok:
                     msg = 'There was a problem adding features to the layer.'
                     log_msg(msg, level='C',
