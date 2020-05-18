@@ -87,6 +87,7 @@ class LoadDisaggAsLayerDialog(LoadOutputAsLayerDialog):
 
     def build_layer(self, disagg):
         layer_name = '%s_%s' % (self.output_type, self.calc_id)
+        log_msg('Getting field types', level='I', print_to_stdout=True)
         field_types = self.get_field_types(disagg)
         # create layer
         self.layer = QgsVectorLayer(
@@ -95,7 +96,10 @@ class LoadDisaggAsLayerDialog(LoadOutputAsLayerDialog):
         for field_name, field_type in field_types.items():
             if field_name in ['lon', 'lat']:
                 continue
+            log_msg('Adding field %s of type %s' % (field_name, field_type),
+                    level='I', print_to_stdout=True)
             added_field_name = self.add_field_to_layer(field_name, field_type)
+            log_msg('\tDone adding field', level='I', print_to_stdout=True)
             if field_name != added_field_name:
                 # replace field_name with the actual added_field_name
                 del modified_field_types[field_name]
@@ -160,7 +164,7 @@ class LoadDisaggAsLayerDialog(LoadOutputAsLayerDialog):
                 log_msg('\tAdding feature', level='I',
                         print_to_stdout=True)
                 added_ok = self.layer.addFeature(feat)
-                log_msg('\tDone adding feature', level='I',
+                log_msg('\t\tDone adding feature', level='I',
                         print_to_stdout=True)
                 if not added_ok:
                     msg = 'There was a problem adding features to the layer.'
