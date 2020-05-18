@@ -72,12 +72,12 @@ class LoadDisaggAsLayerDialog(LoadOutputAsLayerDialog):
             self.build_layer(disagg)
             self.style_curves()
 
-    def get_field_types(self, disagg):
+    def get_field_types(self, disagg_array):
         # field_types = {name: disagg['array'][name].dtype.char
         #                for name in disagg['array'].dtype.names}
         field_types = {}
-        for field_name in disagg['array'].dtype.names:
-            field_type = disagg['array'][field_name].dtype.char
+        for field_name in disagg_array.dtype.names:
+            field_type = disagg_array[field_name].dtype.char
             # FIXME: lists of floats are declared as 'f', but we need to store
             # them as strings
             if field_type == 'f' and field_name not in ('lon', 'lat'):
@@ -86,10 +86,12 @@ class LoadDisaggAsLayerDialog(LoadOutputAsLayerDialog):
         return field_types
 
     def build_layer(self, disagg):
+        log_msg('Getting disagg array', level='I', print_to_stdout=True)
+        disagg_array = disagg['array']
+        log_msg('Done getting disagg array', level='I', print_to_stdout=True)
         layer_name = '%s_%s' % (self.output_type, self.calc_id)
         log_msg('Getting field types', level='I', print_to_stdout=True)
-        field_types = self.get_field_types(disagg)
-        # create layer
+        field_types = self.get_field_types(disagg_array)
         self.layer = QgsVectorLayer(
             "%s?crs=epsg:4326" % 'point', layer_name, "memory")
         modified_field_types = copy.copy(field_types)
@@ -106,13 +108,15 @@ class LoadDisaggAsLayerDialog(LoadOutputAsLayerDialog):
                 modified_field_types[added_field_name] = field_type
         field_types = copy.copy(modified_field_types)
 
-        self.read_npz_into_layer(field_types, disagg)
+        self.read_npz_into_layer(field_types, disagg_array)
         self.layer.setCustomProperty('output_type', self.output_type)
         if self.engine_version is not None:
             self.layer.setCustomProperty('engine_version', self.engine_version)
         irmt_version = get_irmt_version()
         self.layer.setCustomProperty('irmt_version', irmt_version)
         self.layer.setCustomProperty('calc_id', self.calc_id)
+        self.layer.setCustomProperty(
+            'investigation_time', self.oqparam['investigation_time'])
         disagg_params = {}
         for k, v in disagg.items():
             if k == 'array':
@@ -134,29 +138,29 @@ class LoadDisaggAsLayerDialog(LoadOutputAsLayerDialog):
                 message_bar=self.iface.messageBar(),
                 print_to_stdout=True)
 
-    def read_npz_into_layer(self, field_types, disagg):
+    def read_npz_into_layer(self, field_types, disagg_array):
         with edit(self.layer):
-            lons = disagg['array']['lon']
-            lats = disagg['array']['lat']
+            lons = disagg_array['lon']
+            lats = disagg_array['lat']
             # feats = []
-            tot_feats = len(disagg['array'])
-            for row_idx, row in enumerate(disagg['array']):
+            tot_feats = len(disagg_array)
+            for row_idx, row in enumerate(disagg_array):
                 log_msg('Site %s of %s' % (row_idx, tot_feats), level='I',
                         print_to_stdout=True)
                 feat = QgsFeature(self.layer.fields())
                 for field_name_idx, field_name in enumerate(field_types):
                     if field_name in ('lon', 'lat'):
                         continue
-                    if isinstance(disagg['array'][field_name][row_idx],
+                    if isinstance(disagg_array[field_name][row_idx],
                                   np.ndarray):
-                        value = disagg['array'][field_name][row_idx]
+                        value = disagg_array[field_name][row_idx]
                         log_msg('\t\tDumping json', level='I',
                                 print_to_stdout=True)
                         value = json.dumps(value.tolist())
                         log_msg('\t\tDone dumping json', level='I',
                                 print_to_stdout=True)
                     else:  # scalar
-                        value = disagg['array'][field_name][row_idx].item()
+                        value = disagg_array[field_name][row_idx].item()
                     feat.setAttribute(field_name, value)
                 feat.setGeometry(QgsGeometry.fromPointXY(
                     QgsPointXY(lons[row_idx], lats[row_idx])))
