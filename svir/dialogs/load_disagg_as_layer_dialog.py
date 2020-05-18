@@ -90,7 +90,7 @@ class LoadDisaggAsLayerDialog(LoadOutputAsLayerDialog):
         disagg_array = disagg['array']
         log_msg('Done getting disagg array', level='I', print_to_stdout=True)
         layer_name = '%s_%s' % (self.output_type, self.calc_id)
-        log_msg('Getting field types', level='I', print_to_stdout=True)
+        # log_msg('Getting field types', level='I', print_to_stdout=True)
         field_types = self.get_field_types(disagg_array)
         self.layer = QgsVectorLayer(
             "%s?crs=epsg:4326" % 'point', layer_name, "memory")
@@ -98,10 +98,10 @@ class LoadDisaggAsLayerDialog(LoadOutputAsLayerDialog):
         for field_name, field_type in field_types.items():
             if field_name in ['lon', 'lat']:
                 continue
-            log_msg('Adding field %s of type %s' % (field_name, field_type),
-                    level='I', print_to_stdout=True)
+            # log_msg('Adding field %s of type %s' % (field_name, field_type),
+            #         level='I', print_to_stdout=True)
             added_field_name = self.add_field_to_layer(field_name, field_type)
-            log_msg('\tDone adding field', level='I', print_to_stdout=True)
+            # log_msg('\tDone adding field', level='I', print_to_stdout=True)
             if field_name != added_field_name:
                 # replace field_name with the actual added_field_name
                 del modified_field_types[field_name]
@@ -142,11 +142,11 @@ class LoadDisaggAsLayerDialog(LoadOutputAsLayerDialog):
         with edit(self.layer):
             lons = disagg_array['lon']
             lats = disagg_array['lat']
-            # feats = []
-            tot_feats = len(disagg_array)
+            feats = []
+            # tot_feats = len(disagg_array)
             for row_idx, row in enumerate(disagg_array):
-                log_msg('Site %s of %s' % (row_idx, tot_feats), level='I',
-                        print_to_stdout=True)
+                # log_msg('Site %s of %s' % (row_idx, tot_feats), level='I',
+                #         print_to_stdout=True)
                 feat = QgsFeature(self.layer.fields())
                 for field_name_idx, field_name in enumerate(field_types):
                     if field_name in ('lon', 'lat'):
@@ -154,28 +154,28 @@ class LoadDisaggAsLayerDialog(LoadOutputAsLayerDialog):
                     if isinstance(disagg_array[field_name][row_idx],
                                   np.ndarray):
                         value = disagg_array[field_name][row_idx]
-                        log_msg('\t\tDumping json', level='I',
-                                print_to_stdout=True)
+                        # log_msg('\t\tDumping json', level='I',
+                        #         print_to_stdout=True)
                         value = json.dumps(value.tolist())
-                        log_msg('\t\tDone dumping json', level='I',
-                                print_to_stdout=True)
+                        # log_msg('\t\tDone dumping json', level='I',
+                        #         print_to_stdout=True)
                     else:  # scalar
                         value = disagg_array[field_name][row_idx].item()
                     feat.setAttribute(field_name, value)
                 feat.setGeometry(QgsGeometry.fromPointXY(
                     QgsPointXY(lons[row_idx], lats[row_idx])))
-                # feats.append(feat)
-                log_msg('\tAdding feature', level='I',
-                        print_to_stdout=True)
-                added_ok = self.layer.addFeature(feat)
-                log_msg('\t\tDone adding feature', level='I',
-                        print_to_stdout=True)
-                if not added_ok:
-                    msg = 'There was a problem adding features to the layer.'
-                    log_msg(msg, level='C',
-                            message_bar=self.iface.messageBar(),
-                            print_to_stderr=True)
-            # added_ok = self.layer.addFeatures(feats)
-            # if not added_ok:
-            #     msg = 'There was a problem adding features to the layer.'
-            #     log_msg(msg, level='C', message_bar=self.iface.messageBar())
+                feats.append(feat)
+                # log_msg('\tAdding feature', level='I',
+                #         print_to_stdout=True)
+                # added_ok = self.layer.addFeature(feat)
+                # log_msg('\t\tDone adding feature', level='I',
+                #         print_to_stdout=True)
+                # if not added_ok:
+                #     msg = 'There was a problem adding features to the layer.'
+                #     log_msg(msg, level='C',
+                #             message_bar=self.iface.messageBar(),
+                #             print_to_stderr=True)
+            added_ok = self.layer.addFeatures(feats)
+            if not added_ok:
+                msg = 'There was a problem adding features to the layer.'
+                log_msg(msg, level='C', message_bar=self.iface.messageBar())
