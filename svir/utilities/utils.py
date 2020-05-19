@@ -1158,7 +1158,14 @@ def extract_npz(
     if not extracted_content:
         log_msg(msg, level='C', message_bar=message_bar, print_to_stderr=True)
         return
-    return extracted_content
+
+    dic = {}
+    for k, v in extracted_content.items():
+        if k == 'json':
+            dic.update(json.loads(bytes(v)))
+        else:
+            dic[k] = v
+    return dic
 
 
 def convert_bytes(num):
