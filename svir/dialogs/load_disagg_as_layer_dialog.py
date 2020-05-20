@@ -156,6 +156,9 @@ class LoadDisaggAsLayerDialog(LoadOutputAsLayerDialog):
                         value = disagg_array[field_name][row_idx]
                         # log_msg('\t\tDumping json', level='I',
                         #         print_to_stdout=True)
+                        if any(value < 0):
+                            log_msg('\tNegative values were found: %s' % value,
+                                    level='I', print_to_stdout=True)
                         value = json.dumps(value.tolist())
                         # log_msg('\t\tDone dumping json', level='I',
                         #         print_to_stdout=True)
