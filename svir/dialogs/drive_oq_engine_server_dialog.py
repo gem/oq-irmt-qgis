@@ -23,12 +23,14 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
+import io
 import json
 import tempfile
 import zipfile
 import copy
 from operator import itemgetter
 from uuid import uuid4
+import numpy
 
 from qgis.PyQt.QtCore import (QDir,
                               Qt,
@@ -812,19 +814,11 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.params_dlg.show()
 
     def get_oqparam(self):
-        get_calc_params_url = "%s/v1/calc/%s/oqparam" % (
+        get_calc_params_url = "%s/v1/calc/%s/extract/oqparam" % (
             self.hostname, self.current_calc_id)
-        with WaitCursorManager('Getting calculation parameters...',
-                               self.message_bar):
-            try:
-                # FIXME: enable the user to set verify=True
-                resp = self.session.get(get_calc_params_url, timeout=10,
-                                        verify=False, stream=True)
-            except HANDLED_EXCEPTIONS as exc:
-                self._handle_exception(exc)
-                return exc
-            json_params = json.loads(resp.text)
-        return json_params
+        resp = self.session.get(get_calc_params_url)
+        js = bytes(numpy.load(io.BytesIO(resp.content))['json'])
+        return json.loads(js)
 
     def get_output_list(self, calc_id):
         output_list_url = "%s/v1/calc/%s/results" % (self.hostname, calc_id)
