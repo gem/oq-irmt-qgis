@@ -31,7 +31,7 @@ from svir.utilities.utils import WaitCursorManager, log_msg, get_loss_types
 from svir.tasks.extract_npz_task import ExtractNpzTask
 
 
-class LoadLossesByAssetAsLayerDialog(LoadOutputAsLayerDialog):
+class LoadAvgLossesRlzsAsLayerDialog(LoadOutputAsLayerDialog):
     """
     Dialog to load losses by asset or average asset losses from an
     oq-engine output, as layer
