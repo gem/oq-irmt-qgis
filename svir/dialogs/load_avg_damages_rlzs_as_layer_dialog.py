@@ -132,13 +132,7 @@ class LoadAvgDamagesRlzsAsLayerDialog(LoadOutputAsLayerDialog):
 
     def on_loss_type_changed(self):
         loss_type = self.loss_type_cbx.currentText()
-        names = self.dataset[loss_type].dtype.names
-        self.dmg_states = []
-        for dmg_state_plus_stat in names:
-            # each name looks like: no_damage_mean
-            dmg_state, _ = dmg_state_plus_stat.rsplit('_', 1)
-            if dmg_state not in self.dmg_states:
-                self.dmg_states.append(dmg_state)
+        self.dmg_states = self.dataset[loss_type].dtype.names
         self.populate_dmg_state_cbx()
 
     def populate_dmg_state_cbx(self):
