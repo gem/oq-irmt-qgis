@@ -41,14 +41,14 @@ class LoadLossesByAssetAsLayerDialog(LoadOutputAsLayerDialog):
                  calc_id, output_type=None,
                  path=None, mode=None, zonal_layer_path=None,
                  engine_version=None, calculation_mode=None):
-        assert output_type in ('losses_by_asset', 'avg_losses-stats')
+        assert output_type in ('avg_losses-rlzs', 'avg_losses-stats')
         LoadOutputAsLayerDialog.__init__(
             self, drive_engine_dlg, iface, viewer_dock, session, hostname,
             calc_id, output_type=output_type, path=path, mode=mode,
             zonal_layer_path=zonal_layer_path, engine_version=engine_version,
             calculation_mode=calculation_mode)
 
-        if self.output_type == 'losses_by_asset':
+        if self.output_type == 'avg_losses-rlzs':
             self.setWindowTitle(
                 'Load losses by asset, aggregated by location, as layer')
         elif self.output_type == 'avg_losses-stats':
@@ -64,14 +64,14 @@ class LoadLossesByAssetAsLayerDialog(LoadOutputAsLayerDialog):
         self.create_loss_type_selector()
         self.create_zonal_layer_selector()
 
-        # NOTE: it's correct to use 'losses_by_asset' instead of output_type,
-        #       both in case of losses_by_asset and in case of avg_losses-stats
+        # NOTE: it's correct to use 'avg_losses-rlzs' instead of output_type,
+        #       both in case of avg_losses-rlzs and in case of avg_losses-stats
         log_msg('Extracting output data.'
                 ' Watch progress in QGIS task bar',
                 level='I', message_bar=self.iface.messageBar())
         self.extract_npz_task = ExtractNpzTask(
             'Extract losses by asset', QgsTask.CanCancel, self.session,
-            self.hostname, self.calc_id, 'losses_by_asset', self.finalize_init,
+            self.hostname, self.calc_id, 'avg_losses-rlzs', self.finalize_init,
             self.on_extract_error)
         QgsApplication.taskManager().addTask(self.extract_npz_task)
 
@@ -122,8 +122,8 @@ class LoadLossesByAssetAsLayerDialog(LoadOutputAsLayerDialog):
     def build_layer_name(self, rlz_or_stat=None, **kwargs):
         taxonomy = kwargs['taxonomy']
         loss_type = kwargs['loss_type']
-        if self.output_type == 'losses_by_asset':
-            layer_name = "losses_by_asset_%s_%s_%s" % (
+        if self.output_type == 'avg_losses-rlzs':
+            layer_name = "avg_losses-rlzs_%s_%s_%s" % (
                 rlz_or_stat, taxonomy, loss_type)
         elif self.output_type == 'avg_losses-stats':
             layer_name = "avg_losses-stats_%s_%s_%s" % (
