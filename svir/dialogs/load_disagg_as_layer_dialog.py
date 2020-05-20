@@ -156,7 +156,7 @@ class LoadDisaggAsLayerDialog(LoadOutputAsLayerDialog):
                         value = disagg_array[field_name][row_idx]
                         # log_msg('\t\tDumping json', level='I',
                         #         print_to_stdout=True)
-                        if np.any(value < 0):
+                        if field_name.startswith('Dist-') and np.any(value < 0):
                             log_msg('Negative values were found for field %s:'
                                     ' %s' % (field_name, value),
                                     level='I', print_to_stdout=True)
