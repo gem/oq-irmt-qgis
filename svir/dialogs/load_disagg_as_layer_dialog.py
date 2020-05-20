@@ -157,7 +157,8 @@ class LoadDisaggAsLayerDialog(LoadOutputAsLayerDialog):
                         # log_msg('\t\tDumping json', level='I',
                         #         print_to_stdout=True)
                         if any(value < 0):
-                            log_msg('\tNegative values were found: %s' % value,
+                            log_msg('Negative values were found for field %s:'
+                                    ' %s' % (field_name, value),
                                     level='I', print_to_stdout=True)
                         value = json.dumps(value.tolist())
                         # log_msg('\t\tDone dumping json', level='I',
