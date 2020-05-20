@@ -23,7 +23,7 @@ svir.dialogs.drive_oq_engine_server_dialog module
 svir.dialogs.load_avg_damages_rlzs_as_layer_dialog module
 -----------------------------------------------------
 
-.. automodule:: svir.dialogs.load_avg_damages-rlzs_as_layer_dialog
+.. automodule:: svir.dialogs.load_avg_damages_rlzs_as_layer_dialog
     :members:
     :undoc-members:
     :show-inheritance:

@@ -246,7 +246,7 @@ class LoadAvgDamagesRlzsAsLayerDialog(LoadOutputAsLayerDialog):
         dmg_by_site = collections.defaultdict(float)  # lon, lat -> dmg
         for rec in npz[rlz_or_stat]:
             if taxonomy == 'All' or taxonomy.encode('utf8') == rec['taxonomy']:
-                value = rec[loss_type]['%s_mean' % dmg_state]
+                value = rec[loss_type][dmg_state]
                 dmg_by_site[rec['lon'], rec['lat']] += value
         data = numpy.zeros(
             len(dmg_by_site),
