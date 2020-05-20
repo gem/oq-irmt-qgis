@@ -71,7 +71,7 @@ class LoadAvgLossesRlzsAsLayerDialog(LoadOutputAsLayerDialog):
                 level='I', message_bar=self.iface.messageBar())
         self.extract_npz_task = ExtractNpzTask(
             'Extract losses by asset', QgsTask.CanCancel, self.session,
-            self.hostname, self.calc_id, 'avg_losses-rlzs', self.finalize_init,
+            self.hostname, self.calc_id, 'losses_by_asset', self.finalize_init,
             self.on_extract_error)
         QgsApplication.taskManager().addTask(self.extract_npz_task)
 
