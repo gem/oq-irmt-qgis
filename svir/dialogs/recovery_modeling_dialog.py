@@ -81,15 +81,15 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
             if layer.type() != QgsMapLayer.VectorLayer:
                 continue
             if layer.geometryType() == QgsWkbTypes.PointGeometry:
-                self.dmg_by_asset_layer_cbx.addItem(layer.name(), layer)
+                self.avg_damages_rlzs_layer_cbx.addItem(layer.name(), layer)
             if layer.geometryType() == QgsWkbTypes.PolygonGeometry:
                 self.svi_layer_cbx.addItem(layer.name(), layer)
         # if the active layer contains points, preselect it
         active_layer = self.iface.activeLayer()
         if active_layer is not None:
-            idx = self.dmg_by_asset_layer_cbx.findData(active_layer)
+            idx = self.avg_damages_rlzs_layer_cbx.findData(active_layer)
             if idx != -1:
-                self.dmg_by_asset_layer_cbx.setCurrentIndex(idx)
+                self.avg_damages_rlzs_layer_cbx.setCurrentIndex(idx)
 
     def restore_state(self):
         """
@@ -115,7 +115,7 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
         self.ok_button.setEnabled(
             os.path.isdir(self.output_data_dir_le.text())
             and self.approach_cbx.currentIndex != -1
-            and self.dmg_by_asset_layer_cbx.currentIndex != -1)
+            and self.avg_damages_rlzs_layer_cbx.currentIndex != -1)
         # and self.svi_layer_cbx.currentIndex != -1
         # and self.svi_field_name_cbx.currentIndex != -1
         # and self.zone_field_name_cbx.currentIndex != -1)
@@ -131,12 +131,13 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
         self.set_ok_button()
 
     @pyqtSlot(int)
-    def on_dmg_by_asset_layer_cbx_currentIndexChanged(self, selected_index):
-        self.dmg_by_asset_layer = self.dmg_by_asset_layer_cbx.itemData(
+    def on_avg_damages_rlzs_layer_cbx_currentIndexChanged(
+            self, selected_index):
+        self.avg_damages_rlzs_layer = self.avg_damages_rlzs_layer_cbx.itemData(
             selected_index)
         self.fields_multiselect.clear()
         fill_fields_multiselect(
-            self.fields_multiselect, self.dmg_by_asset_layer)
+            self.fields_multiselect, self.avg_damages_rlzs_layer)
 
     @pyqtSlot(int)
     def on_svi_layer_cbx_currentIndexChanged(self, selected_index):
@@ -173,16 +174,16 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
 
         approach = self.approach_cbx.currentText()
         request = QgsFeatureRequest().setFlags(QgsFeatureRequest.NoGeometry)
-        dmg_by_asset_features = list(
-            self.dmg_by_asset_layer.getFeatures(request))
+        avg_damages_rlzs_features = list(
+            self.avg_damages_rlzs_layer.getFeatures(request))
         recovery = RecoveryModeling(
-            dmg_by_asset_features, approach, self.iface, self.svi_layer,
+            avg_damages_rlzs_features, approach, self.iface, self.svi_layer,
             self.output_data_dir, self.save_bldg_curves_check.isChecked())
 
         probs_field_names = self.fields_multiselect.get_selected_items()
         for i, fieldname in enumerate(probs_field_names):
             probs_field_names[i] = point_attrs_dict[fieldname]
-        zonal_dmg_by_asset_probs, zonal_asset_refs = \
+        zonal_avg_damages_rlzs_probs, zonal_asset_refs = \
             recovery.collect_zonal_data(
                 probs_field_names, integrate_svi, zone_field_name)
 
@@ -195,15 +196,15 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
                   'after_6_months', 'after_12_months', 'after_18_months']
         writer.writerow(header)
         n_simulations = self.n_simulations_sbx.value()
-        n_zones = len(zonal_dmg_by_asset_probs)
+        n_zones = len(zonal_avg_damages_rlzs_probs)
         # for each zone, calculate a zone-level recovery function
         for zone_index, zone_id in enumerate(
-                list(zonal_dmg_by_asset_probs.keys()), start=1):
+                list(zonal_avg_damages_rlzs_probs.keys()), start=1):
             seed = None
             if DEBUG:
                 seed = 42
             recovery.generate_community_level_recovery_curve(
-                zone_id, zonal_dmg_by_asset_probs,
+                zone_id, zonal_avg_damages_rlzs_probs,
                 zonal_asset_refs, writer, integrate_svi, seed,
                 n_simulations=n_simulations, n_zones=n_zones,
                 zone_index=zone_index)
@@ -212,15 +213,16 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
     def accept(self):
         if self.integrate_svi_check.isChecked():
             self.zone_field_name = self.zone_field_name_cbx.currentText()
-            (point_attrs_dict, self.dmg_by_asset_layer,
+            (point_attrs_dict, self.avg_damages_rlzs_layer,
              self.zone_field_name) = add_zone_id_to_points(
-                self.dmg_by_asset_layer,
+                self.avg_damages_rlzs_layer,
                 self.svi_layer, self.zone_field_name)
         else:
             # the layer containing points was not modified by the zonal
             # aggregation, so the field names remained as the original ones
-            point_attrs_dict = {field.name(): field.name()
-                                for field in self.dmg_by_asset_layer.fields()}
+            point_attrs_dict = {
+                field.name(): field.name()
+                for field in self.avg_damages_rlzs_layer.fields()}
         with WaitCursorManager('Generating recovery curves...',
                                self.iface.messageBar()):
             self.calculate_community_level_recovery_curve(
