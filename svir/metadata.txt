@@ -24,7 +24,7 @@ email=staff.it@globalquakemodel.org
 # Uncomment the following line and add your changelog entries:
 changelog=
     3.10.0
-    * OQ Engine outputs dmg_by_asset and losses_by_asset were renamed (following the change in the engine) to avg_damages-rlzs and avg_losses-rlzs
+    * OQ Engine outputs dmg_by_asset and losses_by_asset were renamed (following the change in the engine) to avg_damages-rlzs and avg_losses-rlzs.
     3.9.1
     * For scenario OQ-Engine calculations, when loading GMFs, ranges of event ids per GMPE are displayed while the user chooses an event
     * For GMF loaded layers, the correct GMPE is loaded and the layer name contains the calculation mode and the name of the right GMPE
