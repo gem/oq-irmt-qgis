@@ -65,11 +65,22 @@ class LoadDisaggAsLayerDialog(LoadOutputAsLayerDialog):
         if disagg is None:
             return
         with WaitCursorManager(
+                'Extracting custom site ids...',
+                message_bar=self.iface.messageBar()):
+            log_msg('Extracting custom site ids', level='I',
+                    print_to_stdout=True)
+            sitecol = extract_npz(
+                self.session, self.hostname, self.calc_id,
+                'sitecol', message_bar=self.iface.messageBar())
+            custom_site_ids = sitecol['array']['custom_site_id']
+        if disagg is None:
+            return
+        with WaitCursorManager(
                 'Creating disaggregation layer',
                 self.iface.messageBar()):
             log_msg('Creating disagg_layer', level='I',
                     print_to_stdout=True)
-            self.build_layer(disagg)
+            self.build_layer(disagg, custom_site_ids)
             self.style_curves()
 
     def get_field_types(self, disagg_array):
@@ -85,13 +96,14 @@ class LoadDisaggAsLayerDialog(LoadOutputAsLayerDialog):
             field_types[field_name] = field_type
         return field_types
 
-    def build_layer(self, disagg):
+    def build_layer(self, disagg, custom_site_ids):
         log_msg('Getting disagg array', level='I', print_to_stdout=True)
         disagg_array = disagg['array']
         log_msg('Done getting disagg array', level='I', print_to_stdout=True)
         layer_name = '%s_%s' % (self.output_type, self.calc_id)
         # log_msg('Getting field types', level='I', print_to_stdout=True)
         field_types = self.get_field_types(disagg_array)
+        field_types['custom_site_id'] = 'I'
         self.layer = QgsVectorLayer(
             "%s?crs=epsg:4326" % 'point', layer_name, "memory")
         modified_field_types = copy.copy(field_types)
@@ -108,7 +120,7 @@ class LoadDisaggAsLayerDialog(LoadOutputAsLayerDialog):
                 modified_field_types[added_field_name] = field_type
         field_types = copy.copy(modified_field_types)
 
-        self.read_npz_into_layer(field_types, disagg_array)
+        self.read_npz_into_layer(field_types, disagg_array, custom_site_ids)
         self.layer.setCustomProperty('output_type', self.output_type)
         if self.engine_version is not None:
             self.layer.setCustomProperty('engine_version', self.engine_version)
@@ -138,7 +150,7 @@ class LoadDisaggAsLayerDialog(LoadOutputAsLayerDialog):
                 message_bar=self.iface.messageBar(),
                 print_to_stdout=True)
 
-    def read_npz_into_layer(self, field_types, disagg_array):
+    def read_npz_into_layer(self, field_types, disagg_array, custom_site_ids):
         with edit(self.layer):
             lons = disagg_array['lon']
             lats = disagg_array['lat']
@@ -151,8 +163,10 @@ class LoadDisaggAsLayerDialog(LoadOutputAsLayerDialog):
                 for field_name_idx, field_name in enumerate(field_types):
                     if field_name in ('lon', 'lat'):
                         continue
-                    if isinstance(disagg_array[field_name][row_idx],
-                                  np.ndarray):
+                    if field_name == 'custom_site_id':
+                        value = int(custom_site_ids[row_idx])
+                    elif isinstance(disagg_array[field_name][row_idx],
+                                    np.ndarray):
                         value = disagg_array[field_name][row_idx]
                         # log_msg('\t\tDumping json', level='I',
                         #         print_to_stdout=True)
