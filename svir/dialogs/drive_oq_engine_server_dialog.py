@@ -84,8 +84,8 @@ from svir.dialogs.load_ruptures_as_layer_dialog import (
     LoadRupturesAsLayerDialog)
 from svir.dialogs.load_csv_as_layer_dialog import (
     LoadCsvAsLayerDialog)
-from svir.dialogs.load_dmg_by_asset_as_layer_dialog import (
-    LoadDmgByAssetAsLayerDialog)
+from svir.dialogs.load_avg_damages_rlzs_as_layer_dialog import (
+    LoadAvgDamagesRlzsAsLayerDialog)
 from svir.dialogs.load_gmf_data_as_layer_dialog import (
     LoadGmfDataAsLayerDialog)
 from svir.dialogs.load_asset_risk_as_layer_dialog import (
@@ -96,9 +96,9 @@ from svir.dialogs.load_hcurves_as_layer_dialog import (
     LoadHazardCurvesAsLayerDialog)
 from svir.dialogs.load_uhs_as_layer_dialog import (
     LoadUhsAsLayerDialog)
-from svir.dialogs.load_losses_by_asset_as_layer_dialog import (
-    LoadLossesByAssetAsLayerDialog)
 from svir.dialogs.load_disagg_as_layer_dialog import LoadDisaggAsLayerDialog
+from svir.dialogs.load_avg_losses_rlzs_as_layer_dialog import (
+    LoadAvgLossesRlzsAsLayerDialog)
 from svir.dialogs.load_inputs_dialog import LoadInputsDialog
 from svir.dialogs.show_full_report_dialog import ShowFullReportDialog
 from svir.dialogs.show_console_dialog import ShowConsoleDialog
@@ -123,13 +123,13 @@ OUTPUT_TYPE_LOADERS = {
     'losses_by_event': LoadCsvAsLayerDialog,
     'agglosses': LoadCsvAsLayerDialog,
     'agg_risk': LoadCsvAsLayerDialog,
-    'dmg_by_asset': LoadDmgByAssetAsLayerDialog,
+    'avg_damages-rlzs': LoadAvgDamagesRlzsAsLayerDialog,
     'gmf_data': LoadGmfDataAsLayerDialog,
     'hmaps': LoadHazardMapsAsLayerDialog,
     'hcurves': LoadHazardCurvesAsLayerDialog,
     'uhs': LoadUhsAsLayerDialog,
-    'losses_by_asset': LoadLossesByAssetAsLayerDialog,
-    'avg_losses-stats': LoadLossesByAssetAsLayerDialog,
+    'avg_losses-rlzs': LoadAvgLossesRlzsAsLayerDialog,
+    'avg_losses-stats': LoadAvgLossesRlzsAsLayerDialog,
     'asset_risk': LoadAssetRiskAsLayerDialog,
     'disagg': LoadDisaggAsLayerDialog,
     'input': LoadInputsDialog,
@@ -853,12 +853,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             if row['type'] in (OQ_TO_LAYER_TYPES |
                                OQ_RST_TYPES |
                                OQ_EXTRACT_TO_VIEW_TYPES):
-                # TODO: remove check when dmg_by_event and losses_by_event
-                #       will be loadable also for event_based
-                if not (row['type'] in ['dmg_by_event',
-                                        'losses_by_event']
-                        and 'event_based' in calculation_mode):
-                    num_actions += 1  # needs additional column for loader btn
+                num_actions += 1  # needs additional column for loader btn
             if "%s_aggr" % row['type'] in OQ_EXTRACT_TO_VIEW_TYPES:
                 num_actions += 1
             max_actions = max(max_actions, num_actions)
@@ -911,12 +906,6 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                         action = 'Load table'
                     else:
                         action = 'Load layer'
-                    # TODO: remove check when dmg_by_event and losses_by_event
-                    #       will be loadable also for event_based
-                    if (output['type'] in ['dmg_by_event',
-                                           'losses_by_event']
-                            and calculation_mode == 'event_based'):
-                        continue
                     button = QPushButton()
                     self.connect_button_to_action(
                         button, action, output, outtype, calculation_mode)

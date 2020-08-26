@@ -220,38 +220,42 @@ RECOVERY_DEFAULTS['n_recovery_based_dmg_states'] = len(
 
 
 OQ_CSV_TO_LAYER_TYPES = set([
-    'realizations',
-    'events',
-    'dmg_by_event',
-    'losses_by_event',
-    'agglosses',
     'agg_risk',
+    'agglosses',
+    'dmg_by_event',
+    'events',
+    'losses_by_event',
+    'realizations',
 ])
 OQ_EXTRACT_TO_LAYER_TYPES = set([
-    'hmaps',
-    'hcurves',
-    'uhs',
-    'losses_by_asset',
-    'gmf_data',
-    'dmg_by_asset',
-    'avg_losses-stats',
-    'ruptures',
     'asset_risk',
+    'avg_damages-rlzs',
+    'avg_losses-rlzs',
+    'avg_losses-stats',
+    'gmf_data',
+    'hcurves',
+    'hmaps',
+    'ruptures',
+    'uhs',
     'disagg',
 ])
+>>>>>>> origin/master
 OQ_ZIPPED_TYPES = set([
-    'input'])
+    'input',
+])
 OQ_TO_LAYER_TYPES = (OQ_CSV_TO_LAYER_TYPES |
                      OQ_EXTRACT_TO_LAYER_TYPES |
                      OQ_ZIPPED_TYPES)
 OQ_RST_TYPES = set([
-    'fullreport'])
+    'fullreport',
+])
 OQ_EXTRACT_TO_VIEW_TYPES = set([
      'agg_curves-rlzs',
      'agg_curves-stats',
-     'dmg_by_asset_aggr',
-     'losses_by_asset_aggr',
-     'avg_losses-stats_aggr'])
+     'avg_damages-rlzs_aggr',
+     'avg_losses-rlzs_aggr',
+     'avg_losses-stats_aggr',
+])
 OQ_XMARKER_TYPES = set(['hcurves', 'uhs', 'recovery_curves'])
 OQ_ALL_TYPES = (OQ_TO_LAYER_TYPES | OQ_RST_TYPES | OQ_EXTRACT_TO_VIEW_TYPES)
 

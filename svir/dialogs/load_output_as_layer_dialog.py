@@ -493,7 +493,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             boundaries=boundaries, geometry_type=geometry_type,
             wkt_geom_type=wkt_geom_type,
             row_wkt_geom_types=row_wkt_geom_types)
-        if (self.output_type == 'dmg_by_asset' and
+        if (self.output_type == 'avg_damages-rlzs' and
                 not self.aggregate_by_site_ckb.isChecked()):
             self.layer.setCustomProperty('output_type', 'recovery_curves')
         else:
@@ -542,7 +542,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 message_bar=self.iface.messageBar())
 
     @staticmethod
-    def style_maps(layer, style_by, iface, output_type='dmg_by_asset',
+    def style_maps(layer, style_by, iface, output_type='avg_damages-rlzs',
                    perils=None, add_null_class=False,
                    render_higher_on_top=False):
         symbol = QgsSymbol.defaultSymbol(layer.geometryType())
@@ -565,8 +565,8 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         if output_type in OQ_TO_LAYER_TYPES:
             default_qgs_style = QgsStyle().defaultStyle()
             default_color_ramp_names = default_qgs_style.colorRampNames()
-            if output_type in ('dmg_by_asset',
-                               'losses_by_asset',
+            if output_type in ('avg_damages-rlzs',
+                               'avg_losses-rlzs',
                                'avg_losses-stats',):
                 # options are EqualInterval, Quantile, Jenks, StdDev, Pretty
                 # jenks = natural breaks
@@ -876,8 +876,8 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.hide()
         if self.output_type in OQ_EXTRACT_TO_LAYER_TYPES:
             self.load_from_npz()
-            if self.output_type in ('losses_by_asset',
-                                    'dmg_by_asset',
+            if self.output_type in ('avg_losses-rlzs',
+                                    'avg_damages-rlzs',
                                     'avg_losses-stats'):
                 # check if also aggregating by zone or not
                 if (not self.zonal_layer_cbx.currentText() or
