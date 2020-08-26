@@ -239,7 +239,6 @@ OQ_EXTRACT_TO_LAYER_TYPES = set([
     'uhs',
     'disagg',
 ])
->>>>>>> origin/master
 OQ_ZIPPED_TYPES = set([
     'input',
 ])
