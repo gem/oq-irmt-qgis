@@ -72,7 +72,14 @@ class LoadDisaggAsLayerDialog(LoadOutputAsLayerDialog):
             sitecol = extract_npz(
                 self.session, self.hostname, self.calc_id,
                 'sitecol', message_bar=self.iface.messageBar())
-            custom_site_ids = sitecol['array']['custom_site_id']
+            try:
+                custom_site_ids = sitecol['array']['custom_site_id']
+            except ValueError:
+                custom_site_ids = None
+                msg = ('Missing field "custom_site_id", needed by some '
+                       'OQ-GeoViewer projects')
+                log_msg(msg, level='W', print_to_stdout=True,
+                        message_bar=self.iface.messageBar())
         if disagg is None:
             return
         with WaitCursorManager(
@@ -103,7 +110,8 @@ class LoadDisaggAsLayerDialog(LoadOutputAsLayerDialog):
         layer_name = '%s_%s' % (self.output_type, self.calc_id)
         # log_msg('Getting field types', level='I', print_to_stdout=True)
         field_types = self.get_field_types(disagg_array)
-        field_types['custom_site_id'] = 'I'
+        if custom_site_ids:
+            field_types['custom_site_id'] = 'I'
         self.layer = QgsVectorLayer(
             "%s?crs=epsg:4326" % 'point', layer_name, "memory")
         modified_field_types = copy.copy(field_types)
