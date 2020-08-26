@@ -62,11 +62,11 @@ class RecoveryModeling(object):
     building.
     """
 
-    def __init__(self, dmg_by_asset_features, approach, iface,
+    def __init__(self, avg_damages_rlzs_features, approach, iface,
                  svi_layer=None, output_data_dir=None, save_bldg_curves=False):
         self.iface = iface
         self.svi_layer = svi_layer
-        self.dmg_by_asset_features = dmg_by_asset_features
+        self.avg_damages_rlzs_features = avg_damages_rlzs_features
         self.approach = approach
         self.output_data_dir = output_data_dir
         self.save_bldg_curves = save_bldg_curves
@@ -78,13 +78,13 @@ class RecoveryModeling(object):
 
     def collect_zonal_data(self, probs_field_names, integrate_svi=False,
                            zone_field_name=None):
-        # build dictionary zone_id -> dmg_by_asset_probs
-        zonal_dmg_by_asset_probs = defaultdict(list)
+        # build dictionary zone_id -> avg_damages_rlzs_probs
+        zonal_avg_damages_rlzs_probs = defaultdict(list)
         zonal_asset_refs = defaultdict(list)
         try:
-            first_feat = self.dmg_by_asset_features[0]
+            first_feat = self.avg_damages_rlzs_features[0]
         except IndexError:
-            return zonal_dmg_by_asset_probs, zonal_asset_refs
+            return zonal_avg_damages_rlzs_probs, zonal_asset_refs
         probs_fields_idxs = sorted([
             first_feat.fields().indexOf(probs_field_names[i])
             for i in range(len(probs_field_names))])
@@ -100,9 +100,9 @@ class RecoveryModeling(object):
                 # svi_by_zone[zone_id] = svi_value
             msg = 'Reading damage state probabilities...'
             with WaitCursorManager(msg):
-                for feat_idx, dmg_by_asset_feat in enumerate(
-                        self.dmg_by_asset_features, start=1):
-                    zone_id = dmg_by_asset_feat[zone_field_name]
+                for feat_idx, avg_damages_rlzs_feat in enumerate(
+                        self.avg_damages_rlzs_features, start=1):
+                    zone_id = avg_damages_rlzs_feat[zone_field_name]
                     # FIXME: hack to handle case in which the zone id is an
                     # integer but it is stored as Real
                     try:
@@ -110,32 +110,34 @@ class RecoveryModeling(object):
                     except Exception:
                         zone_id = str(zone_id)
                     # FIXME: same hack as above
-                    asset_ref = dmg_by_asset_feat['id']
+                    asset_ref = avg_damages_rlzs_feat['id']
                     try:
                         asset_ref = str(int(asset_ref))
                     except Exception:
                         asset_ref = str(asset_ref)
-                    dmg_by_asset_probs = [dmg_by_asset_feat.attributes()[idx]
-                                          for idx in probs_fields_idxs]
-                    norm_dmg_by_asset_probs = self.normalize_probabilities(
-                        dmg_by_asset_probs)
-                    zonal_dmg_by_asset_probs[zone_id].append(
-                        norm_dmg_by_asset_probs)
+                    avg_damages_rlzs_probs = [
+                        avg_damages_rlzs_feat.attributes()[idx]
+                        for idx in probs_fields_idxs]
+                    norm_avg_damages_rlzs_probs = self.normalize_probabilities(
+                        avg_damages_rlzs_probs)
+                    zonal_avg_damages_rlzs_probs[zone_id].append(
+                        norm_avg_damages_rlzs_probs)
                     zonal_asset_refs[zone_id].append(asset_ref)
         else:  # ignore svi
             msg = 'Reading damage state probabilities...'
             with WaitCursorManager(msg):
-                for idx, dmg_by_asset_feat in enumerate(
-                        self.dmg_by_asset_features, start=1):
-                    dmg_by_asset_probs = [dmg_by_asset_feat.attributes()[idx]
-                                          for idx in probs_fields_idxs]
-                    norm_dmg_by_asset_probs = self.normalize_probabilities(
-                        dmg_by_asset_probs)
-                    asset_ref = dmg_by_asset_feat['id']
-                    zonal_dmg_by_asset_probs['ALL'].append(
-                        norm_dmg_by_asset_probs)
+                for idx, avg_damages_rlzs_feat in enumerate(
+                        self.avg_damages_rlzs_features, start=1):
+                    avg_damages_rlzs_probs = [
+                        avg_damages_rlzs_feat.attributes()[idx]
+                        for idx in probs_fields_idxs]
+                    norm_avg_damages_rlzs_probs = self.normalize_probabilities(
+                        avg_damages_rlzs_probs)
+                    asset_ref = avg_damages_rlzs_feat['id']
+                    zonal_avg_damages_rlzs_probs['ALL'].append(
+                        norm_avg_damages_rlzs_probs)
                     zonal_asset_refs['ALL'].append(asset_ref)
-        return zonal_dmg_by_asset_probs, zonal_asset_refs
+        return zonal_avg_damages_rlzs_probs, zonal_asset_refs
 
     def normalize_probabilities(self, probabilities):
         sum_probs = sum(probabilities)
@@ -156,19 +158,19 @@ class RecoveryModeling(object):
         return times
 
     def generate_community_level_recovery_curve(
-            self, zone_id, zonal_dmg_by_asset_probs,
+            self, zone_id, zonal_avg_damages_rlzs_probs,
             zonal_asset_refs, writer=None, integrate_svi=False, seed=None,
             n_simulations=1, n_zones=1, zone_index=1, usage='gui'):
 
         # TODO: use svi_by_zone[zone_id] to adjust recovery times (how?)
 
-        dmg_by_asset_probs = zonal_dmg_by_asset_probs[zone_id]
+        avg_damages_rlzs_probs = zonal_avg_damages_rlzs_probs[zone_id]
         asset_refs = zonal_asset_refs[zone_id]
 
         (LossBasedDamageStateProbabilities,
             RecoveryBasedDamageStateProbabilities,
             fractionCollapsedAndIrreparableBuildings) = \
-            self.loss_based_to_recovery_based_probs(dmg_by_asset_probs)
+            self.loss_based_to_recovery_based_probs(avg_damages_rlzs_probs)
 
         # FIXME self.svi_field_name is temporarily ignored
         # svi_value = svi_by_zone[zone_id] if integrate_svi else None
@@ -371,19 +373,19 @@ class RecoveryModeling(object):
             clear_progress_message_bar(self.iface.messageBar(), msg_bar_item)
         return simulationRecoveryFunction
 
-    def loss_based_to_recovery_based_probs(self, dmg_by_asset_probs):
+    def loss_based_to_recovery_based_probs(self, avg_damages_rlzs_probs):
         LossBasedDamageStateProbabilities = \
             [[0 for x in range(self.n_loss_based_dmg_states)]
-             for y in range(len(dmg_by_asset_probs))]
+             for y in range(len(avg_damages_rlzs_probs))]
 
-        for i in range(len(dmg_by_asset_probs)):
+        for i in range(len(avg_damages_rlzs_probs)):
             for j in range(self.n_loss_based_dmg_states):
                 LossBasedDamageStateProbabilities[i][j] = \
-                    dmg_by_asset_probs[i][j]  # ex dmg_by_asset_probs[i+1][j+4]
+                    avg_damages_rlzs_probs[i][j]  # ex dmg_by_asset_probs[i+1][j+4]
 
         # Mapping from Loss-based to recovery-based building damage states
         RecoveryBasedDamageStateProbabilities = [
-            [0 for x in range(6)] for y in range(len(dmg_by_asset_probs))]
+            [0 for x in range(6)] for y in range(len(avg_damages_rlzs_probs))]
 
         fractionCollapsedAndIrreparableBuildings = 0
         # TODO: use enumerate instead
@@ -399,7 +401,8 @@ class RecoveryModeling(object):
                             RecoveryBasedDamageStateProbabilities[i][j]
 
         fractionCollapsedAndIrreparableBuildings = \
-            fractionCollapsedAndIrreparableBuildings / len(dmg_by_asset_probs)
+            fractionCollapsedAndIrreparableBuildings / len(
+                avg_damages_rlzs_probs)
         return (LossBasedDamageStateProbabilities,
                 RecoveryBasedDamageStateProbabilities,
                 fractionCollapsedAndIrreparableBuildings)
