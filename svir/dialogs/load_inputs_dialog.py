@@ -130,9 +130,9 @@ class LoadInputsDialog(QDialog):
             if chk.isChecked():
                 peril = chk.text()
                 zfile = zipfile.ZipFile(self.zip_filepath)
+                inner_path = 'input/' + self.multi_peril_csv_dict[peril]
                 extracted_csv_path = zfile.extract(
-                    self.multi_peril_csv_dict[peril],
-                    path=os.path.dirname(self.zip_filepath))
+                    inner_path, path=os.path.dirname(self.zip_filepath))
                 self.load_from_csv(extracted_csv_path, peril)
         self.loading_completed.emit()
 

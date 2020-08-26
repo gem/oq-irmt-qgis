@@ -43,6 +43,8 @@ from qgis.core import (
                        QgsVectorLayer,
                        QgsVectorFileWriter,
                        Qgis,
+                       QgsRectangle,
+                       QgsLayerTreeLayer,
                        )
 from qgis.gui import QgsMessageBar, QgsMessageBarItem
 from qgis.utils import iface
@@ -1151,11 +1153,19 @@ def extract_npz(
     if not resp_content:
         log_msg(msg, level='C', message_bar=message_bar, print_to_stderr=True)
         return
-    extracted_content = numpy.load(io.BytesIO(resp_content), allow_pickle=True)
+    extracted_content = numpy.load(io.BytesIO(resp_content),
+                                   allow_pickle=False)
     if not extracted_content:
         log_msg(msg, level='C', message_bar=message_bar, print_to_stderr=True)
         return
-    return extracted_content
+
+    dic = {}
+    for k, v in extracted_content.items():
+        if k == 'json':
+            dic.update(json.loads(bytes(v)))
+        else:
+            dic[k] = v
+    return dic
 
 
 def convert_bytes(num):
@@ -1216,7 +1226,7 @@ def get_loss_types(session, hostname, calc_id, message_bar):
     # array of zeros with data type as follows:
     # [('lon', F32), ('lat', F32), (loss_type, F32)])
     loss_types = [
-        str(loss_type)
+        loss_type.decode('utf8')
         for loss_type in composite_risk_model_attrs['loss_types']]
     return loss_types
 
@@ -1237,3 +1247,14 @@ def write_metadata_to_layer(
         if value is not None:
             lm.addKeywords("oquser:%s" % param, [str(value)])
     layer.setMetadata(lm)
+
+
+def zoom_to_group(group):
+    extent = QgsRectangle()
+    extent.setMinimal()
+    # Iterate through layers from group and combine their extent
+    for child in group.children():
+        if isinstance(child, QgsLayerTreeLayer):
+            extent.combineExtentWith(child.layer().extent())
+    iface.mapCanvas().setExtent(extent)
+    iface.mapCanvas().refresh()

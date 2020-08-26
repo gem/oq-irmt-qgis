@@ -40,12 +40,13 @@ class LoadLossesByAssetAsLayerDialog(LoadOutputAsLayerDialog):
     def __init__(self, drive_engine_dlg, iface, viewer_dock, session, hostname,
                  calc_id, output_type=None,
                  path=None, mode=None, zonal_layer_path=None,
-                 engine_version=None):
+                 engine_version=None, calculation_mode=None):
         assert output_type in ('losses_by_asset', 'avg_losses-stats')
         LoadOutputAsLayerDialog.__init__(
             self, drive_engine_dlg, iface, viewer_dock, session, hostname,
             calc_id, output_type=output_type, path=path, mode=mode,
-            zonal_layer_path=zonal_layer_path, engine_version=engine_version)
+            zonal_layer_path=zonal_layer_path, engine_version=engine_version,
+            calculation_mode=calculation_mode)
 
         if self.output_type == 'losses_by_asset':
             self.setWindowTitle(
@@ -153,7 +154,9 @@ class LoadLossesByAssetAsLayerDialog(LoadOutputAsLayerDialog):
                     if field_name in ['lon', 'lat']:
                         field_idx += 1
                         continue
-                    value = float(row[field_idx])
+                    value = row[field_idx].item()
+                    if isinstance(value, bytes):
+                        value = value.decode('utf8')
                     feat.setAttribute(field_name, value)
                     field_idx += 1
                 feat.setGeometry(QgsGeometry.fromPointXY(
@@ -192,7 +195,7 @@ class LoadLossesByAssetAsLayerDialog(LoadOutputAsLayerDialog):
 
     def group_by_site(self, npz, rlz_or_stat, loss_type, taxonomy='All'):
         # example:
-        # npz = numpy.load(npzfname, allow_pickle=True)
+        # npz = numpy.load(npzfname, allow_pickle=False)
         # print(group_by_site(npz, 'rlz-000', 'structural_ins', '"tax1"'))
         F32 = numpy.float32
         loss_by_site = collections.defaultdict(float)  # lon, lat -> loss

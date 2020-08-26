@@ -120,9 +120,9 @@ package: compile doc
 	gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dPDFSETTINGS=/printer -dNOPAUSE -dQUIET -dBATCH -sOutputFile=help/build/html/_downloads/resized-irmt.pdf help/build/html/_downloads/irmt.pdf;
 	mv -f help/build/html/_downloads/resized-irmt.pdf help/build/html/_downloads/irmt.pdf
 	mkdir -p $(PLUGINNAME)/help/build; rm -r $(PLUGINNAME)/help/build/html; cp -r help/build/html $(PLUGINNAME)/help/build/html;
-	mkdir -p $(PLUGINNAME)/apidoc/_build; rm -r $(PLUGINNAME)/apidoc/_build/html; cp -r apidoc/_build/html $(PLUGINNAME)/apidoc/_build/html
+	# mkdir -p $(PLUGINNAME)/apidoc/_build; rm -r $(PLUGINNAME)/apidoc/_build/html; cp -r apidoc/_build/html $(PLUGINNAME)/apidoc/_build/html
 	zip -r $(PLUGINNAME).zip $(PLUGINNAME)/help/build/html
-	zip -r $(PLUGINNAME).zip $(PLUGINNAME)/apidoc/_build/html
+	# zip -r $(PLUGINNAME).zip $(PLUGINNAME)/apidoc/_build/html
 	zip --delete $(PLUGINNAME).zip $(PLUGINNAME)/test/\* $(PLUGINNAME)/help/source/\*
 	rm -r $(PLUGINNAME)/
 	echo "Created package: $(PLUGINNAME).zip"
@@ -196,7 +196,7 @@ clean:
 	rm $(COMPILED_UI_FILES) $(COMPILED_RESOURCE_FILES)
 
 # build documentation with sphinx
-doc: build_manual build_apidoc
+doc: build_manual  # build_apidoc
 
 build_manual: build_manual_latex build_manual_html
 

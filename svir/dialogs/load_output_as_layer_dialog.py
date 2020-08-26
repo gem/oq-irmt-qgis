@@ -23,6 +23,7 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
+import copy
 from random import randrange
 from osgeo import ogr
 from qgis.core import (QgsVectorLayer,
@@ -96,7 +97,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
     def __init__(self, drive_engine_dlg, iface, viewer_dock,
                  session, hostname, calc_id, output_type=None,
                  path=None, mode=None, zonal_layer_path=None,
-                 engine_version=None):
+                 engine_version=None, calculation_mode=None):
         # sanity check
         if output_type not in OQ_TO_LAYER_TYPES:
             raise NotImplementedError(output_type)
@@ -111,6 +112,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.mode = mode  # if 'testing' it will avoid some user interaction
         self.zonal_layer_path = zonal_layer_path
         self.engine_version = engine_version
+        self.calculation_mode = calculation_mode
         QDialog.__init__(self)
         # Set up the user interface from Designer.
         self.setupUi(self)
@@ -459,10 +461,12 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
 
     def build_layer(self, rlz_or_stat=None, taxonomy=None, poe=None,
                     loss_type=None, dmg_state=None, gsim=None, imt=None,
-                    boundaries=None, geometry_type='Point'):
+                    boundaries=None, geometry_type='point', wkt_geom_type=None,
+                    row_wkt_geom_types=None, add_to_group=None):
         layer_name = self.build_layer_name(
             rlz_or_stat=rlz_or_stat, taxonomy=taxonomy, poe=poe,
-            loss_type=loss_type, dmg_state=dmg_state, gsim=gsim, imt=imt)
+            loss_type=loss_type, dmg_state=dmg_state, gsim=gsim, imt=imt,
+            geometry_type=geometry_type)
         field_types = self.get_field_types(
             rlz_or_stat=rlz_or_stat, taxonomy=taxonomy, poe=poe,
             loss_type=loss_type, dmg_state=dmg_state, imt=imt)
@@ -470,6 +474,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         # create layer
         self.layer = QgsVectorLayer(
             "%s?crs=epsg:4326" % geometry_type, layer_name, "memory")
+        modified_field_types = copy.copy(field_types)
         for field_name, field_type in field_types.items():
             if field_name in ['lon', 'lat', 'boundary']:
                 continue
@@ -478,14 +483,16 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 if field_name == self.default_field_name:
                     self.default_field_name = added_field_name
                 # replace field_name with the actual added_field_name
-                field_type = field_types[field_name]
-                del field_types[field_name]
-                field_types[added_field_name] = field_type
+                del modified_field_types[field_name]
+                modified_field_types[added_field_name] = field_type
+        field_types = copy.copy(modified_field_types)
 
         self.read_npz_into_layer(
             field_types, rlz_or_stat=rlz_or_stat, taxonomy=taxonomy, poe=poe,
             loss_type=loss_type, dmg_state=dmg_state, imt=imt,
-            boundaries=boundaries)
+            boundaries=boundaries, geometry_type=geometry_type,
+            wkt_geom_type=wkt_geom_type,
+            row_wkt_geom_types=row_wkt_geom_types)
         if (self.output_type == 'dmg_by_asset' and
                 not self.aggregate_by_site_ckb.isChecked()):
             self.layer.setCustomProperty('output_type', 'recovery_curves')
@@ -518,11 +525,19 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         except AttributeError:
             # the aggregation stuff might not exist for some loaders
             pass
-        root = QgsProject.instance().layerTreeRoot()
         QgsProject.instance().addMapLayer(self.layer, False)
-        root.insertLayer(0, self.layer)
+        if add_to_group:
+            tree_node = add_to_group
+        else:
+            tree_node = QgsProject.instance().layerTreeRoot()
+        tree_node.insertLayer(0, self.layer)
         self.iface.setActiveLayer(self.layer)
-        self.iface.zoomToActiveLayer()
+        if add_to_group:
+            # NOTE: zooming to group from caller function, to avoid repeating
+            #       it once per layer
+            pass
+        else:
+            self.iface.zoomToActiveLayer()
         log_msg('Layer %s was created successfully' % layer_name, level='S',
                 message_bar=self.iface.messageBar())
 

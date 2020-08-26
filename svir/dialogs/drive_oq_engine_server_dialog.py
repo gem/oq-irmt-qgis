@@ -23,18 +23,19 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
+import io
 import json
 import tempfile
 import zipfile
 import copy
 from operator import itemgetter
 from uuid import uuid4
+import numpy
 
 from qgis.PyQt.QtCore import (QDir,
                               Qt,
                               QTimer,
                               pyqtSlot,
-                              QFileInfo,
                               QRegExp,
                               QSettings)
 
@@ -133,6 +134,13 @@ OUTPUT_TYPE_LOADERS = {
 }
 assert set(OUTPUT_TYPE_LOADERS) == OQ_TO_LAYER_TYPES, (
     OUTPUT_TYPE_LOADERS, OQ_TO_LAYER_TYPES)
+
+
+def zipdir(path, ziph):
+    # ziph is zipfile handle
+    for root, dirs, files in os.walk(path):
+        for file in files:
+            ziph.write(os.path.join(root, file))
 
 
 class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
@@ -547,7 +555,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             self.update_output_list(calc_id)
         elif action == 'Continue':
             self.update_output_list(calc_id)
-            self.run_calc(calc_id)
+            self.run_calc(calc_id=calc_id)
         else:
             raise NotImplementedError(action)
 
@@ -627,37 +635,49 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         Run a calculation. If `calc_id` is given, it means we want to run
         a calculation re-using the output of the given calculation
         """
-        text = self.tr('Select the files needed to run the calculation,'
-                       ' or the zip archive containing those files.')
+        zipped_file_name = None
+        selected_dir = None
         if directory is None:
             default_dir = QSettings().value('irmt/run_oqengine_calc_dir',
                                             QDir.homePath())
         else:
             default_dir = directory
+        if isinstance(default_dir, int):
+            default_dir = os.path.expanduser('~')
         if not file_names:
-            file_names, __ = QFileDialog.getOpenFileNames(
-                self, text, default_dir)
-        if not file_names:
-            return
-        if directory is None:
-            selected_dir = QFileInfo(file_names[0]).dir().path()
-            QSettings().setValue('irmt/run_oqengine_calc_dir', selected_dir)
-        else:
-            file_names = [os.path.join(directory, os.path.basename(file_name))
-                          for file_name in file_names]
-        if len(file_names) == 1:
-            file_full_path = file_names[0]
-            _, file_ext = os.path.splitext(file_full_path)
-            if file_ext == '.zip':
-                zipped_file_name = file_full_path
-            else:
-                # NOTE: an alternative solution could be to check if the single
-                # file is .ini, to look for all the files specified in the .ini
-                # and to build a zip archive with all them
-                msg = "Please select all the files needed, or a zip archive"
-                log_msg(msg, level='C', message_bar=self.message_bar)
+            select_from, ok_pressed = QInputDialog.getItem(
+                self, self.tr('Select input data container'),
+                "Input data is in",
+                ['Directory', 'Zip archive'], 0, False)
+            if not ok_pressed:
                 return
-        else:
+            if select_from == 'Zip archive':
+                text = self.tr('Select a zip archive containing input files')
+                file_types = self.tr('Zip archives (*.zip)')
+                zipped_file_name = QFileDialog.getOpenFileName(
+                    self, text, default_dir, file_types)[0]
+                if not zipped_file_name:
+                    return
+                if directory is None:
+                    selected_dir = os.path.dirname(zipped_file_name)
+                    QSettings().setValue(
+                        'irmt/run_oqengine_calc_dir', selected_dir)
+            elif select_from == 'Directory':
+                text = self.tr('Select a directory containing input files')
+                selected_dir = QFileDialog.getExistingDirectory(
+                    self, text, default_dir)
+                if not selected_dir:
+                    return
+                if directory is None:
+                    QSettings().setValue(
+                        'irmt/run_oqengine_calc_dir', selected_dir)
+            else:
+                raise NotImplementedError(select_from)
+            if select_from == 'Directory':
+                _, zipped_file_name = tempfile.mkstemp()
+                with zipfile.ZipFile(zipped_file_name, 'w') as zipped_file:
+                    zipdir(selected_dir, zipped_file)
+        else:  # given filenames
             _, zipped_file_name = tempfile.mkstemp()
             with zipfile.ZipFile(zipped_file_name, 'w') as zipped_file:
                 for file_name in file_names:
@@ -792,19 +812,11 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.params_dlg.show()
 
     def get_oqparam(self):
-        get_calc_params_url = "%s/v1/calc/%s/oqparam" % (
+        get_calc_params_url = "%s/v1/calc/%s/extract/oqparam" % (
             self.hostname, self.current_calc_id)
-        with WaitCursorManager('Getting calculation parameters...',
-                               self.message_bar):
-            try:
-                # FIXME: enable the user to set verify=True
-                resp = self.session.get(get_calc_params_url, timeout=10,
-                                        verify=False, stream=True)
-            except HANDLED_EXCEPTIONS as exc:
-                self._handle_exception(exc)
-                return exc
-            json_params = json.loads(resp.text)
-        return json_params
+        resp = self.session.get(get_calc_params_url)
+        js = bytes(numpy.load(io.BytesIO(resp.content))['json'])
+        return json.loads(js)
 
     def get_output_list(self, calc_id):
         output_list_url = "%s/v1/calc/%s/results" % (self.hostname, calc_id)
@@ -881,7 +893,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                             action = 'Download'
                             button = QPushButton()
                             self.connect_button_to_action(
-                                button, action, output, outtype)
+                                button, action, output, outtype,
+                                calculation_mode)
                             self.output_list_tbl.setCellWidget(
                                 row, additional_cols, button)
                             self.calc_list_tbl.setColumnWidth(
@@ -893,7 +906,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                         action = 'Load layer'
                     button = QPushButton()
                     self.connect_button_to_action(
-                        button, action, output, outtype)
+                        button, action, output, outtype, calculation_mode)
                     self.output_list_tbl.setCellWidget(
                         row, additional_cols, button)
                     additional_cols += 1
@@ -902,7 +915,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                     mod_output['type'] = "%s_aggr" % output['type']
                     button = QPushButton()
                     self.connect_button_to_action(
-                        button, 'Aggregate', mod_output, outtype)
+                        button, 'Aggregate', mod_output, outtype,
+                        calculation_mode)
                     self.output_list_tbl.setCellWidget(
                         row, additional_cols, button)
                     additional_cols += 1
@@ -910,7 +924,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 # (like in the webui)
                 action = 'Download'
                 button = QPushButton()
-                self.connect_button_to_action(button, action, output, outtype)
+                self.connect_button_to_action(
+                    button, action, output, outtype, calculation_mode)
                 self.output_list_tbl.setCellWidget(
                     row, additional_cols, button)
                 self.calc_list_tbl.setColumnWidth(
@@ -924,7 +939,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.output_list_tbl.resizeColumnsToContents()
         self.output_list_tbl.resizeRowsToContents()
 
-    def connect_button_to_action(self, button, action, output, outtype):
+    def connect_button_to_action(self, button, action, output, outtype,
+                                 calculation_mode):
         if action in ('Load layer', 'Load from zip', 'Load table',
                       'Show', 'Aggregate'):
             style = 'background-color: blue; color: white;'
@@ -942,10 +958,12 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             style = 'background-color: #3cb3c5; color: white;'
             button.setText("%s %s" % (action, outtype))
         button.setStyleSheet(style)
-        button.clicked.connect(lambda checked=False, output=output, action=action, outtype=outtype: (  # NOQA
-            self.on_output_action_btn_clicked(output, action, outtype)))
+        button.clicked.connect(lambda checked=False, output=output, action=action, outtype=outtype, calculation_mode=calculation_mode: (  # NOQA
+            self.on_output_action_btn_clicked(
+                output, action, outtype, calculation_mode)))
 
-    def on_output_action_btn_clicked(self, output, action, outtype):
+    def on_output_action_btn_clicked(
+            self, output, action, outtype, calculation_mode):
         output_id = output['id']
         output_type = output['type']
         if action in ['Show', 'Aggregate']:
@@ -978,7 +996,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             # the asset_risk output type
             if outtype == 'npz' or output_type in (
                     OQ_EXTRACT_TO_LAYER_TYPES | OQ_EXTRACT_TO_VIEW_TYPES):
-                self.open_output(output_id, output_type)
+                self.open_output(
+                    output_id, output_type, calculation_mode=calculation_mode)
             elif outtype == 'csv':
                 dest_folder = tempfile.gettempdir()
                 descr = 'Download %s for calculation %s' % (
@@ -1038,7 +1057,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.full_report_dlg.show()
 
     def open_output(
-            self, output_id=None, output_type=None, filepath=None):
+            self, output_id=None, output_type=None, filepath=None,
+            calculation_mode=None):
         assert(output_type is not None)
         if output_type not in OUTPUT_TYPE_LOADERS:
             raise NotImplementedError(output_type)
@@ -1047,7 +1067,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             self, self.iface, self.viewer_dock,
             self.session, self.hostname, self.current_calc_id,
             output_type, path=filepath,
-            engine_version=self.engine_version)
+            engine_version=self.engine_version,
+            calculation_mode=calculation_mode)
         self.open_output_dlgs[dlg_id] = open_output_dlg
         open_output_dlg.finished[int].connect(
             lambda result: self.del_dlg(dlg_id))

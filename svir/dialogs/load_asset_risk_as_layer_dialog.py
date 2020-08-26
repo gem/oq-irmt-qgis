@@ -39,12 +39,12 @@ class LoadAssetRiskAsLayerDialog(LoadOutputAsLayerDialog):
     """
     def __init__(self, drive_engine_dlg, iface, viewer_dock, session, hostname,
                  calc_id, output_type='asset_risk', path=None, mode=None,
-                 engine_version=None):
+                 engine_version=None, calculation_mode=None):
         assert output_type == 'asset_risk'
         LoadOutputAsLayerDialog.__init__(
             self, drive_engine_dlg, iface, viewer_dock, session, hostname,
             calc_id, output_type=output_type, path=path, mode=mode,
-            engine_version=engine_version)
+            engine_version=engine_version, calculation_mode=calculation_mode)
 
         self.setWindowTitle(
             'Load Exposure/Risk as layer')
@@ -59,7 +59,9 @@ class LoadAssetRiskAsLayerDialog(LoadOutputAsLayerDialog):
 
     def finalize_init(self, extracted_npz):
         self.exposure_metadata = extracted_npz
-        self.tag_names = sorted(self.exposure_metadata['tagnames'])
+        self.tag_names = sorted(
+            [tag_name.decode('utf8')
+             for tag_name in self.exposure_metadata['tagnames']])
         self.exposure_categories = sorted(self.exposure_metadata['array'])
         self.risk_categories = sorted(self.exposure_metadata['multi_risk'])
         self.perils = set(
@@ -103,7 +105,8 @@ class LoadAssetRiskAsLayerDialog(LoadOutputAsLayerDialog):
         self.taxonomies_lbl = QLabel("Taxonomies")
         self.taxonomies_multisel = MultiSelectComboBox(self)
         self.taxonomies_multisel.add_unselected_items(
-            sorted([taxonomy for taxonomy in self.exposure_metadata['taxonomy']
+            sorted([taxonomy.decode('utf8')
+                    for taxonomy in self.exposure_metadata['taxonomy']
                     if taxonomy != '?']))
         self.taxonomies_gbx_v_layout.addWidget(self.taxonomies_lbl)
         self.taxonomies_gbx_v_layout.addWidget(self.taxonomies_multisel)
@@ -167,7 +170,7 @@ class LoadAssetRiskAsLayerDialog(LoadOutputAsLayerDialog):
 
     def on_tag_changed(self, tag_name):
         tag_values = sorted([
-            value for value in self.exposure_metadata[tag_name]
+            value.decode('utf8') for value in self.exposure_metadata[tag_name]
             if value != '?'])
         self.tag_values_multisel.clear()
         self.tag_values_multisel.add_unselected_items(tag_values)
@@ -197,7 +200,7 @@ class LoadAssetRiskAsLayerDialog(LoadOutputAsLayerDialog):
                        and name not in self.tag_names}
         return field_types
 
-    def read_npz_into_layer(self, field_names, **kwargs):
+    def read_npz_into_layer(self, field_types, **kwargs):
         with edit(self.layer):
             lons = self.dataset['lon']
             lats = self.dataset['lat']
@@ -205,8 +208,10 @@ class LoadAssetRiskAsLayerDialog(LoadOutputAsLayerDialog):
             for row_idx, row in enumerate(self.dataset):
                 # add a feature
                 feat = QgsFeature(self.layer.fields())
-                for field_name in field_names:
-                    value = float(row[field_name])
+                for field_name in field_types:
+                    value = row[field_name].item()
+                    if isinstance(value, bytes):
+                        value = value.decode('utf8')
                     feat.setAttribute(field_name, value)
                 feat.setGeometry(QgsGeometry.fromPointXY(
                     QgsPointXY(lons[row_idx], lats[row_idx])))

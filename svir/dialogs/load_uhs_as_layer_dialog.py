@@ -37,12 +37,12 @@ class LoadUhsAsLayerDialog(LoadOutputAsLayerDialog):
 
     def __init__(self, drive_engine_dlg, iface, viewer_dock, session, hostname,
                  calc_id, output_type='uhs', path=None, mode=None,
-                 engine_version=None):
+                 engine_version=None, calculation_mode=None):
         assert output_type == 'uhs'
         LoadOutputAsLayerDialog.__init__(
             self, drive_engine_dlg, iface, viewer_dock, session, hostname,
             calc_id, output_type=output_type, path=path, mode=mode,
-            engine_version=engine_version)
+            engine_version=engine_version, calculation_mode=calculation_mode)
 
         self.setWindowTitle(
             'Load uniform hazard spectra as layer')
@@ -117,8 +117,8 @@ class LoadUhsAsLayerDialog(LoadOutputAsLayerDialog):
                 feat = QgsFeature(self.layer.fields())
                 for field_name_idx, field_name in enumerate(field_names):
                     rlz_or_stat, imt = field_name.split('_')
-                    iml = row[rlz_or_stat][poe][imt]
-                    feat.setAttribute(field_name, float(iml))
+                    iml = row[rlz_or_stat][poe][imt].item()
+                    feat.setAttribute(field_name, iml)
                 feat.setGeometry(QgsGeometry.fromPointXY(
                     QgsPointXY(lons[row_idx], lats[row_idx])))
                 feats.append(feat)

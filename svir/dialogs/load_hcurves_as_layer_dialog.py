@@ -36,12 +36,12 @@ class LoadHazardCurvesAsLayerDialog(LoadOutputAsLayerDialog):
 
     def __init__(self, drive_engine_dlg, iface, viewer_dock, session, hostname,
                  calc_id, output_type='hcurves', path=None, mode=None,
-                 engine_version=None):
+                 engine_version=None, calculation_mode=None):
         assert output_type == 'hcurves'
         LoadOutputAsLayerDialog.__init__(
             self, drive_engine_dlg, iface, viewer_dock, session, hostname,
             calc_id, output_type=output_type, path=path, mode=mode,
-            engine_version=engine_version)
+            engine_version=engine_version, calculation_mode=calculation_mode)
 
         self.setWindowTitle(
             'Load hazard curves as layer')
@@ -124,8 +124,8 @@ class LoadHazardCurvesAsLayerDialog(LoadOutputAsLayerDialog):
                 feat = QgsFeature(self.layer.fields())
                 for field_name_idx, field_name in enumerate(field_names):
                     rlz_or_stat, imt, iml = field_name.split('_')
-                    poe = row[rlz_or_stat][imt][iml]
-                    feat.setAttribute(field_name, float(poe))
+                    poe = row[rlz_or_stat][imt][iml].item()
+                    feat.setAttribute(field_name, poe)
                 feat.setGeometry(QgsGeometry.fromPointXY(
                     QgsPointXY(lons[row_idx], lats[row_idx])))
                 feats.append(feat)

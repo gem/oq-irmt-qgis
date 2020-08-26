@@ -36,12 +36,12 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
     """
     def __init__(self, drive_engine_dlg, iface, viewer_dock, session, hostname,
                  calc_id, output_type='hmaps', path=None, mode=None,
-                 engine_version=None):
+                 engine_version=None, calculation_mode=None):
         assert output_type == 'hmaps'
         LoadOutputAsLayerDialog.__init__(
             self, drive_engine_dlg, iface, viewer_dock, session, hostname,
             calc_id, output_type=output_type, path=path, mode=mode,
-            engine_version=engine_version)
+            engine_version=engine_version, calculation_mode=calculation_mode)
 
         self.setWindowTitle(
             'Load hazard maps as layer')
@@ -167,7 +167,7 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
             field_types[field_name] = 'F'
         return field_types
 
-    def read_npz_into_layer(self, field_names, **kwargs):
+    def read_npz_into_layer(self, field_types, **kwargs):
         with edit(self.layer):
             lons = self.npz_file['all']['lon']
             lats = self.npz_file['all']['lat']
@@ -175,13 +175,12 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
             for row_idx, row in enumerate(self.dataset):
                 # add a feature
                 feat = QgsFeature(self.layer.fields())
-                for field_name in field_names:
-                    # NB: example field_name == 'PGA-0.01'
-                    # NOTE: without casting to float, it produces a
-                    #       null because it does not recognize the
-                    #       numpy type
+                for field_name in field_types:
+                    # NOTE: example field_name == 'PGA-0.01'
                     imt, poe = field_name.split('-')
-                    value = float(row[imt][poe])
+                    value = row[imt][poe].item()
+                    if isinstance(value, bytes):
+                        value = value.decode('utf8')
                     feat.setAttribute(field_name, value)
                 feat.setGeometry(QgsGeometry.fromPointXY(
                     QgsPointXY(lons[row_idx], lats[row_idx])))

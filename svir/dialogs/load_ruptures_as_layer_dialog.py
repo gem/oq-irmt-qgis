@@ -26,8 +26,9 @@ import gzip
 from collections import OrderedDict
 from qgis.PyQt.QtWidgets import QDialog
 from qgis.core import (
-    QgsFeature, QgsGeometry, edit, QgsTask, QgsApplication)
-from svir.utilities.utils import log_msg, WaitCursorManager
+    QgsFeature, QgsGeometry, QgsWkbTypes, edit, QgsTask, QgsApplication,
+    QgsProject)
+from svir.utilities.utils import log_msg, WaitCursorManager, zoom_to_group
 from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
 from svir.tasks.extract_npz_task import ExtractNpzTask
 
@@ -39,12 +40,12 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
 
     def __init__(self, drive_engine_dlg, iface, viewer_dock, session, hostname,
                  calc_id, output_type='ruptures', path=None, mode=None,
-                 engine_version=None):
+                 engine_version=None, calculation_mode=None):
         assert output_type == 'ruptures'
         LoadOutputAsLayerDialog.__init__(
             self, drive_engine_dlg, iface, viewer_dock, session, hostname,
             calc_id, output_type=output_type, path=path, mode=mode,
-            engine_version=engine_version)
+            engine_version=engine_version, calculation_mode=calculation_mode)
         self.style_by_items = OrderedDict([
             ('Tectonic region type', 'trt'),
             ('Magnitude', 'mag'),
@@ -93,7 +94,9 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
 
     def build_layer_name(self, **kwargs):
         investigation_time = self.get_investigation_time()
-        self.layer_name = 'ruptures_%sy' % investigation_time
+        geometry_type = kwargs['geometry_type']
+        self.layer_name = '%s_ruptures_%sy' % (
+            geometry_type, investigation_time)
         return self.layer_name
 
     def get_field_types(self, **kwargs):
@@ -103,35 +106,67 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
 
     def load_from_npz(self):
         boundaries = gzip.decompress(self.npz_file['boundaries']).split(b'\n')
-        with WaitCursorManager(
-                'Creating layer for ruptures...', self.iface.messageBar()):
-            self.build_layer(boundaries=boundaries, geometry_type='Polygon')
-        style_by = self.style_by_cbx.itemData(self.style_by_cbx.currentIndex())
-        if style_by == 'mag':
-            self.style_maps(self.layer, style_by,
-                            self.iface, self.output_type)
-        else:  # 'trt'
-            self.style_categorized(layer=self.layer, style_by=style_by)
-        log_msg('Layer %s was loaded successfully' % self.layer_name,
-                level='S', message_bar=self.iface.messageBar())
+        row_wkt_geom_types = {
+            row_idx: QgsGeometry.fromWkt(boundary.decode('utf8')).wkbType()
+            for row_idx, boundary in enumerate(boundaries)}
+        wkt_geom_types = set(row_wkt_geom_types.values())
+        if len(wkt_geom_types) > 1:
+            root = QgsProject.instance().layerTreeRoot()
+            rup_group = root.insertGroup(0, "Earthquake Ruptures")
+        else:
+            rup_group = None
+        for wkt_geom_type in wkt_geom_types:
+            if wkt_geom_type == QgsWkbTypes.Point:
+                layer_geom_type = "point"
+            elif wkt_geom_type == QgsWkbTypes.LineString:
+                layer_geom_type = "linestring"
+            elif wkt_geom_type == QgsWkbTypes.Polygon:
+                layer_geom_type = "polygon"
+            elif wkt_geom_type == QgsWkbTypes.MultiPoint:
+                layer_geom_type = "multipoint"
+            elif wkt_geom_type == QgsWkbTypes.MultiLineString:
+                layer_geom_type = "multilinestring"
+            elif wkt_geom_type == QgsWkbTypes.MultiPolygon:
+                layer_geom_type = "multipolygon"
+            else:
+                raise ValueError(
+                    'Unexpected geometry type: %s' % wkt_geom_type)
+            with WaitCursorManager(
+                    'Creating layer for "%s" ruptures...' % layer_geom_type,
+                    self.iface.messageBar()):
+                self.build_layer(boundaries=boundaries,
+                                 geometry_type=layer_geom_type,
+                                 wkt_geom_type=wkt_geom_type,
+                                 row_wkt_geom_types=row_wkt_geom_types,
+                                 add_to_group=rup_group)
+            style_by = self.style_by_cbx.itemData(
+                self.style_by_cbx.currentIndex())
+            if style_by == 'mag':
+                self.style_maps(self.layer, style_by,
+                                self.iface, self.output_type)
+            else:  # 'trt'
+                self.style_categorized(layer=self.layer, style_by=style_by)
+            log_msg('Layer %s was loaded successfully' % self.layer_name,
+                    level='S', message_bar=self.iface.messageBar())
+        if rup_group:
+            zoom_to_group(rup_group)
 
     def read_npz_into_layer(
-            self, field_types, rlz_or_stat, boundaries, **kwargs):
+            self, field_types, rlz_or_stat, boundaries,
+            wkt_geom_type, row_wkt_geom_types, **kwargs):
         with edit(self.layer):
             feats = []
             fields = self.layer.fields()
             field_names = [field.name() for field in fields]
             for row_idx, row in enumerate(self.npz_file['array']):
+                if row_wkt_geom_types[row_idx] != wkt_geom_type:
+                    continue
                 # add a feature
                 feat = QgsFeature(fields)
                 for field_name in field_names:
-                    try:
-                        value = float(row[field_name])
-                    except ValueError:
-                        try:
-                            value = row[field_name].decode('utf8')
-                        except AttributeError:
-                            value = row[field_name]
+                    value = row[field_name].item()
+                    if isinstance(value, bytes):
+                        value = value.decode('utf8')
                     feat.setAttribute(field_name, value)
                 feat.setGeometry(QgsGeometry.fromWkt(
                     boundaries[row_idx].decode('utf8')))

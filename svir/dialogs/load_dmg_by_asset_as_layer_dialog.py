@@ -42,12 +42,13 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
     def __init__(self, drive_engine_dlg, iface, viewer_dock, session, hostname,
                  calc_id, output_type='dmg_by_asset',
                  path=None, mode=None, zonal_layer_path=None,
-                 engine_version=None):
+                 engine_version=None, calculation_mode=None):
         assert output_type == 'dmg_by_asset'
         LoadOutputAsLayerDialog.__init__(
             self, drive_engine_dlg, iface, viewer_dock, session, hostname,
             calc_id, output_type=output_type, path=path, mode=mode,
-            zonal_layer_path=zonal_layer_path, engine_version=engine_version)
+            zonal_layer_path=zonal_layer_path, engine_version=engine_version,
+            calculation_mode=calculation_mode)
 
         self.setWindowTitle('Load scenario damage by asset as layer')
         self.create_load_selected_only_ckb()
@@ -130,7 +131,8 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
         self.taxonomy_cbx.setEnabled(True)
 
     def on_loss_type_changed(self):
-        names = self.dataset[self.loss_type_cbx.currentText()].dtype.names
+        loss_type = self.loss_type_cbx.currentText()
+        names = self.dataset[loss_type].dtype.names
         self.dmg_states = []
         for dmg_state_plus_stat in names:
             # each name looks like: no_damage_mean
@@ -199,14 +201,12 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
                     if field_name in ['lon', 'lat']:
                         continue
                     elif field_name in data.dtype.names:
-                        value = row[field_name]
-                        if data[field_name].dtype.char == 'S':
-                            value = str(value, encoding='utf8').strip('"')
-                        else:
-                            value = float(value)
+                        value = row[field_name].item()
+                        if isinstance(value, bytes):
+                            value = value.decode('utf8').strip('"')
                     else:
-                        value = float(
-                            row[loss_type][field_name[len(loss_type)+1:]])
+                        value = row[
+                            loss_type][field_name[len(loss_type)+1:]].item()
                     feat.setAttribute(field_name, value)
                 feat.setGeometry(QgsGeometry.fromPointXY(
                     QgsPointXY(row['lon'], row['lat'])))
@@ -233,7 +233,9 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
                     if field_name in ['lon', 'lat']:
                         field_idx += 1
                         continue
-                    value = float(row[field_idx])
+                    value = row[field_idx].item()
+                    if isinstance(value, bytes):
+                        value = value.decode('utf8')
                     feat.setAttribute(field_name, value)
                     field_idx += 1
                 feat.setGeometry(QgsGeometry.fromPointXY(

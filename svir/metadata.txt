@@ -13,7 +13,7 @@ name=OpenQuake Integrated Risk Modelling Toolkit
 qgisMinimumVersion=3.0
 description=Tools to drive the OpenQuake Engine, to develop composite indicators and integrate them with physical risk estimations, and to predict building recovery times following an earthquake
 about=This plugin allows users to drive OpenQuake Engine calculations (https://github.com/gem/oq-engine) of physical hazard and risk, and to load the corresponding outputs as QGIS layers. For those outputs, data visualization tools are provided. The toolkit also enables users to develop composite indicators to measure and quantify social characteristics, and combine them with estimates of human or infrastructure loss. The plugin can interact with the OpenQuake Platform (https://platform.openquake.org), to browse and download socio-economic data or existing projects, edit projects locally in QGIS and upload and share them with the scientific community. A post-earthquake recovery modeling framework is incorporated into the toolkit, to produce building level and/or community level recovery functions.
-version=3.8.0
+version=3.9.1
 author=GEM Foundation
 email=staff.it@globalquakemodel.org
 
@@ -23,8 +23,19 @@ email=staff.it@globalquakemodel.org
 
 # Uncomment the following line and add your changelog entries:
 changelog=
-    3.8.0
+    3.10.0
     * The visualization of dmg_by_event and losses_by_event is enabled also for event-based calculations
+    3.9.1
+    * For scenario OQ-Engine calculations, when loading GMFs, ranges of event ids per GMPE are displayed while the user chooses an event
+    * For GMF loaded layers, the correct GMPE is loaded and the layer name contains the calculation mode and the name of the right GMPE
+    * Fixed conversion of numpy data loaded from OQ Engine outputs into native python data types used in QGIS layers
+    * Fixed the wrong creation of additional empty fields while loading ground motion fields
+    * When pressing the button to run an OQ-Engine calculation or to continue from a previous one, the user can choose if selecting files from a zip file or from
+      a directory. In the latter case, also data available in nested directories will be sent to the OQ-Engine
+    3.9.0
+    * The plugin uses `numpy.load(allow_pickle=False)` while extracting data from the OQ-Engine
+    3.8.0
+    * Ruptures are loaded from OQ-Engine outputs as separate layers, one for each geometry type (polygon, line or point), instead of representing lines as degenerate flat polygons.
     * Ground motion fields are loaded from the OQ-Engine after pre-filtering them by event id, thus dramatically reducing data transfer and visualization time. This improvement made
       it possible to enable the visualization of ground motion fields also for event-based calculations.
     * Field data types of layers created from OQ-Engine outputs were fixed (they were wrongly all numeric before)
@@ -190,7 +201,7 @@ tracker=https://github.com/gem/oq-irmt-qgis/issues
 repository=https://github.com/gem/oq-irmt-qgis
 icon=resources/icon.svg
 # experimental flag
-experimental=True
+experimental=False
 
 # deprecated flag (applies to the whole plugin, not just a single version
 deprecated=False
