@@ -34,20 +34,21 @@ from svir.utilities.utils import (WaitCursorManager,
 from svir.tasks.extract_npz_task import ExtractNpzTask
 
 
-class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
+class LoadAvgDamagesRlzsAsLayerDialog(LoadOutputAsLayerDialog):
     """
-    Dialog to load dmg_by_asset from an oq-engine output, as layer
+    Dialog to load avg_damages-rlzs from an oq-engine output, as layer
     """
 
     def __init__(self, drive_engine_dlg, iface, viewer_dock, session, hostname,
-                 calc_id, output_type='dmg_by_asset',
+                 calc_id, output_type='avg_damages-rlzs',
                  path=None, mode=None, zonal_layer_path=None,
-                 engine_version=None):
-        assert output_type == 'dmg_by_asset'
+                 engine_version=None, calculation_mode=None):
+        assert output_type == 'avg_damages-rlzs'
         LoadOutputAsLayerDialog.__init__(
             self, drive_engine_dlg, iface, viewer_dock, session, hostname,
             calc_id, output_type=output_type, path=path, mode=mode,
-            zonal_layer_path=zonal_layer_path, engine_version=engine_version)
+            zonal_layer_path=zonal_layer_path, engine_version=engine_version,
+            calculation_mode=calculation_mode)
 
         self.setWindowTitle('Load scenario damage by asset as layer')
         self.create_load_selected_only_ckb()
@@ -130,13 +131,8 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
         self.taxonomy_cbx.setEnabled(True)
 
     def on_loss_type_changed(self):
-        names = self.dataset[self.loss_type_cbx.currentText()].dtype.names
-        self.dmg_states = []
-        for dmg_state_plus_stat in names:
-            # each name looks like: no_damage_mean
-            dmg_state, _ = dmg_state_plus_stat.rsplit('_', 1)
-            if dmg_state not in self.dmg_states:
-                self.dmg_states.append(dmg_state)
+        loss_type = self.loss_type_cbx.currentText()
+        self.dmg_states = self.dataset[loss_type].dtype.names
         self.populate_dmg_state_cbx()
 
     def populate_dmg_state_cbx(self):
@@ -150,10 +146,10 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
         dmg_state = kwargs['dmg_state']
         if (self.aggregate_by_site_ckb.isChecked() or
                 self.zonal_layer_gbx.isChecked()):
-            layer_name = "dmg_by_asset_%s_%s_%s_%s" % (
+            layer_name = "avg_damages-rlzs_%s_%s_%s_%s" % (
                 rlz_or_stat, taxonomy, loss_type, dmg_state)
         else:  # recovery modeling
-            layer_name = "dmg_by_asset_%s_%s" % (rlz_or_stat, loss_type)
+            layer_name = "avg_damages-rlzs_%s_%s" % (rlz_or_stat, loss_type)
         return layer_name
 
     def get_field_types(self, **kwargs):
@@ -199,14 +195,12 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
                     if field_name in ['lon', 'lat']:
                         continue
                     elif field_name in data.dtype.names:
-                        value = row[field_name]
-                        if data[field_name].dtype.char == 'S':
-                            value = str(value, encoding='utf8').strip('"')
-                        else:
-                            value = float(value)
+                        value = row[field_name].item()
+                        if isinstance(value, bytes):
+                            value = value.decode('utf8').strip('"')
                     else:
-                        value = float(
-                            row[loss_type][field_name[len(loss_type)+1:]])
+                        value = row[
+                            loss_type][field_name[len(loss_type)+1:]].item()
                     feat.setAttribute(field_name, value)
                 feat.setGeometry(QgsGeometry.fromPointXY(
                     QgsPointXY(row['lon'], row['lat'])))
@@ -233,7 +227,9 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
                     if field_name in ['lon', 'lat']:
                         field_idx += 1
                         continue
-                    value = float(row[field_idx])
+                    value = row[field_idx].item()
+                    if isinstance(value, bytes):
+                        value = value.decode('utf8')
                     feat.setAttribute(field_name, value)
                     field_idx += 1
                 feat.setGeometry(QgsGeometry.fromPointXY(
@@ -250,7 +246,7 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
         dmg_by_site = collections.defaultdict(float)  # lon, lat -> dmg
         for rec in npz[rlz_or_stat]:
             if taxonomy == 'All' or taxonomy.encode('utf8') == rec['taxonomy']:
-                value = rec[loss_type]['%s_mean' % dmg_state]
+                value = rec[loss_type][dmg_state]
                 dmg_by_site[rec['lon'], rec['lat']] += value
         data = numpy.zeros(
             len(dmg_by_site),

@@ -40,12 +40,12 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
 
     def __init__(self, drive_engine_dlg, iface, viewer_dock, session, hostname,
                  calc_id, output_type='ruptures', path=None, mode=None,
-                 engine_version=None):
+                 engine_version=None, calculation_mode=None):
         assert output_type == 'ruptures'
         LoadOutputAsLayerDialog.__init__(
             self, drive_engine_dlg, iface, viewer_dock, session, hostname,
             calc_id, output_type=output_type, path=path, mode=mode,
-            engine_version=engine_version)
+            engine_version=engine_version, calculation_mode=calculation_mode)
         self.style_by_items = OrderedDict([
             ('Tectonic region type', 'trt'),
             ('Magnitude', 'mag'),
@@ -164,13 +164,9 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
                 # add a feature
                 feat = QgsFeature(fields)
                 for field_name in field_names:
-                    try:
-                        value = float(row[field_name])
-                    except ValueError:
-                        try:
-                            value = row[field_name].decode('utf8')
-                        except AttributeError:
-                            value = row[field_name]
+                    value = row[field_name].item()
+                    if isinstance(value, bytes):
+                        value = value.decode('utf8')
                     feat.setAttribute(field_name, value)
                 feat.setGeometry(QgsGeometry.fromWkt(
                     boundaries[row_idx].decode('utf8')))

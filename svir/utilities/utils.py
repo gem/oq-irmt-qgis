@@ -31,6 +31,7 @@ import traceback
 import locale
 import zlib
 import io
+from datetime import datetime
 from pygments import highlight
 from pygments.lexers import PythonLexer
 from pygments.formatters import HtmlFormatter
@@ -93,7 +94,7 @@ def get_irmt_version():
 
 def log_msg(message, tag='GEM OpenQuake IRMT plugin', level='I',
             message_bar=None, duration=None, exception=None,
-            print_to_stderr=False):
+            print_to_stderr=False, print_to_stdout=False):
     """
     Add a message to the QGIS message log. If a messageBar is provided,
     the same message will be displayed also in the messageBar. In the latter
@@ -185,7 +186,11 @@ def log_msg(message, tag='GEM OpenQuake IRMT plugin', level='I',
                     duration)
                 message_bar.pushItem(mb_item)
         if print_to_stderr:
-            print('\t\t%s' % message + tb_text, file=sys.stderr)
+            print('\t\t%s: %s' % (datetime.now(), message + tb_text),
+                  file=sys.stderr)
+        if print_to_stdout:
+            print('\t\t%s: %s' % (datetime.now(), message + tb_text),
+                  file=sys.stdout)
 
 
 def _on_tb_btn_clicked(message, tb_text):
@@ -1185,11 +1190,19 @@ def extract_npz(
     if not resp_content:
         log_msg(msg, level='C', message_bar=message_bar, print_to_stderr=True)
         return
-    extracted_content = numpy.load(io.BytesIO(resp_content), allow_pickle=True)
+    extracted_content = numpy.load(io.BytesIO(resp_content),
+                                   allow_pickle=False)
     if not extracted_content:
         log_msg(msg, level='C', message_bar=message_bar, print_to_stderr=True)
         return
-    return extracted_content
+
+    dic = {}
+    for k, v in extracted_content.items():
+        if k == 'json':
+            dic.update(json.loads(bytes(v)))
+        else:
+            dic[k] = v
+    return dic
 
 
 def convert_bytes(num):
@@ -1250,14 +1263,16 @@ def get_loss_types(session, hostname, calc_id, message_bar):
     # array of zeros with data type as follows:
     # [('lon', F32), ('lat', F32), (loss_type, F32)])
     loss_types = [
-        str(loss_type)
+        loss_type.decode('utf8')
         for loss_type in composite_risk_model_attrs['loss_types']]
     return loss_types
 
 
 def write_metadata_to_layer(
-        drive_engine_dlg, output_type, layer, user_params=None):
+        drive_engine_dlg, output_type, layer, user_params=None,
+        disagg_params=None):
     user_params = user_params or {}
+    disagg_params = disagg_params or {}
     json_params = drive_engine_dlg.get_oqparam()
     lm = layer.metadata()
     for param in json_params:
@@ -1270,6 +1285,10 @@ def write_metadata_to_layer(
         value = user_params[param]
         if value is not None:
             lm.addKeywords("oquser:%s" % param, [str(value)])
+    for param in disagg_params:
+        value = disagg_params[param]
+        if value is not None:
+            lm.addKeywords("oqdisagg:%s" % param, [str(value)])
     layer.setMetadata(lm)
 
 

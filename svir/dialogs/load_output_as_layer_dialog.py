@@ -23,6 +23,7 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
+import copy
 from random import randrange
 from osgeo import ogr
 from qgis.core import (QgsVectorLayer,
@@ -96,7 +97,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
     def __init__(self, drive_engine_dlg, iface, viewer_dock,
                  session, hostname, calc_id, output_type=None,
                  path=None, mode=None, zonal_layer_path=None,
-                 engine_version=None):
+                 engine_version=None, calculation_mode=None):
         # sanity check
         if output_type not in OQ_TO_LAYER_TYPES:
             raise NotImplementedError(output_type)
@@ -111,6 +112,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.mode = mode  # if 'testing' it will avoid some user interaction
         self.zonal_layer_path = zonal_layer_path
         self.engine_version = engine_version
+        self.calculation_mode = calculation_mode
         QDialog.__init__(self)
         # Set up the user interface from Designer.
         self.setupUi(self)
@@ -472,6 +474,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         # create layer
         self.layer = QgsVectorLayer(
             "%s?crs=epsg:4326" % geometry_type, layer_name, "memory")
+        modified_field_types = copy.copy(field_types)
         for field_name, field_type in field_types.items():
             if field_name in ['lon', 'lat', 'boundary']:
                 continue
@@ -480,9 +483,9 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 if field_name == self.default_field_name:
                     self.default_field_name = added_field_name
                 # replace field_name with the actual added_field_name
-                field_type = field_types[field_name]
-                del field_types[field_name]
-                field_types[added_field_name] = field_type
+                del modified_field_types[field_name]
+                modified_field_types[added_field_name] = field_type
+        field_types = copy.copy(modified_field_types)
 
         self.read_npz_into_layer(
             field_types, rlz_or_stat=rlz_or_stat, taxonomy=taxonomy, poe=poe,
@@ -490,7 +493,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             boundaries=boundaries, geometry_type=geometry_type,
             wkt_geom_type=wkt_geom_type,
             row_wkt_geom_types=row_wkt_geom_types)
-        if (self.output_type == 'dmg_by_asset' and
+        if (self.output_type == 'avg_damages-rlzs' and
                 not self.aggregate_by_site_ckb.isChecked()):
             self.layer.setCustomProperty('output_type', 'recovery_curves')
         else:
@@ -539,7 +542,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 message_bar=self.iface.messageBar())
 
     @staticmethod
-    def style_maps(layer, style_by, iface, output_type='dmg_by_asset',
+    def style_maps(layer, style_by, iface, output_type='avg_damages-rlzs',
                    perils=None, add_null_class=False,
                    render_higher_on_top=False):
         symbol = QgsSymbol.defaultSymbol(layer.geometryType())
@@ -562,8 +565,8 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         if output_type in OQ_TO_LAYER_TYPES:
             default_qgs_style = QgsStyle().defaultStyle()
             default_color_ramp_names = default_qgs_style.colorRampNames()
-            if output_type in ('dmg_by_asset',
-                               'losses_by_asset',
+            if output_type in ('avg_damages-rlzs',
+                               'avg_losses-rlzs',
                                'avg_losses-stats',):
                 # options are EqualInterval, Quantile, Jenks, StdDev, Pretty
                 # jenks = natural breaks
@@ -873,8 +876,8 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.hide()
         if self.output_type in OQ_EXTRACT_TO_LAYER_TYPES:
             self.load_from_npz()
-            if self.output_type in ('losses_by_asset',
-                                    'dmg_by_asset',
+            if self.output_type in ('avg_losses-rlzs',
+                                    'avg_damages-rlzs',
                                     'avg_losses-stats'):
                 # check if also aggregating by zone or not
                 if (not self.zonal_layer_cbx.currentText() or
