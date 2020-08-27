@@ -96,6 +96,7 @@ from svir.dialogs.load_hcurves_as_layer_dialog import (
     LoadHazardCurvesAsLayerDialog)
 from svir.dialogs.load_uhs_as_layer_dialog import (
     LoadUhsAsLayerDialog)
+from svir.dialogs.load_disagg_as_layer_dialog import LoadDisaggAsLayerDialog
 from svir.dialogs.load_avg_losses_rlzs_as_layer_dialog import (
     LoadAvgLossesRlzsAsLayerDialog)
 from svir.dialogs.load_inputs_dialog import LoadInputsDialog
@@ -130,6 +131,7 @@ OUTPUT_TYPE_LOADERS = {
     'avg_losses-rlzs': LoadAvgLossesRlzsAsLayerDialog,
     'avg_losses-stats': LoadAvgLossesRlzsAsLayerDialog,
     'asset_risk': LoadAssetRiskAsLayerDialog,
+    'disagg': LoadDisaggAsLayerDialog,
     'input': LoadInputsDialog,
 }
 assert set(OUTPUT_TYPE_LOADERS) == OQ_TO_LAYER_TYPES, (

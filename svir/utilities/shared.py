@@ -237,6 +237,7 @@ OQ_EXTRACT_TO_LAYER_TYPES = set([
     'hmaps',
     'ruptures',
     'uhs',
+    'disagg',
 ])
 OQ_ZIPPED_TYPES = set([
     'input',
