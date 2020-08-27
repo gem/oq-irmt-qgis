@@ -114,6 +114,17 @@ class UploadGvProjDialog(QDialog, FORM_CLASS):
 
     def check_capabilities(self):
         p = QgsProject.instance()
+        add_geoms_to_feat_resp = p.readBoolEntry("WMSAddWktGeometry", "/")[0]
+        if not add_geoms_to_feat_resp:
+            msg = ('Project QGIS Server property "Add geometry to feature'
+                   ' response" is disabled')
+            log_msg(msg, level='W',
+                    message_bar=self.message_bar)
+        if not QgsServerProjectUtils.wmsFeatureInfoSegmentizeWktGeometry(p):
+            msg = ('Project QGIS Server property "Segmentize feature info'
+                   ' geometry" is disabled')
+            log_msg(msg, level='W',
+                    message_bar=self.message_bar)
         if not QgsServerProjectUtils.owsServiceCapabilities(p):
             log_msg("Project capabilities are disabled", level='C',
                     message_bar=self.message_bar)
