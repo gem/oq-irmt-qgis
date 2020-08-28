@@ -42,7 +42,8 @@ from svir.tasks.consolidate_task import ConsolidateTask
 from svir.utilities.utils import (
     get_ui_class, log_msg, get_credentials, tr, geoviewer_login)
 from svir.utilities.shared import (
-    DEFAULT_GEOVIEWER_PROFILES, LICENSES, DEFAULT_LICENSE)
+    DEFAULT_GEOVIEWER_PROFILES, LICENSES, DEFAULT_LICENSE, PROJECT_KINDS,
+    DEFAULT_PROJECT_KIND)
 
 
 FORM_CLASS = get_ui_class('ui_upload_gv_proj.ui')
@@ -67,11 +68,13 @@ class UploadGvProjDialog(QDialog, FORM_CLASS):
         self.proj_name_le.textEdited.connect(self.set_ok_btn_status)
         # self.add_layer_with_invalid_geometries()  # useful to test validity
         self.populate_license_cbx()
-        self.check_capabilities()
+        self.populate_kind_cbx()
+        self.check_project_properties()
         self.check_geometries()
         self.check_crs()
         self.session = Session()
-        # self.authenticate()  # FIXME
+        self.authenticate()
+        self.get_geoviewer_project_list()
 
     def authenticate(self):
         self.hostname, username, password = get_credentials('geoviewer')
@@ -87,6 +90,14 @@ class UploadGvProjDialog(QDialog, FORM_CLASS):
             self.license_cbx.addItem(license_name, license_link)
         self.license_cbx.setCurrentIndex(
             self.license_cbx.findText(DEFAULT_LICENSE[0]))
+
+    def populate_kind_cbx(self):
+        # FIXME: kinds should be retrieved from those available in the
+        # GeoViewer
+        for kind_name, kind_text in PROJECT_KINDS:
+            self.project_kind_cbx.addItem(kind_text, kind_name)
+        self.project_kind_cbx.setCurrentIndex(
+            self.project_kind_cbx.findData(DEFAULT_PROJECT_KIND))
 
     def add_layer_with_invalid_geometries(self):
         # NOTE: userful to test the validation
@@ -112,7 +123,7 @@ class UploadGvProjDialog(QDialog, FORM_CLASS):
         polygon_layer.rollBack()
         QgsProject.instance().addMapLayers([polygon_layer])
 
-    def check_capabilities(self):
+    def check_project_properties(self):
         p = QgsProject.instance()
         add_geoms_to_feat_resp = p.readBoolEntry("WMSAddWktGeometry", "/")[0]
         if not add_geoms_to_feat_resp:
@@ -196,6 +207,11 @@ class UploadGvProjDialog(QDialog, FORM_CLASS):
             log_msg(msg, level='C', message_bar=self.message_bar)
 
     def accept(self):
+        proj_name = self.proj_name_le.text()
+        if proj_name in self.proj_names:
+            msg = ("A project named %s already exists" % proj_name)
+            log_msg(msg, level='C', message_bar=self.message_bar)
+            return
         super().accept()
         self.consolidate()
 
@@ -255,7 +271,7 @@ class UploadGvProjDialog(QDialog, FORM_CLASS):
                 newProjectFile))
 
         QgsApplication.taskManager().addTask(self.consolidateTask)
-        super().accept()
+        # super().accept()
 
     def on_consolidation_begun(self):
         log_msg("Consolidation started.", level='I', duration=4)
@@ -266,9 +282,21 @@ class UploadGvProjDialog(QDialog, FORM_CLASS):
                 % zipped_project, level='S')
         self.upload_to_geoviewer(zipped_project)
 
+    def get_geoviewer_project_list(self):
+        r = self.session.get(self.hostname + '/api/project_list/')
+        if r.ok:
+            content = json.loads(r.text)
+            self.proj_names = [proj['fields']['name'] for proj in content]
+            msg = ("Projects available on the OpenQuake GeoViewer: %s"
+                   % self.proj_names)
+            log_msg(msg, level='S', message_bar=self.message_bar)
+        else:
+            log_msg(r.reason, level='C', message_bar=self.message_bar)
+
     def upload_to_geoviewer(self, zipped_project):
         # FIXME: probably the license should be added to the project properties
         # and it should be read GeoViewer-side through an api
+        # FIXME: same as above for the project kind
         files = {'file': open(zipped_project, 'rb')}
         r = self.session.post(
             self.hostname + '/api/project/upload', files=files)

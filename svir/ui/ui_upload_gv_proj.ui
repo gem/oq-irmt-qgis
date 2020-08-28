@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>400</width>
-    <height>151</height>
+    <height>234</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -23,6 +23,23 @@
    </item>
    <item>
     <widget class="QLineEdit" name="proj_name_le"/>
+   </item>
+   <item>
+    <widget class="QLabel" name="project_kind_lbl">
+     <property name="text">
+      <string>Project kind</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QComboBox" name="project_kind_cbx"/>
+   </item>
+   <item>
+    <widget class="QCheckBox" name="auto_create_map">
+     <property name="text">
+      <string>Automatically create a map associated to the project</string>
+     </property>
+    </widget>
    </item>
    <item>
     <widget class="QLabel" name="license_lbl">

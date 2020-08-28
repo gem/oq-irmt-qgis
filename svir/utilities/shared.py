@@ -328,3 +328,10 @@ LICENSES = (
     ('CC BY-NC-SA 4.0', 'https://creativecommons.org/licenses/by-nc-sa/4.0/')
 )
 DEFAULT_LICENSE = LICENSES[5]  # CC BY-SA 4.0
+
+PROJECT_KINDS = (
+    ('normal', 'Normal'),
+    ('gem_explorer', 'GEM Risk Explorer'),
+    ('disag', 'Disaggregation')
+)
+DEFAULT_PROJECT_KIND = 'normal'
