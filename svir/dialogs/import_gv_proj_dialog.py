@@ -26,10 +26,11 @@ import json
 import traceback
 from requests import Session
 from qgis.PyQt.QtCore import QSettings
-from qgis.PyQt.QtWidgets import QDialog, QMessageBox, QTableWidgetItem
-from svir.utilities.utils import get_ui_class, log_msg, geoviewer_login
+from qgis.PyQt.QtWidgets import (
+    QDialog, QMessageBox, QTableWidgetItem, QPushButton)
+from svir.utilities.utils import (
+    get_ui_class, log_msg, geoviewer_login, get_credentials)
 from svir.utilities.shared import DEFAULT_GEOVIEWER_PROFILES
-
 
 FORM_CLASS = get_ui_class('ui_import_gv_proj.ui')
 
@@ -44,6 +45,8 @@ class ImportGvProjDialog(QDialog, FORM_CLASS):
         QDialog.__init__(self)
         # Set up the user interface from Designer.
         self.setupUi(self)
+        self.session = Session()
+        self.authenticate()
         project_list = self.get_project_list()
         if not project_list:
             return
@@ -52,38 +55,34 @@ class ImportGvProjDialog(QDialog, FORM_CLASS):
         #     QMessageBox.Ok)
         self.show_project_list(project_list)
 
+    def authenticate(self):
+        self.hostname, username, password = get_credentials('geoviewer')
+        geoviewer_login(self.hostname, username, password, self.session)
+
     def show_project_list(self, project_list):
-        fields_to_display = ('name', )  # FIXME
+        fields_to_display = ('name', 'kind')  # FIXME
         self.list_of_projects_tbl.setRowCount(len(project_list))
-        self.list_of_projects_tbl.setColumnCount(len(fields_to_display))
+        self.list_of_projects_tbl.setColumnCount(len(fields_to_display) + 1)
         for row, project in enumerate(project_list):
-            if not project['fields']['downloadable']:
-                continue
             for col, field in enumerate(fields_to_display):
                 item = QTableWidgetItem(project['fields'][field])
                 self.list_of_projects_tbl.setItem(row, col, item)
+            if project['fields']['downloadable']:
+                button = QPushButton('Download')
+                self.list_of_projects_tbl.setCellWidget(
+                    row, len(fields_to_display), button)
+                button.clicked.connect(
+                    lambda checked=False, name=project['fields']['name']:
+                        self.on_download_btn_clicked(name))
+
+    def on_download_btn_clicked(self, proj_name):
+        msg = 'Downloading project %s' % proj_name
+        log_msg(msg, level='S', message_bar=self.message_bar)
 
     def get_project_list(self):
-        mySettings = QSettings()
-        profiles = json.loads(mySettings.value(
-            'irmt/geoviewer_profiles', DEFAULT_GEOVIEWER_PROFILES))
-        # FIXME: make a utility function to retrieve credentials from settings
-        profile = profiles['Local OpenQuake GeoViewer']
-        session = Session()
-        hostname, username, password = (profile['hostname'],
-                                        profile['username'],
-                                        profile['password'])
-        session.auth = (username, password)
+        project_list_url = self.hostname + '/api/project_list/'
         try:
-            geoviewer_login(hostname, username, password, session)
-        except Exception as exc:
-            err_msg = "Unable to connect (see Log Message Panel for details)"
-            log_msg(err_msg, level='C', message_bar=self.message_bar,
-                    exception=exc)
-            return
-        project_list_url = hostname + '/api/project_list/'
-        try:
-            resp = session.get(project_list_url, timeout=10)
+            resp = self.session.get(project_list_url, timeout=10)
         except Exception:
             msg = "Unable to retrieve the list of projects.\n%s" % (
                 traceback.format_exc())
