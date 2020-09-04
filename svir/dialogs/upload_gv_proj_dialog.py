@@ -53,10 +53,13 @@ class UploadGvProjDialog(QDialog, FORM_CLASS):
     """
     Workflow:
     1. check that all geometries are valid for all layers
+    (NOTE: some layers might contain no geometries, but they could be used as
+    data sources, joined to layers containing geometries)
     2. check that a valid CRS has been set for the project
-    3. let the user pick a license
-    4. consolidate layers into .gpkg files and project into a .qgs
-    5. use "api/project/upload" to upload the consolidated project
+    3. let the user pick a type for the project
+    4. let the user pick a license
+    5. consolidate layers into .gpkg files and project into a .qgs
+    6. use "api/project/upload" to upload the consolidated project
     """
     def __init__(self, message_bar, parent=None):
         self.message_bar = message_bar
@@ -185,14 +188,14 @@ class UploadGvProjDialog(QDialog, FORM_CLASS):
             parameters['INPUT_LAYER'] = layer.id()
             ok, results = execute(
                 alg, parameters, context=context, feedback=feedback)
-            invalid_layer = QgsProcessingUtils.mapLayerFromString(
+            invalid_geoms_layer = QgsProcessingUtils.mapLayerFromString(
                 results['INVALID_OUTPUT'], context)
-            if invalid_layer.featureCount():
+            if invalid_geoms_layer.featureCount():
                 feedback.reportError(
                     "Layer '%s' contains features with invalid geometries."
                     " A layer containing these invalid geometries was added"
                     " to the project." % layer.name())
-                QgsProject.instance().addMapLayer(invalid_layer)
+                QgsProject.instance().addMapLayer(invalid_geoms_layer)
 
     def check_crs(self):
         layers = list(QgsProject.instance().mapLayers().values())
@@ -200,22 +203,13 @@ class UploadGvProjDialog(QDialog, FORM_CLASS):
             if not layer.crs().isValid():
                 msg = ("Layer '%s' does not have a valid coordinate"
                        " reference system" % layer.name())
-                log_msg(msg, level='C', message_bar=self.message_bar)
+                log_msg(msg, level='W', message_bar=self.message_bar)
         if not QgsProject.instance().crs().isValid():
             msg = ("The current project does not have a valid coordinate"
                    " reference system")
             log_msg(msg, level='C', message_bar=self.message_bar)
 
     def accept(self):
-        proj_name = self.proj_name_le.text()
-        if proj_name in self.proj_names:
-            msg = ("A project named %s already exists" % proj_name)
-            log_msg(msg, level='C', message_bar=self.message_bar)
-            return
-        super().accept()
-        self.consolidate()
-
-    def consolidate(self):
         project_name = self.proj_name_le.text()
         if project_name.endswith('.qgs'):
             project_name = project_name[:-4]
@@ -223,7 +217,14 @@ class UploadGvProjDialog(QDialog, FORM_CLASS):
             msg = tr("Please specify the project name")
             log_msg(msg, level='C', message_bar=self.message_bar)
             return
+        if project_name in self.proj_names:
+            msg = ("A project named %s already exists" % project_name)
+            log_msg(msg, level='C', message_bar=self.message_bar)
+            return
+        super().accept()
+        self.consolidate(project_name)
 
+    def consolidate(self, project_name):
         outputDir = tempfile.mkdtemp()
         outputDir = os.path.join(outputDir,
                                  get_valid_filename(project_name))
@@ -283,7 +284,7 @@ class UploadGvProjDialog(QDialog, FORM_CLASS):
         self.upload_to_geoviewer(zipped_project)
 
     def get_geoviewer_project_list(self):
-        r = self.session.get(self.hostname + '/api/project_list/')
+        r = self.session.get(self.hostname + '/api/project_list/', timeout=10)
         if r.ok:
             content = json.loads(r.text)
             self.proj_names = [proj['fields']['name'] for proj in content]
@@ -294,12 +295,15 @@ class UploadGvProjDialog(QDialog, FORM_CLASS):
             log_msg(r.reason, level='C', message_bar=self.message_bar)
 
     def upload_to_geoviewer(self, zipped_project):
+        project_license = self.license_cbx.currentText()
         # FIXME: probably the license should be added to the project properties
         # and it should be read GeoViewer-side through an api
-        # FIXME: same as above for the project kind
+        project_kind = self.project_kind_cbx.currentData()
         files = {'file': open(zipped_project, 'rb')}
+        data = {'license': project_license, 'kind': project_kind}
         r = self.session.post(
-            self.hostname + '/api/project/upload', files=files)
+            self.hostname + '/api/project/upload', files=files, data=data,
+            timeout=20)
         if r.ok:
             msg = ("The project was successfully uploaded to the"
                    " OpenQuake GeoViewer")
