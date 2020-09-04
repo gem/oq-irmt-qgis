@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>400</width>
-    <height>234</height>
+    <height>236</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -35,7 +35,7 @@
     <widget class="QComboBox" name="project_kind_cbx"/>
    </item>
    <item>
-    <widget class="QCheckBox" name="auto_create_map">
+    <widget class="QCheckBox" name="auto_create_map_ckb">
      <property name="text">
       <string>Automatically create a map associated to the project</string>
      </property>

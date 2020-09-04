@@ -299,8 +299,10 @@ class UploadGvProjDialog(QDialog, FORM_CLASS):
         # FIXME: probably the license should be added to the project properties
         # and it should be read GeoViewer-side through an api
         project_kind = self.project_kind_cbx.currentData()
+        auto_create_map = self.auto_create_map_ckb.isChecked()
         files = {'file': open(zipped_project, 'rb')}
-        data = {'license': project_license, 'kind': project_kind}
+        data = {'license': project_license, 'kind': project_kind,
+                'auto_create_map': auto_create_map}
         r = self.session.post(
             self.hostname + '/api/project/upload', files=files, data=data,
             timeout=20)
