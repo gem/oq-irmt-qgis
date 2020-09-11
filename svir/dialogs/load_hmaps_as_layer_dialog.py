@@ -142,7 +142,7 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
         self.default_field_name = '%s-%s' % (imt, poe)
         investigation_time = self.get_investigation_time()
         if self.load_multicol_ckb.isChecked():
-            layer_name = "hazard_map_%s_%sy" % (
+            layer_name = "hmap_%s_%sy" % (
                 rlz_or_stat, investigation_time)
         elif self.show_return_period_chk.isChecked():
             return_period = int(float(investigation_time) / float(poe))
@@ -200,8 +200,16 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
                         'Creating layer for "%s"...' % rlz_or_stat,
                         self.iface.messageBar()):
                     self.build_layer(rlz_or_stat)
-                    self.style_maps(self.layer, self.default_field_name,
-                                    self.iface, self.output_type)
+                    style_manager = self.layer.styleManager()
+                    for field_name in [field.name()
+                                       for field in self.layer.fields()]:
+                        style_manager.addStyleFromLayer(field_name)
+                        style_manager.setCurrentStyle(field_name)
+                        self.style_maps(self.layer, field_name,
+                                        self.iface, self.output_type,
+                                        repaint=False)
+                    style_manager.setCurrentStyle(self.default_field_name)
+                    self.repaint(self.layer, self.iface)
             else:
                 for imt in self.imts:
                     if (not self.load_all_imts_chk.isChecked()

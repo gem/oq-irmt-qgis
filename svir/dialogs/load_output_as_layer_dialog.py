@@ -544,7 +544,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
     @staticmethod
     def style_maps(layer, style_by, iface, output_type='avg_damages-rlzs',
                    perils=None, add_null_class=False,
-                   render_higher_on_top=False):
+                   render_higher_on_top=False, repaint=True):
         symbol = QgsSymbol.defaultSymbol(layer.geometryType())
         # see properties at:
         # https://qgis.org/api/qgsmarkersymbollayerv2_8cpp_source.html#l01073
@@ -700,15 +700,19 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 renderer.setLegendSymbolItem(key, sym)
         layer.setRenderer(renderer)
         layer.setOpacity(0.7)
-        layer.triggerRepaint()
-        iface.setActiveLayer(layer)
-        iface.zoomToActiveLayer()
         log_msg('Layer %s was created successfully' % layer.name(), level='S',
                 message_bar=iface.messageBar())
-        # NOTE QGIS3: probably not needed
-        # iface.layerTreeView().refreshLayerSymbology(layer.id())
+        if repaint:
+            self.repaint(layer, iface)
 
-        iface.mapCanvas().refresh()
+    @staticmethod
+    def repaint(layer, iface):
+            layer.triggerRepaint()
+            iface.setActiveLayer(layer)
+            iface.zoomToActiveLayer()
+            # NOTE QGIS3: probably not needed
+            # iface.layerTreeView().refreshLayerSymbology(layer.id())
+            iface.mapCanvas().refresh()
 
     def style_categorized(self, layer=None, style_by=None):
         if layer is None:
