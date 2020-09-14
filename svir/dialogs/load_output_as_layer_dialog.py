@@ -148,10 +148,15 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.file_size_lbl = QLabel(self.file_size_msg % '')
         self.vlayout.addWidget(self.file_size_lbl)
 
-    def create_load_multicol_ckb(self):
-        self.load_multicol_ckb = QCheckBox(
+    def create_single_layer_ckb(self):
+        self.load_single_layer_ckb = QCheckBox(
+            'Load one layer containing all hazard maps')
+        self.vlayout.addWidget(self.load_single_layer_ckb)
+
+    def create_load_one_layer_per_stat_ckb(self):
+        self.load_one_layer_per_stat_ckb = QCheckBox(
             'Load one layer per realization or statistic')
-        self.vlayout.addWidget(self.load_multicol_ckb)
+        self.vlayout.addWidget(self.load_one_layer_per_stat_ckb)
 
     def create_min_mag_dsb(self):
         self.min_mag_lbl = QLabel()
@@ -292,7 +297,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
 
     def create_show_return_period_ckb(self):
         self.show_return_period_chk = QCheckBox(
-            "Show the return time in layer names")
+            "Show the return period in layer names")
         self.show_return_period_chk.setChecked(False)
         self.vlayout.addWidget(self.show_return_period_chk)
 
@@ -703,10 +708,6 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         log_msg('Layer %s was created successfully' % layer.name(), level='S',
                 message_bar=iface.messageBar())
         if repaint:
-            self.repaint(layer, iface)
-
-    @staticmethod
-    def repaint(layer, iface):
             layer.triggerRepaint()
             iface.setActiveLayer(layer)
             iface.zoomToActiveLayer()
