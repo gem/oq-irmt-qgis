@@ -204,8 +204,8 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
                     # add a feature
                     feat = QgsFeature(self.layer.fields())
                     for field_name in field_types:
-                        # NOTE: example field_name == 'mean-PGA-0.01'
-                        rlz_or_stat, imt, poe = field_name.split('-')
+                        # NOTE: example field_name == 'quantile-0.15-PGA-0.01'
+                        rlz_or_stat, imt, poe = field_name.rsplit('-', 2)
                         value = row[rlz_or_stat][imt][poe].item()
                         if isinstance(value, bytes):
                             value = value.decode('utf8')
