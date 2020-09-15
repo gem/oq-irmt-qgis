@@ -148,10 +148,15 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.file_size_lbl = QLabel(self.file_size_msg % '')
         self.vlayout.addWidget(self.file_size_lbl)
 
-    def create_load_multicol_ckb(self):
-        self.load_multicol_ckb = QCheckBox(
+    def create_single_layer_ckb(self):
+        self.load_single_layer_ckb = QCheckBox(
+            'Load one layer containing all hazard maps')
+        self.vlayout.addWidget(self.load_single_layer_ckb)
+
+    def create_load_one_layer_per_stat_ckb(self):
+        self.load_one_layer_per_stat_ckb = QCheckBox(
             'Load one layer per realization or statistic')
-        self.vlayout.addWidget(self.load_multicol_ckb)
+        self.vlayout.addWidget(self.load_one_layer_per_stat_ckb)
 
     def create_min_mag_dsb(self):
         self.min_mag_lbl = QLabel()
@@ -292,7 +297,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
 
     def create_show_return_period_ckb(self):
         self.show_return_period_chk = QCheckBox(
-            "Show the return time in layer names")
+            "Show the return period in layer names")
         self.show_return_period_chk.setChecked(False)
         self.vlayout.addWidget(self.show_return_period_chk)
 
@@ -544,7 +549,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
     @staticmethod
     def style_maps(layer, style_by, iface, output_type='avg_damages-rlzs',
                    perils=None, add_null_class=False,
-                   render_higher_on_top=False):
+                   render_higher_on_top=False, repaint=True):
         symbol = QgsSymbol.defaultSymbol(layer.geometryType())
         # see properties at:
         # https://qgis.org/api/qgsmarkersymbollayerv2_8cpp_source.html#l01073
@@ -700,15 +705,15 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 renderer.setLegendSymbolItem(key, sym)
         layer.setRenderer(renderer)
         layer.setOpacity(0.7)
-        layer.triggerRepaint()
-        iface.setActiveLayer(layer)
-        iface.zoomToActiveLayer()
         log_msg('Layer %s was created successfully' % layer.name(), level='S',
                 message_bar=iface.messageBar())
-        # NOTE QGIS3: probably not needed
-        # iface.layerTreeView().refreshLayerSymbology(layer.id())
-
-        iface.mapCanvas().refresh()
+        if repaint:
+            layer.triggerRepaint()
+            iface.setActiveLayer(layer)
+            iface.zoomToActiveLayer()
+            # NOTE QGIS3: probably not needed
+            # iface.layerTreeView().refreshLayerSymbology(layer.id())
+            iface.mapCanvas().refresh()
 
     def style_categorized(self, layer=None, style_by=None):
         if layer is None:

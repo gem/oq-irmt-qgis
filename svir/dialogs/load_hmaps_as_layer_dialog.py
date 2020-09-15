@@ -46,14 +46,17 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
         self.setWindowTitle(
             'Load hazard maps as layer')
         self.create_num_sites_indicator()
-        self.create_load_multicol_ckb()
+        self.create_single_layer_ckb()
+        self.create_load_one_layer_per_stat_ckb()
         self.create_rlz_or_stat_selector(all_ckb=True)
         self.create_imt_selector(all_ckb=True)
         self.create_poe_selector(all_ckb=True)
         self.create_show_return_period_ckb()
 
-        self.load_multicol_ckb.stateChanged[int].connect(
-            self.on_load_multicol_ckb_stateChanged)
+        self.load_single_layer_ckb.stateChanged[int].connect(
+            self.on_load_single_layer_ckb_stateChanged)
+        self.load_one_layer_per_stat_ckb.stateChanged[int].connect(
+            self.on_load_one_layer_per_stat_ckb_stateChanged)
 
         log_msg('Extracting hazard maps.'
                 ' Watch progress in QGIS task bar',
@@ -64,7 +67,18 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
             self.on_extract_error)
         QgsApplication.taskManager().addTask(self.extract_npz_task)
 
-    def on_load_multicol_ckb_stateChanged(self, state):
+    def on_load_single_layer_ckb_stateChanged(self, state):
+        self.load_one_layer_per_stat_ckb.setDisabled(state)
+        self.load_all_rlzs_or_stats_chk.setDisabled(state)
+        if state == Qt.Checked:
+            self.load_all_rlzs_or_stats_chk.setChecked(True)
+        self.cascade_selections(state)
+
+    def on_load_one_layer_per_stat_ckb_stateChanged(self, state):
+        self.load_single_layer_ckb.setDisabled(state)
+        self.cascade_selections(state)
+
+    def cascade_selections(self, state):
         if state == Qt.Checked:
             self.show_return_period_chk.setChecked(False)
             self.show_return_period_chk.setEnabled(False)
@@ -133,16 +147,22 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
         self.set_ok_button()
 
     def build_layer_name(self, rlz_or_stat=None, **kwargs):
-        if self.load_multicol_ckb.isChecked():
+        investigation_time = self.get_investigation_time()
+        if self.load_single_layer_ckb.isChecked():
+            rlz_or_stat = self.rlz_or_stat_cbx.currentText()
+            imt = self.imt_cbx.currentText()
+            poe = self.poe_cbx.currentText()
+            self.default_field_name = '%s-%s-%s' % (rlz_or_stat, imt, poe)
+            return "hmap_%sy" % investigation_time
+        elif self.load_one_layer_per_stat_ckb.isChecked():
             imt = self.imt_cbx.currentText()
             poe = self.poe_cbx.currentText()
         else:
             imt = kwargs['imt']
             poe = kwargs['poe']
         self.default_field_name = '%s-%s' % (imt, poe)
-        investigation_time = self.get_investigation_time()
-        if self.load_multicol_ckb.isChecked():
-            layer_name = "hazard_map_%s_%sy" % (
+        if self.load_one_layer_per_stat_ckb.isChecked():
+            layer_name = "hmap_%s_%sy" % (
                 rlz_or_stat, investigation_time)
         elif self.show_return_period_chk.isChecked():
             return_period = int(float(investigation_time) / float(poe))
@@ -155,7 +175,13 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
 
     def get_field_types(self, **kwargs):
         field_types = {}
-        if self.load_multicol_ckb.isChecked():
+        if self.load_single_layer_ckb.isChecked():
+            for rlz_or_stat in self.rlzs_or_stats:
+                for imt in self.imts:
+                    for poe in self.imts[imt]:
+                        field_name = "%s-%s-%s" % (rlz_or_stat, imt, poe)
+                        field_types[field_name] = 'F'
+        elif self.load_one_layer_per_stat_ckb.isChecked():
             for imt in self.imts:
                 for poe in self.imts[imt]:
                     field_name = "%s-%s" % (imt, poe)
@@ -172,53 +198,102 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
             lons = self.npz_file['all']['lon']
             lats = self.npz_file['all']['lat']
             feats = []
-            for row_idx, row in enumerate(self.dataset):
-                # add a feature
-                feat = QgsFeature(self.layer.fields())
-                for field_name in field_types:
-                    # NOTE: example field_name == 'PGA-0.01'
-                    imt, poe = field_name.split('-')
-                    value = row[imt][poe].item()
-                    if isinstance(value, bytes):
-                        value = value.decode('utf8')
-                    feat.setAttribute(field_name, value)
-                feat.setGeometry(QgsGeometry.fromPointXY(
-                    QgsPointXY(lons[row_idx], lats[row_idx])))
-                feats.append(feat)
+            if self.load_single_layer_ckb.isChecked():
+                all_data = self.npz_file['all']
+                for row_idx, row in enumerate(all_data):
+                    # add a feature
+                    feat = QgsFeature(self.layer.fields())
+                    for field_name in field_types:
+                        # NOTE: example field_name == 'mean-PGA-0.01'
+                        rlz_or_stat, imt, poe = field_name.split('-')
+                        value = row[rlz_or_stat][imt][poe].item()
+                        if isinstance(value, bytes):
+                            value = value.decode('utf8')
+                        feat.setAttribute(field_name, value)
+                        feat.setGeometry(QgsGeometry.fromPointXY(
+                            QgsPointXY(lons[row_idx], lats[row_idx])))
+                        feats.append(feat)
+            else:
+                for row_idx, row in enumerate(self.dataset):
+                    # add a feature
+                    feat = QgsFeature(self.layer.fields())
+                    for field_name in field_types:
+                        # NOTE: example field_name == 'PGA-0.01'
+                        imt, poe = field_name.split('-')
+                        value = row[imt][poe].item()
+                        if isinstance(value, bytes):
+                            value = value.decode('utf8')
+                        feat.setAttribute(field_name, value)
+                    feat.setGeometry(QgsGeometry.fromPointXY(
+                        QgsPointXY(lons[row_idx], lats[row_idx])))
+                    feats.append(feat)
             added_ok = self.layer.addFeatures(feats)
             if not added_ok:
                 msg = 'There was a problem adding features to the layer.'
                 log_msg(msg, level='C', message_bar=self.iface.messageBar())
 
     def load_from_npz(self):
-        for rlz_or_stat in self.rlzs_or_stats:
-            if (not self.load_all_rlzs_or_stats_chk.isChecked()
-                    and rlz_or_stat != self.rlz_or_stat_cbx.currentText()):
-                continue
-            if self.load_multicol_ckb.isChecked():
-                with WaitCursorManager(
-                        'Creating layer for "%s"...' % rlz_or_stat,
-                        self.iface.messageBar()):
-                    self.build_layer(rlz_or_stat)
-                    self.style_maps(self.layer, self.default_field_name,
-                                    self.iface, self.output_type)
-            else:
-                for imt in self.imts:
-                    if (not self.load_all_imts_chk.isChecked()
-                            and imt != self.imt_cbx.currentText()):
-                        continue
-                    for poe in self.imts[imt]:
-                        if (not self.load_all_poes_chk.isChecked()
-                                and poe != self.poe_cbx.currentText()):
+        if self.load_single_layer_ckb.isChecked():
+            with WaitCursorManager(
+                    'Creating layer...', self.iface.messageBar()):
+                self.build_layer()
+                style_manager = self.layer.styleManager()
+                for field_name in [field.name()
+                                   for field in self.layer.fields()]:
+                    style_manager.addStyleFromLayer(field_name)
+                    style_manager.setCurrentStyle(field_name)
+                    self.style_maps(self.layer, field_name,
+                                    self.iface, self.output_type,
+                                    repaint=False)
+                style_manager.setCurrentStyle(self.default_field_name)
+                self.layer.triggerRepaint()
+                self.iface.setActiveLayer(self.layer)
+                self.iface.zoomToActiveLayer()
+                # NOTE QGIS3: probably not needed
+                # iface.layerTreeView().refreshLayerSymbology(layer.id())
+                self.iface.mapCanvas().refresh()
+        else:
+            for rlz_or_stat in self.rlzs_or_stats:
+                if (not self.load_all_rlzs_or_stats_chk.isChecked()
+                        and rlz_or_stat != self.rlz_or_stat_cbx.currentText()):
+                    continue
+                elif self.load_one_layer_per_stat_ckb.isChecked():
+                    with WaitCursorManager(
+                            'Creating layer for "%s"...' % rlz_or_stat,
+                            self.iface.messageBar()):
+                        self.build_layer(rlz_or_stat)
+                        style_manager = self.layer.styleManager()
+                        for field_name in [field.name()
+                                           for field in self.layer.fields()]:
+                            style_manager.addStyleFromLayer(field_name)
+                            style_manager.setCurrentStyle(field_name)
+                            self.style_maps(self.layer, field_name,
+                                            self.iface, self.output_type,
+                                            repaint=False)
+                        style_manager.setCurrentStyle(self.default_field_name)
+                        self.layer.triggerRepaint()
+                        self.iface.setActiveLayer(self.layer)
+                        self.iface.zoomToActiveLayer()
+                        # NOTE QGIS3: probably not needed
+                        # iface.layerTreeView().refreshLayerSymbology(layer.id())
+                        self.iface.mapCanvas().refresh()
+                else:
+                    for imt in self.imts:
+                        if (not self.load_all_imts_chk.isChecked()
+                                and imt != self.imt_cbx.currentText()):
                             continue
-                        with WaitCursorManager(
-                                'Creating layer for "%s, %s, %s"...' % (
-                                    rlz_or_stat, imt, poe),
-                                self.iface.messageBar()):
-                            self.build_layer(rlz_or_stat, imt=imt, poe=poe)
-                            self.style_maps(self.layer,
-                                            self.default_field_name,
-                                            self.iface,
-                                            self.output_type)
+                        for poe in self.imts[imt]:
+                            if (not self.load_all_poes_chk.isChecked()
+                                    and poe != self.poe_cbx.currentText()):
+                                continue
+                            with WaitCursorManager(
+                                    'Creating layer for "%s, %s, %s"...' % (
+                                        rlz_or_stat, imt, poe),
+                                    self.iface.messageBar()):
+                                self.build_layer(rlz_or_stat, imt=imt, poe=poe)
+                                self.style_maps(self.layer,
+                                                self.default_field_name,
+                                                self.iface,
+                                                self.output_type)
         if self.npz_file is not None:
             self.npz_file.close()
