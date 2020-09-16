@@ -203,6 +203,8 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
                 for row_idx, row in enumerate(all_data):
                     # add a feature
                     feat = QgsFeature(self.layer.fields())
+                    feat.setGeometry(QgsGeometry.fromPointXY(
+                        QgsPointXY(lons[row_idx], lats[row_idx])))
                     for field_name in field_types:
                         # NOTE: example field_name == 'quantile-0.15-PGA-0.01'
                         rlz_or_stat, imt, poe = field_name.rsplit('-', 2)
@@ -210,9 +212,7 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
                         if isinstance(value, bytes):
                             value = value.decode('utf8')
                         feat.setAttribute(field_name, value)
-                        feat.setGeometry(QgsGeometry.fromPointXY(
-                            QgsPointXY(lons[row_idx], lats[row_idx])))
-                        feats.append(feat)
+                    feats.append(feat)
             else:
                 for row_idx, row in enumerate(self.dataset):
                     # add a feature
