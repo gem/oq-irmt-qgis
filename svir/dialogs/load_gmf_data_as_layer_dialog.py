@@ -69,9 +69,12 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
             self.on_extract_error)
         QgsApplication.taskManager().addTask(self.extract_npz_task)
 
+    def get_closest_element(self, element, elements):
+        return min(elements, key=lambda x: abs(x - element))
+
     def get_eid(self, events_npz):
         self.events_npz = events_npz
-        num_events = len(events_npz['array'])
+        events = events_npz['array']
         if 'GEM_QGIS_TEST' in os.environ:
             self.eid, ok = 0, True
         elif 'scenario' in self.calculation_mode:
@@ -86,12 +89,42 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
             self.eid, ok = QInputDialog.getInt(
                 self.drive_engine_dlg,
                 "Select an event ID", "Ranges:%s" % ranges_str,
-                0, 0, num_events - 1)
+                0, 0, events[-1]['id'])
+            if not ok:
+                self.reject()
+                return
+            while self.eid not in events['id']:
+                self.eid = self.get_closest_element(self.eid, events['id'])
+                log_msg('The closest relevant event id is %s' % self.eid,
+                        level='W', message_bar=self.iface.messageBar())
+                self.eid, ok = QInputDialog.getInt(
+                    self.drive_engine_dlg,
+                    "Select an event ID", "Ranges:%s" % ranges_str,
+                    self.eid, events[0]['id'], events[-1]['id'])
+                if not ok:
+                    self.reject()
+                    return
         else:
             self.eid, ok = QInputDialog.getInt(
                 self.drive_engine_dlg,
-                "Select an event ID", "Range (0 - %s)" % (num_events - 1),
-                0, 0, num_events - 1)
+                "Select an event ID", "Range (%s - %s)" % (
+                    events[0]['id'], events[-1]['id']),
+                events[0]['id'], events[0]['id'], events[-1]['id'])
+            if not ok:
+                self.reject()
+                return
+            while self.eid not in events['id']:
+                self.eid = self.get_closest_element(self.eid, events['id'])
+                log_msg('The closest relevant event id is %s' % self.eid,
+                        level='W', message_bar=self.iface.messageBar())
+                self.eid, ok = QInputDialog.getInt(
+                    self.drive_engine_dlg,
+                    "Select an event ID", "Range (%s - %s)" % (
+                        events[0]['id'], events[-1]['id']),
+                    self.eid, events[0]['id'], events[-1]['id'])
+                if not ok:
+                    self.reject()
+                    return
         if not ok:
             self.reject()
             return
