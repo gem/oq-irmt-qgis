@@ -188,12 +188,12 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
         rlz_id = self.events_npz['array'][
             np.where(self.events_npz['array']['id'] == self.eid)]['rlz_id']
         self.rlz_or_stat_cbx.setCurrentIndex(
-            self.rlz_or_stat_cbx.itemData(rlz_id))
+            self.rlz_or_stat_cbx.itemData(int(rlz_id)))
 
     def on_rlz_or_stat_changed(self):
         gmpe = self.rlz_or_stat_cbx.currentText()
         self.rlz_or_stat_lbl.setText("GMPE: %s" % gmpe)
-        self.gmf_data = self.npz_file[self.npz_file.keys()[0]]
+        self.gmf_data = self.npz_file[list(self.npz_file)[0]]
         if not len(self.gmf_data):
             log_msg('No data corresponds to the chosen event and GMPE',
                     level='W', message_bar=self.iface.messageBar())
@@ -201,9 +201,9 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
                 self.set_ok_button()
             return
         try:
-            imts = list(self.oqparam['hazard_imtls'].keys())
+            imts = list(self.oqparam['hazard_imtls'])
         except KeyError:
-            imts = list(self.oqparam['risk_imtls'].keys())
+            imts = list(self.oqparam['risk_imtls'])
         self.imt_cbx.clear()
         self.imt_cbx.setEnabled(True)
         self.imt_cbx.addItems(imts)
@@ -253,7 +253,7 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
             feats = []
             fields = self.layer.fields()
             layer_field_names = [field.name() for field in fields]
-            dataset_field_names = list(self.get_field_types().keys())
+            dataset_field_names = list(self.get_field_types())
             d2l_field_names = dict(
                 list(zip(dataset_field_names[2:], layer_field_names)))
             rlz_name = 'rlz-%03d' % rlz_or_stat
