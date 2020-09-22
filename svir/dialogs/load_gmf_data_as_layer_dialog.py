@@ -76,7 +76,8 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
         self.events_npz = events_npz
         events = events_npz['array']
         if 'GEM_QGIS_TEST' in os.environ:
-            self.eid, ok = 0, True
+            self.eid = self.get_closest_element(self.eid, events['id'])
+            ok = True
         elif 'scenario' in self.calculation_mode:
             range_width = self.oqparam['number_of_ground_motion_fields']
             ranges = {}
