@@ -306,5 +306,3 @@ class LoadAvgDamagesRlzsAsLayerDialog(LoadOutputAsLayerDialog):
                             rlz_or_stat, loss_type), self.iface.messageBar()):
                         self.build_layer(rlz_or_stat, loss_type=loss_type)
                         self.style_curves()
-        if self.npz_file is not None:
-            self.npz_file.close()

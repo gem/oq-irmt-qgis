@@ -25,6 +25,7 @@
 import io
 import numpy
 import tempfile
+import json
 from time import sleep
 from qgis.core import QgsTask
 from qgis.PyQt.QtCore import QThread, pyqtSignal, pyqtSlot
@@ -90,7 +91,7 @@ class ExtractNpzTask(QgsTask):
         self.extract_thread = ExtractThread(
             session, extract_url, extract_params, self.dest_folder)
         self.extract_thread.progress_sig[float].connect(self.set_progress)
-        self.extract_thread.extracted_npz_sig[NpzFile].connect(
+        self.extract_thread.extracted_npz_sig[dict].connect(
             self.set_extracted_npz)
         self.extract_thread.exception_sig[Exception].connect(
             self.on_exception)
@@ -124,7 +125,7 @@ class ExtractNpzTask(QgsTask):
 class ExtractThread(QThread):
 
     progress_sig = pyqtSignal(float)
-    extracted_npz_sig = pyqtSignal(NpzFile)
+    extracted_npz_sig = pyqtSignal(dict)
     exception_sig = pyqtSignal(Exception)
 
     def __init__(self, session, url, params, dest_folder):
@@ -186,7 +187,14 @@ class ExtractThread(QThread):
                     err_msg, resp.reason, resp.content)))
             return
 
-        self.extracted_npz_sig.emit(extracted_npz)
+        dic = {}
+        for k, v in extracted_npz.items():
+            if k == 'json':
+                dic.update(json.loads(bytes(v)))
+            else:
+                dic[k] = v
+
+        self.extracted_npz_sig.emit(dic)
 
         # FIXME: use stream=True
         # os.remove(filepath)

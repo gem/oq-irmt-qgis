@@ -213,8 +213,6 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
             self.build_layer(rlz_or_stat=rlz, gsim=gsim)
             self.style_maps(self.layer, self.default_field_name,
                             self.iface, self.output_type)
-        if self.npz_file is not None:
-            self.npz_file.close()
 
     def build_layer_name(self, gsim=None, **kwargs):
         self.imt = self.imt_cbx.currentText()
