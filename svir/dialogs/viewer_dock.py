@@ -795,9 +795,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.filter_avg_damages_rlzs_aggr()
 
     def _build_tags(self):
-        tag_names = sorted([
-            tag_name.decode('utf8')
-            for tag_name in self.exposure_metadata['tagnames']])
+        tag_names = sorted(self.exposure_metadata['tagnames'])
         self.tags = {}
         for tag_idx, tag_name in enumerate(tag_names):
             tag_values = sorted([
