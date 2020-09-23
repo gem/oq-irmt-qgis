@@ -59,10 +59,8 @@ class LoadAssetRiskAsLayerDialog(LoadOutputAsLayerDialog):
 
     def finalize_init(self, extracted_npz):
         self.exposure_metadata = extracted_npz
-        self.tag_names = sorted(
-            [tag_name.decode('utf8')
-             for tag_name in self.exposure_metadata['tagnames']])
-        self.exposure_categories = sorted(self.exposure_metadata['array'])
+        self.tag_names = sorted(self.exposure_metadata['tagnames'])
+        self.exposure_categories = sorted(self.exposure_metadata['names'])
         self.risk_categories = sorted(self.exposure_metadata['multi_risk'])
         self.perils = set(
             [cat.rsplit('-', 1)[-1] for cat in self.risk_categories])
@@ -105,7 +103,7 @@ class LoadAssetRiskAsLayerDialog(LoadOutputAsLayerDialog):
         self.taxonomies_lbl = QLabel("Taxonomies")
         self.taxonomies_multisel = MultiSelectComboBox(self)
         self.taxonomies_multisel.add_unselected_items(
-            sorted([taxonomy.decode('utf8')
+            sorted([taxonomy
                     for taxonomy in self.exposure_metadata['taxonomy']
                     if taxonomy != '?']))
         self.taxonomies_gbx_v_layout.addWidget(self.taxonomies_lbl)
@@ -170,7 +168,7 @@ class LoadAssetRiskAsLayerDialog(LoadOutputAsLayerDialog):
 
     def on_tag_changed(self, tag_name):
         tag_values = sorted([
-            value.decode('utf8') for value in self.exposure_metadata[tag_name]
+            value for value in self.exposure_metadata[tag_name]
             if value != '?'])
         self.tag_values_multisel.clear()
         self.tag_values_multisel.add_unselected_items(tag_values)

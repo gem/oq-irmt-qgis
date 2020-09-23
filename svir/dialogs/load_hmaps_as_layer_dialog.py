@@ -295,5 +295,3 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
                                                 self.default_field_name,
                                                 self.iface,
                                                 self.output_type)
-        if self.npz_file is not None:
-            self.npz_file.close()

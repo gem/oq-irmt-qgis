@@ -969,7 +969,4 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         except Exception:
             # it's connected only for some loaders
             pass
-        if (hasattr(self, 'npz_file') and self.npz_file is not None
-                and self.output_type in OQ_TO_LAYER_TYPES):
-            self.npz_file.close()
         super().reject()

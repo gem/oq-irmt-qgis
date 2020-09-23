@@ -69,11 +69,16 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
             self.on_extract_error)
         QgsApplication.taskManager().addTask(self.extract_npz_task)
 
+    def get_closest_element(self, element, elements):
+        return elements[np.abs(elements - element).argmin()]
+
     def get_eid(self, events_npz):
         self.events_npz = events_npz
-        num_events = len(events_npz['array'])
+        events = events_npz['array']
+        self.eid = -1  # assuming events start from 0
         if 'GEM_QGIS_TEST' in os.environ:
-            self.eid, ok = 0, True
+            self.eid = self.get_closest_element(self.eid, events['id'])
+            ok = True
         elif 'scenario' in self.calculation_mode:
             range_width = self.oqparam['number_of_ground_motion_fields']
             ranges = {}
@@ -83,15 +88,29 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
             ranges_str = ''
             for gsim in ranges:
                 ranges_str += '\n%s: %s' % (gsim, ranges[gsim])
-            self.eid, ok = QInputDialog.getInt(
-                self.drive_engine_dlg,
-                "Select an event ID", "Ranges:%s" % ranges_str,
-                0, 0, num_events - 1)
+            input_msg = "Ranges:%s" % ranges_str
         else:
-            self.eid, ok = QInputDialog.getInt(
-                self.drive_engine_dlg,
-                "Select an event ID", "Range (0 - %s)" % (num_events - 1),
-                0, 0, num_events - 1)
+            input_msg = "Range (%s - %s)" % (events[0]['id'], events[-1]['id'])
+        if 'GEM_QGIS_TEST' not in os.environ:
+            while self.eid not in events['id']:
+                if self.eid == -1:
+                    is_first_iteration = True
+                self.eid = self.get_closest_element(self.eid, events['id'])
+                if is_first_iteration:
+                    msg = 'The first relevant event id is %s' % self.eid
+                    level = 'I'
+                else:
+                    msg = 'The closest relevant event id is %s' % self.eid
+                    level = 'W'
+                log_msg(msg, level=level, message_bar=self.iface.messageBar())
+                self.eid, ok = QInputDialog.getInt(
+                    self.drive_engine_dlg,
+                    'Select an event ID',
+                    input_msg,
+                    self.eid, events[0]['id'], events[-1]['id'])
+                if not ok:
+                    self.reject()
+                    return
         if not ok:
             self.reject()
             return
@@ -155,12 +174,12 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
         rlz_id = self.events_npz['array'][
             np.where(self.events_npz['array']['id'] == self.eid)]['rlz_id']
         self.rlz_or_stat_cbx.setCurrentIndex(
-            self.rlz_or_stat_cbx.itemData(rlz_id))
+            self.rlz_or_stat_cbx.itemData(int(rlz_id)))
 
     def on_rlz_or_stat_changed(self):
         gmpe = self.rlz_or_stat_cbx.currentText()
         self.rlz_or_stat_lbl.setText("GMPE: %s" % gmpe)
-        self.gmf_data = self.npz_file[self.npz_file.keys()[0]]
+        self.gmf_data = self.npz_file[list(self.npz_file)[0]]
         if not len(self.gmf_data):
             log_msg('No data corresponds to the chosen event and GMPE',
                     level='W', message_bar=self.iface.messageBar())
@@ -168,9 +187,9 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
                 self.set_ok_button()
             return
         try:
-            imts = list(self.oqparam['hazard_imtls'].keys())
+            imts = list(self.oqparam['hazard_imtls'])
         except KeyError:
-            imts = list(self.oqparam['risk_imtls'].keys())
+            imts = list(self.oqparam['risk_imtls'])
         self.imt_cbx.clear()
         self.imt_cbx.setEnabled(True)
         self.imt_cbx.addItems(imts)
@@ -194,8 +213,6 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
             self.build_layer(rlz_or_stat=rlz, gsim=gsim)
             self.style_maps(self.layer, self.default_field_name,
                             self.iface, self.output_type)
-        if self.npz_file is not None:
-            self.npz_file.close()
 
     def build_layer_name(self, gsim=None, **kwargs):
         self.imt = self.imt_cbx.currentText()
@@ -220,7 +237,7 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
             feats = []
             fields = self.layer.fields()
             layer_field_names = [field.name() for field in fields]
-            dataset_field_names = list(self.get_field_types().keys())
+            dataset_field_names = list(self.get_field_types())
             d2l_field_names = dict(
                 list(zip(dataset_field_names[2:], layer_field_names)))
             rlz_name = 'rlz-%03d' % rlz_or_stat
