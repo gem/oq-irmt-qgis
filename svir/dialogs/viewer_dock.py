@@ -799,8 +799,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.tags = {}
         for tag_idx, tag_name in enumerate(tag_names):
             tag_values = sorted([
-                value.decode('utf8')
-                for value in self.exposure_metadata[tag_name]
+                value for value in self.exposure_metadata[tag_name]
                 if value != b'?'])
             self.tags[tag_name] = {
                 'selected': True if tag_idx == 0 else False,
