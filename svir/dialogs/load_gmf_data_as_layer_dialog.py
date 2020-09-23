@@ -70,7 +70,7 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
         QgsApplication.taskManager().addTask(self.extract_npz_task)
 
     def get_closest_element(self, element, elements):
-        return min(elements, key=lambda x: abs(x - element))
+        return elements[np.abs(elements - element).argmin()]
 
     def get_eid(self, events_npz):
         self.events_npz = events_npz
