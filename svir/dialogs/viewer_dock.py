@@ -781,8 +781,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.rlz_cbx.addItems(rlzs)
         self.rlz_cbx.blockSignals(False)
 
-        loss_types = [lt.decode('utf8')
-                      for lt in composite_risk_model_attrs['loss_types']]
+        loss_types = composite_risk_model_attrs['loss_types']
         self.loss_type_cbx.blockSignals(True)
         self.loss_type_cbx.clear()
         self.loss_type_cbx.addItems(loss_types)
@@ -939,9 +938,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 tag_value = [val for val in self.tags[tag_name]['values']
                              if self.tags[tag_name]['values'][val]][0]
                 params[tag_name] = tag_value
-        loss_types = [
-            loss_type.decode('utf8')
-            for loss_type in composite_risk_model_attrs['loss_types']]
+        loss_types = composite_risk_model_attrs['loss_types']
         self.loss_type_cbx.blockSignals(True)
         self.loss_type_cbx.clear()
         self.loss_type_cbx.addItems(loss_types)

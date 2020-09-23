@@ -1232,9 +1232,7 @@ def get_loss_types(session, hostname, calc_id, message_bar):
     # casting loss_types to string, otherwise numpy complains when creating
     # array of zeros with data type as follows:
     # [('lon', F32), ('lat', F32), (loss_type, F32)])
-    loss_types = [
-        loss_type.decode('utf8')
-        for loss_type in composite_risk_model_attrs['loss_types']]
+    loss_types = composite_risk_model_attrs['loss_types']
     return loss_types
 
 
