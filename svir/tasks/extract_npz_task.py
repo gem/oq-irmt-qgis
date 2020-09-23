@@ -42,6 +42,8 @@ class ExtractFailed(Exception):
 
 
 class ExtractNpzTask(QgsTask):
+    # NOTE: there is also a synchronous extract_npz utility that contains some
+    # duplicated code
 
     is_canceled_sig = pyqtSignal()
 
