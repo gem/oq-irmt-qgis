@@ -637,7 +637,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
 
     def get_list_selected_tags_str(self):
         selected_tags_str = ''
-        if self.aggregate_by is None:
+        if not hasattr(self, 'aggregate_by') or self.aggregate_by is None:
             return selected_tags_str
         for tag_name in self.aggregate_by:
             for tag_value in self.tags[tag_name]['values']:
@@ -1001,8 +1001,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                                 self.agg_curves[tag_name]).index(tag_value)
                             tag_value_idxs[tag_name].append(tag_value_idx)
             else:
-                for tag in self.aggregate_by:
-                    tag_name = tag.decode('utf8')
+                for tag_name in self.aggregate_by:
                     # FIXME: check if currentIndex is ok
                     tag_value_idx = getattr(
                         self,
