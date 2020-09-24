@@ -110,7 +110,10 @@ class LoadDisaggAsLayerDialog(LoadOutputAsLayerDialog):
         layer_name = '%s_%s' % (self.output_type, self.calc_id)
         # log_msg('Getting field types', level='I', print_to_stdout=True)
         field_types = self.get_field_types(disagg_array)
-        if custom_site_ids:
+        # NOTE: just "if custom_site_id:" would raise the following error:
+        # ValueError: The truth value of an array with more than one
+        # element is ambiguous. Use a.any() or a.all()
+        if custom_site_ids is not None:
             field_types['custom_site_id'] = 'I'
         self.layer = QgsVectorLayer(
             "%s?crs=epsg:4326" % 'point', layer_name, "memory")

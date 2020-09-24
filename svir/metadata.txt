@@ -24,6 +24,9 @@ email=staff.it@globalquakemodel.org
 # Uncomment the following line and add your changelog entries:
 changelog=
     3.10.0
+    * When loading ground motion fields, download and preselect relevant event ids
+    * Added possibility to load all hmaps into a single layer, with a style per field created automatically
+    * When hmaps are loaded from OQ-Engine outputs and the option to create one layer per statistic is checked, a style per field is created
     * Added loader for disaggregation OQ-Engine outputs
     * The visualization of dmg_by_event and losses_by_event is enabled also for event-based calculations
     * OQ Engine outputs dmg_by_asset and losses_by_asset were renamed (following the change in the engine) to avg_damages-rlzs and avg_losses-rlzs.
