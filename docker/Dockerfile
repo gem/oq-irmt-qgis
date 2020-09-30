@@ -1,15 +1,15 @@
 # vi:syntax=dockerfile
 FROM ubuntu:bionic
-MAINTAINER Daniele Viganò <daniele@openquake.org>
+MAINTAINER GEM Foundation <devops@openquake.org>
 
 ENV DEBIAN_FRONTEND noninteractive
 
-RUN apt update && apt -q install -y gnupg2 && \
-    echo "deb     http://qgis.org/debian bionic main" >> /etc/apt/sources.list && \
-    apt-key adv --keyserver keyserver.ubuntu.com --recv-key CAEB3DC3BDF7FB45 && \
-    apt update && \
-    apt upgrade -y && \
-    apt -q install -y locales build-essential git sudo xvfb zip \
+RUN apt update && apt -q install -y gnupg2 
+
+RUN echo "deb https://qgis.org/debian bionic main " >> /etc/apt/sources.list && \
+   apt-key adv --keyserver keyserver.ubuntu.com --recv-key F7E06F06199EF2F2 && \
+   apt update &&  apt dist-upgrade -y 
+RUN apt -q install -y locales build-essential git sudo xvfb zip \
                    qt5-default pyqt5-dev pyqt5-dev-tools \
                    python3-pyqt5.qtwebkit python3-pip \
                    python3-mock python3-nose \
@@ -26,8 +26,8 @@ ADD http://qgis.org/debian/dists/bionic/main/binary-amd64/Packages /tmp/nocache.
 RUN apt update && \
     apt install -y qgis python-qgis && \
     apt clean all
-
-ARG uid=1000
+#  instead of use ARG use: --build-arg uid=$(id -u)
+#ARG uid=988
 RUN useradd -m -u $uid builder && \
     echo 'builder ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 
