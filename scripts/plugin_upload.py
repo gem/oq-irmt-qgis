@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # coding=utf-8
 """This script uploads a plugin package to the plugin repository.
         Authors: A. Pasotti, V. Picavet
