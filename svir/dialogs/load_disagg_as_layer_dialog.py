@@ -31,6 +31,7 @@ from svir.utilities.utils import (
     log_msg, WaitCursorManager, extract_npz, get_irmt_version,
     write_metadata_to_layer)
 from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
+from svir.calculations.calculate_utils import add_attribute
 
 
 class LoadDisaggAsLayerDialog(LoadOutputAsLayerDialog):
@@ -75,9 +76,9 @@ class LoadDisaggAsLayerDialog(LoadOutputAsLayerDialog):
             try:
                 custom_site_ids = sitecol['array']['custom_site_id']
             except ValueError:
-                custom_site_ids = None
+                custom_site_ids = sitecol['array']['sids']
                 msg = ('Missing field "custom_site_id", needed by some '
-                       'OQ-GeoViewer projects')
+                       'OQ-GeoViewer projects. Using "sids" instead.')
                 log_msg(msg, level='W', print_to_stdout=True,
                         message_bar=self.iface.messageBar())
         if disagg is None:
@@ -87,7 +88,13 @@ class LoadDisaggAsLayerDialog(LoadOutputAsLayerDialog):
                 self.iface.messageBar()):
             log_msg('Creating disagg_layer', level='I',
                     print_to_stdout=True)
-            self.build_layer(disagg, custom_site_ids)
+            log_msg('Getting disagg array', level='I', print_to_stdout=True)
+            disagg_array = disagg['array']
+            lons = disagg_array['lon']
+            lats = disagg_array['lat']
+            self.build_layer(disagg, disagg_array, lons, lats, custom_site_ids)
+            if custom_site_ids is not None:
+                self.build_custom_site_ids_layer(lons, lats, custom_site_ids)
             self.style_curves()
 
     def get_field_types(self, disagg_array):
@@ -103,9 +110,46 @@ class LoadDisaggAsLayerDialog(LoadOutputAsLayerDialog):
             field_types[field_name] = field_type
         return field_types
 
-    def build_layer(self, disagg, custom_site_ids):
-        log_msg('Getting disagg array', level='I', print_to_stdout=True)
-        disagg_array = disagg['array']
+    def build_custom_site_ids_layer(self, lons, lats, custom_site_ids):
+        layer_name = 'custom_site_ids_%s' % self.calc_id
+        custom_site_id_layer = QgsVectorLayer(
+            "%s?crs=epsg:4326" % 'point', layer_name, "memory")
+        add_attribute('custom_site_id', 'I', custom_site_id_layer)
+        self.read_custom_site_ids_into_layer(
+            custom_site_id_layer, lons, lats, custom_site_ids)
+        custom_site_id_layer.setCustomProperty(
+            'output_type', '%s-%s' % (self.output_type, 'custom_site_ids'))
+        if self.engine_version is not None:
+            custom_site_id_layer.setCustomProperty(
+                'engine_version', self.engine_version)
+        irmt_version = get_irmt_version()
+        custom_site_id_layer.setCustomProperty('irmt_version', irmt_version)
+        custom_site_id_layer.setCustomProperty('calc_id', self.calc_id)
+        QgsProject.instance().addMapLayer(custom_site_id_layer, False)
+        tree_node = QgsProject.instance().layerTreeRoot()
+        tree_node.insertLayer(0, custom_site_id_layer)
+        self.iface.setActiveLayer(custom_site_id_layer)
+        log_msg('Layer %s was created successfully' % layer_name, level='S',
+                message_bar=self.iface.messageBar(),
+                print_to_stdout=True)
+
+    def read_custom_site_ids_into_layer(
+            self, custom_site_id_layer, lons, lats, custom_site_ids):
+        with edit(custom_site_id_layer):
+            feats = []
+            for row_idx, row in enumerate(custom_site_ids):
+                feat = QgsFeature(custom_site_id_layer.fields())
+                value = int(custom_site_ids[row_idx])
+                feat.setAttribute('custom_site_id', value)
+                feat.setGeometry(QgsGeometry.fromPointXY(
+                    QgsPointXY(lons[row_idx], lats[row_idx])))
+                feats.append(feat)
+            added_ok = custom_site_id_layer.addFeatures(feats)
+            if not added_ok:
+                msg = 'There was a problem adding features to the layer.'
+                log_msg(msg, level='C', message_bar=self.iface.messageBar())
+
+    def build_layer(self, disagg, disagg_array, lons, lats, custom_site_ids):
         log_msg('Done getting disagg array', level='I', print_to_stdout=True)
         layer_name = '%s_%s' % (self.output_type, self.calc_id)
         # log_msg('Getting field types', level='I', print_to_stdout=True)
@@ -131,7 +175,8 @@ class LoadDisaggAsLayerDialog(LoadOutputAsLayerDialog):
                 modified_field_types[added_field_name] = field_type
         field_types = copy.copy(modified_field_types)
 
-        self.read_npz_into_layer(field_types, disagg_array, custom_site_ids)
+        self.read_npz_into_layer(
+            field_types, disagg_array, lons, lats, custom_site_ids)
         self.layer.setCustomProperty('output_type', self.output_type)
         if self.engine_version is not None:
             self.layer.setCustomProperty('engine_version', self.engine_version)
@@ -161,10 +206,9 @@ class LoadDisaggAsLayerDialog(LoadOutputAsLayerDialog):
                 message_bar=self.iface.messageBar(),
                 print_to_stdout=True)
 
-    def read_npz_into_layer(self, field_types, disagg_array, custom_site_ids):
+    def read_npz_into_layer(
+            self, field_types, disagg_array, lons, lats, custom_site_ids):
         with edit(self.layer):
-            lons = disagg_array['lon']
-            lats = disagg_array['lat']
             feats = []
             # tot_feats = len(disagg_array)
             for row_idx, row in enumerate(disagg_array):
@@ -181,7 +225,8 @@ class LoadDisaggAsLayerDialog(LoadOutputAsLayerDialog):
                         value = disagg_array[field_name][row_idx]
                         # log_msg('\t\tDumping json', level='I',
                         #         print_to_stdout=True)
-                        if field_name.startswith('Dist-') and np.any(value < 0):
+                        if (field_name.startswith('Dist-') and
+                                np.any(value < 0)):
                             log_msg('Negative values were found for field %s:'
                                     ' %s' % (field_name, value),
                                     level='I', print_to_stdout=True)
