@@ -405,7 +405,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             dlg.loss_type_cbx.setCurrentIndex(0)
             # FIXME: we need to do dlg.accept() also for the case
             #        performing the aggregation by zone
-        elif dlg.output_type == 'avg_damages-rlzs' and aggregate_by_site:
+        elif dlg.output_type == 'damages-rlzs' and aggregate_by_site:
             # FIXME: testing only for selected taxonomy
             dlg.load_selected_only_ckb.setChecked(True)
             assert_and_emit(
@@ -455,7 +455,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             self.load_hcurves()
         elif dlg.output_type == 'uhs':
             self.load_uhs()
-        elif dlg.output_type == 'avg_damages-rlzs' and not aggregate_by_site:
+        elif dlg.output_type == 'damages-rlzs' and not aggregate_by_site:
             self.load_recovery_curves(dlg, approach, n_simulations)
             return
         dlg.loading_completed.emit()
@@ -524,7 +524,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 self.irmt.drive_oq_engine_server_dlg, self.irmt.iface,
                 self.irmt.viewer_dock,
                 self.irmt.drive_oq_engine_server_dlg.session,
-                self.hostname, calc_id, output_type)
+                self.hostname, calc_id, output_type, min_mag=6.5)
             self.loading_completed = False
             self.loading_exception = None
             dlg.loading_completed.connect(self.on_loading_completed)
@@ -602,7 +602,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         self.skipped_attempts = []
         self.time_consuming_outputs = []
         for calc in self.calc_list:
-            if selected_output_type in ['avg_losses-rlzs', 'avg_damages-rlzs']:
+            if selected_output_type in ['avg_losses-rlzs', 'damages-rlzs']:
                 # TODO: keep track of taxonomy in test summary
                 aggregate_by_site = (
                     None if selected_output_type == 'avg_losses-rlzs'
@@ -611,8 +611,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                     self.load_calc_output(
                         calc, selected_output_type, taxonomy_idx=taxonomy_idx,
                         aggregate_by_site=aggregate_by_site)
-                # for avg_damages-rlzs also test recovery modeling
-                if selected_output_type == 'avg_damages-rlzs':
+                # for damages-rlzs also test recovery modeling
+                if selected_output_type == 'damages-rlzs':
                     for approach in ['Disaggregate', 'Aggregate']:
                         self.load_calc_output(
                             calc, selected_output_type,

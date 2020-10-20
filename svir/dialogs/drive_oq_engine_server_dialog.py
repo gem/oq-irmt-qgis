@@ -84,8 +84,8 @@ from svir.dialogs.load_ruptures_as_layer_dialog import (
     LoadRupturesAsLayerDialog)
 from svir.dialogs.load_csv_as_layer_dialog import (
     LoadCsvAsLayerDialog)
-from svir.dialogs.load_avg_damages_rlzs_as_layer_dialog import (
-    LoadAvgDamagesRlzsAsLayerDialog)
+from svir.dialogs.load_damages_rlzs_as_layer_dialog import (
+    LoadDamagesRlzsAsLayerDialog)
 from svir.dialogs.load_gmf_data_as_layer_dialog import (
     LoadGmfDataAsLayerDialog)
 from svir.dialogs.load_asset_risk_as_layer_dialog import (
@@ -123,7 +123,7 @@ OUTPUT_TYPE_LOADERS = {
     'losses_by_event': LoadCsvAsLayerDialog,
     'agglosses': LoadCsvAsLayerDialog,
     'agg_risk': LoadCsvAsLayerDialog,
-    'avg_damages-rlzs': LoadAvgDamagesRlzsAsLayerDialog,
+    'damages-rlzs': LoadDamagesRlzsAsLayerDialog,
     'gmf_data': LoadGmfDataAsLayerDialog,
     'hmaps': LoadHazardMapsAsLayerDialog,
     'hcurves': LoadHazardCurvesAsLayerDialog,
