@@ -158,13 +158,13 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             'Load one layer per realization or statistic')
         self.vlayout.addWidget(self.load_one_layer_per_stat_ckb)
 
-    def create_min_mag_dsb(self):
+    def create_min_mag_dsb(self, min_mag=4.0):
         self.min_mag_lbl = QLabel()
         self.min_mag_dsb = QDoubleSpinBox(self)
         self.min_mag_dsb.setRange(0, 10)
         self.min_mag_dsb.setDecimals(1)
         self.min_mag_dsb.setSingleStep(0.1)
-        self.min_mag_dsb.setValue(4.0)
+        self.min_mag_dsb.setValue(min_mag)
         self.vlayout.addWidget(self.min_mag_lbl)
         self.vlayout.addWidget(self.min_mag_dsb)
         # NOTE: if we don't modify the text of the label after adding the
