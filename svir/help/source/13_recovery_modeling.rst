@@ -147,7 +147,7 @@ the user:
 
 The list of the outputs from the Scenario Damage calculation can be visualized
 in :numref:`fig-dialogDriveOqEngine`. The tool offers the possibility to load the 'Damage by asset'
-CSV file (avg_damages-rlzs) as a QGIS vector layer, stored in
+CSV file (damages-rlzs) as a QGIS vector layer, stored in
 the user's computer as a shapefile. In addition, it is possible to
 automatically style the layer with respect to a chosen damage state.
 Alternatively, the user can upload on QGIS the 'Damage by asset' CSV file,
