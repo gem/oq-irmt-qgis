@@ -123,7 +123,7 @@ OUTPUT_TYPE_LOADERS = {
     'losses_by_event': LoadCsvAsLayerDialog,
     'agglosses': LoadCsvAsLayerDialog,
     'agg_risk': LoadCsvAsLayerDialog,
-    'avg_damages-rlzs': LoadAvgDamagesRlzsAsLayerDialog,
+    'damages-rlzs': LoadAvgDamagesRlzsAsLayerDialog,
     'gmf_data': LoadGmfDataAsLayerDialog,
     'hmaps': LoadHazardMapsAsLayerDialog,
     'hcurves': LoadHazardCurvesAsLayerDialog,
