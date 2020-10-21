@@ -1086,7 +1086,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.plot.set_xscale('log')
         self.plot.set_yscale('linear')
         self.plot.set_xlabel('Return period (years)')
-        self.plot.set_ylabel('Loss (%s)' % unit.decode('utf8'))
+        self.plot.set_ylabel('Loss (%s)' % unit)
         title = 'Loss type: %s' % self.loss_type_cbx.currentText()
         self.plot.set_title(title)
         self.plot.grid(which='both')
@@ -1880,7 +1880,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 loss_type = self.loss_type_cbx.currentText()
                 abs_rel = self.abs_rel_cbx.currentText()
                 loss_type_idx = self.loss_type_cbx.currentIndex()
-                unit = self.agg_curves['units'][loss_type_idx].decode('utf8')
+                unit = self.agg_curves['units'][loss_type_idx]
                 csv_file.write("# Loss type: %s\r\n" % loss_type)
                 csv_file.write("# Absolute or relative: %s\r\n" % abs_rel)
                 csv_file.write("# Measurement unit: %s\r\n" % unit)
@@ -1906,7 +1906,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 loss_type = self.loss_type_cbx.currentText()
                 abs_rel = self.abs_rel_cbx.currentText()
                 loss_type_idx = self.loss_type_cbx.currentIndex()
-                unit = self.agg_curves['units'][loss_type_idx].decode('utf8')
+                unit = self.agg_curves['units'][loss_type_idx]
                 csv_file.write("# Loss type: %s\r\n" % loss_type)
                 csv_file.write("# Absolute or relative: %s\r\n" % abs_rel)
                 csv_file.write("# Measurement unit: %s\r\n" % unit)
