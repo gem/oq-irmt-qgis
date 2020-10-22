@@ -167,7 +167,7 @@ class LoadDamagesRlzsAsLayerDialog(LoadOutputAsLayerDialog):
                 '%s_%s' % (loss_type, name)
                 for name in self.dataset[loss_type].dtype.names])
         if self.zonal_layer_gbx.isChecked():
-            self.default_field_name = "%s_%s_mean" % (
+            self.default_field_name = "%s_%s" % (
                 self.loss_type_cbx.currentText(),
                 self.dmg_state_cbx.currentText())
         # NOTE: assuming that all fields are numeric
