@@ -20,7 +20,8 @@ docker run -d --name qgis -v /tmp/.X11-unix:/tmp/.X11-unix \
  -e DISPLAY=:99 \
  -e OQ_ENGINE_HOST='http://172.17.0.1:8800' \
  -e BRANCH="$BRANCH" \
- -e SELECTED_CALC_ID="$SELECTED_CALC_ID" \
+ -e ONLY_CALC_ID="$ONLY_CALC_ID" \
+ -e ONLY_OUTPUT_TYPE="$ONLY_OUTPUT_TYPE" \
  -e GEM_QGIS_TEST=y \
  qgis/qgis:final-3_8_3
 
