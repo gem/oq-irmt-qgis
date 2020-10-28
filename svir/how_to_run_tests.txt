@@ -12,7 +12,10 @@ make unittest
 make integrationtest
 
 # to run integration tests for only one specific oq-engine calculation (e.g. 5):
-SELECTED_CALC_ID=5 make integrationtest
+ONLY_CALC_ID=5 make integrationtest
+
+# to run integration tests for only one specific oq-engine output type (e.g. hcurves):
+ONLY_OUTPUT_TYPE=hcurves
 
 # to run all tests:
 make test

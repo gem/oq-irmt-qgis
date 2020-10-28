@@ -93,18 +93,25 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             raise cls.calc_list
         cls.output_list = {}
         try:
-            selected_calc_id = int(os.environ.get('SELECTED_CALC_ID'))
+            cls.only_calc_id = int(os.environ.get('ONLY_CALC_ID'))
         except (ValueError, TypeError):
-            print('SELECTED_CALC_ID was not set or is not an integer'
+            print('ONLY_CALC_ID was not set or is not an integer'
                   ' value. Running tests for all the available calculations')
-            selected_calc_id = None
+            cls.only_calc_id = None
         else:
-            print('SELECTED_CALC_ID is set.'
+            print('ONLY_CALC_ID is set.'
                   ' Running tests only for calculation #%s'
-                  % selected_calc_id)
-        if selected_calc_id is not None:
+                  % cls.only_calc_id)
+        if cls.only_calc_id is not None:
             cls.calc_list = [calc for calc in cls.calc_list
-                             if calc['id'] == selected_calc_id]
+                             if calc['id'] == cls.only_calc_id]
+        cls.only_output_type = os.environ.get('ONLY_OUTPUT_TYPE')
+        if not cls.only_output_type:
+            print('ONLY_OUTPUT_TYPE was not set. Running tests for all'
+                  ' the available output types')
+        else:
+            print('ONLY_OUTPUT_TYPE is set. Running tests only for'
+                  ' output type: %s' % cls.only_output_type)
         print("List of tested OQ-Engine demo calculations:")
         for calc in cls.calc_list:
             print('\tCalculation %s (%s): %s' % (calc['id'],
@@ -115,8 +122,9 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             if isinstance(calc_output_list, Exception):
                 raise calc_output_list
             cls.output_list[calc['id']] = calc_output_list
-            print('\t\tOutput types: %s' % ', '.join(
-                [output['type'] for output in calc_output_list]))
+            if not cls.only_output_type:
+                print('\t\tOutput types: %s' % ', '.join(
+                    [output['type'] for output in calc_output_list]))
 
     @classmethod
     def tearDownClass(cls):
@@ -189,6 +197,9 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         return calc_id
 
     def test_run_calculation(self):
+        if self.only_calc_id or self.only_output_type:
+            print('Skipping test running a new calculation')
+            return
         risk_demos_path = os.path.join(
             os.pardir, 'oq-engine', 'demos', 'risk')
         risk_demos_dirs = glob.glob(os.path.join(risk_demos_path, "*", ""))
@@ -230,6 +241,10 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             print(calc_log)
 
     def test_all_loadable_output_types_found_in_demos(self):
+        if self.only_calc_id or self.only_output_type:
+            print('Skipping test checking if all loadable outputs are found'
+                  ' in demos')
+            return
         loadable_output_types_found = set()
         loadable_output_types_not_found = set()
         for loadable_output_type in OQ_ALL_TYPES:
@@ -274,6 +289,9 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                         if not output_type.endswith('_aggr')]))
 
     def test_all_loaders_are_implemented(self):
+        if self.only_calc_id or self.only_output_type:
+            print('Skipping test checking if any loaders are not implemented')
+            return
         not_implemented_loaders = set()
         for calc in self.calc_list:
             for output in self.output_list[calc['id']]:
@@ -598,6 +616,9 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         self.loading_exception = exception
 
     def load_output_type(self, selected_output_type):
+        if self.only_output_type and self.only_output_type != selected_output_type:
+            print('\nSkipped output type: %s' % selected_output_type)
+            return
         self.failed_attempts = []
         self.skipped_attempts = []
         self.time_consuming_outputs = []
