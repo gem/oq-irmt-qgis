@@ -25,6 +25,7 @@ email=staff.it@globalquakemodel.org
 changelog=
     3.11.0
     * Following a change in the OQ Engine outputs, avg_damages-rlzs and avg_damages-stats were renamed into damages-rlzs and damages-stats
+    * Fixed management of MultiPoint when selecting a point and redrawing charts accordingly
     3.10.0
     * When loading ground motion fields, download and preselect relevant event ids
     * Added possibility to load all hmaps into a single layer, with a style per field created automatically

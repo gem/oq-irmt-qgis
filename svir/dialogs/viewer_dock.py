@@ -1587,7 +1587,13 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         selected = self.iface.activeLayer().selectedFeatureIds()
         if len(selected) == 1:
             feat = self.iface.activeLayer().getFeature(selected[0])
-            point = feat.geometry().asPoint()
+            try:
+                point = feat.geometry().asPoint()
+            except TypeError:
+                try:
+                    point = feat.geometry().asMultiPoint()[0]
+                except TypeError:
+                    return
             x, y = point.x(), point.y()
             expression = '$x = %s AND $y = %s' % (x, y)
             request = QgsFeatureRequest().setFilterExpression(expression)
