@@ -756,16 +756,31 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
 
     def style_curves(self):
         registry = QgsApplication.symbolLayerRegistry()
+        symbol_props = {
+            'name': 'cross2',
+            'color': '0,0,0',
+            'color_border': '0,0,0',
+            'offset': '0,0',
+            'size': '1.5',
+            'angle': '0',
+        }
+        opacity = 0.7
         cross = registry.symbolLayerMetadata("SimpleMarker").createSymbolLayer(
-            {'name': 'cross2', 'color': '0,0,0', 'color_border': '0,0,0',
-             'offset': '0,0', 'size': '1.5', 'angle': '0'})
-        symbol = QgsSymbol.defaultSymbol(self.layer.geometryType())
+            symbol_props)
+        # NOTE: Cross symbols rendered for OQ-Engine disaggregation outputs are
+        # opaque, wider and thicker than those used for other outputs (e.g.
+        # hcurves)
+        if self.output_type == 'disagg':
+            cross.setSize(3)
+            cross.setStrokeWidth(0.5)
+            opacity = 1
+        symbol = QgsSymbol.defaultSymbol(self.layer.geometryType()).clone()
         symbol.deleteSymbolLayer(0)
         symbol.appendSymbolLayer(cross)
         renderer = QgsSingleSymbolRenderer(symbol)
         effect = QgsOuterGlowEffect()
         effect.setSpread(0.5)
-        effect.setOpacity(1)
+        effect.setOpacity(opacity)
         effect.setColor(QColor(255, 255, 255))
         effect.setBlurLevel(1)
 
@@ -773,7 +788,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         renderer.paintEffect().setEnabled(True)
 
         self.layer.setRenderer(renderer)
-        self.layer.setOpacity(0.7)
+        self.layer.setOpacity(opacity)
         self.layer.triggerRepaint()
 
         # NOTE QGIS3: probably not needed
