@@ -579,7 +579,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 ramp_type_idx = default_color_ramp_names.index('Reds')
                 symbol.setColor(QColor(RAMP_EXTREME_COLORS['Reds']['top']))
                 inverted = False
-            elif output_type in ('hmaps', 'gmf_data', 'ruptures'):
+            elif output_type in ('gmf_data', 'ruptures'):
                 # options are EqualInterval, Quantile, Jenks, StdDev, Pretty
                 # jenks = natural breaks
                 if output_type == 'ruptures':
@@ -589,6 +589,34 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 ramp_type_idx = default_color_ramp_names.index('Spectral')
                 inverted = True
                 symbol.setColor(QColor(RAMP_EXTREME_COLORS['Reds']['top']))
+            elif output_type == 'hmaps':
+                # FIXME: for SGC they were using:
+                # Simple marker (square) size 10000 map units
+                # Color ramp custom Green2Red (like RdYlGn inverted)
+                # Pretty breaks (8 classes)
+
+                # options are EqualInterval, Quantile, Jenks, StdDev, Pretty
+                # jenks = natural breaks
+                mode = QgsGraduatedSymbolRenderer.Pretty
+                ramp_type_idx = default_color_ramp_names.index('RdYlGn')
+                inverted = True
+                registry = QgsApplication.symbolLayerRegistry()
+                symbol_props = {
+                    'name': 'square',
+                    'color': '0,0,0',
+                    'color_border': '0,0,0',
+                    'offset': '0,0',
+                    'size': '1.5',  # FIXME
+                    'angle': '0',
+                }
+                square = registry.symbolLayerMetadata(
+                    "SimpleMarker").createSymbolLayer(symbol_props)
+                symbol = QgsSymbol.defaultSymbol(layer.geometryType()).clone()
+                symbol.deleteSymbolLayer(0)
+                symbol.appendSymbolLayer(square)
+                symbol.symbolLayer(0).setStrokeStyle(Qt.PenStyle(Qt.NoPen))
+                # renderer = QgsSingleSymbolRenderer(symbol)
+                # layer.setRenderer(renderer)
             elif output_type in ['asset_risk', 'input']:
                 # options are EqualInterval, Quantile, Jenks, StdDev, Pretty
                 # jenks = natural breaks
