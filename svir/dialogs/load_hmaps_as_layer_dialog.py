@@ -23,7 +23,8 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 from qgis.core import (
-    QgsFeature, QgsGeometry, QgsPointXY, edit, QgsTask, QgsApplication)
+    QgsFeature, QgsGeometry, QgsPointXY, edit, QgsTask, QgsApplication,
+    QgsProject)
 from qgis.PyQt.QtCore import Qt
 from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
 from svir.utilities.utils import WaitCursorManager, log_msg
@@ -233,6 +234,14 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
                 log_msg(msg, level='C', message_bar=self.iface.messageBar())
 
     def load_from_npz(self):
+        ret_per_groups = {}
+        poes = set()
+        for imt in self.imts:
+            for poe in self.imts[imt]:
+                poes.add(poe)
+        for poe in poes:
+            root = QgsProject.instance().layerTreeRoot()
+            ret_per_groups[poe] = root.insertGroup(0, str(poe))
         if self.load_single_layer_ckb.isChecked():
             with WaitCursorManager(
                     'Creating layer...', self.iface.messageBar()):
@@ -290,7 +299,9 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
                                     'Creating layer for "%s, %s, %s"...' % (
                                         rlz_or_stat, imt, poe),
                                     self.iface.messageBar()):
-                                self.build_layer(rlz_or_stat, imt=imt, poe=poe)
+                                self.build_layer(
+                                    rlz_or_stat, imt=imt, poe=poe,
+                                    add_to_group=ret_per_groups[poe])
                                 self.style_maps(self.layer,
                                                 self.default_field_name,
                                                 self.iface,
