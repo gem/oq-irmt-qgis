@@ -598,8 +598,10 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 # options are EqualInterval, Quantile, Jenks, StdDev, Pretty
                 # jenks = natural breaks
                 mode = QgsGraduatedSymbolRenderer.Pretty
-                ramp_type_idx = default_color_ramp_names.index('RdYlGn')
-                inverted = True
+                # ramp_type_idx = default_color_ramp_names.index('RdYlGn')
+                # inverted = True
+                ramp_type_idx = default_color_ramp_names.index('Green2Red')
+                inverted = False
                 registry = QgsApplication.symbolLayerRegistry()
                 symbol_props = {
                     'name': 'square',
@@ -663,10 +665,10 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 mode,
                 symbol.clone(),
                 ramp)
-            label_format = renderer.labelFormat()
-            # label_format.setTrimTrailingZeroes(True)  # it might be useful
-            label_format.setPrecision(2)
-            renderer.setLabelFormat(label_format, updateRanges=True)
+            # label_format = renderer.labelFormat()
+            # # label_format.setTrimTrailingZeroes(True)  # it might be useful
+            # label_format.setPrecision(2)
+            # renderer.setLabelFormat(label_format, updateRanges=True)
         elif num_unique_values == 2:
             categories = []
             for unique_value in unique_values:
@@ -732,7 +734,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                     sym.symbolLayer(lay).setRenderingPass(i)
                 renderer.setLegendSymbolItem(key, sym)
         layer.setRenderer(renderer)
-        layer.setOpacity(0.7)
+        # layer.setOpacity(0.7)
         log_msg('Layer %s was created successfully' % layer.name(), level='S',
                 message_bar=iface.messageBar())
         if repaint:
