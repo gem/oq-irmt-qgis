@@ -24,6 +24,7 @@ email=staff.it@globalquakemodel.org
 # Uncomment the following line and add your changelog entries:
 changelog=
     3.11.0
+    * A parameter was added to switch between default hmaps styling and the styling used for SGC projects
     * Cross symbols rendered for OQ-Engine disaggregation outputs are opaque, wider and thicker than those used for other outputs (e.g. hcurves)
     * Following a change in the OQ Engine outputs, avg_damages-rlzs and avg_damages-stats were renamed into damages-rlzs and damages-stats
     * Fixed management of MultiPoint when selecting a point and redrawing charts accordingly
