@@ -241,7 +241,7 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
                 poes.add(poe)
         for poe in poes:
             root = QgsProject.instance().layerTreeRoot()
-            ret_per_groups[poe] = root.insertGroup(0, str(poe))
+            ret_per_groups[poe] = root.insertGroup(0, 'POE_%s' % poe)
         if self.load_single_layer_ckb.isChecked():
             with WaitCursorManager(
                     'Creating layer...', self.iface.messageBar()):
@@ -302,7 +302,10 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
                                 self.build_layer(
                                     rlz_or_stat, imt=imt, poe=poe,
                                     add_to_group=ret_per_groups[poe])
+                                # NOTE: set sgc_style=True to use SGC settings
+                                # for hazard maps styling
                                 self.style_maps(self.layer,
                                                 self.default_field_name,
                                                 self.iface,
-                                                self.output_type)
+                                                self.output_type,
+                                                use_sgc_style=False)

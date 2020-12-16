@@ -549,7 +549,8 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
     @staticmethod
     def style_maps(layer, style_by, iface, output_type='damages-rlzs',
                    perils=None, add_null_class=False,
-                   render_higher_on_top=False, repaint=True):
+                   render_higher_on_top=False, repaint=True,
+                   use_sgc_style=False):
         symbol = QgsSymbol.defaultSymbol(layer.geometryType())
         # see properties at:
         # https://qgis.org/api/qgsmarkersymbollayerv2_8cpp_source.html#l01073
@@ -579,7 +580,8 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 ramp_type_idx = default_color_ramp_names.index('Reds')
                 symbol.setColor(QColor(RAMP_EXTREME_COLORS['Reds']['top']))
                 inverted = False
-            elif output_type in ('gmf_data', 'ruptures'):
+            elif (output_type in ('gmf_data', 'ruptures')
+                  or (output_type == 'hmaps' and not use_sgc_style)):
                 # options are EqualInterval, Quantile, Jenks, StdDev, Pretty
                 # jenks = natural breaks
                 if output_type == 'ruptures':
@@ -589,18 +591,21 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 ramp_type_idx = default_color_ramp_names.index('Spectral')
                 inverted = True
                 symbol.setColor(QColor(RAMP_EXTREME_COLORS['Reds']['top']))
-            elif output_type == 'hmaps':
-                # FIXME: for SGC they were using:
-                # Simple marker (square) size 10000 map units
-                # Color ramp custom Green2Red (like RdYlGn inverted)
-                # Pretty breaks (8 classes)
+            elif output_type == 'hmaps' and use_sgc_style:
+                # FIXME: for SGC they were using size 10000 map units
 
                 # options are EqualInterval, Quantile, Jenks, StdDev, Pretty
                 # jenks = natural breaks
                 mode = QgsGraduatedSymbolRenderer.Pretty
-                # ramp_type_idx = default_color_ramp_names.index('RdYlGn')
-                # inverted = True
-                ramp_type_idx = default_color_ramp_names.index('Green2Red')
+                try:
+                    ramp_type_idx = default_color_ramp_names.index(
+                        'SGC_Green2Red_Hmap_Color_Ramp')
+                except ValueError:
+                    raise ValueError(
+                            'Color ramp SGC_Green2Red_Hmap_Color_Ramp was '
+                            'not found. Please import it from '
+                            'Settings -> Style Manager, loading '
+                            'svir/resources/sgc_green2red_hmap_color_ramp.xml')
                 inverted = False
                 registry = QgsApplication.symbolLayerRegistry()
                 symbol_props = {
@@ -617,8 +622,6 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 symbol.deleteSymbolLayer(0)
                 symbol.appendSymbolLayer(square)
                 symbol.symbolLayer(0).setStrokeStyle(Qt.PenStyle(Qt.NoPen))
-                # renderer = QgsSingleSymbolRenderer(symbol)
-                # layer.setRenderer(renderer)
             elif output_type in ['asset_risk', 'input']:
                 # options are EqualInterval, Quantile, Jenks, StdDev, Pretty
                 # jenks = natural breaks
@@ -665,10 +668,11 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 mode,
                 symbol.clone(),
                 ramp)
-            # label_format = renderer.labelFormat()
-            # # label_format.setTrimTrailingZeroes(True)  # it might be useful
-            # label_format.setPrecision(2)
-            # renderer.setLabelFormat(label_format, updateRanges=True)
+            if not use_sgc_style:
+                label_format = renderer.labelFormat()
+                # label_format.setTrimTrailingZeroes(True)  # might be useful
+                label_format.setPrecision(2)
+                renderer.setLabelFormat(label_format, updateRanges=True)
         elif num_unique_values == 2:
             categories = []
             for unique_value in unique_values:
@@ -734,7 +738,8 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                     sym.symbolLayer(lay).setRenderingPass(i)
                 renderer.setLegendSymbolItem(key, sym)
         layer.setRenderer(renderer)
-        # layer.setOpacity(0.7)
+        if not use_sgc_style:
+            layer.setOpacity(0.7)
         log_msg('Layer %s was created successfully' % layer.name(), level='S',
                 message_bar=iface.messageBar())
         if repaint:
