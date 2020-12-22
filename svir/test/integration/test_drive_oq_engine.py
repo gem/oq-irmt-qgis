@@ -557,7 +557,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                     return 'ok'
                 if self.loading_exception:
                     raise self.loading_exception
-                    return 'ok'
+                    return 'ko'
                 time.sleep(0.1)
             raise TimeoutError(
                 'Loading time exceeded %s seconds' % timeout)
@@ -592,7 +592,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                     return 'ok'
                 if self.loading_exception:
                     raise self.loading_exception
-                    return 'ok'
+                    return 'ko'
                 time.sleep(0.1)
             raise TimeoutError(
                 'Loading time exceeded %s seconds' % timeout)
