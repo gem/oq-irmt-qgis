@@ -1,0 +1,39 @@
+name: build gdal whl
+on:
+  push:
+jobs:
+  Matrix-build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-1804, ubuntu-2004]
+        python-version: [3.6, 3.7, 3.8]
+    env:
+      GITHUB_PULL_REQUEST: ${{ github.event.number }}
+      GITHUB_DEF_BR:  ${{ github.event.repository.default_branch }}
+      GITHUB_REF:  ${{ github.ref }}
+      GITHUB_HD_REF:  ${{ github.head_ref }}
+      GITHUB_BS_REF:  ${{ github.base_ref }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Clone engine and run test
+        run: |
+          echo " Check if this is a pull request or not"
+          if [ -z "$GITHUB_HD_REF" ]
+             then
+              echo " Is not a pull request, use branch: $GITHUB_DEF_BR"
+              GITHUB_BR=`echo ${{ github.event.repository.default_branch }}`
+             else
+              echo " Is a pull request, use branch: $GITHUB_HD_BR"
+              GITHUB_BR=`echo ${{ github.head_ref }}`
+          fi
+          git clone -b $GITHUB_BR --depth=1 https://github.com/gem/oq-engine.git
+          PY_VER=`echo py${{ matrix.python-version }} | tr -d .`
+          echo $PY_VER
+          cd oq-engine
+          pip3 install -r requirements-$PY_VER-linux64.txt
+          pip3 install -e .
