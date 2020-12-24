@@ -40,9 +40,11 @@ jobs:
           pip3 install -r requirements-$PY_VER-linux64.txt
           pip3 install -e .
           cd ..
-          curl -sfLO https://artifacts.openquake.org/travis/oqdata-${GITHUB_BR}.zip || ( echo "Dump for $GITHUB_BR unavailable"; exit 1 )
+          echo "Dump for $GITHUB_BR branch "
+          curl -sfLO https://artifacts.openquake.org/travis/oqdata-${GITHUB_BR}.zip
+          mkdir ~/oqdata
           oq restore oqdata-${GITHUB_BR}.zip ~/oqdata
-          oq webui start 0.0.0.0:8800 --skip-browser &> webui.log
+          oq webui start 0.0.0.0:8800 --skip-browser & > webui.log
       - name: Run unit tests
         run: ./scipts/run_unit_tests.sh
       - name: Run integration tests
