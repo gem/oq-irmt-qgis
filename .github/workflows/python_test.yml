@@ -39,5 +39,15 @@ jobs:
           cd oq-engine
           pip3 install -r requirements-$PY_VER-linux64.txt
           pip3 install -e .
+          cd ..
+          curl -sfLO https://artifacts.openquake.org/travis/oqdata-${GITHUB_BR}.zip || ( echo "Dump for $GITHUB_BR unavailable"; exit 1 )
           oq restore oqdata-${GITHUB_BR}.zip ~/oqdata
           oq webui start 0.0.0.0:8800 --skip-browser &> webui.log
+      - name: Run unit tests
+        run: ./scipts/run_unit_tests.sh
+      - name: Run integration tests
+        run: ./scipts/run_integration_tests.sh
+      - name: Make documentation
+        run: ./scipts/make_doc.sh
+      - name: Display Web UI log
+        run: cat webui.log
