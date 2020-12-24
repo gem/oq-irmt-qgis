@@ -6,10 +6,10 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-18.04]
+        os: [ubuntu-latest]
         #os: [ubuntu-18.04, ubuntu-20.04]
         #python-version: [3.6, 3.7, 3.8]
-        python-version: [3.6, 3.8]
+        python-version: [3.8]
     env:
       GITHUB_PULL_REQUEST: ${{ github.event.number }}
       GITHUB_DEF_BR:  ${{ github.event.repository.default_branch }}
@@ -45,8 +45,11 @@ jobs:
           mkdir ~/oqdata
           oq restore oqdata-${GITHUB_BR}.zip ~/oqdata
           oq webui start 0.0.0.0:8800 --skip-browser & > webui.log
+
       - name: Run unit tests
-        run: ./scripts/run_unit_tests.sh
+        run: |
+            mkdir /tests_directory
+            ./scripts/run_unit_tests.sh
       - name: Run integration tests
         run: ./scripts/run_integration_tests.sh
       - name: Make documentation
