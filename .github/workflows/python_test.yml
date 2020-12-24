@@ -16,7 +16,6 @@ jobs:
       GITHUB_REF:  ${{ github.ref }}
       GITHUB_HD_REF:  ${{ github.head_ref }}
       GITHUB_BS_REF:  ${{ github.base_ref }}
-      GIT_TAG:  ${{ github.ref##refs/tags/ }}
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python
