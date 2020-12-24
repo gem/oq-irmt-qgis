@@ -1,4 +1,4 @@
-name: test python
+name: QGIS unit and integration test
 on:
   push:
 jobs:
@@ -48,23 +48,32 @@ jobs:
 
       - name: Run unit tests
         run: |
-            set -x
-            #
-            docker run -d --name qgis -v /tmp/.X11-unix:/tmp/.X11-unix -v `pwd`:/tests_directory -e DISPLAY=:99 -e GEM_QGIS_TEST=y qgis/qgis:final-3_8_3
-            docker exec qgis bash -c "apt update --allow-releaseinfo-change; DEBIAN_FRONTEND=noninteractive apt install -y python3-scipy python3-matplotlib python3-pyqt5.qtwebkit"
-            docker exec qgis bash -c "python3 -m pip install pytest"
-            # OGR_SQLITE_JOURNAL=delete prevents QGIS from using WAL, which modifies geopackages even if they are just read
-            docker exec qgis bash -c "export PYTHONPATH=/usr/share/qgis/python/plugins/:$PYTHONPATH; OGR_SQLITE_JOURNAL=delete pytest -v /tests_directory/svir/test/unit/"
+          set -x
+          #
+          docker run -d --name qgis -v /tmp/.X11-unix:/tmp/.X11-unix -v `pwd`:/tests_directory -e DISPLAY=:99 -e GEM_QGIS_TEST=y qgis/qgis:final-3_8_3
+          docker exec qgis bash -c "apt update --allow-releaseinfo-change; DEBIAN_FRONTEND=noninteractive apt install -y python3-scipy python3-matplotlib python3-pyqt5.qtwebkit"
+          docker exec qgis bash -c "python3 -m pip install pytest"
+          # OGR_SQLITE_JOURNAL=delete prevents QGIS from using WAL, which modifies geopackages even if they are just read
+          docker exec qgis bash -c "export PYTHONPATH=/usr/share/qgis/python/plugins/:$PYTHONPATH; OGR_SQLITE_JOURNAL=delete pytest -v /tests_directory/svir/test/unit/"
       - name: Run integration tests
         run: |
-            set -x
-            docker exec qgis sh -c "git clone -q -b $GITHUB_BR --depth=1 https://github.com/gem/oq-engine.git && echo 'Running against oq-engine/$GITHUB_BR'"
-            docker exec qgis sh -c "qgis_setup.sh svir"
-            docker exec qgis sh -c "cd /tests_directory && qgis_testrunner.sh svir.test.integration.test_drive_oq_engine"
+          set -x
+          echo " Check if this is a pull request or not"
+          if [ -z "$GITHUB_HD_REF" ]
+             then
+              echo " Is not a pull request, use branch: $GITHUB_DEF_BR"
+              GITHUB_BR=`echo ${{ github.event.repository.default_branch }}`
+             else
+              echo " Is a pull request, use branch: $GITHUB_HD_BR"
+              GITHUB_BR=`echo ${{ github.head_ref }}`
+          fi
+          docker exec qgis sh -c "git clone -q -b $GITHUB_BR --depth=1 https://github.com/gem/oq-engine.git && echo 'Running against oq-engine/$GITHUB_BR'"
+          docker exec qgis sh -c "qgis_setup.sh svir"
+          docker exec qgis sh -c "cd /tests_directory && qgis_testrunner.sh svir.test.integration.test_drive_oq_engine"
       - name: Make documentation
         run: |
-            set -x
-            docker exec qgis sh -c "apt update --allow-releaseinfo-change; DEBIAN_FRONTEND=noninteractive apt install -y latexmk texlive-latex-extra python3-matplotlib python3-sphinx python3-sphinx-rtd-theme dvipng"
-            docker exec qgis sh -c "export PYTHONPATH=$PYTHONPATH:/oq-irmt-qgis; cd /oq-irmt-qgis/svir; make doc"
+          set -x
+          docker exec qgis sh -c "apt update --allow-releaseinfo-change; DEBIAN_FRONTEND=noninteractive apt install -y latexmk texlive-latex-extra python3-matplotlib python3-sphinx python3-sphinx-rtd-theme dvipng"
+          docker exec qgis sh -c "export PYTHONPATH=$PYTHONPATH:/oq-irmt-qgis; cd /oq-irmt-qgis/svir; make doc"
       - name: Display Web UI log
         run: cat webui.log
