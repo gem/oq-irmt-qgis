@@ -9,7 +9,7 @@ jobs:
         os: [ubuntu-18.04]
         #os: [ubuntu-18.04, ubuntu-20.04]
         #python-version: [3.6, 3.7, 3.8]
-        python-version: [3.6]
+        python-version: [3.6, 3.8]
     env:
       GITHUB_PULL_REQUEST: ${{ github.event.number }}
       GITHUB_DEF_BR:  ${{ github.event.repository.default_branch }}
