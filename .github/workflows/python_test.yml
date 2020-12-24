@@ -46,10 +46,10 @@ jobs:
           oq restore oqdata-${GITHUB_BR}.zip ~/oqdata
           oq webui start 0.0.0.0:8800 --skip-browser & > webui.log
       - name: Run unit tests
-        run: ./scipts/run_unit_tests.sh
+        run: ./scripts/run_unit_tests.sh
       - name: Run integration tests
-        run: ./scipts/run_integration_tests.sh
+        run: ./scripts/run_integration_tests.sh
       - name: Make documentation
-        run: ./scipts/make_doc.sh
+        run: ./scripts/make_doc.sh
       - name: Display Web UI log
         run: cat webui.log
