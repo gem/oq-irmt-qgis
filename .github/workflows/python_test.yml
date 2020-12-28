@@ -45,9 +45,9 @@ jobs:
           curl -sfLO https://artifacts.openquake.org/travis/oqdata-${GITHUB_BR}.zip
           mkdir ~/oqdata
           oq restore oqdata-${GITHUB_BR}.zip ~/oqdata
-          oq webui start 0.0.0.0:8800 --skip-browser &
+          oq webui start 172.17.0.1:8800 --skip-browser &
           sleep 5
-          curl -s http://0.0.0.0:8800/v1/engine_version
+          curl http://172.17.0.1:8800/v1/engine_version
           #
           DOCKER_HOST=`ip -4 addr show docker0 | grep -Po 'inet \K[\d.]+'`
           ENGINE_HOST=`echo http://$DOCKER_HOST:8800`
