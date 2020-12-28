@@ -3,13 +3,7 @@ on:
   push:
 jobs:
   Matrix-build:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest]
-        #os: [ubuntu-18.04, ubuntu-20.04]
-        #python-version: [3.6, 3.7, 3.8]
-        python-version: [3.8]
+    runs-on: ubuntu-18.04
     env:
       GITHUB_PULL_REQUEST: ${{ github.event.number }}
       GITHUB_DEF_BR:  ${{ github.event.repository.default_branch }}
@@ -21,7 +15,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: 3.8
       - name: Clone engine and restore oqdata and docker container
         run: |
           set -x
@@ -45,7 +39,7 @@ jobs:
           curl -sfLO https://artifacts.openquake.org/travis/oqdata-${GITHUB_BR}.zip
           mkdir ~/oqdata
           oq restore oqdata-${GITHUB_BR}.zip ~/oqdata
-          oq webui start 172.17.0.1:8800 --skip-browser &
+          oq webui start 172.17.0.1:8800 --skip-browser &> webui.log &
           sleep 5
           curl http://172.17.0.1:8800/v1/engine_version
           #
@@ -80,3 +74,8 @@ jobs:
           set -x
           docker exec qgis sh -c "apt update --allow-releaseinfo-change; DEBIAN_FRONTEND=noninteractive apt install -y latexmk texlive-latex-extra python3-matplotlib python3-sphinx python3-sphinx-rtd-theme dvipng"
           docker exec qgis sh -c "export PYTHONPATH=$PYTHONPATH:/oq-irmt-qgis; cd /oq-irmt-qgis/svir; make doc"
+      - name: Display web logs
+        run: |
+          set -x
+          cat webui.log
+
