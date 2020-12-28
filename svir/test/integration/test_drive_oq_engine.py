@@ -86,6 +86,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         cls.global_failed_attempts = []
         cls.global_skipped_attempts = []
         cls.global_time_consuming_outputs = []
+        cls.loading_completed = {}
+        cls.loading_exception = {}
         cls.irmt.drive_oq_engine_server(show=False, hostname=cls.hostname)
         # NOTE: calc_list must be retrieved BEFORE starting any test
         cls.calc_list = cls.irmt.drive_oq_engine_server_dlg.calc_list
@@ -401,6 +403,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         if dlg.output_type == 'uhs':
             dlg.load_selected_only_ckb.setChecked(True)
             assert_and_emit(
+                dlg,
                 dlg.loading_exception, self.assertGreater,
                 dlg.poe_cbx.count(), 0, 'No PoE was found')
             dlg.poe_cbx.setCurrentIndex(0)
@@ -408,16 +411,19 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             dlg.load_selected_only_ckb.setChecked(True)
             # Taxonomies should be at least 'All' and a single one
             assert_and_emit(
+                dlg,
                 dlg.loading_exception, self.assertGreater,
                 dlg.taxonomy_cbx.count(), 1, 'No taxonomy was found')
             # 'All' (inserted on top)
             taxonomy_all_idx = dlg.taxonomy_cbx.findText('All')
             assert_and_emit(
+                dlg,
                 dlg.loading_exception, self.assertEqual,
                 taxonomy_all_idx, 0,
                 "Taxonomy All was not the first in selector")
             dlg.taxonomy_cbx.setCurrentIndex(taxonomy_idx)
             assert_and_emit(
+                dlg,
                 dlg.loading_exception, self.assertGreater,
                 dlg.loss_type_cbx.count(), 0, 'No loss type was found')
             dlg.loss_type_cbx.setCurrentIndex(0)
@@ -427,20 +433,24 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             # FIXME: testing only for selected taxonomy
             dlg.load_selected_only_ckb.setChecked(True)
             assert_and_emit(
+                dlg,
                 dlg.loading_exception, self.assertGreater,
                 dlg.taxonomy_cbx.count(), 0, 'No taxonomy was found')
             dlg.taxonomy_cbx.setCurrentIndex(0)
             taxonomy_all_idx = dlg.taxonomy_cbx.findText('All')
             assert_and_emit(
+                dlg,
                 dlg.loading_exception, self.assertEqual,
                 taxonomy_all_idx, 0,
                 "Taxonomy All was not the first in selector")
             dlg.taxonomy_cbx.setCurrentIndex(taxonomy_idx)
             assert_and_emit(
+                dlg,
                 dlg.loading_exception, self.assertGreater,
                 dlg.loss_type_cbx.count(), 0, 'No loss_type was found')
             dlg.loss_type_cbx.setCurrentIndex(0)
             assert_and_emit(
+                dlg,
                 dlg.loading_exception, self.assertGreater,
                 dlg.dmg_state_cbx.count(), 0, 'No damage state was found')
             dlg.dmg_state_cbx.setCurrentIndex(0)
@@ -454,9 +464,11 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             num_taxonomies = (
                 num_selected_taxonomies + num_unselected_taxonomies)
             assert_and_emit(
+                dlg,
                 dlg.loading_exception, self.assertGreater,
                 num_taxonomies, 0, 'No taxonomy was found')
             assert_and_emit(
+                dlg,
                 dlg.loading_exception, self.assertGreater,
                 dlg.category_cbx.count(), 0, 'No category was found')
             dlg.category_cbx.setCurrentIndex(0)
@@ -476,7 +488,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         elif dlg.output_type == 'damages-rlzs' and not aggregate_by_site:
             self.load_recovery_curves(dlg, approach, n_simulations)
             return
-        dlg.loading_completed.emit()
+        dlg.loading_completed.emit(dlg)
 
     def _store_skipped_attempt(self, id, calculation_mode, description, type):
         skipped_attempt = {
@@ -543,19 +555,22 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 self.irmt.viewer_dock,
                 self.irmt.drive_oq_engine_server_dlg.session,
                 self.hostname, calc_id, output_type, min_mag=6.5)
-            self.loading_completed = False
-            self.loading_exception = None
-            dlg.loading_completed.connect(self.on_loading_completed)
-            dlg.loading_exception[Exception].connect(self.on_loading_exception)
+            self.loading_completed[dlg] = False
+            self.loading_exception[dlg] = None
+            dlg.loading_completed.connect(
+                lambda dlg: self.on_loading_completed(dlg))
+            dlg.loading_exception.connect(
+                lambda dlg, exception: self.on_loading_exception(
+                    dlg, exception))
             timeout = 10
             start_time = time.time()
             dlg.accept()
             while time.time() - start_time < timeout:
                 QGIS_APP.processEvents()
-                if self.loading_completed:
+                if self.loading_completed[dlg]:
                     print('\t\tok')
                     return 'ok'
-                if self.loading_exception:
+                if self.loading_exception[dlg]:
                     raise self.loading_exception
                     return 'ko'
                 time.sleep(0.1)
@@ -572,12 +587,15 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             if output_type == 'disagg':
                 print('\t\tok')
                 return 'ok'
-            self.loading_completed = False
-            self.loading_exception = None
-            dlg.loading_completed.connect(self.on_loading_completed)
-            dlg.loading_exception[Exception].connect(self.on_loading_exception)
+            self.loading_completed[dlg] = False
+            self.loading_exception[dlg] = None
+            dlg.loading_completed.connect(
+                lambda dlg: self.on_loading_completed(dlg))
+            dlg.loading_exception.connect(
+                lambda dlg, exception: self.on_loading_exception(
+                    dlg, exception))
             dlg.init_done.connect(
-                lambda: self.on_init_done(
+                lambda dlg: self.on_init_done(
                     dlg,
                     taxonomy_idx=taxonomy_idx,
                     aggregate_by_site=aggregate_by_site,
@@ -587,10 +605,10 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             start_time = time.time()
             while time.time() - start_time < timeout:
                 QGIS_APP.processEvents()
-                if self.loading_completed:
+                if self.loading_completed[dlg]:
                     print('\t\tok')
                     return 'ok'
-                if self.loading_exception:
+                if self.loading_exception[dlg]:
                     raise self.loading_exception
                     return 'ko'
                 time.sleep(0.1)
@@ -609,11 +627,11 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             print('\t\tok')
             return 'ok'
 
-    def on_loading_completed(self):
-        self.loading_completed = True
+    def on_loading_completed(self, dlg):
+        self.loading_completed[dlg] = True
 
-    def on_loading_exception(self, exception):
-        self.loading_exception = exception
+    def on_loading_exception(self, dlg, exception):
+        self.loading_exception[dlg] = exception
 
     def load_output_type(self, selected_output_type):
         if self.only_output_type and self.only_output_type != selected_output_type:
@@ -681,7 +699,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         # self.irmt.viewer_dock.n_simulations_sbx.setValue(n_simulations)
         # self._change_selection()
         # self._test_export()
-        dlg.loading_completed.emit()
+        dlg.loading_completed.emit(dlg)
 
     def load_uhs(self):
         self._set_output_type('Uniform Hazard Spectra')

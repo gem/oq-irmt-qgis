@@ -130,7 +130,7 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
         self.adjustSize()
         self.set_ok_button()
         self.show()
-        self.init_done.emit()
+        self.init_done.emit(self)
 
     def set_ok_button(self):
         if not len(self.gmf_data) and 'GEM_QGIS_TEST' in os.environ:

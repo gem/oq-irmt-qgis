@@ -90,9 +90,9 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
     """
     Dialog to load an oq-engine output as layer
     """
-    init_done = pyqtSignal()
-    loading_completed = pyqtSignal()
-    loading_exception = pyqtSignal(Exception)
+    init_done = pyqtSignal(QDialog)
+    loading_completed = pyqtSignal(QDialog)
+    loading_exception = pyqtSignal(QDialog, Exception)
 
     def __init__(self, drive_engine_dlg, iface, viewer_dock,
                  session, hostname, calc_id, output_type=None,
@@ -136,7 +136,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.adjustSize()
         self.set_ok_button()
         self.show()
-        self.init_done.emit()
+        self.init_done.emit(self)
 
     def create_num_sites_indicator(self):
         self.num_sites_msg = 'Number of sites: %s'

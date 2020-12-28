@@ -125,9 +125,9 @@ def compare_wkt(a, b, tol=0.000001):
     return True
 
 
-def assert_and_emit(signal, assertion, p1, p2, msg):
+def assert_and_emit(dlg, signal, assertion, p1, p2, msg):
     try:
         assertion(p1, p2, msg)
     except Exception as exc:
-        signal.emit(exc)
+        signal.emit(dlg, exc)
         raise exc
