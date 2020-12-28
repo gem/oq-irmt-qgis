@@ -7,7 +7,8 @@ docker run -d --name qgis -v /tmp/.X11-unix:/tmp/.X11-unix \
  -v `pwd`/../.:/tests_directory \
  -e DISPLAY=:99 \
  -e GEM_QGIS_TEST=y \
- qgis/qgis:final-3_8_3
+ qgis/qgis:release-3_10
+# qgis/qgis:final-3_8_3
 
 docker exec -it qgis bash -c "apt update --allow-releaseinfo-change; DEBIAN_FRONTEND=noninteractive apt install -y python3-scipy python3-matplotlib python3-pyqt5.qtwebkit"
 docker exec -it qgis bash -c "python3 -m pip install pytest"
