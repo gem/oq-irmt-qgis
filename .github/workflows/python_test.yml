@@ -45,7 +45,8 @@ jobs:
           curl -sfLO https://artifacts.openquake.org/travis/oqdata-${GITHUB_BR}.zip
           mkdir ~/oqdata
           oq restore oqdata-${GITHUB_BR}.zip ~/oqdata
-          oq webui start 0.0.0.0:8800 --skip-browser &> webui.log &
+          oq webui start 0.0.0.0:8800 --skip-browser &
+          sleep 5
           curl http://0.0.0.0:8800/v1/engine_version
           #
           docker run -d --name qgis -v /tmp/.X11-unix:/tmp/.X11-unix -v `pwd`:/tests_directory -e DISPLAY=:99 -e GEM_QGIS_TEST=y qgis/qgis:release-3_10
@@ -62,4 +63,3 @@ jobs:
           docker exec qgis sh -c "apt update --allow-releaseinfo-change; DEBIAN_FRONTEND=noninteractive apt install -y latexmk texlive-latex-extra python3-matplotlib python3-sphinx python3-sphinx-rtd-theme dvipng"
           docker exec qgis sh -c "export PYTHONPATH=$PYTHONPATH:/oq-irmt-qgis; cd /oq-irmt-qgis/svir; make doc"
           echo "Display Web UI log"
-          cat webui.log
