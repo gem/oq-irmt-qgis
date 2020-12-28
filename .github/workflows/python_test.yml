@@ -63,6 +63,15 @@ jobs:
       - name: Run Integration test
         run: |
           set -x
+          echo " Check if this is a pull request or not"
+          if [ -z "$GITHUB_HD_REF" ]
+             then
+              echo " Is not a pull request, use branch: $GITHUB_DEF_BR"
+              GITHUB_BR=`echo ${{ github.event.repository.default_branch }}`
+             else
+              echo " Is a pull request, use branch: $GITHUB_HD_BR"
+              GITHUB_BR=`echo ${{ github.head_ref }}`
+          fi
           docker exec qgis sh -c "git clone -q -b $GITHUB_BR --depth=1 https://github.com/gem/oq-engine.git && echo 'Running against oq-engine/$GITHUB_BR'"
           docker exec qgis sh -c "qgis_setup.sh svir"
           docker exec qgis sh -c "cd /tests_directory && qgis_testrunner.sh svir.test.integration.test_drive_oq_engine"
