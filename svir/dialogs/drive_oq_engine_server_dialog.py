@@ -1044,8 +1044,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
     def del_task(self, task_id):
         del(self.download_tasks[task_id])
 
-    def del_dlg(self, dlg_id):
-        del(self.open_output_dlgs[dlg_id])
+    def del_dlg(self, dlg):
+        del(self.open_output_dlgs[dlg])
 
     def open_full_report(
             self, output_id=None, output_type=None, filepath=None):
@@ -1064,16 +1064,15 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         assert(output_type is not None)
         if output_type not in OUTPUT_TYPE_LOADERS:
             raise NotImplementedError(output_type)
-        dlg_id = uuid4()
         open_output_dlg = OUTPUT_TYPE_LOADERS[output_type](
             self, self.iface, self.viewer_dock,
             self.session, self.hostname, self.current_calc_id,
             output_type, path=filepath,
             engine_version=self.engine_version,
             calculation_mode=calculation_mode)
-        self.open_output_dlgs[dlg_id] = open_output_dlg
+        self.open_output_dlgs[self] = open_output_dlg
         open_output_dlg.finished[int].connect(
-            lambda result: self.del_dlg(dlg_id))
+            lambda result: self.del_dlg(self))
 
     def notify_downloaded(
             self, output_id=None, output_type=None, filepath=None):
@@ -1087,11 +1086,12 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
     def on_zip_downloaded(
             self, output_id=None, output_type=None, filepath=None):
         self.notify_downloaded(output_id, output_type, filepath)
-        dlg_id = uuid4()
         load_inputs_dlg = LoadInputsDialog(self, filepath, self.iface)
-        self.open_output_dlgs[dlg_id] = load_inputs_dlg
-        load_inputs_dlg.loading_completed.connect(lambda: self.del_dlg(dlg_id))
-        load_inputs_dlg.loading_canceled.connect(lambda: self.del_dlg(dlg_id))
+        self.open_output_dlgs[self] = load_inputs_dlg
+        load_inputs_dlg.loading_completed.connect(
+            lambda dlg: self.del_dlg(dlg))
+        load_inputs_dlg.loading_canceled.connect(
+            lambda dlg: self.del_dlg(dlg))
         load_inputs_dlg.show()
 
     def notify_error(self, exc):

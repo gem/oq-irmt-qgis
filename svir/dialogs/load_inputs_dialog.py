@@ -40,8 +40,8 @@ class LoadInputsDialog(QDialog):
     Dialog to browse zipped input files
     """
 
-    loading_canceled = pyqtSignal()
-    loading_completed = pyqtSignal()
+    loading_canceled = pyqtSignal(QDialog)
+    loading_completed = pyqtSignal(QDialog)
 
     def __init__(self, drive_engine_dlg, zip_filepath, iface, parent=None):
         super().__init__(parent)
@@ -134,8 +134,8 @@ class LoadInputsDialog(QDialog):
                 extracted_csv_path = zfile.extract(
                     inner_path, path=os.path.dirname(self.zip_filepath))
                 self.load_from_csv(extracted_csv_path, peril)
-        self.loading_completed.emit()
+        self.loading_completed.emit(self)
 
     def reject(self):
         super().reject()
-        self.loading_canceled.emit()
+        self.loading_canceled.emit(self)
