@@ -2,7 +2,7 @@ name: QGIS unit and integration test
 on:
   push:
 jobs:
-  Matrix-build:
+  QGIS_plugin_LTR:
     runs-on: ubuntu-18.04
     env:
       GITHUB_PULL_REQUEST: ${{ github.event.number }}
@@ -32,7 +32,7 @@ jobs:
           PY_VER=`echo py${{ matrix.python-version }} | tr -d .`
           echo $PY_VER
           cd oq-engine
-          pip3 install -r requirements-$PY_VER-linux64.txt
+          pip3 install -r requirements-py38-linux64.txt
           pip3 install -e .
           cd ..
           echo "Dump for $GITHUB_BR branch "
