@@ -75,10 +75,10 @@ class LoadCsvAsLayerDialog(LoadOutputAsLayerDialog):
             # unzip and load all
             with zipfile.ZipFile(self.path, 'r') as zip_ref:
                 zip_ref.extractall(save_dest_dir)
-            for i, csv_path in enumerate(os.listdir(save_dest_dir)):
+            for csv_path in os.listdir(save_dest_dir):
                 full_csv_path = os.path.join(save_dest_dir, csv_path)
                 if os.path.isfile(full_csv_path):
-                    if i == 0:
+                    if 'mean' in os.path.basename(full_csv_path):
                         do_show_table = True
                     else:
                         do_show_table = False
