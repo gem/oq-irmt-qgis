@@ -24,6 +24,7 @@
 
 import os
 import tempfile
+import zipfile
 from svir.utilities.utils import (
     import_layer_from_csv, log_msg, write_metadata_to_layer)
 from svir.utilities.shared import OQ_CSV_TO_LAYER_TYPES
@@ -69,11 +70,31 @@ class LoadCsvAsLayerDialog(LoadOutputAsLayerDialog):
         else:
             save_dest = None  # the destination file will be selected via GUI
             save_format = None
-        csv_path = self.path
+        if os.path.splitext(self.path)[1] == '.zip':
+            save_dest_dir = tempfile.mkdtemp()
+            # unzip and load all
+            with zipfile.ZipFile(self.path, 'r') as zip_ref:
+                zip_ref.extractall(save_dest_dir)
+            for i, csv_path in enumerate(os.listdir(save_dest_dir)):
+                full_csv_path = os.path.join(save_dest_dir, csv_path)
+                if os.path.isfile(full_csv_path):
+                    if i == 0:
+                        do_show_table = True
+                    else:
+                        do_show_table = False
+                    self.load_from_csv_file(
+                        full_csv_path, save_format, save_dest,
+                        do_show_table=do_show_table)
+        else:
+            full_csv_path = self.path
+            self.load_from_csv_file(full_csv_path, save_format, save_dest)
+
+    def load_from_csv_file(self, csv_path, save_format, save_dest,
+                           do_show_table=True):
         # extract the name of the csv file and remove the extension
         layer_name = os.path.splitext(os.path.basename(csv_path))[0]
         try:
-            self.layer = import_layer_from_csv(
+            layer = import_layer_from_csv(
                 self, csv_path, layer_name, self.iface,
                 save_format=save_format, save_dest=save_dest,
                 zoom_to_layer=False, has_geom=False)
@@ -82,7 +103,8 @@ class LoadCsvAsLayerDialog(LoadOutputAsLayerDialog):
                     exception=exc)
             return
         write_metadata_to_layer(
-            self.drive_engine_dlg, self.output_type, self.layer)
+            self.drive_engine_dlg, self.output_type, layer)
         log_msg('Layer %s was loaded successfully' % layer_name,
                 level='S', message_bar=self.iface.messageBar())
-        self.iface.showAttributeTable(self.layer)
+        if do_show_table:
+            self.iface.showAttributeTable(layer)
