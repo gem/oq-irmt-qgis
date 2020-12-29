@@ -79,7 +79,7 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
             return
         self.load_from_npz()
         QDialog.accept(self)
-        self.loading_completed.emit()
+        self.loading_completed.emit(self)
 
     def set_ok_button(self):
         self.ok_button.setEnabled(True)

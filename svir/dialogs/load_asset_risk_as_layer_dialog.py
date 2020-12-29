@@ -72,7 +72,7 @@ class LoadAssetRiskAsLayerDialog(LoadOutputAsLayerDialog):
         self.tag_gbx.toggled.emit(False)
         self.set_ok_button()
         self.show()
-        self.init_done.emit()
+        self.init_done.emit(self)
 
     def populate_out_dep_widgets(self):
         self.visualize_gbx = QGroupBox('Visualize')
@@ -258,5 +258,5 @@ class LoadAssetRiskAsLayerDialog(LoadOutputAsLayerDialog):
                 and self.zonal_layer_gbx.isChecked()):
             self.aggregate_by_zone()
         else:
-            self.loading_completed.emit()
+            self.loading_completed.emit(self)
         QDialog.accept(self)
