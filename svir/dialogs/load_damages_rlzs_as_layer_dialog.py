@@ -34,16 +34,16 @@ from svir.utilities.utils import (WaitCursorManager,
 from svir.tasks.extract_npz_task import ExtractNpzTask
 
 
-class LoadAvgDamagesRlzsAsLayerDialog(LoadOutputAsLayerDialog):
+class LoadDamagesRlzsAsLayerDialog(LoadOutputAsLayerDialog):
     """
-    Dialog to load avg_damages-rlzs from an oq-engine output, as layer
+    Dialog to load damages-rlzs from an oq-engine output, as layer
     """
 
     def __init__(self, drive_engine_dlg, iface, viewer_dock, session, hostname,
-                 calc_id, output_type='avg_damages-rlzs',
+                 calc_id, output_type='damages-rlzs',
                  path=None, mode=None, zonal_layer_path=None,
                  engine_version=None, calculation_mode=None):
-        assert output_type == 'avg_damages-rlzs'
+        assert output_type == 'damages-rlzs'
         LoadOutputAsLayerDialog.__init__(
             self, drive_engine_dlg, iface, viewer_dock, session, hostname,
             calc_id, output_type=output_type, path=path, mode=mode,
@@ -93,7 +93,7 @@ class LoadAvgDamagesRlzsAsLayerDialog(LoadOutputAsLayerDialog):
         self.adjustSize()
         self.set_ok_button()
         self.show()
-        self.init_done.emit()
+        self.init_done.emit(self)
 
     def set_ok_button(self):
         self.ok_button.setEnabled(self.dmg_state_cbx.currentIndex() != -1
@@ -146,10 +146,10 @@ class LoadAvgDamagesRlzsAsLayerDialog(LoadOutputAsLayerDialog):
         dmg_state = kwargs['dmg_state']
         if (self.aggregate_by_site_ckb.isChecked() or
                 self.zonal_layer_gbx.isChecked()):
-            layer_name = "avg_damages-rlzs_%s_%s_%s_%s" % (
+            layer_name = "damages-rlzs_%s_%s_%s_%s" % (
                 rlz_or_stat, taxonomy, loss_type, dmg_state)
         else:  # recovery modeling
-            layer_name = "avg_damages-rlzs_%s_%s" % (rlz_or_stat, loss_type)
+            layer_name = "damages-rlzs_%s_%s" % (rlz_or_stat, loss_type)
         return layer_name
 
     def get_field_types(self, **kwargs):
@@ -167,7 +167,7 @@ class LoadAvgDamagesRlzsAsLayerDialog(LoadOutputAsLayerDialog):
                 '%s_%s' % (loss_type, name)
                 for name in self.dataset[loss_type].dtype.names])
         if self.zonal_layer_gbx.isChecked():
-            self.default_field_name = "%s_%s_mean" % (
+            self.default_field_name = "%s_%s" % (
                 self.loss_type_cbx.currentText(),
                 self.dmg_state_cbx.currentText())
         # NOTE: assuming that all fields are numeric

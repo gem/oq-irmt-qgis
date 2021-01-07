@@ -86,6 +86,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         cls.global_failed_attempts = []
         cls.global_skipped_attempts = []
         cls.global_time_consuming_outputs = []
+        cls.loading_completed = {}
+        cls.loading_exception = {}
         cls.irmt.drive_oq_engine_server(show=False, hostname=cls.hostname)
         # NOTE: calc_list must be retrieved BEFORE starting any test
         cls.calc_list = cls.irmt.drive_oq_engine_server_dlg.calc_list
@@ -93,18 +95,25 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             raise cls.calc_list
         cls.output_list = {}
         try:
-            selected_calc_id = int(os.environ.get('SELECTED_CALC_ID'))
+            cls.only_calc_id = int(os.environ.get('ONLY_CALC_ID'))
         except (ValueError, TypeError):
-            print('SELECTED_CALC_ID was not set or is not an integer'
+            print('ONLY_CALC_ID was not set or is not an integer'
                   ' value. Running tests for all the available calculations')
-            selected_calc_id = None
+            cls.only_calc_id = None
         else:
-            print('SELECTED_CALC_ID is set.'
+            print('ONLY_CALC_ID is set.'
                   ' Running tests only for calculation #%s'
-                  % selected_calc_id)
-        if selected_calc_id is not None:
+                  % cls.only_calc_id)
+        if cls.only_calc_id is not None:
             cls.calc_list = [calc for calc in cls.calc_list
-                             if calc['id'] == selected_calc_id]
+                             if calc['id'] == cls.only_calc_id]
+        cls.only_output_type = os.environ.get('ONLY_OUTPUT_TYPE')
+        if not cls.only_output_type:
+            print('ONLY_OUTPUT_TYPE was not set. Running tests for all'
+                  ' the available output types')
+        else:
+            print('ONLY_OUTPUT_TYPE is set. Running tests only for'
+                  ' output type: %s' % cls.only_output_type)
         print("List of tested OQ-Engine demo calculations:")
         for calc in cls.calc_list:
             print('\tCalculation %s (%s): %s' % (calc['id'],
@@ -115,8 +124,9 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             if isinstance(calc_output_list, Exception):
                 raise calc_output_list
             cls.output_list[calc['id']] = calc_output_list
-            print('\t\tOutput types: %s' % ', '.join(
-                [output['type'] for output in calc_output_list]))
+            if not cls.only_output_type:
+                print('\t\tOutput types: %s' % ', '.join(
+                    [output['type'] for output in calc_output_list]))
 
     @classmethod
     def tearDownClass(cls):
@@ -189,6 +199,9 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         return calc_id
 
     def test_run_calculation(self):
+        if self.only_calc_id or self.only_output_type:
+            print('Skipping test running a new calculation')
+            return
         risk_demos_path = os.path.join(
             os.pardir, 'oq-engine', 'demos', 'risk')
         risk_demos_dirs = glob.glob(os.path.join(risk_demos_path, "*", ""))
@@ -230,6 +243,10 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             print(calc_log)
 
     def test_all_loadable_output_types_found_in_demos(self):
+        if self.only_calc_id or self.only_output_type:
+            print('Skipping test checking if all loadable outputs are found'
+                  ' in demos')
+            return
         loadable_output_types_found = set()
         loadable_output_types_not_found = set()
         for loadable_output_type in OQ_ALL_TYPES:
@@ -274,6 +291,9 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                         if not output_type.endswith('_aggr')]))
 
     def test_all_loaders_are_implemented(self):
+        if self.only_calc_id or self.only_output_type:
+            print('Skipping test checking if any loaders are not implemented')
+            return
         not_implemented_loaders = set()
         for calc in self.calc_list:
             for output in self.output_list[calc['id']]:
@@ -383,6 +403,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         if dlg.output_type == 'uhs':
             dlg.load_selected_only_ckb.setChecked(True)
             assert_and_emit(
+                dlg,
                 dlg.loading_exception, self.assertGreater,
                 dlg.poe_cbx.count(), 0, 'No PoE was found')
             dlg.poe_cbx.setCurrentIndex(0)
@@ -390,39 +411,46 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             dlg.load_selected_only_ckb.setChecked(True)
             # Taxonomies should be at least 'All' and a single one
             assert_and_emit(
+                dlg,
                 dlg.loading_exception, self.assertGreater,
                 dlg.taxonomy_cbx.count(), 1, 'No taxonomy was found')
             # 'All' (inserted on top)
             taxonomy_all_idx = dlg.taxonomy_cbx.findText('All')
             assert_and_emit(
+                dlg,
                 dlg.loading_exception, self.assertEqual,
                 taxonomy_all_idx, 0,
                 "Taxonomy All was not the first in selector")
             dlg.taxonomy_cbx.setCurrentIndex(taxonomy_idx)
             assert_and_emit(
+                dlg,
                 dlg.loading_exception, self.assertGreater,
                 dlg.loss_type_cbx.count(), 0, 'No loss type was found')
             dlg.loss_type_cbx.setCurrentIndex(0)
             # FIXME: we need to do dlg.accept() also for the case
             #        performing the aggregation by zone
-        elif dlg.output_type == 'avg_damages-rlzs' and aggregate_by_site:
+        elif dlg.output_type == 'damages-rlzs' and aggregate_by_site:
             # FIXME: testing only for selected taxonomy
             dlg.load_selected_only_ckb.setChecked(True)
             assert_and_emit(
+                dlg,
                 dlg.loading_exception, self.assertGreater,
                 dlg.taxonomy_cbx.count(), 0, 'No taxonomy was found')
             dlg.taxonomy_cbx.setCurrentIndex(0)
             taxonomy_all_idx = dlg.taxonomy_cbx.findText('All')
             assert_and_emit(
+                dlg,
                 dlg.loading_exception, self.assertEqual,
                 taxonomy_all_idx, 0,
                 "Taxonomy All was not the first in selector")
             dlg.taxonomy_cbx.setCurrentIndex(taxonomy_idx)
             assert_and_emit(
+                dlg,
                 dlg.loading_exception, self.assertGreater,
                 dlg.loss_type_cbx.count(), 0, 'No loss_type was found')
             dlg.loss_type_cbx.setCurrentIndex(0)
             assert_and_emit(
+                dlg,
                 dlg.loading_exception, self.assertGreater,
                 dlg.dmg_state_cbx.count(), 0, 'No damage state was found')
             dlg.dmg_state_cbx.setCurrentIndex(0)
@@ -436,9 +464,11 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             num_taxonomies = (
                 num_selected_taxonomies + num_unselected_taxonomies)
             assert_and_emit(
+                dlg,
                 dlg.loading_exception, self.assertGreater,
                 num_taxonomies, 0, 'No taxonomy was found')
             assert_and_emit(
+                dlg,
                 dlg.loading_exception, self.assertGreater,
                 dlg.category_cbx.count(), 0, 'No category was found')
             dlg.category_cbx.setCurrentIndex(0)
@@ -455,10 +485,10 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             self.load_hcurves()
         elif dlg.output_type == 'uhs':
             self.load_uhs()
-        elif dlg.output_type == 'avg_damages-rlzs' and not aggregate_by_site:
+        elif dlg.output_type == 'damages-rlzs' and not aggregate_by_site:
             self.load_recovery_curves(dlg, approach, n_simulations)
             return
-        dlg.loading_completed.emit()
+        dlg.loading_completed.emit(dlg)
 
     def _store_skipped_attempt(self, id, calculation_mode, description, type):
         skipped_attempt = {
@@ -524,22 +554,25 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 self.irmt.drive_oq_engine_server_dlg, self.irmt.iface,
                 self.irmt.viewer_dock,
                 self.irmt.drive_oq_engine_server_dlg.session,
-                self.hostname, calc_id, output_type)
-            self.loading_completed = False
-            self.loading_exception = None
-            dlg.loading_completed.connect(self.on_loading_completed)
-            dlg.loading_exception[Exception].connect(self.on_loading_exception)
+                self.hostname, calc_id, output_type, min_mag=6.5)
+            self.loading_completed[dlg] = False
+            self.loading_exception[dlg] = None
+            dlg.loading_completed.connect(
+                lambda dlg: self.on_loading_completed(dlg))
+            dlg.loading_exception.connect(
+                lambda dlg, exception: self.on_loading_exception(
+                    dlg, exception))
             timeout = 10
             start_time = time.time()
             dlg.accept()
             while time.time() - start_time < timeout:
                 QGIS_APP.processEvents()
-                if self.loading_completed:
+                if self.loading_completed[dlg]:
                     print('\t\tok')
                     return 'ok'
-                if self.loading_exception:
+                if self.loading_exception[dlg]:
                     raise self.loading_exception
-                    return 'ok'
+                    return 'ko'
                 time.sleep(0.1)
             raise TimeoutError(
                 'Loading time exceeded %s seconds' % timeout)
@@ -554,12 +587,15 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             if output_type == 'disagg':
                 print('\t\tok')
                 return 'ok'
-            self.loading_completed = False
-            self.loading_exception = None
-            dlg.loading_completed.connect(self.on_loading_completed)
-            dlg.loading_exception[Exception].connect(self.on_loading_exception)
+            self.loading_completed[dlg] = False
+            self.loading_exception[dlg] = None
+            dlg.loading_completed.connect(
+                lambda dlg: self.on_loading_completed(dlg))
+            dlg.loading_exception.connect(
+                lambda dlg, exception: self.on_loading_exception(
+                    dlg, exception))
             dlg.init_done.connect(
-                lambda: self.on_init_done(
+                lambda dlg: self.on_init_done(
                     dlg,
                     taxonomy_idx=taxonomy_idx,
                     aggregate_by_site=aggregate_by_site,
@@ -569,12 +605,12 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             start_time = time.time()
             while time.time() - start_time < timeout:
                 QGIS_APP.processEvents()
-                if self.loading_completed:
+                if self.loading_completed[dlg]:
                     print('\t\tok')
                     return 'ok'
-                if self.loading_exception:
+                if self.loading_exception[dlg]:
                     raise self.loading_exception
-                    return 'ok'
+                    return 'ko'
                 time.sleep(0.1)
             raise TimeoutError(
                 'Loading time exceeded %s seconds' % timeout)
@@ -591,18 +627,21 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             print('\t\tok')
             return 'ok'
 
-    def on_loading_completed(self):
-        self.loading_completed = True
+    def on_loading_completed(self, dlg):
+        self.loading_completed[dlg] = True
 
-    def on_loading_exception(self, exception):
-        self.loading_exception = exception
+    def on_loading_exception(self, dlg, exception):
+        self.loading_exception[dlg] = exception
 
     def load_output_type(self, selected_output_type):
+        if self.only_output_type and self.only_output_type != selected_output_type:
+            print('\nSkipped output type: %s' % selected_output_type)
+            return
         self.failed_attempts = []
         self.skipped_attempts = []
         self.time_consuming_outputs = []
         for calc in self.calc_list:
-            if selected_output_type in ['avg_losses-rlzs', 'avg_damages-rlzs']:
+            if selected_output_type in ['avg_losses-rlzs', 'damages-rlzs']:
                 # TODO: keep track of taxonomy in test summary
                 aggregate_by_site = (
                     None if selected_output_type == 'avg_losses-rlzs'
@@ -611,8 +650,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                     self.load_calc_output(
                         calc, selected_output_type, taxonomy_idx=taxonomy_idx,
                         aggregate_by_site=aggregate_by_site)
-                # for avg_damages-rlzs also test recovery modeling
-                if selected_output_type == 'avg_damages-rlzs':
+                # for damages-rlzs also test recovery modeling
+                if selected_output_type == 'damages-rlzs':
                     for approach in ['Disaggregate', 'Aggregate']:
                         self.load_calc_output(
                             calc, selected_output_type,
@@ -660,7 +699,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         # self.irmt.viewer_dock.n_simulations_sbx.setValue(n_simulations)
         # self._change_selection()
         # self._test_export()
-        dlg.loading_completed.emit()
+        dlg.loading_completed.emit(dlg)
 
     def load_uhs(self):
         self._set_output_type('Uniform Hazard Spectra')

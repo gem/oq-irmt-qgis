@@ -52,7 +52,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QComboBox" name="avg_damages_rlzs_layer_cbx"/>
+      <widget class="QComboBox" name="damages_rlzs_layer_cbx"/>
      </item>
      <item>
       <layout class="QFormLayout" name="formLayout">

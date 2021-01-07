@@ -90,9 +90,9 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
     """
     Dialog to load an oq-engine output as layer
     """
-    init_done = pyqtSignal()
-    loading_completed = pyqtSignal()
-    loading_exception = pyqtSignal(Exception)
+    init_done = pyqtSignal(QDialog)
+    loading_completed = pyqtSignal(QDialog)
+    loading_exception = pyqtSignal(QDialog, Exception)
 
     def __init__(self, drive_engine_dlg, iface, viewer_dock,
                  session, hostname, calc_id, output_type=None,
@@ -136,7 +136,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.adjustSize()
         self.set_ok_button()
         self.show()
-        self.init_done.emit()
+        self.init_done.emit(self)
 
     def create_num_sites_indicator(self):
         self.num_sites_msg = 'Number of sites: %s'
@@ -158,13 +158,13 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             'Load one layer per realization or statistic')
         self.vlayout.addWidget(self.load_one_layer_per_stat_ckb)
 
-    def create_min_mag_dsb(self):
+    def create_min_mag_dsb(self, min_mag=4.0):
         self.min_mag_lbl = QLabel()
         self.min_mag_dsb = QDoubleSpinBox(self)
         self.min_mag_dsb.setRange(0, 10)
         self.min_mag_dsb.setDecimals(1)
         self.min_mag_dsb.setSingleStep(0.1)
-        self.min_mag_dsb.setValue(4.0)
+        self.min_mag_dsb.setValue(min_mag)
         self.vlayout.addWidget(self.min_mag_lbl)
         self.vlayout.addWidget(self.min_mag_dsb)
         # NOTE: if we don't modify the text of the label after adding the
@@ -498,7 +498,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             boundaries=boundaries, geometry_type=geometry_type,
             wkt_geom_type=wkt_geom_type,
             row_wkt_geom_types=row_wkt_geom_types)
-        if (self.output_type == 'avg_damages-rlzs' and
+        if (self.output_type == 'damages-rlzs' and
                 not self.aggregate_by_site_ckb.isChecked()):
             self.layer.setCustomProperty('output_type', 'recovery_curves')
         else:
@@ -547,9 +547,10 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 message_bar=self.iface.messageBar())
 
     @staticmethod
-    def style_maps(layer, style_by, iface, output_type='avg_damages-rlzs',
+    def style_maps(layer, style_by, iface, output_type='damages-rlzs',
                    perils=None, add_null_class=False,
-                   render_higher_on_top=False, repaint=True):
+                   render_higher_on_top=False, repaint=True,
+                   use_sgc_style=False):
         symbol = QgsSymbol.defaultSymbol(layer.geometryType())
         # see properties at:
         # https://qgis.org/api/qgsmarkersymbollayerv2_8cpp_source.html#l01073
@@ -570,7 +571,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         if output_type in OQ_TO_LAYER_TYPES:
             default_qgs_style = QgsStyle().defaultStyle()
             default_color_ramp_names = default_qgs_style.colorRampNames()
-            if output_type in ('avg_damages-rlzs',
+            if output_type in ('damages-rlzs',
                                'avg_losses-rlzs',
                                'avg_losses-stats',):
                 # options are EqualInterval, Quantile, Jenks, StdDev, Pretty
@@ -579,7 +580,8 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 ramp_type_idx = default_color_ramp_names.index('Reds')
                 symbol.setColor(QColor(RAMP_EXTREME_COLORS['Reds']['top']))
                 inverted = False
-            elif output_type in ('hmaps', 'gmf_data', 'ruptures'):
+            elif (output_type in ('gmf_data', 'ruptures')
+                  or (output_type == 'hmaps' and not use_sgc_style)):
                 # options are EqualInterval, Quantile, Jenks, StdDev, Pretty
                 # jenks = natural breaks
                 if output_type == 'ruptures':
@@ -589,6 +591,37 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 ramp_type_idx = default_color_ramp_names.index('Spectral')
                 inverted = True
                 symbol.setColor(QColor(RAMP_EXTREME_COLORS['Reds']['top']))
+            elif output_type == 'hmaps' and use_sgc_style:
+                # FIXME: for SGC they were using size 10000 map units
+
+                # options are EqualInterval, Quantile, Jenks, StdDev, Pretty
+                # jenks = natural breaks
+                mode = QgsGraduatedSymbolRenderer.Pretty
+                try:
+                    ramp_type_idx = default_color_ramp_names.index(
+                        'SGC_Green2Red_Hmap_Color_Ramp')
+                except ValueError:
+                    raise ValueError(
+                            'Color ramp SGC_Green2Red_Hmap_Color_Ramp was '
+                            'not found. Please import it from '
+                            'Settings -> Style Manager, loading '
+                            'svir/resources/sgc_green2red_hmap_color_ramp.xml')
+                inverted = False
+                registry = QgsApplication.symbolLayerRegistry()
+                symbol_props = {
+                    'name': 'square',
+                    'color': '0,0,0',
+                    'color_border': '0,0,0',
+                    'offset': '0,0',
+                    'size': '1.5',  # FIXME
+                    'angle': '0',
+                }
+                square = registry.symbolLayerMetadata(
+                    "SimpleMarker").createSymbolLayer(symbol_props)
+                symbol = QgsSymbol.defaultSymbol(layer.geometryType()).clone()
+                symbol.deleteSymbolLayer(0)
+                symbol.appendSymbolLayer(square)
+                symbol.symbolLayer(0).setStrokeStyle(Qt.PenStyle(Qt.NoPen))
             elif output_type in ['asset_risk', 'input']:
                 # options are EqualInterval, Quantile, Jenks, StdDev, Pretty
                 # jenks = natural breaks
@@ -635,10 +668,11 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 mode,
                 symbol.clone(),
                 ramp)
-            label_format = renderer.labelFormat()
-            # label_format.setTrimTrailingZeroes(True)  # it might be useful
-            label_format.setPrecision(2)
-            renderer.setLabelFormat(label_format, updateRanges=True)
+            if not use_sgc_style:
+                label_format = renderer.labelFormat()
+                # label_format.setTrimTrailingZeroes(True)  # might be useful
+                label_format.setPrecision(2)
+                renderer.setLabelFormat(label_format, updateRanges=True)
         elif num_unique_values == 2:
             categories = []
             for unique_value in unique_values:
@@ -704,7 +738,8 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                     sym.symbolLayer(lay).setRenderingPass(i)
                 renderer.setLegendSymbolItem(key, sym)
         layer.setRenderer(renderer)
-        layer.setOpacity(0.7)
+        if not use_sgc_style:
+            layer.setOpacity(0.7)
         log_msg('Layer %s was created successfully' % layer.name(), level='S',
                 message_bar=iface.messageBar())
         if repaint:
@@ -756,16 +791,31 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
 
     def style_curves(self):
         registry = QgsApplication.symbolLayerRegistry()
+        symbol_props = {
+            'name': 'cross2',
+            'color': '0,0,0',
+            'color_border': '0,0,0',
+            'offset': '0,0',
+            'size': '1.5',
+            'angle': '0',
+        }
+        opacity = 0.7
         cross = registry.symbolLayerMetadata("SimpleMarker").createSymbolLayer(
-            {'name': 'cross2', 'color': '0,0,0', 'color_border': '0,0,0',
-             'offset': '0,0', 'size': '1.5', 'angle': '0'})
-        symbol = QgsSymbol.defaultSymbol(self.layer.geometryType())
+            symbol_props)
+        # NOTE: Cross symbols rendered for OQ-Engine disaggregation outputs are
+        # opaque, wider and thicker than those used for other outputs (e.g.
+        # hcurves)
+        if self.output_type == 'disagg':
+            cross.setSize(3)
+            cross.setStrokeWidth(0.5)
+            opacity = 1
+        symbol = QgsSymbol.defaultSymbol(self.layer.geometryType()).clone()
         symbol.deleteSymbolLayer(0)
         symbol.appendSymbolLayer(cross)
         renderer = QgsSingleSymbolRenderer(symbol)
         effect = QgsOuterGlowEffect()
         effect.setSpread(0.5)
-        effect.setOpacity(1)
+        effect.setOpacity(opacity)
         effect.setColor(QColor(255, 255, 255))
         effect.setBlurLevel(1)
 
@@ -773,7 +823,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         renderer.paintEffect().setEnabled(True)
 
         self.layer.setRenderer(renderer)
-        self.layer.setOpacity(0.7)
+        self.layer.setOpacity(opacity)
         self.layer.triggerRepaint()
 
         # NOTE QGIS3: probably not needed
@@ -882,7 +932,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         if self.output_type in OQ_EXTRACT_TO_LAYER_TYPES:
             self.load_from_npz()
             if self.output_type in ('avg_losses-rlzs',
-                                    'avg_damages-rlzs',
+                                    'damages-rlzs',
                                     'avg_losses-stats'):
                 # check if also aggregating by zone or not
                 if (not self.zonal_layer_cbx.currentText() or

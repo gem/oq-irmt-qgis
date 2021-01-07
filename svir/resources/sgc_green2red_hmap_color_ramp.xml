@@ -1,0 +1,22 @@
+<!DOCTYPE qgis_style>
+<qgis_style version="2">
+  <symbols/>
+  <colorramps>
+    <colorramp type="gradient" tags="Colorful" name="SGC_Green2Red_Hmap_Color_Ramp">
+      <prop k="color1" v="89,157,92,255"/>
+      <prop k="color2" v="211,0,0,255"/>
+      <prop k="discrete" v="0"/>
+      <prop k="info_authors" v="Paul Wessel, Walter Smith, Andreas Trawoeger"/>
+      <prop k="info_cpt-city-gradient" v="&lt;cpt-city>/gmt/GMT_panoply.svg"/>
+      <prop k="info_cpt-city-license" v="&lt;cpt-city>/gmt/COPYING.xml"/>
+      <prop k="info_license/informal" v="GPLv2"/>
+      <prop k="info_license/url" v="http://www.gnu.org/licenses/gpl-2.0.html"/>
+      <prop k="info_license/year" v="2004, 2010"/>
+      <prop k="info_src/link" v="http://gmt.soest.hawaii.edu/gmt/gmt_download.html"/>
+      <prop k="rampType" v="gradient"/>
+      <prop k="stops" v="0.109337;69,187,61,255:0.203931;145,255,128,255:0.292383;255,245,67,255:0.386978;240,237,18,255:0.538084;255,204,0,255:0.652334;255,124,76,255"/>
+    </colorramp>
+  </colorramps>
+  <textformats/>
+  <labelsettings/>
+</qgis_style>

@@ -221,7 +221,7 @@ RECOVERY_DEFAULTS['n_recovery_based_dmg_states'] = len(
 
 OQ_CSV_TO_LAYER_TYPES = set([
     'agg_risk',
-    'agglosses',
+    'agg_losses-stats',
     'dmg_by_event',
     'events',
     'losses_by_event',
@@ -229,7 +229,7 @@ OQ_CSV_TO_LAYER_TYPES = set([
 ])
 OQ_EXTRACT_TO_LAYER_TYPES = set([
     'asset_risk',
-    'avg_damages-rlzs',
+    'damages-rlzs',
     'avg_losses-rlzs',
     'avg_losses-stats',
     'gmf_data',
@@ -251,7 +251,7 @@ OQ_RST_TYPES = set([
 OQ_EXTRACT_TO_VIEW_TYPES = set([
      'agg_curves-rlzs',
      'agg_curves-stats',
-     'avg_damages-rlzs_aggr',
+     'damages-rlzs_aggr',
      'avg_losses-rlzs_aggr',
      'avg_losses-stats_aggr',
 ])

@@ -39,8 +39,8 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
     """
 
     def __init__(self, drive_engine_dlg, iface, viewer_dock, session, hostname,
-                 calc_id, output_type='ruptures', path=None, mode=None,
-                 engine_version=None, calculation_mode=None):
+                 calc_id, output_type='ruptures', min_mag=4, path=None,
+                 mode=None, engine_version=None, calculation_mode=None):
         assert output_type == 'ruptures'
         LoadOutputAsLayerDialog.__init__(
             self, drive_engine_dlg, iface, viewer_dock, session, hostname,
@@ -51,7 +51,7 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
             ('Magnitude', 'mag'),
         ])
         self.setWindowTitle('Load ruptures as layer')
-        self.create_min_mag_dsb()
+        self.create_min_mag_dsb(min_mag)
         self.create_style_by_selector()
         self.populate_out_dep_widgets()
         self.adjustSize()
@@ -79,7 +79,7 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
             return
         self.load_from_npz()
         QDialog.accept(self)
-        self.loading_completed.emit()
+        self.loading_completed.emit(self)
 
     def set_ok_button(self):
         self.ok_button.setEnabled(True)

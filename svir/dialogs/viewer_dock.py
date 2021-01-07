@@ -159,7 +159,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             ('uhs', 'Uniform Hazard Spectra'),
             ('agg_curves-rlzs', 'Aggregate loss curves (realizations)'),
             ('agg_curves-stats', 'Aggregate loss curves (statistics)'),
-            ('avg_damages-rlzs_aggr', 'Damage distribution'),
+            ('damages-rlzs_aggr', 'Damage distribution'),
             ('avg_losses-rlzs_aggr', 'Loss distribution'),
             ('avg_losses-stats_aggr', 'Average assets losses (statistics)'),
         ])
@@ -484,7 +484,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         cbx.setEnabled(
             tag_name in self.tag_names_multiselect.get_selected_items())
 
-    def filter_avg_damages_rlzs_aggr(self):
+    def filter_damages_rlzs_aggr(self):
         # NOTE: self.tags is structured like:
         # {'taxonomy': {
         #     'selected': True,
@@ -519,17 +519,17 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         output_type = 'agg_damages/%s' % self.loss_type_cbx.currentText()
         with WaitCursorManager(
                 'Extracting...', message_bar=self.iface.messageBar()):
-            self.avg_damages_rlzs_aggr = extract_npz(
+            self.damages_rlzs_aggr = extract_npz(
                 self.session, self.hostname, self.calc_id, output_type,
                 message_bar=self.iface.messageBar(), params=params)
-        if (self.avg_damages_rlzs_aggr is None
-                or 'array' not in self.avg_damages_rlzs_aggr):
+        if (self.damages_rlzs_aggr is None
+                or 'array' not in self.damages_rlzs_aggr):
             msg = 'No data corresponds to the current selection'
             log_msg(msg, level='W', message_bar=self.iface.messageBar(),
                     duration=5)
             self.clear_plot()
             return
-        self.draw_avg_damages_rlzs_aggr()
+        self.draw_damages_rlzs_aggr()
 
     def filter_agg_curves(self):
         params = {}
@@ -604,8 +604,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                     self.tags[tag_name]['values'][value] = False
                     if self.tag_with_all_values == tag_name:
                         self.tag_with_all_values = None
-        if self.output_type == 'avg_damages-rlzs_aggr':
-            self.filter_avg_damages_rlzs_aggr()
+        if self.output_type == 'damages-rlzs_aggr':
+            self.filter_damages_rlzs_aggr()
         elif self.output_type in ('avg_losses-rlzs_aggr',
                                   'avg_losses-stats_aggr'):
             self.filter_avg_losses_rlzs_aggr()
@@ -618,8 +618,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.tags[tag_name]['values'][tag_value] = True
         for tag_value in cbx.get_unselected_items():
             self.tags[tag_name]['values'][tag_value] = False
-        if self.output_type == 'avg_damages-rlzs_aggr':
-            self.filter_avg_damages_rlzs_aggr()
+        if self.output_type == 'damages-rlzs_aggr':
+            self.filter_damages_rlzs_aggr()
         elif self.output_type in ('avg_losses-rlzs_aggr',
                                   'avg_losses-stats_aggr',
                                   'agg_curves-rlzs',
@@ -701,7 +701,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.stats_multiselect.selection_changed.connect(
                 # lambda: self.draw_agg_curves(new_output_type))
                 self.filter_agg_curves)
-        elif new_output_type == 'avg_damages-rlzs_aggr':
+        elif new_output_type == 'damages-rlzs_aggr':
             self.create_loss_type_selector()
             self.create_rlz_selector()
             self.create_tag_names_multiselect(monovalue=True)
@@ -743,8 +743,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.raise_()
         if output_type in ['agg_curves-rlzs', 'agg_curves-stats']:
             self.load_agg_curves(calc_id, session, hostname, output_type)
-        elif output_type == 'avg_damages-rlzs_aggr':
-            self.load_avg_damages_rlzs_aggr(
+        elif output_type == 'damages-rlzs_aggr':
+            self.load_damages_rlzs_aggr(
                 calc_id, session, hostname, output_type)
         elif output_type in ('avg_losses-rlzs_aggr',
                              'avg_losses-stats_aggr'):
@@ -753,7 +753,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         else:
             raise NotImplementedError(output_type)
 
-    def load_avg_damages_rlzs_aggr(
+    def load_damages_rlzs_aggr(
             self, calc_id, session, hostname, output_type):
         with WaitCursorManager(
                 'Extracting...', message_bar=self.iface.messageBar()):
@@ -792,7 +792,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.tag_names_multiselect.add_unselected_items(tag_names)
         self.clear_tag_values_multiselects(tag_names)
 
-        self.filter_avg_damages_rlzs_aggr()
+        self.filter_damages_rlzs_aggr()
 
     def _build_tags(self):
         tag_names = sorted(self.exposure_metadata['tagnames'])
@@ -1086,7 +1086,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.plot.set_xscale('log')
         self.plot.set_yscale('linear')
         self.plot.set_xlabel('Return period (years)')
-        self.plot.set_ylabel('Loss (%s)' % unit.decode('utf8'))
+        self.plot.set_ylabel('Loss (%s)' % unit)
         title = 'Loss type: %s' % self.loss_type_cbx.currentText()
         self.plot.set_title(title)
         self.plot.grid(which='both')
@@ -1096,11 +1096,11 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 loc=location, fancybox=True, shadow=True, fontsize='small')
         self.plot_canvas.draw()
 
-    def draw_avg_damages_rlzs_aggr(self):
+    def draw_damages_rlzs_aggr(self):
         '''
         Plots the total damage distribution
         '''
-        if len(self.avg_damages_rlzs_aggr['array']) == 0:
+        if len(self.damages_rlzs_aggr['array']) == 0:
             msg = 'No assets satisfy the selected criteria'
             log_msg(msg, level='W', message_bar=self.iface.messageBar())
             self.plot.clear()
@@ -1108,9 +1108,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             return
         rlz = self.rlz_cbx.currentIndex()
         # TODO: re-add error bars when stddev will become available again
-        # means = self.avg_damages_rlzs_aggr['array'][rlz]['mean']
-        # stddevs = self.avg_damages_rlzs_aggr['array'][rlz]['stddev']
-        means = self.avg_damages_rlzs_aggr['array'][rlz]
+        # means = self.damages_rlzs_aggr['array'][rlz]['mean']
+        # stddevs = self.damages_rlzs_aggr['array'][rlz]['stddev']
+        means = self.damages_rlzs_aggr['array'][rlz]
         if (means < 0).any():
             msg = ('The results displayed include negative damage estimates'
                    ' for one or more damage states. Please check the fragility'
@@ -1503,12 +1503,12 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         recovery = RecoveryModeling(features, approach, self.iface)
         integrate_svi = False
         probs_field_names = self.fields_multiselect.get_selected_items()
-        zonal_avg_damages_rlzs_probs, zonal_asset_refs = \
+        zonal_damages_rlzs_probs, zonal_asset_refs = \
             recovery.collect_zonal_data(probs_field_names, integrate_svi)
         n_simulations = self.n_simulations_sbx.value()
         recovery_function = \
             recovery.generate_community_level_recovery_curve(
-                'ALL', zonal_avg_damages_rlzs_probs, zonal_asset_refs,
+                'ALL', zonal_damages_rlzs_probs, zonal_asset_refs,
                 n_simulations=n_simulations)
         self.current_abscissa = list(range(len(recovery_function)))
         color = QColor('black')
@@ -1587,7 +1587,13 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         selected = self.iface.activeLayer().selectedFeatureIds()
         if len(selected) == 1:
             feat = self.iface.activeLayer().getFeature(selected[0])
-            point = feat.geometry().asPoint()
+            try:
+                point = feat.geometry().asPoint()
+            except TypeError:
+                try:
+                    point = feat.geometry().asMultiPoint()[0]
+                except TypeError:
+                    return
             x, y = point.x(), point.y()
             expression = '$x = %s AND $y = %s' % (x, y)
             request = QgsFeatureRequest().setFilterExpression(expression)
@@ -1698,8 +1704,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             # self.draw_agg_curves(self.output_type)
         elif self.output_type == 'agg_curves-stats':
             self.filter_agg_curves()
-        elif self.output_type == 'avg_damages-rlzs_aggr':
-            self.filter_avg_damages_rlzs_aggr()
+        elif self.output_type == 'damages-rlzs_aggr':
+            self.filter_damages_rlzs_aggr()
         elif self.output_type in ('avg_losses-rlzs_aggr',
                                   'avg_losses-stats_aggr'):
             self.filter_avg_losses_rlzs_aggr()
@@ -1733,11 +1739,11 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.filter_agg_curves()
 
     def on_rlz_changed(self):
-        self.filter_avg_damages_rlzs_aggr()
+        self.filter_damages_rlzs_aggr()
 
     @pyqtSlot(int)
     def on_exclude_no_dmg_ckb_state_changed(self, state):
-        self.filter_avg_damages_rlzs_aggr()
+        self.filter_damages_rlzs_aggr()
 
     @pyqtSlot()
     def on_export_data_button_clicked(self):
@@ -1767,7 +1773,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                                         loss_type,
                                         self.calc_id)),
                 '*.csv')
-        elif self.output_type in ('avg_damages-rlzs_aggr',
+        elif self.output_type in ('damages-rlzs_aggr',
                                   'avg_losses-rlzs_aggr',
                                   'avg_losses-stats_aggr'):
             filename, _ = QFileDialog.getSaveFileName(
@@ -1880,7 +1886,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 loss_type = self.loss_type_cbx.currentText()
                 abs_rel = self.abs_rel_cbx.currentText()
                 loss_type_idx = self.loss_type_cbx.currentIndex()
-                unit = self.agg_curves['units'][loss_type_idx].decode('utf8')
+                unit = self.agg_curves['units'][loss_type_idx]
                 csv_file.write("# Loss type: %s\r\n" % loss_type)
                 csv_file.write("# Absolute or relative: %s\r\n" % abs_rel)
                 csv_file.write("# Measurement unit: %s\r\n" % unit)
@@ -1906,7 +1912,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 loss_type = self.loss_type_cbx.currentText()
                 abs_rel = self.abs_rel_cbx.currentText()
                 loss_type_idx = self.loss_type_cbx.currentIndex()
-                unit = self.agg_curves['units'][loss_type_idx].decode('utf8')
+                unit = self.agg_curves['units'][loss_type_idx]
                 csv_file.write("# Loss type: %s\r\n" % loss_type)
                 csv_file.write("# Absolute or relative: %s\r\n" % abs_rel)
                 csv_file.write("# Measurement unit: %s\r\n" % unit)
@@ -1949,7 +1955,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                     except TypeError:  # it is a single value instead of list
                         row.append(values)
                     writer.writerow(row)
-            elif self.output_type == 'avg_damages-rlzs_aggr':
+            elif self.output_type == 'damages-rlzs_aggr':
                 csv_file.write(
                     "# Realization: %s\r\n" % self.rlz_cbx.currentText())
                 csv_file.write(
@@ -1959,7 +1965,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                         self.get_list_selected_tags_str() or 'None'))
                 headers = self.dmg_states
                 writer.writerow(headers)
-                values = self.avg_damages_rlzs_aggr[
+                values = self.damages_rlzs_aggr[
                     'array'][self.rlz_cbx.currentIndex()]
                 writer.writerow(values)
             elif self.output_type in ('avg_losses-rlzs_aggr',
@@ -2011,8 +2017,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         elif self.output_type == 'agg_curves-stats':
             # self.draw_agg_curves(self.output_type)
             self.filter_agg_curves()
-        elif self.output_type == 'avg_damages-rlzs_aggr':
-            self.filter_avg_damages_rlzs_aggr()
+        elif self.output_type == 'damages-rlzs_aggr':
+            self.filter_damages_rlzs_aggr()
 
     @pyqtSlot(int)
     def on_output_type_cbx_currentIndexChanged(self, index):
