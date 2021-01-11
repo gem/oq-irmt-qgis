@@ -65,25 +65,32 @@ class ImportGvMapDialog(QDialog, FORM_CLASS):
     def show_map_list(self, map_list):
         if not map_list:
             return
-        fields_to_display = map_list[0]['fields']
+        fields_to_display = list(map_list[0]['fields'])
+        name_idx = fields_to_display.index('name')
+        fields_to_display.pop(name_idx)
+        fields_to_display.insert(0, 'name')
+
         self.list_of_maps_tbl.setRowCount(len(map_list))
         self.list_of_maps_tbl.setColumnCount(len(fields_to_display) + 1)
         for row, map in enumerate(map_list):
-            for col, field in enumerate(fields_to_display):
-                item = QTableWidgetItem(str(map['fields'][field]))
-                self.list_of_maps_tbl.setItem(row, col, item)
-                self.list_of_maps_tbl.setHorizontalHeaderItem(
-                    col, QTableWidgetItem(field))
+            # FIXME
             # if map['fields']['downloadable']:
             button = QPushButton('Download')
             self.list_of_maps_tbl.setCellWidget(
-                row, len(fields_to_display), button)
-            self.list_of_maps_tbl.setColumnWidth(col, BUTTON_WIDTH)
+                row, 0, button)
+            # self.list_of_maps_tbl.setColumnWidth(0, BUTTON_WIDTH)
+            self.list_of_maps_tbl.setHorizontalHeaderItem(
+                0, QTableWidgetItem(''))
             button.clicked.connect(
                 lambda checked=False,
                 map_name=map['fields']['name'],
                 map_slug=map['fields']['slug']:
                     self.on_download_btn_clicked(map_name, map_slug))
+            for col, field in enumerate(fields_to_display, start=1):
+                item = QTableWidgetItem(str(map['fields'][field]))
+                self.list_of_maps_tbl.setItem(row, col, item)
+                self.list_of_maps_tbl.setHorizontalHeaderItem(
+                    col, QTableWidgetItem(field))
 
     def download_url(self, url, save_path, chunk_size=128):
         r = requests.get(url, stream=True)
