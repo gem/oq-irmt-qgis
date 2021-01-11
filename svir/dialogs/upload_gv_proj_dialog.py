@@ -35,7 +35,7 @@ from qgis.core import (
     QgsTask, QgsMapLayerType)
 from qgis.PyQt.QtCore import QVariant, QDir, QFile
 from qgis.PyQt.QtWidgets import (
-    QDialog, QDialogButtonBox)
+    QDialog, QDialogButtonBox, QMessageBox)
 from processing.gui.AlgorithmExecutor import execute
 from svir.tasks.consolidate_task import ConsolidateTask
 from svir.utilities.utils import (
@@ -129,25 +129,48 @@ class UploadGvProjDialog(QDialog, FORM_CLASS):
         p = QgsProject.instance()
         add_geoms_to_feat_resp = p.readBoolEntry("WMSAddWktGeometry", "/")[0]
         if not add_geoms_to_feat_resp:
-            msg = ('Project QGIS Server property "Add geometry to feature'
-                   ' response" is disabled')
-            log_msg(msg, level='W',
-                    message_bar=self.message_bar)
-        if not QgsServerProjectUtils.wmsFeatureInfoSegmentizeWktGeometry(p):
-            msg = ('Project QGIS Server property "Segmentize feature info'
-                   ' geometry" is disabled')
-            log_msg(msg, level='W',
-                    message_bar=self.message_bar)
+            msg = 'Would you like to add geometry to GetFeatureInfo response?'
+            ret = QMessageBox.question(
+                self, '', msg, QMessageBox.Yes, QMessageBox.No)
+            if ret == QMessageBox.Yes:
+                p.writeEntryBool("WMSAddWktGeometry", "/", True)
+
+        # FIXME: this returns False even if the precision is set to 1
+        geom_precision = p.readEntry("WMSPrecision", "/")[0]
+        if geom_precision != 1:
+            msg = ('Would you like to set GetFeatureInfo geometry precision '
+                   'to 1 decimal place?')
+            ret = QMessageBox.question(
+                self, '', msg, QMessageBox.Yes, QMessageBox.No)
+            if ret == QMessageBox.Yes:
+                p.writeEntry("WMSPrecision", "/", 1)
+        # if not QgsServerProjectUtils.wmsFeatureInfoSegmentizeWktGeometry(p):
+        #     msg = ('Project QGIS Server property "Segmentize feature info'
+        #            ' geometry" is disabled')
+        #     log_msg(msg, level='W',
+        #             message_bar=self.message_bar)
         if not QgsServerProjectUtils.owsServiceCapabilities(p):
-            log_msg("Project capabilities are disabled", level='C',
-                    message_bar=self.message_bar)
-            self.reject()
-            return
+            msg = ('Would you like to enable service capabilities?')
+            ret = QMessageBox.question(
+                self, '', msg, QMessageBox.Yes, QMessageBox.No)
+            if ret == QMessageBox.Yes:
+                p.writeEntryBool("WMSServiceCapabilities", "/", True)
+            # log_msg("Project capabilities are disabled", level='C',
+            #         message_bar=self.message_bar)
+            # self.reject()
+            # return
+
+        # FIXME: we should set the extent to the current one
         if QgsServerProjectUtils.wmsExtent(p).isEmpty():
-            log_msg("Project extent is not advertised", level='C',
-                    message_bar=self.message_bar)
-            self.reject()
-            return
+            msg = ('Would you like to advertise project extent?')
+            ret = QMessageBox.question(
+                self, '', msg, QMessageBox.Yes, QMessageBox.No)
+            if ret == QMessageBox.Yes:
+                p.writeEntry("WMSExtent", "/", True)
+            # log_msg("Project extent is not advertised", level='C',
+            #         message_bar=self.message_bar)
+            # self.reject()
+            # return
 
     def check_geometries(self):
         layers = list(QgsProject.instance().mapLayers().values())
