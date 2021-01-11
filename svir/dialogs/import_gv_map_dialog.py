@@ -30,12 +30,10 @@ import zipfile
 import os
 from requests import Session
 from qgis.core import QgsProject
-from qgis.PyQt.QtCore import QSettings
 from qgis.PyQt.QtWidgets import (
-    QDialog, QMessageBox, QTableWidgetItem, QPushButton)
+    QDialog, QTableWidgetItem, QPushButton)
 from svir.utilities.utils import (
     get_ui_class, log_msg, geoviewer_login, get_credentials)
-from svir.utilities.shared import DEFAULT_GEOVIEWER_PROFILES
 
 BUTTON_WIDTH = 75
 
@@ -76,16 +74,16 @@ class ImportGvMapDialog(QDialog, FORM_CLASS):
                 self.list_of_maps_tbl.setItem(row, col, item)
                 self.list_of_maps_tbl.setHorizontalHeaderItem(
                     col, QTableWidgetItem(field))
-            # if True:  # map['fields']['downloadable']:
-                button = QPushButton('Download')
-                self.list_of_maps_tbl.setCellWidget(
-                    row, len(fields_to_display), button)
-                self.list_of_maps_tbl.setColumnWidth(col, BUTTON_WIDTH)
-                button.clicked.connect(
-                    lambda checked=False,
-                    map_name=map['fields']['name'],
-                    map_slug=map['fields']['slug']:
-                        self.on_download_btn_clicked(map_name, map_slug))
+            # if map['fields']['downloadable']:
+            button = QPushButton('Download')
+            self.list_of_maps_tbl.setCellWidget(
+                row, len(fields_to_display), button)
+            self.list_of_maps_tbl.setColumnWidth(col, BUTTON_WIDTH)
+            button.clicked.connect(
+                lambda checked=False,
+                map_name=map['fields']['name'],
+                map_slug=map['fields']['slug']:
+                    self.on_download_btn_clicked(map_name, map_slug))
 
     def download_url(self, url, save_path, chunk_size=128):
         r = requests.get(url, stream=True)
