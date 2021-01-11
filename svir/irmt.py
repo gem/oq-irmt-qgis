@@ -61,7 +61,7 @@ from qgis.PyQt.QtGui import QIcon, QDesktopServices, QColor
 from svir.dialogs.viewer_dock import ViewerDock
 from svir.utilities.import_sv_data import get_loggedin_downloader
 from svir.dialogs.download_layer_dialog import DownloadLayerDialog
-from svir.dialogs.import_gv_proj_dialog import ImportGvProjDialog
+from svir.dialogs.import_gv_map_dialog import ImportGvMapDialog
 from svir.dialogs.upload_gv_proj_dialog import UploadGvProjDialog
 from svir.dialogs.projects_manager_dialog import ProjectsManagerDialog
 from svir.dialogs.select_sv_variables_dialog import SelectSvVariablesDialog
@@ -204,11 +204,13 @@ class Irmt(object):
         self.menu_action = menu_bar.insertMenu(
             self.iface.firstRightStandardMenu().menuAction(), self.menu)
 
-        # Action to list OQ GeoViewer projects
-        self.add_menu_item("import_geoviewer_project",
+        # NOTE: we could either list maps and use the existing api to download
+        # maps or add a GeoViewer api to download projects
+        # Action to list OQ GeoViewer maps
+        self.add_menu_item("import_geoviewer_map",
                            ":/plugins/irmt/load_layer.svg",
-                           u"Import project from the OpenQuake &GeoViewer",
-                           self.import_geoviewer_project,
+                           u"Import map from the OpenQuake &GeoViewer",
+                           self.import_geoviewer_map,
                            enable=True,
                            add_to_layer_actions=False,
                            submenu='OQ GeoViewer')
@@ -818,17 +820,17 @@ class Irmt(object):
                 layer.setFieldAlias(
                     field_idx, 'Country name')
 
-    def import_geoviewer_project(self):
+    def import_geoviewer_map(self):
         """
-        FIXME
+        Open dialog to import maps from a connected OQ-GeoViewer
         """
-        self.download_gv_proj_dlg = ImportGvProjDialog(
+        self.download_gv_map_dlg = ImportGvMapDialog(
             self.iface.messageBar())
-        self.download_gv_proj_dlg.exec_()
+        self.download_gv_map_dlg.exec_()
 
     def upload_project_to_geoviewer(self):
         """
-        FIXME
+        Open dialog to upload the current project to a connected OQ-GeoViewer
         """
         self.upload_gv_proj_dlg = UploadGvProjDialog(
             self.iface.messageBar(), parent=self.iface.mainWindow())

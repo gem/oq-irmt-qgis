@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>DownloadGeoviewerProjectDialog</class>
- <widget class="QDialog" name="DownloadGeoviewerProjectDialog">
+ <class>DownloadGeoviewerMapDialog</class>
+ <widget class="QDialog" name="DownloadGeoviewerMapDialog">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Download OQ-GeoViewer projects</string>
+   <string>Download OQ-GeoViewer map</string>
   </property>
   <property name="windowIcon">
    <iconset>
@@ -31,7 +31,7 @@
           <number>0</number>
          </property>
          <item>
-          <widget class="QLabel" name="list_of_projects_lbl">
+          <widget class="QLabel" name="list_of_maps_lbl">
            <property name="font">
             <font>
              <weight>75</weight>
@@ -40,14 +40,14 @@
             </font>
            </property>
            <property name="text">
-            <string>OpenQuake GeoViewer Projects</string>
+            <string>OpenQuake GeoViewer Maps</string>
            </property>
           </widget>
          </item>
         </layout>
        </item>
        <item>
-        <widget class="QTableWidget" name="list_of_projects_tbl">
+        <widget class="QTableWidget" name="list_of_maps_tbl">
          <property name="editTriggers">
           <set>QAbstractItemView::NoEditTriggers</set>
          </property>

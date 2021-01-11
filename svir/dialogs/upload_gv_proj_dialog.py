@@ -25,7 +25,6 @@
 import os
 import re
 import json
-import traceback
 import tempfile
 from requests import Session
 from qgis.server import QgsServerProjectUtils
@@ -34,7 +33,7 @@ from qgis.core import (
     QgsProcessingUtils, QgsField, QgsFields, QgsFeature, QgsGeometry,
     QgsWkbTypes, QgsMemoryProviderUtils, QgsCoordinateReferenceSystem,
     QgsTask, QgsMapLayerType)
-from qgis.PyQt.QtCore import QSettings, QVariant, QDir, QFile
+from qgis.PyQt.QtCore import QVariant, QDir, QFile
 from qgis.PyQt.QtWidgets import (
     QDialog, QDialogButtonBox)
 from processing.gui.AlgorithmExecutor import execute
@@ -42,7 +41,7 @@ from svir.tasks.consolidate_task import ConsolidateTask
 from svir.utilities.utils import (
     get_ui_class, log_msg, get_credentials, tr, geoviewer_login)
 from svir.utilities.shared import (
-    DEFAULT_GEOVIEWER_PROFILES, LICENSES, DEFAULT_LICENSE, PROJECT_KINDS,
+    LICENSES, DEFAULT_LICENSE, PROJECT_KINDS,
     DEFAULT_PROJECT_KIND)
 
 
@@ -185,6 +184,8 @@ class UploadGvProjDialog(QDialog, FORM_CLASS):
                            " 'Basemaps'" % layer.name())
                     log_msg(msg, level='W', message_bar=self.message_bar)
                 continue
+            # FIXME: we could add a check to avoid warnings for layers that
+            # have no geometries (e.g. those used as data sources for joins)
             parameters['INPUT_LAYER'] = layer.id()
             ok, results = execute(
                 alg, parameters, context=context, feedback=feedback)
