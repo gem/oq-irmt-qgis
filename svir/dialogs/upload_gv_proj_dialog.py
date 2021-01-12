@@ -207,8 +207,8 @@ class UploadGvProjDialog(QDialog, FORM_CLASS):
                            " 'Basemaps'" % layer.name())
                     log_msg(msg, level='W', message_bar=self.message_bar)
                 continue
-            # FIXME: we could add a check to avoid warnings for layers that
-            # have no geometries (e.g. those used as data sources for joins)
+            if layer.geometryType() == QgsWkbTypes.NullGeometry:
+                continue
             parameters['INPUT_LAYER'] = layer.id()
             ok, results = execute(
                 alg, parameters, context=context, feedback=feedback)
@@ -224,6 +224,8 @@ class UploadGvProjDialog(QDialog, FORM_CLASS):
     def check_crs(self):
         layers = list(QgsProject.instance().mapLayers().values())
         for layer in layers:
+            if layer.geometryType() == QgsWkbTypes.NullGeometry:
+                continue
             if not layer.crs().isValid():
                 msg = ("Layer '%s' does not have a valid coordinate"
                        " reference system" % layer.name())
