@@ -240,6 +240,9 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
             for poe in self.imts[imt]:
                 poes.add(poe)
         for poe in poes:
+            if (not self.load_all_poes_chk.isChecked()
+                    and poe != self.poe_cbx.currentText()):
+                continue
             root = QgsProject.instance().layerTreeRoot()
             ret_per_groups[poe] = root.insertGroup(0, 'POE_%s' % poe)
         if self.load_single_layer_ckb.isChecked():
