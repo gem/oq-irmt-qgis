@@ -24,6 +24,8 @@ email=staff.it@globalquakemodel.org
 # Uncomment the following line and add your changelog entries:
 changelog=
     3.11.0
+    * The settings dialog was made scrollable
+    * Hazard maps are grouped by POE
     * Following a change in the OQ-Engine, agglosses are now loaded as agg_losses-stats
     * A parameter was added to switch between default hmaps styling and the styling used for SGC projects
     * Cross symbols rendered for OQ-Engine disaggregation outputs are opaque, wider and thicker than those used for other outputs (e.g. hcurves)
