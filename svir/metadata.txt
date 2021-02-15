@@ -24,6 +24,8 @@ email=staff.it@globalquakemodel.org
 # Uncomment the following line and add your changelog entries:
 changelog=
     3.11.0
+    * The OQ-Engine output 'losses_by_event' was renamed into 'agg_loss_table'
+    * Fixed displaying full vertical headers in Data Viewer
     * The settings dialog was made scrollable
     * Hazard maps are grouped by POE
     * Following a change in the OQ-Engine, agglosses are now loaded as agg_losses-stats
