@@ -2,6 +2,8 @@
 
 set -e
 
+DOCKER_HOST=$(/sbin/ip -4 addr show docker0 | grep -Po 'inet \K[\d.]+')
+
 if [ "$TRAVIS_PULL_REQUEST_BRANCH" != "" ]; then
     BRANCH=$TRAVIS_PULL_REQUEST_BRANCH
 elif [ "$TRAVIS_BRANCH" != "" ]; then
@@ -18,7 +20,7 @@ docker rm -f qgis || true
 docker run -d --name qgis -v /tmp/.X11-unix:/tmp/.X11-unix \
  -v `pwd`/../.:/tests_directory \
  -e DISPLAY=:99 \
- -e OQ_ENGINE_HOST='http://172.17.0.1:8800' \
+ -e OQ_ENGINE_HOST="http://${DOCKER_HOST}:8800" \
  -e BRANCH="$BRANCH" \
  -e ONLY_CALC_ID="$ONLY_CALC_ID" \
  -e ONLY_OUTPUT_TYPE="$ONLY_OUTPUT_TYPE" \
