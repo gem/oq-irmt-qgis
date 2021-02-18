@@ -55,7 +55,7 @@ jobs:
       - name: Run unit test
         run: |
           set -x
-          docker exec qgis bash -c "export PYTHONPATH=/usr/share/qgis/python/plugins/:$PYTHONPATH; OGR_SQLITE_JOURNAL=delete pytest -v /tests_directory/svir/test/unit/"
+          docker exec -t qgis bash -c "export PYTHONPATH=/usr/share/qgis/python/plugins/:$PYTHONPATH; OGR_SQLITE_JOURNAL=delete pytest -v /tests_directory/svir/test/unit/"
       - name: Run Integration test
         run: |
           set -x
@@ -70,12 +70,12 @@ jobs:
           fi
           docker exec qgis sh -c "git clone -q -b $GITHUB_BR --depth=1 https://github.com/gem/oq-engine.git && echo 'Running against oq-engine/$GITHUB_BR'"
           docker exec qgis sh -c "qgis_setup.sh svir"
-          docker exec qgis sh -c "cd /tests_directory && qgis_testrunner.sh svir.test.integration.test_drive_oq_engine"
+          docker exec -t qgis sh -c "cd /tests_directory && qgis_testrunner.sh svir.test.integration.test_drive_oq_engine"
       - name: Make docs
         run: |
           set -x
           docker exec qgis sh -c "apt update --allow-releaseinfo-change; DEBIAN_FRONTEND=noninteractive apt install -y latexmk texlive-latex-extra python3-matplotlib python3-sphinx python3-sphinx-rtd-theme dvipng"
-          docker exec qgis sh -c "export PYTHONPATH=$PYTHONPATH:/oq-irmt-qgis; cd /oq-irmt-qgis/svir; make doc"
+          docker exec -t qgis sh -c "export PYTHONPATH=$PYTHONPATH:/tests_directory; cd /tests_directory/svir; make doc"
       - name: Display web logs
         run: |
           set -x
