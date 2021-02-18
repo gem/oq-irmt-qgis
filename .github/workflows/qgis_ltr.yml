@@ -1,4 +1,4 @@
-name: QGIS unit and integration test
+name: QGIS LTR unit and integration test
 on:
   push:
 
@@ -42,7 +42,7 @@ jobs:
           mkdir ~/oqdata
           oq restore oqdata-${GITHUB_BR}.zip ~/oqdata
           oq webui start 172.17.0.1:8800 --skip-browser &> webui.log &
-          sleep 5
+          sleep 10 
           curl http://172.17.0.1:8800/v1/engine_version
           #
           DOCKER_HOST=`ip -4 addr show docker0 | grep -Po 'inet \K[\d.]+'`

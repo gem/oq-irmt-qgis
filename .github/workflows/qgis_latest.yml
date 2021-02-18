@@ -1,4 +1,4 @@
-name: QGIS unit and integration test
+name: QGIS LATEST unit and integration test
 on:
   push:
 jobs:
