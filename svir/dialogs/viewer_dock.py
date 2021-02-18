@@ -1181,7 +1181,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             #        'taxonomy=Stone-Masonry',
             #        'taxonomy=Unreinforced-Brick-Masonry',
             #        'taxonomy=Concrete'], dtype='|S35')
-            tag_values = [tag.split('=')[1] for tag in tags]
+            tag_values = [tag.split('=')[1] + '  ' for tag in tags]
             self.table.setVerticalHeaderLabels(tag_values)
         else:  # NOTE: case without '*'
             tag_values = []
@@ -1192,13 +1192,18 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                         if self.tags[tag]['values'][tag_value]]
                     tag_values.extend(values)
             if tag_values:
-                self.table.setVerticalHeaderLabels([', '.join(tag_values)])
+                self.table.setVerticalHeaderLabels([
+                    ', '.join(tag_values) + '  '])
             else:
-                self.table.setVerticalHeaderLabels(['Total'])
+                self.table.setVerticalHeaderLabels(['Total  '])
         for row in range(nrows):
             for col in range(ncols):
                 self.table.setItem(
                     row, col, QTableWidgetItem(str(losses_array[row, col])))
+        # NOTE: vertical headers are not resized properly with respect to
+        # contents (they are cut on the right). I couldn't find any proper way
+        # to fix it, so I am adding a tail of 2 spaces to each header as a
+        # workaround (hack)
         self.table.resizeColumnsToContents()
 
     def draw(self):

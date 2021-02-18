@@ -120,7 +120,7 @@ OUTPUT_TYPE_LOADERS = {
     'realizations': LoadCsvAsLayerDialog,
     'events': LoadCsvAsLayerDialog,
     'dmg_by_event': LoadCsvAsLayerDialog,
-    'losses_by_event': LoadCsvAsLayerDialog,
+    'agg_loss_table': LoadCsvAsLayerDialog,
     'agg_losses-stats': LoadCsvAsLayerDialog,
     'agg_risk': LoadCsvAsLayerDialog,
     'damages-rlzs': LoadDamagesRlzsAsLayerDialog,
