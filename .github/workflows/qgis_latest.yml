@@ -1,6 +1,12 @@
 name: QGIS LATEST unit and integration test
 on:
   push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  schedule:
+    - cron: "0 1 * * *"
+
 jobs:
   PLUGIN:
     runs-on: ubuntu-18.04
