@@ -4,7 +4,7 @@ on:
 
 jobs:
   
-  QGIS_plugin_LTR:
+  PLUGIN:
     runs-on: ubuntu-18.04
     env:
       GITHUB_PULL_REQUEST: ${{ github.event.number }}
