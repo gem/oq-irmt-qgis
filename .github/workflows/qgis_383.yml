@@ -43,7 +43,7 @@ jobs:
           pip3 install -r requirements-py38-linux64.txt
           pip3 install -e .
           cd ..
-          echo "Restore demos for $ENGINE_BR branch "
+          echo "Restore OQ-Engine demos for $ENGINE_BR branch "
           mkdir ~/oqdata
           oq restore https://artifacts.openquake.org/travis/oqdata-${ENGINE_BR}.zip ~/oqdata
           oq webui start 172.17.0.1:8800 --skip-browser &> webui.log &
