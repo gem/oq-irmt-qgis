@@ -27,12 +27,12 @@ jobs:
           if [ -z "$GITHUB_HEAD_REF" ]
              then
               echo " Is not a pull request, use branch: $GITHUB_DEF_BR"
-              GITHUB_BR=$GITHUB_DEF_BR
+              IRMT_BR=$GITHUB_DEF_BR
              else
               echo " Is a pull request, use branch: $GITHUB_HEAD_REF"
-              GITHUB_BR=$GITHUB_HEAD_REF
+              IRMT_BR=$GITHUB_HEAD_REF
           fi
-          ENGINE_BR=$GITHUB_BR
+          ENGINE_BR=$IRMT_BR
           if [ "$(git ls-remote --heads https://github.com/gem/oq-engine.git ${ENGINE_BR})" == "" ]; then
               ENGINE_BR='master';
           fi
@@ -44,7 +44,7 @@ jobs:
           pip3 install -e .
           cd ..
           echo "Dump for $ENGINE_BR branch "
-          curl -sfLO https://artifacts.openquake.org/travis/oqdata-${GITHUB_BR}.zip
+          curl -sfLO https://artifacts.openquake.org/travis/oqdata-${ENGINE_BR}.zip
           mkdir ~/oqdata
           oq restore oqdata-${ENGINE_BR}.zip ~/oqdata
           oq webui start 172.17.0.1:8800 --skip-browser &> webui.log &
@@ -54,7 +54,7 @@ jobs:
           DOCKER_HOST=`ip -4 addr show docker0 | grep -Po 'inet \K[\d.]+'`
           ENGINE_HOST=`echo http://$DOCKER_HOST:8800`
           docker run -d --name qgis -v /tmp/.X11-unix:/tmp/.X11-unix -v `pwd`:/tests_directory -e DISPLAY=:99  -e OQ_ENGINE_HOST='http://172.17.0.1:8800' \
-          -e BRANCH="$GITHUB_BR" -e ONLY_CALC_ID="$ONLY_CALC_ID" -e ONLY_OUTPUT_TYPE="$ONLY_OUTPUT_TYPE"  -e GEM_QGIS_TEST=y qgis/qgis:final-3_8_3
+          -e BRANCH="$IRMT_BR" -e ONLY_CALC_ID="$ONLY_CALC_ID" -e ONLY_OUTPUT_TYPE="$ONLY_OUTPUT_TYPE"  -e GEM_QGIS_TEST=y qgis/qgis:final-3_8_3
           docker exec qgis bash -c "apt update --allow-releaseinfo-change; DEBIAN_FRONTEND=noninteractive apt install -y python3-scipy python3-matplotlib python3-pyqt5.qtwebkit"
           docker exec qgis bash -c "python3 -m pip install pytest"
           # OGR_SQLITE_JOURNAL=delete prevents QGIS from using WAL, which modifies geopackages even if they are just read
@@ -69,12 +69,16 @@ jobs:
           if [ -z "$GITHUB_HEAD_REF" ]
              then
               echo " Is not a pull request, use branch: $GITHUB_DEF_BR"
-              GITHUB_BR=$GITHUB_DEF_BR
+              IRMT_BR=$GITHUB_DEF_BR
              else
               echo " Is a pull request, use branch: $GITHUB_HEAD_REF"
-              GITHUB_BR=$GITHUB_HEAD_REF
+              IRMT_BR=$GITHUB_HEAD_REF
           fi
-          docker exec qgis sh -c "git clone -q -b $GITHUB_BR --depth=1 https://github.com/gem/oq-engine.git && echo 'Running against oq-engine/$GITHUB_BR'"
+          ENGINE_BR=$IRMT_BR
+          if [ "$(git ls-remote --heads https://github.com/gem/oq-engine.git ${ENGINE_BR})" == "" ]; then
+              ENGINE_BR='master';
+          fi
+          docker exec qgis sh -c "git clone -q -b $ENGINE_BR --depth=1 https://github.com/gem/oq-engine.git && echo 'Running against oq-engine/$GITHUB_BR'"
           docker exec qgis sh -c "qgis_setup.sh svir"
           docker exec -t qgis sh -c "cd /tests_directory && qgis_testrunner.sh svir.test.integration.test_drive_oq_engine"
       - name: Make docs
