@@ -43,10 +43,9 @@ jobs:
           pip3 install -r requirements-py38-linux64.txt
           pip3 install -e .
           cd ..
-          echo "Dump for $ENGINE_BR branch "
-          curl -sfLO https://artifacts.openquake.org/travis/oqdata-${ENGINE_BR}.zip
+          echo "Restore demos for $ENGINE_BR branch "
           mkdir ~/oqdata
-          oq restore oqdata-${ENGINE_BR}.zip ~/oqdata
+          oq restore https://artifacts.openquake.org/travis/oqdata-${ENGINE_BR}.zip ~/oqdata
           oq webui start 172.17.0.1:8800 --skip-browser &> webui.log &
           sleep 10 
           curl http://172.17.0.1:8800/v1/engine_version
