@@ -10,13 +10,10 @@ on:
 jobs:
   
   PLUGIN:
+    if: "!contains(github.event.head_commit.message, 'skip CI')"
     runs-on: ubuntu-18.04
     env:
-      GITHUB_PULL_REQUEST: ${{ github.event.number }}
-      GITHUB_DEF_BR:  ${{ github.event.repository.default_branch }}
-      GITHUB_REF:  ${{ github.ref }}
-      GITHUB_HD_REF:  ${{ github.head_ref }}
-      GITHUB_BS_REF:  ${{ github.base_ref }}
+      GITHUB_DEF_BR: master
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python
@@ -27,12 +24,12 @@ jobs:
         run: |
           set -x
           echo " Check if this is a pull request or not"
-          if [ -z "$GITHUB_HD_REF" ]
+          if [ -z "$GITHUB_HEAD_REF" ]
              then
               echo " Is not a pull request, use branch: $GITHUB_DEF_BR"
               GITHUB_BR=`echo ${{ github.event.repository.default_branch }}`
              else
-              echo " Is a pull request, use branch: $GITHUB_HD_BR"
+              echo " Is a pull request, use branch: $GITHUB_HEAD_REF"
               GITHUB_BR=`echo ${{ github.head_ref }}`
           fi
           git clone -b $GITHUB_BR --depth=1 https://github.com/gem/oq-engine.git
@@ -65,12 +62,12 @@ jobs:
         run: |
           set -x
           echo " Check if this is a pull request or not"
-          if [ -z "$GITHUB_HD_REF" ]
+          if [ -z "$GITHUB_HEAD_REF" ]
              then
               echo " Is not a pull request, use branch: $GITHUB_DEF_BR"
               GITHUB_BR=`echo ${{ github.event.repository.default_branch }}`
              else
-              echo " Is a pull request, use branch: $GITHUB_HD_BR"
+              echo " Is a pull request, use branch: $GITHUB_HEAD_REF"
               GITHUB_BR=`echo ${{ github.head_ref }}`
           fi
           docker exec qgis sh -c "git clone -q -b $GITHUB_BR --depth=1 https://github.com/gem/oq-engine.git && echo 'Running against oq-engine/$GITHUB_BR'"
