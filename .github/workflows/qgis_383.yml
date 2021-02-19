@@ -10,7 +10,6 @@ on:
 jobs:
   
   Tests_and_docs:
-    if: "! contains(toJSON(github.event.commits.*.message), '[skip CI]')"
     runs-on: ubuntu-18.04
     env:
       GITHUB_DEF_BR: master
@@ -22,6 +21,8 @@ jobs:
           python-version: 3.8
       - name: Clone engine and restore oqdata and docker container
         run: |
+          if: "!contains(github.event.head_commit.message, 'skip CI')"
+          # if: "! contains(toJSON(github.event.commits.*.message), '[skip CI]')"
           set -x
           echo " Check if this is a pull request or not"
           if [ -z "$GITHUB_HEAD_REF" ]
