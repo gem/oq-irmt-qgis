@@ -1042,10 +1042,10 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             raise NotImplementedError(action)
 
     def del_task(self, task_id):
-        del(self.download_tasks[task_id])
+        self.download_tasks.pop(task_id, None)
 
     def del_dlg(self, dlg):
-        del(self.open_output_dlgs[dlg])
+        self.open_output_dlgs.pop(dlg, None)
 
     def open_full_report(
             self, output_id=None, output_type=None, filepath=None):
