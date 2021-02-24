@@ -60,8 +60,42 @@ LONG_LOADING_TIME = 10  # seconds
 
 def run_all():
     suite = unittest.TestSuite()
+    # OQ_CSV_TO_LAYER_TYPES
+    suite.addTest(unittest.makeSuite(LoadAggRiskTestCase, 'test'))
+    suite.addTest(unittest.makeSuite(LoadAggLossesStatsTestCase, 'test'))
+    suite.addTest(unittest.makeSuite(LoadDmgByEventTestCase, 'test'))
+    suite.addTest(unittest.makeSuite(LoadEventsTestCase, 'test'))
+    suite.addTest(unittest.makeSuite(LoadAggLossTableTestCase, 'test'))
+    suite.addTest(unittest.makeSuite(LoadRealizationsTestCase, 'test'))
+    # OQ_EXTRACT_TO_LAYER_TYPES
+    suite.addTest(unittest.makeSuite(LoadAssetRiskTestCase, 'test'))
+    suite.addTest(unittest.makeSuite(LoadDamagesRlzsTestCase, 'test'))
+    suite.addTest(unittest.makeSuite(LoadAvgLossesRlzsTestCase, 'test'))
+    suite.addTest(unittest.makeSuite(LoadAvgLossesStatsTestCase, 'test'))
+    suite.addTest(unittest.makeSuite(LoadGmfDataTestCase, 'test'))
+    suite.addTest(unittest.makeSuite(LoadHcurvesTestCase, 'test'))
+    suite.addTest(unittest.makeSuite(LoadHmapsTestCase, 'test'))
+    suite.addTest(unittest.makeSuite(LoadRupturesTestCase, 'test'))
+    suite.addTest(unittest.makeSuite(LoadUhsTestCase, 'test'))
+    suite.addTest(unittest.makeSuite(LoadDisaggTestCase, 'test'))
+    # OQ_ZIPPED_TYPES
+    suite.addTest(unittest.makeSuite(LoadInputTestCase, 'test'))
+    # OQ_RST_TYPES
+    suite.addTest(unittest.makeSuite(LoadFullReportTestCase, 'test'))
+    # OQ_EXTRACT_TO_VIEW_TYPES
+    suite.addTest(unittest.makeSuite(LoadAggCurvesRlzsTestCase, 'test'))
+    suite.addTest(unittest.makeSuite(LoadAggCurvesStatsTestCase, 'test'))
+    suite.addTest(unittest.makeSuite(LoadDamagesRlzsAggrTestCase, 'test'))
+    suite.addTest(unittest.makeSuite(LoadAvgLossesRlzsAggrTestCase, 'test'))
+    suite.addTest(unittest.makeSuite(LoadAvgLossesStatsAggrTestCase, 'test'))
+    # Skipped
+    # suite.addTest(unittest.makeSuite(LoadRecoveryCurvesTestCase, 'test'))
+
+    # Other tests and checks
+    suite.addTest(unittest.makeSuite(RunCalculationTestCase, 'test'))
     suite.addTest(unittest.makeSuite(
-        LoadOqEngineOutputsTestCase, 'test'))
+        AllLoadableOutputsFoundInDemosTestCase, 'test'))
+    suite.addTest(unittest.makeSuite(AllLoadersAreImplementedTestCase, 'test'))
     unittest.TextTestRunner(verbosity=3, stream=sys.stdout).run(suite)
 
 
@@ -114,50 +148,61 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         else:
             print('ONLY_OUTPUT_TYPE is set. Running tests only for'
                   ' output type: %s' % cls.only_output_type)
-        print("List of tested OQ-Engine demo calculations:")
-        for calc in cls.calc_list:
-            print('\tCalculation %s (%s): %s' % (calc['id'],
-                                                 calc['calculation_mode'],
-                                                 calc['description']))
-            calc_output_list = \
-                cls.irmt.drive_oq_engine_server_dlg.get_output_list(calc['id'])
-            if isinstance(calc_output_list, Exception):
-                raise calc_output_list
-            cls.output_list[calc['id']] = calc_output_list
-            if not cls.only_output_type:
-                print('\t\tOutput types: %s' % ', '.join(
-                    [output['type'] for output in calc_output_list]))
 
     @classmethod
     def tearDownClass(cls):
         QSettings().setValue(
             'irmt/experimental_enabled', cls.initial_experimental_enabled)
-        print("\n\nGLOBAL SUMMARY OF TESTING OQ-ENGINE OUTPUT LOADERS")
-        print("==================================================\n")
-        if cls.global_skipped_attempts:
-            print('\nSkipped:')
-            for skipped_attempt in cls.global_skipped_attempts:
-                print('\tCalculation %s: %s'
-                      % (skipped_attempt['calc_id'],
-                         skipped_attempt['calc_description']))
-                print('\t\tOutput type: %s' % skipped_attempt['output_type'])
-        if not cls.global_failed_attempts:
-            print("All the outputs were loaded successfully")
-        else:
-            print('\nFailed attempts:')
-            for failed_attempt in cls.global_failed_attempts:
-                print('\tCalculation %s (%s): %s'
-                      % (failed_attempt['calc_id'],
-                         failed_attempt['calc_mode'],
-                         failed_attempt['calc_description']))
-                print('\t\tOutput type: %s' % failed_attempt['output_type'])
-        if cls.global_time_consuming_outputs:
-            print('\n\nSome loaders took longer than %s seconds:' %
-                  LONG_LOADING_TIME)
-            for output in sorted(cls.global_time_consuming_outputs,
-                                 key=operator.itemgetter('loading_time'),
-                                 reverse=True):
-                print('\t%s' % output)
+        # print("\n\nGLOBAL SUMMARY OF TESTING OQ-ENGINE OUTPUT LOADERS")
+        # print("==================================================\n")
+        # if cls.global_skipped_attempts:
+        #     print('\nSkipped:')
+        #     for skipped_attempt in cls.global_skipped_attempts:
+        #         print('\tCalculation %s: %s'
+        #               % (skipped_attempt['calc_id'],
+        #                  skipped_attempt['calc_description']))
+        #         print('\t\tOutput type: %s' % skipped_attempt['output_type'])
+        # if not cls.global_failed_attempts:
+        #     print("All the outputs were loaded successfully")
+        # else:
+        #     print('\nFailed attempts:')
+        #     for failed_attempt in cls.global_failed_attempts:
+        #         print('\tCalculation %s (%s): %s'
+        #               % (failed_attempt['calc_id'],
+        #                  failed_attempt['calc_mode'],
+        #                  failed_attempt['calc_description']))
+        #         print('\t\tOutput type: %s' % failed_attempt['output_type'])
+        # if cls.global_time_consuming_outputs:
+        #     print('\n\nSome loaders took longer than %s seconds:' %
+        #           LONG_LOADING_TIME)
+        #     for output in sorted(cls.global_time_consuming_outputs,
+        #                          key=operator.itemgetter('loading_time'),
+        #                          reverse=True):
+        #         print('\t%s' % output)
+
+    def list_calculations_and_outputs(self):
+        print("\n\tList of tested OQ-Engine demo calculations:")
+        for calc in self.calc_list:
+            print('\tCalculation %s (%s): %s' % (calc['id'],
+                                                 calc['calculation_mode'],
+                                                 calc['description']))
+            calc_output_list = \
+                self.irmt.drive_oq_engine_server_dlg.get_output_list(
+                    calc['id'])
+            if isinstance(calc_output_list, Exception):
+                raise calc_output_list
+            self.output_list[calc['id']] = calc_output_list
+            print('\t\tOutput types: %s' % ', '.join(
+                [output['type'] for output in calc_output_list]))
+
+    def get_output_list(self):
+        for calc in self.calc_list:
+            calc_output_list = \
+                self.irmt.drive_oq_engine_server_dlg.get_output_list(
+                    calc['id'])
+            if isinstance(calc_output_list, Exception):
+                raise calc_output_list
+            self.output_list[calc['id']] = calc_output_list
 
     def run_calc(self, input_files, job_type='hazard', calc_id=None):
         if hasattr(self, 'timer'):
@@ -198,28 +243,6 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             print('Calculation #%s was completed' % calc_id)
         return calc_id
 
-    def test_run_calculation(self):
-        if self.only_calc_id or self.only_output_type:
-            print('Skipping test running a new calculation')
-            return
-        risk_demos_path = os.path.join(
-            os.pardir, 'oq-engine', 'demos', 'risk')
-        risk_demos_dirs = glob.glob(os.path.join(risk_demos_path, "*", ""))
-        # NOTE: assuming to find ScenarioDamage folder
-        demo_dir_list = [demo_dir
-                         for demo_dir in risk_demos_dirs
-                         if "ScenarioDamage" in demo_dir]
-        self.assertEquals(len(demo_dir_list), 1,
-                          "Demo directory ScenarioDamage was not found")
-        demo_dir = demo_dir_list[0]
-        filepaths = glob.glob(os.path.join(demo_dir, '*'))
-        hazard_calc_id = self.run_calc(filepaths, 'hazard')
-        risk_calc_id = self.run_calc(filepaths, 'risk', hazard_calc_id)
-        print('Removing calculation #%s' % risk_calc_id)
-        self.irmt.drive_oq_engine_server_dlg.remove_calc(risk_calc_id)
-        print('Removing calculation #%s' % hazard_calc_id)
-        self.irmt.drive_oq_engine_server_dlg.remove_calc(hazard_calc_id)
-
     def get_calc_status(self, calc_id):
         calc_status = self.irmt.drive_oq_engine_server_dlg.get_calc_status(
             calc_id)
@@ -241,71 +264,6 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             return
         if calc_log:
             print(calc_log)
-
-    def test_all_loadable_output_types_found_in_demos(self):
-        if self.only_calc_id or self.only_output_type:
-            print('Skipping test checking if all loadable outputs are found'
-                  ' in demos')
-            return
-        loadable_output_types_found = set()
-        loadable_output_types_not_found = set()
-        for loadable_output_type in OQ_ALL_TYPES:
-            loadable_output_type_found = False
-            for calc in self.calc_list:
-                for output in self.output_list[calc['id']]:
-                    if loadable_output_type == output['type']:
-                        loadable_output_type_found = True
-                        loadable_output_types_found.add(loadable_output_type)
-                        break
-                if loadable_output_type_found:
-                    break
-            if not loadable_output_type_found:
-                loadable_output_types_not_found.add(loadable_output_type)
-        if loadable_output_types_found:
-            print("\nOutput_types found at least in one demo:\n\t%s" %
-                  "\n\t".join(loadable_output_types_found))
-        else:
-            raise RuntimeError("No loadable output type was found in any demo")
-        if loadable_output_types_not_found:
-            print("\nOutput_types not found in any demo:\n\t%s" %
-                  "\n\t".join(loadable_output_types_not_found))
-            if all([output_type.endswith('_aggr')
-                    for output_type in loadable_output_types_not_found]):
-                print("\nThe only missing output types are '_aggr', which are"
-                      " not actual outputs exposed by the engine, but"
-                      " derived outputs accessed through the extract API."
-                      " Therefore, is is ok.")
-            else:
-                print("\nSome missing output types are '_aggr', which are"
-                      " not actual outputs exposed by the engine, but"
-                      " derived outputs accessed through the extract API."
-                      " Therefore, is is ok:\n\t%s" % "\n\t".join([
-                          output_type
-                          for output_type in loadable_output_types_not_found
-                          if output_type.endswith('_aggr')]))
-                raise RuntimeError(
-                    "\nThe following loadable output types were not found in"
-                    " any demo:\n%s" % "\n\t".join([
-                        output_type
-                        for output_type in loadable_output_types_not_found
-                        if not output_type.endswith('_aggr')]))
-
-    def test_all_loaders_are_implemented(self):
-        if self.only_calc_id or self.only_output_type:
-            print('Skipping test checking if any loaders are not implemented')
-            return
-        not_implemented_loaders = set()
-        for calc in self.calc_list:
-            for output in self.output_list[calc['id']]:
-                if output['type'] not in OQ_ALL_TYPES:
-                    not_implemented_loaders.add(output['type'])
-        if not_implemented_loaders:
-            print('\n\nLoaders for the following output types found in the'
-                  ' available calculations have not been implemented yet:')
-            print(", ".join(not_implemented_loaders))
-        else:
-            print("All outputs in the demos have a corresponding loader")
-        # NOTE: We want green tests even when loaders are still missing
 
     def download_output(self, output_id, outtype):
         dest_folder = tempfile.gettempdir()
@@ -634,7 +592,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         self.loading_exception[dlg] = exception
 
     def load_output_type(self, selected_output_type):
-        if self.only_output_type and self.only_output_type != selected_output_type:
+        if (self.only_output_type and
+                self.only_output_type != selected_output_type):
             print('\nSkipped output type: %s' % selected_output_type)
             return
         self.failed_attempts = []
@@ -767,11 +726,246 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         # not necessary ant it made tests much slower in case of many features
 
 
-# For each loadable output type, create dinamically a test that loads it from
-# all available demo calculations
-for output_type in OQ_ALL_TYPES:
-    def test_func(output_type):
-        return lambda self: self.load_output_type(output_type)
-    setattr(LoadOqEngineOutputsTestCase,
-            "test_load_%s" % output_type,
-            test_func(output_type))
+# OQ_CSV_TO_LAYER_TYPES
+
+class LoadAggRiskTestCase(LoadOqEngineOutputsTestCase):
+    def test_load_agg_risk(self):
+        self.get_output_list()
+        self.load_output_type('agg_risk')
+
+
+class LoadAggLossesStatsTestCase(LoadOqEngineOutputsTestCase):
+    def test_load_agg_losses_stats(self):
+        self.get_output_list()
+        self.load_output_type('agg_losses-stats')
+
+
+class LoadDmgByEventTestCase(LoadOqEngineOutputsTestCase):
+    def test_load_dmg_by_event(self):
+        self.get_output_list()
+        self.load_output_type('dmg_by_event')
+
+
+class LoadEventsTestCase(LoadOqEngineOutputsTestCase):
+    def test_load_events(self):
+        self.get_output_list()
+        self.load_output_type('events')
+
+
+class LoadAggLossTableTestCase(LoadOqEngineOutputsTestCase):
+    def test_load_agg_loss_table(self):
+        self.get_output_list()
+        self.load_output_type('agg_loss_table')
+
+
+class LoadRealizationsTestCase(LoadOqEngineOutputsTestCase):
+    def test_load_realizations(self):
+        self.get_output_list()
+        self.load_output_type('realizations')
+
+
+# OQ_EXTRACT_TO_LAYER_TYPES
+
+class LoadAssetRiskTestCase(LoadOqEngineOutputsTestCase):
+    def test_load_asset_risk(self):
+        self.get_output_list()
+        self.load_output_type('asset_risk')
+
+
+class LoadDamagesRlzsTestCase(LoadOqEngineOutputsTestCase):
+    def test_load_damages_rlzs(self):
+        self.get_output_list()
+        self.load_output_type('damages-rlzs')
+
+
+class LoadAvgLossesRlzsTestCase(LoadOqEngineOutputsTestCase):
+    def test_load_avg_losses_rlzs(self):
+        self.get_output_list()
+        self.load_output_type('avg_losses-rlzs')
+
+
+class LoadAvgLossesStatsTestCase(LoadOqEngineOutputsTestCase):
+    def test_load_avg_losses_stats(self):
+        self.get_output_list()
+        self.load_output_type('avg_losses-stats')
+
+
+class LoadGmfDataTestCase(LoadOqEngineOutputsTestCase):
+    def test_load_gmf_data(self):
+        self.get_output_list()
+        self.load_output_type('gmf_data')
+
+
+class LoadHcurvesTestCase(LoadOqEngineOutputsTestCase):
+    def test_load_hcurves(self):
+        self.get_output_list()
+        self.load_output_type('hcurves')
+
+
+class LoadHmapsTestCase(LoadOqEngineOutputsTestCase):
+    def test_load_hmaps(self):
+        self.get_output_list()
+        self.load_output_type('hmaps')
+
+
+class LoadRupturesTestCase(LoadOqEngineOutputsTestCase):
+    def test_load_ruptures(self):
+        self.get_output_list()
+        self.load_output_type('ruptures')
+
+
+class LoadUhsTestCase(LoadOqEngineOutputsTestCase):
+    def test_load_uhs(self):
+        self.get_output_list()
+        self.load_output_type('uhs')
+
+
+class LoadDisaggTestCase(LoadOqEngineOutputsTestCase):
+    def test_load_disagg(self):
+        self.get_output_list()
+        self.load_output_type('disagg')
+
+
+# OQ_ZIPPED_TYPES
+
+class LoadInputTestCase(LoadOqEngineOutputsTestCase):
+    def test_load_input(self):
+        self.get_output_list()
+        self.load_output_type('input')
+
+
+# OQ_RST_TYPES
+
+class LoadFullReportTestCase(LoadOqEngineOutputsTestCase):
+    def test_load_full_report(self):
+        self.get_output_list()
+        self.load_output_type('full_report')
+
+
+# OQ_EXTRACT_TO_VIEW_TYPES
+
+class LoadAggCurvesRlzsTestCase(LoadOqEngineOutputsTestCase):
+    def test_load_agg_curves_rlzs(self):
+        self.get_output_list()
+        self.load_output_type('agg_curves-rlzs')
+
+
+class LoadAggCurvesStatsTestCase(LoadOqEngineOutputsTestCase):
+    def test_load_agg_curves_stats(self):
+        self.get_output_list()
+        self.load_output_type('agg_curves-stats')
+
+
+class LoadDamagesRlzsAggrTestCase(LoadOqEngineOutputsTestCase):
+    def test_load_damages_rlzs_aggr(self):
+        self.get_output_list()
+        self.load_output_type('damages-rlzs_aggr')
+
+
+class LoadAvgLossesRlzsAggrTestCase(LoadOqEngineOutputsTestCase):
+    def test_load_avg_losses_rlzs_aggr(self):
+        self.get_output_list()
+        self.load_output_type('avg_losses-rlzs_aggr')
+
+
+class LoadAvgLossesStatsAggrTestCase(LoadOqEngineOutputsTestCase):
+    def test_load_avg_losses_stats_aggr(self):
+        self.get_output_list()
+        self.load_output_type('avg_losses-stats_aggr')
+
+
+# Other tests and checks
+
+class AllLoadableOutputsFoundInDemosTestCase(LoadOqEngineOutputsTestCase):
+    def test_all_loadable_output_types_found_in_demos(self):
+        self.list_calculations_and_outputs()
+        if self.only_calc_id or self.only_output_type:
+            print('Skipping test checking if all loadable outputs are found'
+                  ' in demos')
+            return
+        loadable_output_types_found = set()
+        loadable_output_types_not_found = set()
+        for loadable_output_type in OQ_ALL_TYPES:
+            loadable_output_type_found = False
+            for calc in self.calc_list:
+                for output in self.output_list[calc['id']]:
+                    if loadable_output_type == output['type']:
+                        loadable_output_type_found = True
+                        loadable_output_types_found.add(loadable_output_type)
+                        break
+                if loadable_output_type_found:
+                    break
+            if not loadable_output_type_found:
+                loadable_output_types_not_found.add(loadable_output_type)
+        if loadable_output_types_found:
+            print("\nOutput_types found at least in one demo:\n\t%s" %
+                  "\n\t".join(loadable_output_types_found))
+        else:
+            raise RuntimeError("No loadable output type was found in any demo")
+        if loadable_output_types_not_found:
+            print("\nOutput_types not found in any demo:\n\t%s" %
+                  "\n\t".join(loadable_output_types_not_found))
+            if all([output_type.endswith('_aggr')
+                    for output_type in loadable_output_types_not_found]):
+                print("\nThe only missing output types are '_aggr', which are"
+                      " not actual outputs exposed by the engine, but"
+                      " derived outputs accessed through the extract API."
+                      " Therefore, is is ok.")
+            else:
+                print("\nSome missing output types are '_aggr', which are"
+                      " not actual outputs exposed by the engine, but"
+                      " derived outputs accessed through the extract API."
+                      " Therefore, is is ok:\n\t%s" % "\n\t".join([
+                          output_type
+                          for output_type in loadable_output_types_not_found
+                          if output_type.endswith('_aggr')]))
+                raise RuntimeError(
+                    "\nThe following loadable output types were not found in"
+                    " any demo:\n%s" % "\n\t".join([
+                        output_type
+                        for output_type in loadable_output_types_not_found
+                        if not output_type.endswith('_aggr')]))
+
+
+class AllLoadersAreImplementedTestCase(LoadOqEngineOutputsTestCase):
+    def test_all_loaders_are_implemented(self):
+        self.list_calculations_and_outputs()
+        if self.only_calc_id or self.only_output_type:
+            print('Skipping test checking if any loaders are not implemented')
+            return
+        not_implemented_loaders = set()
+        for calc in self.calc_list:
+            for output in self.output_list[calc['id']]:
+                if output['type'] not in OQ_ALL_TYPES:
+                    not_implemented_loaders.add(output['type'])
+        if not_implemented_loaders:
+            print('\n\nLoaders for the following output types found in the'
+                  ' available calculations have not been implemented yet:')
+            print(", ".join(not_implemented_loaders))
+        else:
+            print("All outputs in the demos have a corresponding loader")
+        # NOTE: We want green tests even when loaders are still missing
+
+
+class RunCalculationTestCase(LoadOqEngineOutputsTestCase):
+    def test_run_calculation(self):
+        if self.only_calc_id or self.only_output_type:
+            print('Skipping test running a new calculation')
+            return
+        risk_demos_path = os.path.join(
+            os.pardir, 'oq-engine', 'demos', 'risk')
+        risk_demos_dirs = glob.glob(os.path.join(risk_demos_path, "*", ""))
+        # NOTE: assuming to find ScenarioDamage folder
+        demo_dir_list = [demo_dir
+                         for demo_dir in risk_demos_dirs
+                         if "ScenarioDamage" in demo_dir]
+        self.assertEquals(len(demo_dir_list), 1,
+                          "Demo directory ScenarioDamage was not found")
+        demo_dir = demo_dir_list[0]
+        filepaths = glob.glob(os.path.join(demo_dir, '*'))
+        hazard_calc_id = self.run_calc(filepaths, 'hazard')
+        risk_calc_id = self.run_calc(filepaths, 'risk', hazard_calc_id)
+        print('Removing calculation #%s' % risk_calc_id)
+        self.irmt.drive_oq_engine_server_dlg.remove_calc(risk_calc_id)
+        print('Removing calculation #%s' % hazard_calc_id)
+        self.irmt.drive_oq_engine_server_dlg.remove_calc(hazard_calc_id)
