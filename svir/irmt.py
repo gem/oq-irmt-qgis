@@ -181,6 +181,10 @@ class Irmt(object):
         pass
 
     def initProcessing(self):
+        # remove any existing version of the irmt provider
+        provider = QgsApplication.processingRegistry().providerById('irmt')
+        if provider:
+            QgsApplication.processingRegistry().removeProvider(provider)
         self.provider = Provider()
         QgsApplication.processingRegistry().addProvider(self.provider)
 
