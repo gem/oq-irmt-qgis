@@ -56,6 +56,7 @@ from svir.dialogs.load_inputs_dialog import LoadInputsDialog
 QGIS_APP = QgsApplication([], True)
 
 LONG_LOADING_TIME = 10  # seconds
+ONLY_OUTPUT_TYPE = os.environ.get('ONLY_OUTPUT_TYPE')
 
 
 def run_all():
@@ -729,36 +730,54 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
 # OQ_CSV_TO_LAYER_TYPES
 
 class LoadAggRiskTestCase(LoadOqEngineOutputsTestCase):
+    @unittest.skipIf(
+        ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'agg_risk',
+        'only testing output type %s' % ONLY_OUTPUT_TYPE)
     def test_load_agg_risk(self):
         self.get_output_list()
         self.load_output_type('agg_risk')
 
 
 class LoadAggLossesStatsTestCase(LoadOqEngineOutputsTestCase):
+    @unittest.skipIf(
+        ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'agg_losses-stats',
+        'only testing output type %s' % ONLY_OUTPUT_TYPE)
     def test_load_agg_losses_stats(self):
         self.get_output_list()
         self.load_output_type('agg_losses-stats')
 
 
 class LoadDmgByEventTestCase(LoadOqEngineOutputsTestCase):
+    @unittest.skipIf(
+        ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'dmg_by_event',
+        'only testing output type %s' % ONLY_OUTPUT_TYPE)
     def test_load_dmg_by_event(self):
         self.get_output_list()
         self.load_output_type('dmg_by_event')
 
 
 class LoadEventsTestCase(LoadOqEngineOutputsTestCase):
+    @unittest.skipIf(
+        ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'events',
+        'only testing output type %s' % ONLY_OUTPUT_TYPE)
     def test_load_events(self):
         self.get_output_list()
         self.load_output_type('events')
 
 
 class LoadAggLossTableTestCase(LoadOqEngineOutputsTestCase):
+    @unittest.skipIf(
+        ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'agg_loss_table',
+        'only testing output type %s' % ONLY_OUTPUT_TYPE)
     def test_load_agg_loss_table(self):
         self.get_output_list()
         self.load_output_type('agg_loss_table')
 
 
 class LoadRealizationsTestCase(LoadOqEngineOutputsTestCase):
+    @unittest.skipIf(
+        ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'realizations',
+        'only testing output type %s' % ONLY_OUTPUT_TYPE)
     def test_load_realizations(self):
         self.get_output_list()
         self.load_output_type('realizations')
@@ -767,60 +786,90 @@ class LoadRealizationsTestCase(LoadOqEngineOutputsTestCase):
 # OQ_EXTRACT_TO_LAYER_TYPES
 
 class LoadAssetRiskTestCase(LoadOqEngineOutputsTestCase):
+    @unittest.skipIf(
+        ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'asset_risk',
+        'only testing output type %s' % ONLY_OUTPUT_TYPE)
     def test_load_asset_risk(self):
         self.get_output_list()
         self.load_output_type('asset_risk')
 
 
 class LoadDamagesRlzsTestCase(LoadOqEngineOutputsTestCase):
+    @unittest.skipIf(
+        ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'damages-rlzs',
+        'only testing output type %s' % ONLY_OUTPUT_TYPE)
     def test_load_damages_rlzs(self):
         self.get_output_list()
         self.load_output_type('damages-rlzs')
 
 
 class LoadAvgLossesRlzsTestCase(LoadOqEngineOutputsTestCase):
+    @unittest.skipIf(
+        ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'avg_losses-rlzs',
+        'only testing output type %s' % ONLY_OUTPUT_TYPE)
     def test_load_avg_losses_rlzs(self):
         self.get_output_list()
         self.load_output_type('avg_losses-rlzs')
 
 
 class LoadAvgLossesStatsTestCase(LoadOqEngineOutputsTestCase):
+    @unittest.skipIf(
+        ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'avg_losses-stats',
+        'only testing output type %s' % ONLY_OUTPUT_TYPE)
     def test_load_avg_losses_stats(self):
         self.get_output_list()
         self.load_output_type('avg_losses-stats')
 
 
 class LoadGmfDataTestCase(LoadOqEngineOutputsTestCase):
+    @unittest.skipIf(
+        ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'gmf_data',
+        'only testing output type %s' % ONLY_OUTPUT_TYPE)
     def test_load_gmf_data(self):
         self.get_output_list()
         self.load_output_type('gmf_data')
 
 
 class LoadHcurvesTestCase(LoadOqEngineOutputsTestCase):
+    @unittest.skipIf(
+        ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'hcurves',
+        'only testing output type %s' % ONLY_OUTPUT_TYPE)
     def test_load_hcurves(self):
         self.get_output_list()
         self.load_output_type('hcurves')
 
 
 class LoadHmapsTestCase(LoadOqEngineOutputsTestCase):
+    @unittest.skipIf(
+        ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'hmaps',
+        'only testing output type %s' % ONLY_OUTPUT_TYPE)
     def test_load_hmaps(self):
         self.get_output_list()
         self.load_output_type('hmaps')
 
 
 class LoadRupturesTestCase(LoadOqEngineOutputsTestCase):
+    @unittest.skipIf(
+        ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'ruptures',
+        'only testing output type %s' % ONLY_OUTPUT_TYPE)
     def test_load_ruptures(self):
         self.get_output_list()
         self.load_output_type('ruptures')
 
 
 class LoadUhsTestCase(LoadOqEngineOutputsTestCase):
+    @unittest.skipIf(
+        ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'uhs',
+        'only testing output type %s' % ONLY_OUTPUT_TYPE)
     def test_load_uhs(self):
         self.get_output_list()
         self.load_output_type('uhs')
 
 
 class LoadDisaggTestCase(LoadOqEngineOutputsTestCase):
+    @unittest.skipIf(
+        ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'disagg',
+        'only testing output type %s' % ONLY_OUTPUT_TYPE)
     def test_load_disagg(self):
         self.get_output_list()
         self.load_output_type('disagg')
@@ -829,6 +878,9 @@ class LoadDisaggTestCase(LoadOqEngineOutputsTestCase):
 # OQ_ZIPPED_TYPES
 
 class LoadInputTestCase(LoadOqEngineOutputsTestCase):
+    @unittest.skipIf(
+        ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'input',
+        'only testing output type %s' % ONLY_OUTPUT_TYPE)
     def test_load_input(self):
         self.get_output_list()
         self.load_output_type('input')
@@ -837,6 +889,9 @@ class LoadInputTestCase(LoadOqEngineOutputsTestCase):
 # OQ_RST_TYPES
 
 class LoadFullReportTestCase(LoadOqEngineOutputsTestCase):
+    @unittest.skipIf(
+        ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'full_report',
+        'only testing output type %s' % ONLY_OUTPUT_TYPE)
     def test_load_full_report(self):
         self.get_output_list()
         self.load_output_type('full_report')
@@ -845,30 +900,45 @@ class LoadFullReportTestCase(LoadOqEngineOutputsTestCase):
 # OQ_EXTRACT_TO_VIEW_TYPES
 
 class LoadAggCurvesRlzsTestCase(LoadOqEngineOutputsTestCase):
+    @unittest.skipIf(
+        ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'agg_curves-rlzs',
+        'only testing output type %s' % ONLY_OUTPUT_TYPE)
     def test_load_agg_curves_rlzs(self):
         self.get_output_list()
         self.load_output_type('agg_curves-rlzs')
 
 
 class LoadAggCurvesStatsTestCase(LoadOqEngineOutputsTestCase):
+    @unittest.skipIf(
+        ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'agg_curves-stats',
+        'only testing output type %s' % ONLY_OUTPUT_TYPE)
     def test_load_agg_curves_stats(self):
         self.get_output_list()
         self.load_output_type('agg_curves-stats')
 
 
 class LoadDamagesRlzsAggrTestCase(LoadOqEngineOutputsTestCase):
+    @unittest.skipIf(
+        ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'damages-rlzs_aggr',
+        'only testing output type %s' % ONLY_OUTPUT_TYPE)
     def test_load_damages_rlzs_aggr(self):
         self.get_output_list()
         self.load_output_type('damages-rlzs_aggr')
 
 
 class LoadAvgLossesRlzsAggrTestCase(LoadOqEngineOutputsTestCase):
+    @unittest.skipIf(
+        ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'avg_losses-rlzs_aggr',
+        'only testing output type %s' % ONLY_OUTPUT_TYPE)
     def test_load_avg_losses_rlzs_aggr(self):
         self.get_output_list()
         self.load_output_type('avg_losses-rlzs_aggr')
 
 
 class LoadAvgLossesStatsAggrTestCase(LoadOqEngineOutputsTestCase):
+    @unittest.skipIf(
+        ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'avg_losses-stats_aggr',
+        'only testing output type %s' % ONLY_OUTPUT_TYPE)
     def test_load_avg_losses_stats_aggr(self):
         self.get_output_list()
         self.load_output_type('avg_losses-stats_aggr')
@@ -877,6 +947,8 @@ class LoadAvgLossesStatsAggrTestCase(LoadOqEngineOutputsTestCase):
 # Other tests and checks
 
 class AllLoadableOutputsFoundInDemosTestCase(LoadOqEngineOutputsTestCase):
+    @unittest.skipIf(ONLY_OUTPUT_TYPE,
+        'only testing output type %s' % ONLY_OUTPUT_TYPE)
     def test_all_loadable_output_types_found_in_demos(self):
         self.list_calculations_and_outputs()
         if self.only_calc_id or self.only_output_type:
@@ -928,6 +1000,8 @@ class AllLoadableOutputsFoundInDemosTestCase(LoadOqEngineOutputsTestCase):
 
 
 class AllLoadersAreImplementedTestCase(LoadOqEngineOutputsTestCase):
+    @unittest.skipIf(ONLY_OUTPUT_TYPE,
+        'only testing output type %s' % ONLY_OUTPUT_TYPE)
     def test_all_loaders_are_implemented(self):
         self.list_calculations_and_outputs()
         if self.only_calc_id or self.only_output_type:
@@ -948,6 +1022,8 @@ class AllLoadersAreImplementedTestCase(LoadOqEngineOutputsTestCase):
 
 
 class RunCalculationTestCase(LoadOqEngineOutputsTestCase):
+    @unittest.skipIf(ONLY_OUTPUT_TYPE,
+        'only testing output type %s' % ONLY_OUTPUT_TYPE)
     def test_run_calculation(self):
         if self.only_calc_id or self.only_output_type:
             print('Skipping test running a new calculation')
