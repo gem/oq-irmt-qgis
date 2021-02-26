@@ -35,7 +35,7 @@ import operator
 import requests
 from qgis.core import QgsApplication
 from qgis.utils import iface
-from qgis.testing import unittest
+from qgis.testing import unittest, start_app, stop_app
 from qgis.PyQt.QtCore import QTimer, QSettings
 from svir.irmt import Irmt
 from svir.utilities.shared import (
@@ -53,7 +53,7 @@ from svir.dialogs.show_full_report_dialog import ShowFullReportDialog
 from svir.dialogs.load_inputs_dialog import LoadInputsDialog
 
 
-QGIS_APP = QgsApplication([], True)
+# QgsApplication([], True)
 
 LONG_LOADING_TIME = 10  # seconds
 ONLY_OUTPUT_TYPE = os.environ.get('ONLY_OUTPUT_TYPE')
@@ -108,6 +108,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        cls.QGIS_APP = start_app()
         # NOTE: recovery modeling is an exprimental feature
         cls.initial_experimental_enabled = QSettings().value(
             '/irmt/experimental_enabled',
@@ -180,6 +181,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         #                          key=operator.itemgetter('loading_time'),
         #                          reverse=True):
         #         print('\t%s' % output)
+        # stop_app()
 
     def list_calculations_and_outputs(self):
         print("\n\tList of tested OQ-Engine demo calculations:")
@@ -220,7 +222,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         timeout = 240
         start_time = time.time()
         while time.time() - start_time < timeout:
-            QGIS_APP.processEvents()
+            self.QGIS_APP.processEvents()
             if not self.timer.isActive():
                 self.timer.timeout.disconnect()
                 break
@@ -525,7 +527,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             start_time = time.time()
             dlg.accept()
             while time.time() - start_time < timeout:
-                QGIS_APP.processEvents()
+                self.QGIS_APP.processEvents()
                 if self.loading_completed[dlg]:
                     print('\t\tok')
                     return 'ok'
@@ -563,7 +565,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             timeout = 10
             start_time = time.time()
             while time.time() - start_time < timeout:
-                QGIS_APP.processEvents()
+                self.QGIS_APP.processEvents()
                 if self.loading_completed[dlg]:
                     print('\t\tok')
                     return 'ok'
