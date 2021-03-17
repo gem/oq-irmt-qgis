@@ -25,13 +25,16 @@
 import numpy
 import collections
 from qgis.core import (
-    QgsFeature, QgsGeometry, QgsPointXY, edit, QgsTask, QgsApplication)
+    QgsFeature, QgsGeometry, QgsPointXY, edit, QgsTask, QgsApplication,
+    QgsVectorLayer, QgsProject)
 from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
-from svir.calculations.calculate_utils import add_numeric_attribute
 from svir.utilities.utils import (WaitCursorManager,
                                   log_msg,
                                   get_loss_types,
+                                  get_irmt_version,
+                                  write_metadata_to_layer,
                                   )
+from svir.calculations.calculate_utils import add_attribute
 from svir.tasks.extract_npz_task import ExtractNpzTask
 
 
@@ -155,7 +158,7 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
             layer_name = "dmg_by_asset_%s_%s" % (rlz_or_stat, loss_type)
         return layer_name
 
-    def get_field_names(self, **kwargs):
+    def get_field_types(self, **kwargs):
         loss_type = kwargs['loss_type']
         dmg_state = kwargs['dmg_state']
         if self.aggregate_by_site_ckb.isChecked():
@@ -173,23 +176,28 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
             self.default_field_name = "%s_%s_mean" % (
                 self.loss_type_cbx.currentText(),
                 self.dmg_state_cbx.currentText())
-        return field_names
-
-    def add_field_to_layer(self, field_name):
-        # NOTE: add_numeric_attribute uses the native qgis editing manager
-        added_field_name = add_numeric_attribute(
-            field_name, self.layer)
-        return added_field_name
-
-    def read_npz_into_layer(self, field_names, **kwargs):
         if self.aggregate_by_site_ckb.isChecked():
-            self.read_npz_into_layer_aggr_by_site(field_names, **kwargs)
+            field_types = {field_name: 'F' for field_name in field_names}
+        else:
+            field_types = {}
+            for field_name in field_names:
+                try:
+                    field_types[field_name] = self.dataset.dtype[
+                        field_name].kind
+                except KeyError:
+                    field_types[field_name] = 'F'
+        return field_types
+
+    def read_npz_into_layer(self, field_types, **kwargs):
+        if self.aggregate_by_site_ckb.isChecked():
+            self.read_npz_into_layer_aggr_by_site(list(field_types), **kwargs)
         else:
             # do not aggregate by site, then aggregate by zone afterwards if
             # required
-            self.read_npz_into_layer_no_aggr(field_names, **kwargs)
+            self.read_npz_into_layer_no_aggr(field_types, **kwargs)
 
-    def read_npz_into_layer_no_aggr(self, field_names, **kwargs):
+    def read_npz_into_layer_no_aggr(self, field_types, **kwargs):
+        field_names = list(field_types)
         rlz_or_stat = kwargs['rlz_or_stat']
         loss_type = kwargs['loss_type']
         with edit(self.layer):
@@ -312,3 +320,79 @@ class LoadDmgByAssetAsLayerDialog(LoadOutputAsLayerDialog):
                         self.style_curves()
         if self.npz_file is not None:
             self.npz_file.close()
+
+    def add_field_to_layer(self, field_name, field_type):
+        # NOTE: add_attribute use the native qgis editing manager
+        added_field_name = add_attribute(
+            field_name, field_type, self.layer)
+        return added_field_name
+
+    def build_layer(self, rlz_or_stat=None, taxonomy=None, poe=None,
+                    loss_type=None, dmg_state=None, gsim=None, imt=None,
+                    boundaries=None, geometry_type='Point'):
+        layer_name = self.build_layer_name(
+            rlz_or_stat=rlz_or_stat, taxonomy=taxonomy, poe=poe,
+            loss_type=loss_type, dmg_state=dmg_state, gsim=gsim, imt=imt)
+        field_types = self.get_field_types(
+            rlz_or_stat=rlz_or_stat, taxonomy=taxonomy, poe=poe,
+            loss_type=loss_type, dmg_state=dmg_state, imt=imt)
+        field_names = field_types.keys()
+
+        # create layer
+        self.layer = QgsVectorLayer(
+            "%s?crs=epsg:4326" % geometry_type, layer_name, "memory")
+        for field_name, field_type in field_types.items():
+            if field_name in ['lon', 'lat', 'boundary']:
+                continue
+            added_field_name = self.add_field_to_layer(field_name, field_type)
+            if field_name != added_field_name:
+                if field_name == self.default_field_name:
+                    self.default_field_name = added_field_name
+                # replace field_name with the actual added_field_name
+                field_name_idx = field_names.index(field_name)
+                field_names.remove(field_name)
+                field_names.insert(field_name_idx, added_field_name)
+
+        self.read_npz_into_layer(
+            field_types, rlz_or_stat=rlz_or_stat, taxonomy=taxonomy, poe=poe,
+            loss_type=loss_type, dmg_state=dmg_state, imt=imt,
+            boundaries=boundaries)
+        if (self.output_type == 'dmg_by_asset' and
+                not self.aggregate_by_site_ckb.isChecked()):
+            self.layer.setCustomProperty('output_type', 'recovery_curves')
+        else:
+            self.layer.setCustomProperty('output_type', self.output_type)
+        investigation_time = self.get_investigation_time()
+        if investigation_time is not None:
+            self.layer.setCustomProperty('investigation_time',
+                                         investigation_time)
+        if self.engine_version is not None:
+            self.layer.setCustomProperty('engine_version', self.engine_version)
+        irmt_version = get_irmt_version()
+        self.layer.setCustomProperty('irmt_version', irmt_version)
+        self.layer.setCustomProperty('calc_id', self.calc_id)
+        if poe is not None:
+            self.layer.setCustomProperty('poe', poe)
+        user_params = {'rlz_or_stat': rlz_or_stat,
+                       'taxonomy': taxonomy,
+                       'poe': poe,
+                       'loss_type': loss_type,
+                       'dmg_state': dmg_state,
+                       'gsim': gsim,
+                       'imt': imt}
+        write_metadata_to_layer(
+            self.drive_engine_dlg, self.output_type, self.layer, user_params)
+        try:
+            if (self.zonal_layer_cbx.currentText()
+                    and self.zonal_layer_gbx.isChecked()):
+                return
+        except AttributeError:
+            # the aggregation stuff might not exist for some loaders
+            pass
+        root = QgsProject.instance().layerTreeRoot()
+        QgsProject.instance().addMapLayer(self.layer, False)
+        root.insertLayer(0, self.layer)
+        self.iface.setActiveLayer(self.layer)
+        self.iface.zoomToActiveLayer()
+        log_msg('Layer %s was created successfully' % layer_name, level='S',
+                message_bar=self.iface.messageBar())

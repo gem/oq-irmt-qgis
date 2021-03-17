@@ -63,6 +63,24 @@ class InvalidFormula(Exception):
     pass
 
 
+def add_attribute(proposed_attr_name, dtype, layer):
+    if dtype == 'S':
+        qtype = QVariant.String
+        qname = 'String'
+    elif dtype in ('U', 'I'):  # FIXME: what for unsigned int?
+        qtype = QVariant.Int
+        qname = 'integer'
+    else:  # FIXME: treating everything else as numeric (it might be wrong)
+        qtype = QVariant.Double
+        qname = 'double'
+    field = QgsField(proposed_attr_name, qtype)
+    field.setTypeName(qname)
+    assigned_attr_names = ProcessLayer(layer).add_attributes(
+        [field])
+    assigned_attr_name = assigned_attr_names[proposed_attr_name]
+    return assigned_attr_name
+
+
 def add_numeric_attribute(proposed_attr_name, layer):
     field = QgsField(proposed_attr_name, QVariant.Double)
     field.setTypeName(DOUBLE_FIELD_TYPE_NAME)
@@ -194,15 +212,13 @@ def get_node_attr_id_and_name(node, layer):
         # deleted it). If it is not there anymore, add a new field
         if layer.fields().indexOf(node_attr_name) == -1:  # not found
             proposed_node_attr_name = node_attr_name
-            node_attr_name = add_numeric_attribute(
-                proposed_node_attr_name, layer)
+            node_attr_name = add_attribute(proposed_node_attr_name, 'F', layer)
             field_was_added = True
         elif DEBUG:
             log_msg('Reusing field %s' % node_attr_name)
     elif 'name' in node:
         proposed_node_attr_name = node['name']
-        node_attr_name = add_numeric_attribute(
-            proposed_node_attr_name, layer)
+        node_attr_name = add_attribute(proposed_node_attr_name, 'F', layer)
         field_was_added = True
     else:  # this corner case should never happen (hopefully)
         raise InvalidNode('This node has no name and it does'
