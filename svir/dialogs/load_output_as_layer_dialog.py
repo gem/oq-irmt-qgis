@@ -414,9 +414,6 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
     def build_layer_name(self, *args, **kwargs):
         raise NotImplementedError()
 
-    def get_field_names(self, **kwargs):
-        raise NotImplementedError()
-
     def add_field_to_layer(self, field_name):
         raise NotImplementedError()
 

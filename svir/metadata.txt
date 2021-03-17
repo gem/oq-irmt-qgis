@@ -23,6 +23,8 @@ email=staff.it@globalquakemodel.org
 
 # Uncomment the following line and add your changelog entries:
 changelog=
+    3.7.3
+    * Fixed loading OQ-Engine output Average Asset Damages without aggregating features by site.
     3.7.2
     * The management of profiles for the connection to the OpenQuake Platform was fixed.
     * The output type selector in the Data Viewer was disabled, so it still shows the output type but it can not be modified by the user.
