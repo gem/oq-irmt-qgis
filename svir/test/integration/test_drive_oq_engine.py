@@ -471,7 +471,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             self._store_skipped_attempt(
                 calc_id, calc['calculation_mode'],
                 calc['description'], output_type)
-            print('\t\tSKIPPED')
+            print('\t\tSKIPPED (loading zipped input files only for'
+                  ' multi_risk)')
             return 'skipped'
         if output_type in (OQ_CSV_TO_LAYER_TYPES |
                            OQ_RST_TYPES | OQ_ZIPPED_TYPES):
