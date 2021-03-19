@@ -652,14 +652,12 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 print('\t%s' % output)
 
     def load_recovery_curves(self, dlg, approach, n_simulations):
-        # FIXME: skipping test on recovery curves
-        print('\n\nSkipped test on recovery curves!')
-        # self._set_output_type('Recovery Curves')
-        # self.irmt.viewer_dock.approach_cbx.setCurrentIndex(
-        #     self.irmt.viewer_dock.approach_cbx.findText(approach))
-        # self.irmt.viewer_dock.n_simulations_sbx.setValue(n_simulations)
-        # self._change_selection()
-        # self._test_export()
+        self._set_output_type('Recovery Curves')
+        self.irmt.viewer_dock.approach_cbx.setCurrentIndex(
+            self.irmt.viewer_dock.approach_cbx.findText(approach))
+        self.irmt.viewer_dock.n_simulations_sbx.setValue(n_simulations)
+        self._change_selection()
+        self._test_export()
         dlg.loading_completed.emit(dlg)
 
     def load_uhs(self):
