@@ -70,6 +70,7 @@ def run_all():
     suite.addTest(unittest.makeSuite(LoadRealizationsTestCase, 'test'))
     # OQ_EXTRACT_TO_LAYER_TYPES
     suite.addTest(unittest.makeSuite(LoadAssetRiskTestCase, 'test'))
+    # NOTE: testing recovery curves starting from damages-rlzs
     suite.addTest(unittest.makeSuite(LoadDamagesRlzsTestCase, 'test'))
     suite.addTest(unittest.makeSuite(LoadAvgLossesRlzsTestCase, 'test'))
     suite.addTest(unittest.makeSuite(LoadAvgLossesStatsTestCase, 'test'))
@@ -89,8 +90,6 @@ def run_all():
     suite.addTest(unittest.makeSuite(LoadDamagesRlzsAggrTestCase, 'test'))
     suite.addTest(unittest.makeSuite(LoadAvgLossesRlzsAggrTestCase, 'test'))
     suite.addTest(unittest.makeSuite(LoadAvgLossesStatsAggrTestCase, 'test'))
-    # Skipped
-    # suite.addTest(unittest.makeSuite(LoadRecoveryCurvesTestCase, 'test'))
 
     # Other tests and checks
     suite.addTest(unittest.makeSuite(RunCalculationTestCase, 'test'))
