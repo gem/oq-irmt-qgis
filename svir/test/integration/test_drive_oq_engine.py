@@ -70,6 +70,7 @@ def run_all():
     suite.addTest(unittest.makeSuite(LoadRealizationsTestCase, 'test'))
     # OQ_EXTRACT_TO_LAYER_TYPES
     suite.addTest(unittest.makeSuite(LoadAssetRiskTestCase, 'test'))
+    # NOTE: testing recovery curves starting from damages-rlzs
     suite.addTest(unittest.makeSuite(LoadDamagesRlzsTestCase, 'test'))
     suite.addTest(unittest.makeSuite(LoadAvgLossesRlzsTestCase, 'test'))
     suite.addTest(unittest.makeSuite(LoadAvgLossesStatsTestCase, 'test'))
@@ -89,8 +90,6 @@ def run_all():
     suite.addTest(unittest.makeSuite(LoadDamagesRlzsAggrTestCase, 'test'))
     suite.addTest(unittest.makeSuite(LoadAvgLossesRlzsAggrTestCase, 'test'))
     suite.addTest(unittest.makeSuite(LoadAvgLossesStatsAggrTestCase, 'test'))
-    # Skipped
-    # suite.addTest(unittest.makeSuite(LoadRecoveryCurvesTestCase, 'test'))
 
     # Other tests and checks
     suite.addTest(unittest.makeSuite(RunCalculationTestCase, 'test'))
@@ -654,14 +653,12 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 print('\t%s' % output)
 
     def load_recovery_curves(self, dlg, approach, n_simulations):
-        # FIXME: skipping test on recovery curves
-        print('\n\nSkipped test on recovery curves!')
-        # self._set_output_type('Recovery Curves')
-        # self.irmt.viewer_dock.approach_cbx.setCurrentIndex(
-        #     self.irmt.viewer_dock.approach_cbx.findText(approach))
-        # self.irmt.viewer_dock.n_simulations_sbx.setValue(n_simulations)
-        # self._change_selection()
-        # self._test_export()
+        self._set_output_type('Recovery Curves')
+        self.irmt.viewer_dock.approach_cbx.setCurrentIndex(
+            self.irmt.viewer_dock.approach_cbx.findText(approach))
+        self.irmt.viewer_dock.n_simulations_sbx.setValue(n_simulations)
+        self._change_selection()
+        self._test_export()
         dlg.loading_completed.emit(dlg)
 
     def load_uhs(self):
