@@ -210,7 +210,7 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
         gsim = self.rlz_or_stat_cbx.currentText()
         with WaitCursorManager('Creating layer for "%s"...'
                                % gsim, self.iface.messageBar()):
-            self.build_layer(rlz_or_stat=rlz, gsim=gsim)
+            self.layer = self.build_layer(rlz_or_stat=rlz, gsim=gsim)
             self.style_maps(self.layer, self.default_field_name,
                             self.iface, self.output_type)
 
@@ -259,3 +259,4 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
             if not added_ok:
                 msg = 'There was a problem adding features to the layer.'
                 log_msg(msg, level='C', message_bar=self.iface.messageBar())
+        return self.layer

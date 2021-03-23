@@ -126,6 +126,7 @@ class LoadUhsAsLayerDialog(LoadOutputAsLayerDialog):
             if not added_ok:
                 msg = 'There was a problem adding features to the layer.'
                 log_msg(msg, level='C', message_bar=self.iface.messageBar())
+        return self.layer
 
     def load_from_npz(self):
         for poe in self.poes:
@@ -135,5 +136,6 @@ class LoadUhsAsLayerDialog(LoadOutputAsLayerDialog):
             with WaitCursorManager(
                     'Creating layer for poe "%s"...'
                     % poe, self.iface.messageBar()):
-                self.build_layer(poe=poe)
+                self.layer = self.build_layer(poe=poe)
                 self.style_curves()
+        return self.layer

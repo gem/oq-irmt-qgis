@@ -166,6 +166,7 @@ class LoadAvgLossesRlzsAsLayerDialog(LoadOutputAsLayerDialog):
             if not added_ok:
                 msg = 'There was a problem adding features to the layer.'
                 log_msg(msg, level='C', message_bar=self.iface.messageBar())
+        return self.layer
 
     def load_from_npz(self):
         for rlz_or_stat in self.rlzs_or_stats:
@@ -185,8 +186,9 @@ class LoadAvgLossesRlzsAsLayerDialog(LoadOutputAsLayerDialog):
                             ' taxonomy "%s" and loss type "%s"...' % (
                             rlz_or_stat, taxonomy, loss_type),
                             self.iface.messageBar()):
-                        self.build_layer(rlz_or_stat, taxonomy=taxonomy,
-                                         loss_type=loss_type)
+                        self.layer = self.build_layer(
+                            rlz_or_stat, taxonomy=taxonomy,
+                            loss_type=loss_type)
                         self.style_maps(self.layer,
                                         self.default_field_name,
                                         self.iface, self.output_type)

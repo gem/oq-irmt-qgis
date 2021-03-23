@@ -133,8 +133,9 @@ class LoadHazardCurvesAsLayerDialog(LoadOutputAsLayerDialog):
             if not added_ok:
                 msg = 'There was a problem adding features to the layer.'
                 log_msg(msg, level='C', message_bar=self.iface.messageBar())
+        return self.layer
 
     def load_from_npz(self):
         with WaitCursorManager('Creating layer...', self.iface.messageBar()):
-            self.build_layer()
+            self.layer = self.build_layer()
             self.style_curves()

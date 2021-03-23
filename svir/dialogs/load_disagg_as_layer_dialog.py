@@ -92,7 +92,8 @@ class LoadDisaggAsLayerDialog(LoadOutputAsLayerDialog):
             disagg_array = disagg['array']
             lons = disagg_array['lon']
             lats = disagg_array['lat']
-            self.build_layer(disagg, disagg_array, lons, lats, custom_site_ids)
+            self.layer = self.build_layer(
+                disagg, disagg_array, lons, lats, custom_site_ids)
             if custom_site_ids is not None:
                 self.build_custom_site_ids_layer(lons, lats, custom_site_ids)
             self.style_curves()
@@ -115,7 +116,7 @@ class LoadDisaggAsLayerDialog(LoadOutputAsLayerDialog):
         custom_site_id_layer = QgsVectorLayer(
             "%s?crs=epsg:4326" % 'point', layer_name, "memory")
         add_attribute('custom_site_id', 'I', custom_site_id_layer)
-        self.read_custom_site_ids_into_layer(
+        custom_site_id_layer = self.read_custom_site_ids_into_layer(
             custom_site_id_layer, lons, lats, custom_site_ids)
         custom_site_id_layer.setCustomProperty(
             'output_type', '%s-%s' % (self.output_type, 'custom_site_ids'))
@@ -148,6 +149,7 @@ class LoadDisaggAsLayerDialog(LoadOutputAsLayerDialog):
             if not added_ok:
                 msg = 'There was a problem adding features to the layer.'
                 log_msg(msg, level='C', message_bar=self.iface.messageBar())
+        return custom_site_id_layer
 
     def build_layer(self, disagg, disagg_array, lons, lats, custom_site_ids):
         log_msg('Done getting disagg array', level='I', print_to_stdout=True)
@@ -198,13 +200,13 @@ class LoadDisaggAsLayerDialog(LoadOutputAsLayerDialog):
         write_metadata_to_layer(
             self.drive_engine_dlg, self.output_type, self.layer,
             disagg_params=disagg_params)
-        QgsProject.instance().addMapLayer(self.layer, False)
         tree_node = QgsProject.instance().layerTreeRoot()
         tree_node.insertLayer(0, self.layer)
         self.iface.setActiveLayer(self.layer)
         log_msg('Layer %s was created successfully' % layer_name, level='S',
                 message_bar=self.iface.messageBar(),
                 print_to_stdout=True)
+        return self.layer
 
     def read_npz_into_layer(
             self, field_types, disagg_array, lons, lats, custom_site_ids):
@@ -253,3 +255,4 @@ class LoadDisaggAsLayerDialog(LoadOutputAsLayerDialog):
             if not added_ok:
                 msg = 'There was a problem adding features to the layer.'
                 log_msg(msg, level='C', message_bar=self.iface.messageBar())
+        return self.layer

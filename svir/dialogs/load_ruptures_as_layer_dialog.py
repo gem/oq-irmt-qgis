@@ -134,11 +134,12 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
             with WaitCursorManager(
                     'Creating layer for "%s" ruptures...' % layer_geom_type,
                     self.iface.messageBar()):
-                self.build_layer(boundaries=boundaries,
-                                 geometry_type=layer_geom_type,
-                                 wkt_geom_type=wkt_geom_type,
-                                 row_wkt_geom_types=row_wkt_geom_types,
-                                 add_to_group=rup_group)
+                self.layer = self.build_layer(
+                    boundaries=boundaries,
+                    geometry_type=layer_geom_type,
+                    wkt_geom_type=wkt_geom_type,
+                    row_wkt_geom_types=row_wkt_geom_types,
+                    add_to_group=rup_group)
             style_by = self.style_by_cbx.itemData(
                 self.style_by_cbx.currentIndex())
             if style_by == 'mag':
@@ -150,6 +151,7 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
                     level='S', message_bar=self.iface.messageBar())
         if rup_group:
             zoom_to_group(rup_group)
+        return self.layer
 
     def read_npz_into_layer(
             self, field_types, rlz_or_stat, boundaries,
@@ -175,3 +177,4 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
             if not added_ok:
                 msg = 'There was a problem adding features to the layer.'
                 log_msg(msg, level='C', message_bar=self.iface.messageBar())
+        return self.layer

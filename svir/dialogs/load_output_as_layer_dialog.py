@@ -492,7 +492,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 modified_field_types[added_field_name] = field_type
         field_types = copy.copy(modified_field_types)
 
-        self.read_npz_into_layer(
+        self.layer = self.read_npz_into_layer(
             field_types, rlz_or_stat=rlz_or_stat, taxonomy=taxonomy, poe=poe,
             loss_type=loss_type, dmg_state=dmg_state, imt=imt,
             boundaries=boundaries, geometry_type=geometry_type,
@@ -545,6 +545,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             self.iface.zoomToActiveLayer()
         log_msg('Layer %s was created successfully' % layer_name, level='S',
                 message_bar=self.iface.messageBar())
+        return self.layer
 
     @staticmethod
     def style_maps(layer, style_by, iface, output_type='damages-rlzs',
