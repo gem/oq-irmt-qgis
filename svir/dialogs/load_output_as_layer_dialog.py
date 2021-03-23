@@ -670,10 +670,8 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 symbol.clone(),
                 ramp)
             if not use_sgc_style:
-                label_format = renderer.labelFormat()
-                # label_format.setTrimTrailingZeroes(True)  # might be useful
-                label_format.setPrecision(2)
-                renderer.setLabelFormat(label_format, updateRanges=True)
+                renderer.classificationMethod().setLabelPrecision(2)
+                renderer.calculateLabelPrecision()
         elif num_unique_values == 2:
             categories = []
             for unique_value in unique_values:
