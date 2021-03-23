@@ -466,10 +466,11 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         # outputs might be skipped, therefore it would not be needed
         calc_id = calc['id']
         output_type = output['type']
+        calculation_mode = calc['calculation_mode']
         # NOTE: loading zipped input files only for multi_risk
-        if output_type == 'input' and calc['calculation_mode'] != 'multi_risk':
+        if output_type == 'input' and calculation_mode != 'multi_risk':
             self._store_skipped_attempt(
-                calc_id, calc['calculation_mode'],
+                calc_id, calculation_mode,
                 calc['description'], output_type)
             print('\t\tSKIPPED (loading zipped input files only for'
                   ' multi_risk)')
@@ -502,7 +503,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 self.irmt.drive_oq_engine_server_dlg, self.irmt.iface,
                 self.irmt.viewer_dock,
                 self.irmt.drive_oq_engine_server_dlg.session,
-                self.hostname, calc_id, output_type, filepath)
+                self.hostname, calc_id, output_type, filepath,
+                calculation_mode=calculation_mode)
             if dlg.ok_button.isEnabled():
                 dlg.accept()
                 print('\t\tok')
@@ -515,7 +517,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 self.irmt.drive_oq_engine_server_dlg, self.irmt.iface,
                 self.irmt.viewer_dock,
                 self.irmt.drive_oq_engine_server_dlg.session,
-                self.hostname, calc_id, output_type, min_mag=6.5)
+                self.hostname, calc_id, output_type, min_mag=6.5,
+                calculation_mode=calculation_mode)
             self.loading_completed[dlg] = False
             self.loading_exception[dlg] = None
             dlg.loading_completed.connect(
@@ -544,7 +547,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 self.irmt.drive_oq_engine_server_dlg,
                 self.irmt.iface, self.irmt.viewer_dock,
                 self.irmt.drive_oq_engine_server_dlg.session,
-                self.hostname, calc_id, output_type)
+                self.hostname, calc_id, output_type,
+                calculation_mode=calculation_mode)
             if output_type == 'disagg':
                 print('\t\tok')
                 return 'ok'
