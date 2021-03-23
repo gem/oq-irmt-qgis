@@ -366,7 +366,7 @@ class RecoveryModeling(object):
             for timePoint in range(len(timeList)):
                 simulationRecoveryFunction[timePoint] += \
                     building_level_recovery_function[timePoint]
-            progress_perc = bldg_idx / float(tot_bldgs) * 100
+            progress_perc = int(bldg_idx / float(tot_bldgs) * 100)
             if usage == 'gui':
                 progress.setValue(progress_perc)
         if usage == 'gui':
