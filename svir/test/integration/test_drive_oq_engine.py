@@ -1013,8 +1013,8 @@ class RunCalculationTestCase(LoadOqEngineOutputsTestCase):
         demo_dir_list = [demo_dir
                          for demo_dir in risk_demos_dirs
                          if "ScenarioDamage" in demo_dir]
-        self.assertEquals(len(demo_dir_list), 1,
-                          "Demo directory ScenarioDamage was not found")
+        self.assertEqual(len(demo_dir_list), 1,
+                         "Demo directory ScenarioDamage was not found")
         demo_dir = demo_dir_list[0]
         filepaths = glob.glob(os.path.join(demo_dir, '*'))
         hazard_calc_id = self.run_calc(filepaths, 'hazard')
