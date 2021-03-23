@@ -530,7 +530,9 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         except AttributeError:
             # the aggregation stuff might not exist for some loaders
             pass
-        QgsProject.instance().addMapLayer(self.layer, False)
+        # NOTE: the following commented line would cause (unexpectedly)
+        #       "QGIS died on signal 11" and double creation of some layers
+        # QgsProject.instance().addMapLayer(self.layer, False)
         if add_to_group:
             tree_node = add_to_group
         else:
