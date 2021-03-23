@@ -42,8 +42,8 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
                  calc_id, output_type='ruptures', min_mag=4, path=None,
                  mode=None, engine_version=None, calculation_mode=None):
         assert output_type == 'ruptures'
-        LoadOutputAsLayerDialog.__init__(
-            self, drive_engine_dlg, iface, viewer_dock, session, hostname,
+        super().__init__(
+            drive_engine_dlg, iface, viewer_dock, session, hostname,
             calc_id, output_type=output_type, path=path, mode=mode,
             engine_version=engine_version, calculation_mode=calculation_mode)
         self.style_by_items = OrderedDict([
