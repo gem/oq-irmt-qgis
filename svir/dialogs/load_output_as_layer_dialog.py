@@ -467,7 +467,8 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
     def build_layer(self, rlz_or_stat=None, taxonomy=None, poe=None,
                     loss_type=None, dmg_state=None, gsim=None, imt=None,
                     boundaries=None, geometry_type='point', wkt_geom_type=None,
-                    row_wkt_geom_types=None, add_to_group=None):
+                    row_wkt_geom_types=None, add_to_group=None,
+                    add_to_map=True):
         layer_name = self.build_layer_name(
             rlz_or_stat=rlz_or_stat, taxonomy=taxonomy, poe=poe,
             loss_type=loss_type, dmg_state=dmg_state, gsim=gsim, imt=imt,
@@ -533,20 +534,22 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         # NOTE: the following commented line would cause (unexpectedly)
         #       "QGIS died on signal 11" and double creation of some layers
         # QgsProject.instance().addMapLayer(self.layer, False)
-        if add_to_group:
-            tree_node = add_to_group
-        else:
-            tree_node = QgsProject.instance().layerTreeRoot()
-        tree_node.insertLayer(0, self.layer)
-        self.iface.setActiveLayer(self.layer)
-        if add_to_group:
-            # NOTE: zooming to group from caller function, to avoid repeating
-            #       it once per layer
-            pass
-        else:
-            self.iface.zoomToActiveLayer()
-        log_msg('Layer %s was created successfully' % layer_name, level='S',
-                message_bar=self.iface.messageBar())
+
+        if add_to_map:
+            if add_to_group:
+                tree_node = add_to_group
+            else:
+                tree_node = QgsProject.instance().layerTreeRoot()
+            tree_node.insertLayer(0, self.layer)
+            self.iface.setActiveLayer(self.layer)
+            if add_to_group:
+                # NOTE: zooming to group from caller function, to avoid repeating
+                #       it once per layer
+                pass
+            else:
+                self.iface.zoomToActiveLayer()
+            log_msg('Layer %s was created successfully' % layer_name, level='S',
+                    message_bar=self.iface.messageBar())
         return self.layer
 
     @staticmethod
