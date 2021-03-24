@@ -553,9 +553,6 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 self.hostname, calc_id, output_type,
                 calculation_mode=calculation_mode,
                 mode='testing')
-            if output_type == 'disagg':
-                print('\t\tok')
-                return 'ok'
             self.loading_completed[dlg] = False
             self.loading_exception[dlg] = None
             dlg.loading_completed.connect(
