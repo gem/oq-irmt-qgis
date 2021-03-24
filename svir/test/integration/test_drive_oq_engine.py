@@ -709,7 +709,6 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 n_rows, 2,
                 "The exported file %s has only %s rows" % (
                     exported_file_path, n_rows))
-        print("\t\tSelected data was exported to %s" % exported_file_path)
 
     def _set_output_type(self, output_type):
         self.irmt.viewer_dock.output_type_cbx.setCurrentIndex(-1)

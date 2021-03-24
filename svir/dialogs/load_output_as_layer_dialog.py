@@ -745,8 +745,6 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         layer.setRenderer(renderer)
         if not use_sgc_style:
             layer.setOpacity(0.7)
-        log_msg('Layer %s was created successfully' % layer.name(), level='S',
-                message_bar=iface.messageBar())
         if repaint:
             layer.triggerRepaint()
             iface.setActiveLayer(layer)
