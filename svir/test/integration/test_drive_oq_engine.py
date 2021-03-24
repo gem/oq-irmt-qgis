@@ -495,7 +495,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             if output_type in OQ_ZIPPED_TYPES:
                 dlg = LoadInputsDialog(
                     self.irmt.drive_oq_engine_server_dlg,
-                    filepath, self.irmt.iface)
+                    filepath, self.irmt.iface,
+                    mode='testing')
                 dlg.accept()
                 print('\t\tok')
                 return 'ok'
