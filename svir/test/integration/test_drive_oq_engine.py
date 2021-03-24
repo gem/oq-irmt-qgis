@@ -504,7 +504,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 self.irmt.viewer_dock,
                 self.irmt.drive_oq_engine_server_dlg.session,
                 self.hostname, calc_id, output_type, filepath,
-                calculation_mode=calculation_mode)
+                calculation_mode=calculation_mode,
+                mode='testing')
             if dlg.ok_button.isEnabled():
                 dlg.accept()
                 print('\t\tok')
@@ -518,7 +519,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 self.irmt.viewer_dock,
                 self.irmt.drive_oq_engine_server_dlg.session,
                 self.hostname, calc_id, output_type, min_mag=6.5,
-                calculation_mode=calculation_mode)
+                calculation_mode=calculation_mode,
+                mode='testing')
             self.loading_completed[dlg] = False
             self.loading_exception[dlg] = None
             dlg.loading_completed.connect(
@@ -548,7 +550,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 self.irmt.iface, self.irmt.viewer_dock,
                 self.irmt.drive_oq_engine_server_dlg.session,
                 self.hostname, calc_id, output_type,
-                calculation_mode=calculation_mode)
+                calculation_mode=calculation_mode,
+                mode='testing')
             if output_type == 'disagg':
                 print('\t\tok')
                 return 'ok'

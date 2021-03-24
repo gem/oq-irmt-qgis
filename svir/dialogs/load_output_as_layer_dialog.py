@@ -531,20 +531,21 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         except AttributeError:
             # the aggregation stuff might not exist for some loaders
             pass
-        # NOTE: the following commented line would cause (unexpectedly)
-        #       "QGIS died on signal 11" and double creation of some layers
-        # QgsProject.instance().addMapLayer(self.layer, False)
-
         if add_to_map:
             if add_to_group:
                 tree_node = add_to_group
             else:
                 tree_node = QgsProject.instance().layerTreeRoot()
+            if self.mode != 'testing':
+                # NOTE: the following commented line would cause (unexpectedly)
+                #       "QGIS died on signal 11" and double creation of some
+                #       layers during integration tests
+                QgsProject.instance().addMapLayer(self.layer, False)
             tree_node.insertLayer(0, self.layer)
             self.iface.setActiveLayer(self.layer)
             if add_to_group:
-                # NOTE: zooming to group from caller function, to avoid repeating
-                #       it once per layer
+                # NOTE: zooming to group from caller function, to avoid
+                #       repeating it once per layer
                 pass
             else:
                 self.iface.zoomToActiveLayer()
