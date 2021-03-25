@@ -858,7 +858,7 @@ def save_layer_as(orig_layer, dest_path, save_format, crs=None):
         options.fileEncoding = 'utf8'
         options.driverName = save_format
         ctc = QgsCoordinateTransformContext()
-        if crs is not None
+        if crs is not None:
             ctc.addCoordinateOperation(orig_layer.crs(), crs)
         writer_error = QgsVectorFileWriter.writeAsVectorFormatV2(
             orig_layer, dest_path, ctc, options)
