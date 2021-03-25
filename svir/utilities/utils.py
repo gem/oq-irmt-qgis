@@ -601,8 +601,8 @@ def ask_for_destination_full_path_name(
         filter files by specific formats. Default: 'Shapefiles (\*.shp)'
         A more elaborate example:
 
-        "Images `(*.png `*.xpm `*.jpg)`;;
-        Text files `(*.txt)`;;XML files `(*.xml)`"
+        "Images (`*.png *.xpm *.jpg`);;
+        Text files (`*.txt`);;XML files (`*.xml`)"
 
     :returns: full path name of the destination file
     """
