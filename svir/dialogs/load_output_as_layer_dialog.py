@@ -46,6 +46,7 @@ from qgis.core import (QgsVectorLayer,
                        QgsExpression,
                        NULL,
                        QgsSimpleMarkerSymbolLayerBase,
+                       Qgis,
                        )
 from qgis.gui import QgsSublayersDialog
 from qgis.PyQt.QtCore import pyqtSignal, QDir, QSettings, QFileInfo, Qt
@@ -676,8 +677,14 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 symbol.clone(),
                 ramp)
             if not use_sgc_style:
-                renderer.classificationMethod().setLabelPrecision(2)
-                renderer.calculateLabelPrecision()
+                if Qgis.QGIS_VERSION_INT < 31000:
+                    label_format = renderer.labelFormat()
+                    # label_format.setTrimTrailingZeroes(True)  # might be useful
+                    label_format.setPrecision(2)
+                    renderer.setLabelFormat(label_format, updateRanges=True)
+                else:
+                    renderer.classificationMethod().setLabelPrecision(2)
+                    renderer.calculateLabelPrecision()
         elif num_unique_values == 2:
             categories = []
             for unique_value in unique_values:
