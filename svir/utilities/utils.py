@@ -859,7 +859,7 @@ def save_layer_as(orig_layer, dest_path, save_format, crs=None):
         options.driverName = save_format
         ctc = QgsCoordinateTransformContext()
         if crs is not None:
-            ctc.addCoordinateOperation(orig_layer.crs(), crs)
+            ctc.addCoordinateOperation(orig_layer.crs(), crs, 'proj')
         writer_error = QgsVectorFileWriter.writeAsVectorFormatV2(
             orig_layer, dest_path, ctc, options)
     locale.setlocale(locale.LC_NUMERIC, old_lc_numeric)
