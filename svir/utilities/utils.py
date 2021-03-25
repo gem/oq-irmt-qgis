@@ -598,7 +598,7 @@ def ask_for_destination_full_path_name(
     :param parent: the parent dialog
     :param text: the dialog's title text
     :param filter:
-        filter files by specific formats. Default: 'Shapefiles (\*.shp)'
+        filter files by specific formats. Default: 'Shapefiles (`*.shp`)'
         A more elaborate example:
 
         "Images (`*.png *.xpm *.jpg`);;
