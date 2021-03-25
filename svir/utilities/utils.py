@@ -46,6 +46,7 @@ from qgis.core import (
                        Qgis,
                        QgsRectangle,
                        QgsLayerTreeLayer,
+                       QgsCoordinateTransformContext,
                        )
 from qgis.gui import QgsMessageBar, QgsMessageBarItem
 from qgis.utils import iface
@@ -849,8 +850,18 @@ def save_layer_as(orig_layer, dest_path, save_format, crs=None):
         crs = orig_layer.crs()
     old_lc_numeric = locale.getlocale(locale.LC_NUMERIC)
     locale.setlocale(locale.LC_NUMERIC, 'C')
-    writer_error = QgsVectorFileWriter.writeAsVectorFormat(
-        orig_layer, dest_path, 'utf-8', crs, save_format)
+    if Qgis.QGIS_VERSION_INT < 31003:
+        writer_error = QgsVectorFileWriter.writeAsVectorFormat(
+            orig_layer, dest_path, 'utf-8', crs, save_format)
+    else:
+        options = QgsVectorFileWriter.SaveVectorOptions()
+        options.fileEncoding = 'utf8'
+        options.driverName = save_format
+        ctc = QgsCoordinateTransformContext()
+        if crs is not None
+            ctc.addCoordinateOperation(orig_layer.crs(), crs)
+        writer_error = QgsVectorFileWriter.writeAsVectorFormatV2(
+            orig_layer, dest_path, ctc, options)
     locale.setlocale(locale.LC_NUMERIC, old_lc_numeric)
     return writer_error
 
