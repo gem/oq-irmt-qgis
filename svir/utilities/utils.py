@@ -47,6 +47,13 @@ from qgis.core import (
                        QgsRectangle,
                        QgsLayerTreeLayer,
                        QgsCoordinateTransformContext,
+                       QgsGraduatedSymbolRenderer,
+                       QgsClassificationCustom,
+                       QgsClassificationEqualInterval,
+                       QgsClassificationQuantile,
+                       QgsClassificationJenks,
+                       QgsClassificationStandardDeviation,
+                       QgsClassificationPrettyBreaks,
                        )
 from qgis.gui import QgsMessageBar, QgsMessageBarItem
 from qgis.utils import iface
@@ -1280,3 +1287,18 @@ def zoom_to_group(group):
             extent.combineExtentWith(child.layer().extent())
     iface.mapCanvas().setExtent(extent)
     iface.mapCanvas().refresh()
+
+
+def mode2classification_method(mode):
+    if mode == QgsGraduatedSymbolRenderer.Custom:
+        return QgsClassificationCustom()
+    elif mode == QgsGraduatedSymbolRenderer.EqualInterval:
+        return QgsClassificationEqualInterval()
+    elif mode == QgsGraduatedSymbolRenderer.Quantile:
+        return QgsClassificationQuantile()
+    elif mode == QgsGraduatedSymbolRenderer.Jenks:
+        return QgsClassificationJenks()
+    elif mode == QgsGraduatedSymbolRenderer.StdDev:
+        return QgsClassificationStandardDeviation()
+    elif mode == QgsGraduatedSymbolRenderer.Pretty:
+        return QgsClassificationPrettyBreaks()

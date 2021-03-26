@@ -81,6 +81,7 @@ from svir.utilities.utils import (get_ui_class,
                                   get_file_size,
                                   get_irmt_version,
                                   write_metadata_to_layer,
+                                  mode2classification_method,
                                   )
 from svir.tasks.extract_npz_task import TaskCanceled
 
@@ -669,13 +670,23 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         unique_values = layer.dataProvider().uniqueValues(fni)
         num_unique_values = len(unique_values - {NULL})
         if num_unique_values > 2:
-            renderer = QgsGraduatedSymbolRenderer.createRenderer(
-                layer,
-                style_by,
-                min(num_unique_values, style['classes']),
-                mode,
-                symbol.clone(),
-                ramp)
+            if Qgis.QGIS_VERSION_INT < 31000:
+                renderer = QgsGraduatedSymbolRenderer.createRenderer(
+                    layer,
+                    style_by,
+                    min(num_unique_values, style['classes']),
+                    mode,
+                    symbol.clone(),
+                    ramp)
+            else:
+                renderer = QgsGraduatedSymbolRenderer(
+                    style_by, [])
+                classification_method = mode2classification_method(mode)
+                renderer.setClassificationMethod(classification_method)
+                renderer.updateColorRamp(ramp)
+                renderer.updateSymbols(symbol.clone())
+                renderer.updateClasses(
+                    layer, min(num_unique_values, style['classes']))
             if not use_sgc_style:
                 if Qgis.QGIS_VERSION_INT < 31000:
                     label_format = renderer.labelFormat()
