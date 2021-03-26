@@ -48,12 +48,6 @@ from qgis.core import (
                        QgsLayerTreeLayer,
                        QgsCoordinateTransformContext,
                        QgsGraduatedSymbolRenderer,
-                       QgsClassificationCustom,
-                       QgsClassificationEqualInterval,
-                       QgsClassificationQuantile,
-                       QgsClassificationJenks,
-                       QgsClassificationStandardDeviation,
-                       QgsClassificationPrettyBreaks,
                        )
 from qgis.gui import QgsMessageBar, QgsMessageBarItem
 from qgis.utils import iface
@@ -78,6 +72,16 @@ from svir.utilities.shared import (
                                    DEFAULT_PLATFORM_PROFILES,
                                    DEFAULT_ENGINE_PROFILES,
                                    )
+
+if Qgis.QGIS_VERSION_INT >= 31000:
+    from qgis.core import (
+                           QgsClassificationCustom,
+                           QgsClassificationEqualInterval,
+                           QgsClassificationQuantile,
+                           QgsClassificationJenks,
+                           QgsClassificationStandardDeviation,
+                           QgsClassificationPrettyBreaks,
+                           )
 
 F32 = numpy.float32
 
