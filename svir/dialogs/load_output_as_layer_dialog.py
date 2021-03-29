@@ -46,6 +46,7 @@ from qgis.core import (QgsVectorLayer,
                        QgsExpression,
                        NULL,
                        QgsSimpleMarkerSymbolLayerBase,
+                       Qgis,
                        )
 from qgis.gui import QgsSublayersDialog
 from qgis.PyQt.QtCore import pyqtSignal, QDir, QSettings, QFileInfo, Qt
@@ -80,6 +81,7 @@ from svir.utilities.utils import (get_ui_class,
                                   get_file_size,
                                   get_irmt_version,
                                   write_metadata_to_layer,
+                                  mode2classification_method,
                                   )
 from svir.tasks.extract_npz_task import TaskCanceled
 
@@ -467,7 +469,8 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
     def build_layer(self, rlz_or_stat=None, taxonomy=None, poe=None,
                     loss_type=None, dmg_state=None, gsim=None, imt=None,
                     boundaries=None, geometry_type='point', wkt_geom_type=None,
-                    row_wkt_geom_types=None, add_to_group=None):
+                    row_wkt_geom_types=None, add_to_group=None,
+                    add_to_map=True):
         layer_name = self.build_layer_name(
             rlz_or_stat=rlz_or_stat, taxonomy=taxonomy, poe=poe,
             loss_type=loss_type, dmg_state=dmg_state, gsim=gsim, imt=imt,
@@ -492,7 +495,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 modified_field_types[added_field_name] = field_type
         field_types = copy.copy(modified_field_types)
 
-        self.read_npz_into_layer(
+        self.layer = self.read_npz_into_layer(
             field_types, rlz_or_stat=rlz_or_stat, taxonomy=taxonomy, poe=poe,
             loss_type=loss_type, dmg_state=dmg_state, imt=imt,
             boundaries=boundaries, geometry_type=geometry_type,
@@ -530,21 +533,27 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         except AttributeError:
             # the aggregation stuff might not exist for some loaders
             pass
-        QgsProject.instance().addMapLayer(self.layer, False)
-        if add_to_group:
-            tree_node = add_to_group
-        else:
-            tree_node = QgsProject.instance().layerTreeRoot()
-        tree_node.insertLayer(0, self.layer)
-        self.iface.setActiveLayer(self.layer)
-        if add_to_group:
-            # NOTE: zooming to group from caller function, to avoid repeating
-            #       it once per layer
-            pass
-        else:
-            self.iface.zoomToActiveLayer()
-        log_msg('Layer %s was created successfully' % layer_name, level='S',
-                message_bar=self.iface.messageBar())
+        if add_to_map:
+            if add_to_group:
+                tree_node = add_to_group
+            else:
+                tree_node = QgsProject.instance().layerTreeRoot()
+            if self.mode != 'testing':
+                # NOTE: the following commented line would cause (unexpectedly)
+                #       "QGIS died on signal 11" and double creation of some
+                #       layers during integration tests
+                QgsProject.instance().addMapLayer(self.layer, False)
+            tree_node.insertLayer(0, self.layer)
+            self.iface.setActiveLayer(self.layer)
+            if add_to_group:
+                # NOTE: zooming to group from caller function, to avoid
+                #       repeating it once per layer
+                pass
+            else:
+                self.iface.zoomToActiveLayer()
+            log_msg('Layer %s was created successfully' % layer_name, level='S',
+                    message_bar=self.iface.messageBar())
+        return self.layer
 
     @staticmethod
     def style_maps(layer, style_by, iface, output_type='damages-rlzs',
@@ -661,18 +670,32 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         unique_values = layer.dataProvider().uniqueValues(fni)
         num_unique_values = len(unique_values - {NULL})
         if num_unique_values > 2:
-            renderer = QgsGraduatedSymbolRenderer.createRenderer(
-                layer,
-                style_by,
-                min(num_unique_values, style['classes']),
-                mode,
-                symbol.clone(),
-                ramp)
+            if Qgis.QGIS_VERSION_INT < 31000:
+                renderer = QgsGraduatedSymbolRenderer.createRenderer(
+                    layer,
+                    style_by,
+                    min(num_unique_values, style['classes']),
+                    mode,
+                    symbol.clone(),
+                    ramp)
+            else:
+                renderer = QgsGraduatedSymbolRenderer(
+                    style_by, [])
+                classification_method = mode2classification_method(mode)
+                renderer.setClassificationMethod(classification_method)
+                renderer.updateColorRamp(ramp)
+                renderer.updateSymbols(symbol.clone())
+                renderer.updateClasses(
+                    layer, min(num_unique_values, style['classes']))
             if not use_sgc_style:
-                label_format = renderer.labelFormat()
-                # label_format.setTrimTrailingZeroes(True)  # might be useful
-                label_format.setPrecision(2)
-                renderer.setLabelFormat(label_format, updateRanges=True)
+                if Qgis.QGIS_VERSION_INT < 31000:
+                    label_format = renderer.labelFormat()
+                    # label_format.setTrimTrailingZeroes(True)  # might be useful
+                    label_format.setPrecision(2)
+                    renderer.setLabelFormat(label_format, updateRanges=True)
+                else:
+                    renderer.classificationMethod().setLabelPrecision(2)
+                    renderer.calculateLabelPrecision()
         elif num_unique_values == 2:
             categories = []
             for unique_value in unique_values:
@@ -740,8 +763,6 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         layer.setRenderer(renderer)
         if not use_sgc_style:
             layer.setOpacity(0.7)
-        log_msg('Layer %s was created successfully' % layer.name(), level='S',
-                message_bar=iface.messageBar())
         if repaint:
             layer.triggerRepaint()
             iface.setActiveLayer(layer)

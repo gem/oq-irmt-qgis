@@ -41,8 +41,8 @@ class LoadAssetRiskAsLayerDialog(LoadOutputAsLayerDialog):
                  calc_id, output_type='asset_risk', path=None, mode=None,
                  engine_version=None, calculation_mode=None):
         assert output_type == 'asset_risk'
-        LoadOutputAsLayerDialog.__init__(
-            self, drive_engine_dlg, iface, viewer_dock, session, hostname,
+        super().__init__(
+            drive_engine_dlg, iface, viewer_dock, session, hostname,
             calc_id, output_type=output_type, path=path, mode=mode,
             engine_version=engine_version, calculation_mode=calculation_mode)
 
@@ -218,6 +218,7 @@ class LoadAssetRiskAsLayerDialog(LoadOutputAsLayerDialog):
             if not added_ok:
                 msg = 'There was a problem adding features to the layer.'
                 log_msg(msg, level='C', message_bar=self.iface.messageBar())
+        return self.layer
 
     def accept(self):
         log_msg('Loading output started. Watch progress in QGIS task bar',
@@ -249,7 +250,7 @@ class LoadAssetRiskAsLayerDialog(LoadOutputAsLayerDialog):
         self.npz_file = extracted_npz
         self.dataset = self.npz_file['array']
         with WaitCursorManager('Creating layer...', self.iface.messageBar()):
-            self.build_layer()
+            self.layer = self.build_layer()
             self.style_maps(
                 self.layer, self.default_field_name,
                 self.iface, self.output_type, perils=self.perils,

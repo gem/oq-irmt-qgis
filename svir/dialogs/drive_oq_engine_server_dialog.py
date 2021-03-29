@@ -720,17 +720,18 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 data = {}
             if job_ini_filename is not None:
                 data['job_ini'] = job_ini_filename
-            files = {'archive': open(zipped_file_name, 'rb')}
-            try:
-                log_msg('POST: %s, with files: %s, with data: %s' % (
-                            run_calc_url, files, data),
-                        level='I', print_to_stderr=True)
-                resp = self.session.post(
-                    run_calc_url, files=files, data=data, timeout=20,
-                    stream=True)
-            except HANDLED_EXCEPTIONS as exc:
-                self._handle_exception(exc)
-                return exc
+            with open(zipped_file_name, 'rb') as archive:
+                files = {'archive': archive}
+                try:
+                    log_msg('POST: %s, with files: %s, with data: %s' % (
+                                run_calc_url, files, data),
+                            level='I', print_to_stderr=True)
+                    resp = self.session.post(
+                        run_calc_url, files=files, data=data, timeout=20,
+                        stream=True)
+                except HANDLED_EXCEPTIONS as exc:
+                    self._handle_exception(exc)
+                    return exc
         if resp.ok:
             resp_dict = resp.json()
             job_id = resp_dict['job_id']

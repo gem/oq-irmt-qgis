@@ -74,6 +74,9 @@ class SettingsDialog(QDialog, FORM_CLASS):
         self.style_color_from.setFocusPolicy(Qt.NoFocus)
         self.style_color_to.setFocusPolicy(Qt.NoFocus)
 
+        # TODO: replace this deprecated definition with QgsClassificationMethod
+        #       and add the missing QgsClassificationLogarithmic and
+        #       QgsClassificationCustom
         modes = {
             QgsGraduatedSymbolRenderer.EqualInterval: self.tr(
                 'Equal Interval'),

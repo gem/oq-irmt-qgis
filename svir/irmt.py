@@ -95,6 +95,7 @@ from svir.utilities.utils import (tr,
                                   get_checksum,
                                   warn_missing_package,
                                   import_layer_from_csv,
+                                  mode2classification_method,
                                   )
 from svir.utilities.shared import (DEBUG,
                                    PROJECT_TEMPLATE,
@@ -181,6 +182,10 @@ class Irmt(object):
         pass
 
     def initProcessing(self):
+        # remove any existing version of the irmt provider
+        provider = QgsApplication.processingRegistry().providerById('irmt')
+        if provider:
+            QgsApplication.processingRegistry().removeProvider(provider)
         self.provider = Provider()
         QgsApplication.processingRegistry().addProvider(self.provider)
 
@@ -1238,13 +1243,26 @@ class Irmt(object):
 
         ramp = QgsGradientColorRamp(
             style['color_from'], style['color_to'])
-        graduated_renderer = QgsGraduatedSymbolRenderer.createRenderer(
-            self.iface.activeLayer(),
-            target_field,
-            style['classes'],
-            style['mode'],
-            QgsSymbol.defaultSymbol(self.iface.activeLayer().geometryType()),
-            ramp)
+        if Qgis.QGIS_VERSION_INT < 31000:
+            graduated_renderer = QgsGraduatedSymbolRenderer.createRenderer(
+                self.iface.activeLayer(),
+                target_field,
+                style['classes'],
+                style['mode'],
+                QgsSymbol.defaultSymbol(
+                    self.iface.activeLayer().geometryType()),
+                ramp)
+        else:
+            graduated_renderer = QgsGraduatedSymbolRenderer(
+                target_field, [])
+            classification_method = mode2classification_method(style['mode'])
+            graduated_renderer.setClassificationMethod(classification_method)
+            graduated_renderer.updateColorRamp(ramp)
+            graduated_renderer.updateSymbols(
+                QgsSymbol.defaultSymbol(
+                    self.iface.activeLayer().geometryType()))
+            graduated_renderer.updateClasses(
+                self.iface.activeLayer(), style['classes'])
 
         if graduated_renderer.ranges():
             first_range_index = 0

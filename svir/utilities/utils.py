@@ -46,6 +46,8 @@ from qgis.core import (
                        Qgis,
                        QgsRectangle,
                        QgsLayerTreeLayer,
+                       QgsCoordinateTransformContext,
+                       QgsGraduatedSymbolRenderer,
                        )
 from qgis.gui import QgsMessageBar, QgsMessageBarItem
 from qgis.utils import iface
@@ -70,6 +72,16 @@ from svir.utilities.shared import (
                                    DEFAULT_PLATFORM_PROFILES,
                                    DEFAULT_ENGINE_PROFILES,
                                    )
+
+if Qgis.QGIS_VERSION_INT >= 31000:
+    from qgis.core import (
+                           QgsClassificationCustom,
+                           QgsClassificationEqualInterval,
+                           QgsClassificationQuantile,
+                           QgsClassificationJenks,
+                           QgsClassificationStandardDeviation,
+                           QgsClassificationPrettyBreaks,
+                           )
 
 F32 = numpy.float32
 
@@ -432,8 +444,8 @@ def reload_attrib_cbx(
     :type layer: QgsVectorLayer
     :param prepend_empty_item: if to prepend an empty item to the combo
     :type layer: Bool
-    :param \*valid_field_types: multiple tuples containing types
-    :type \*valid_field_types: tuple, tuple, ...
+    :param `*valid_field_types`: multiple tuples containing types
+    :type `*valid_field_types`: tuple, tuple, ...
     """
     field_types = set()
     for field_type in valid_field_types:
@@ -597,11 +609,11 @@ def ask_for_destination_full_path_name(
     :param parent: the parent dialog
     :param text: the dialog's title text
     :param filter:
-        filter files by specific formats. Default: 'Shapefiles (\*.shp)'
+        filter files by specific formats. Default: 'Shapefiles (`*.shp`)'
         A more elaborate example:
 
-        "Images (\*.png \*.xpm \*.jpg);;
-        Text files (\*.txt);;XML files (\*.xml)"
+        "Images (`*.png *.xpm *.jpg`);;
+        Text files (`*.txt`);;XML files (`*.xml`)"
 
     :returns: full path name of the destination file
     """
@@ -849,8 +861,18 @@ def save_layer_as(orig_layer, dest_path, save_format, crs=None):
         crs = orig_layer.crs()
     old_lc_numeric = locale.getlocale(locale.LC_NUMERIC)
     locale.setlocale(locale.LC_NUMERIC, 'C')
-    writer_error = QgsVectorFileWriter.writeAsVectorFormat(
-        orig_layer, dest_path, 'utf-8', crs, save_format)
+    if Qgis.QGIS_VERSION_INT < 31003:
+        writer_error = QgsVectorFileWriter.writeAsVectorFormat(
+            orig_layer, dest_path, 'utf-8', crs, save_format)
+    else:
+        options = QgsVectorFileWriter.SaveVectorOptions()
+        options.fileEncoding = 'utf8'
+        options.driverName = save_format
+        ctc = QgsCoordinateTransformContext()
+        if crs is not None:
+            ctc.addCoordinateOperation(orig_layer.crs(), crs, 'proj')
+        writer_error = QgsVectorFileWriter.writeAsVectorFormatV2(
+            orig_layer, dest_path, ctc, options)
     locale.setlocale(locale.LC_NUMERIC, old_lc_numeric)
     return writer_error
 
@@ -1269,3 +1291,18 @@ def zoom_to_group(group):
             extent.combineExtentWith(child.layer().extent())
     iface.mapCanvas().setExtent(extent)
     iface.mapCanvas().refresh()
+
+
+def mode2classification_method(mode):
+    if mode == QgsGraduatedSymbolRenderer.Custom:
+        return QgsClassificationCustom()
+    elif mode == QgsGraduatedSymbolRenderer.EqualInterval:
+        return QgsClassificationEqualInterval()
+    elif mode == QgsGraduatedSymbolRenderer.Quantile:
+        return QgsClassificationQuantile()
+    elif mode == QgsGraduatedSymbolRenderer.Jenks:
+        return QgsClassificationJenks()
+    elif mode == QgsGraduatedSymbolRenderer.StdDev:
+        return QgsClassificationStandardDeviation()
+    elif mode == QgsGraduatedSymbolRenderer.Pretty:
+        return QgsClassificationPrettyBreaks()

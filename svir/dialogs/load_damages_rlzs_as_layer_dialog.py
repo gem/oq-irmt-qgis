@@ -44,8 +44,8 @@ class LoadDamagesRlzsAsLayerDialog(LoadOutputAsLayerDialog):
                  path=None, mode=None, zonal_layer_path=None,
                  engine_version=None, calculation_mode=None):
         assert output_type == 'damages-rlzs'
-        LoadOutputAsLayerDialog.__init__(
-            self, drive_engine_dlg, iface, viewer_dock, session, hostname,
+        super().__init__(
+            drive_engine_dlg, iface, viewer_dock, session, hostname,
             calc_id, output_type=output_type, path=path, mode=mode,
             zonal_layer_path=zonal_layer_path, engine_version=engine_version,
             calculation_mode=calculation_mode)
@@ -184,11 +184,14 @@ class LoadDamagesRlzsAsLayerDialog(LoadOutputAsLayerDialog):
 
     def read_npz_into_layer(self, field_types, **kwargs):
         if self.aggregate_by_site_ckb.isChecked():
-            self.read_npz_into_layer_aggr_by_site(field_types, **kwargs)
+            self.layer = self.read_npz_into_layer_aggr_by_site(
+                field_types, **kwargs)
         else:
             # do not aggregate by site, then aggregate by zone afterwards if
             # required
-            self.read_npz_into_layer_no_aggr(field_types, **kwargs)
+            self.layer = self.read_npz_into_layer_no_aggr(
+                field_types, **kwargs)
+        return self.layer
 
     def read_npz_into_layer_no_aggr(self, field_types, **kwargs):
         field_names = list(field_types)
@@ -218,6 +221,7 @@ class LoadDamagesRlzsAsLayerDialog(LoadOutputAsLayerDialog):
             if not added_ok:
                 msg = 'There was a problem adding features to the layer.'
                 log_msg(msg, level='C', message_bar=self.iface.messageBar())
+        return self.layer
 
     def read_npz_into_layer_aggr_by_site(self, field_types, **kwargs):
         field_names = list(field_types)
@@ -246,6 +250,7 @@ class LoadDamagesRlzsAsLayerDialog(LoadOutputAsLayerDialog):
             if not added_ok:
                 msg = 'There was a problem adding features to the layer.'
                 log_msg(msg, level='C', message_bar=self.iface.messageBar())
+        return self.layer
 
     def group_by_site(self, npz, rlz_or_stat, loss_type, dmg_state,
                       taxonomy='All'):
@@ -286,7 +291,7 @@ class LoadDamagesRlzsAsLayerDialog(LoadOutputAsLayerDialog):
                                     ' damage state "%s"...' % (
                                     rlz_or_stat, taxonomy, loss_type,
                                     dmg_state), self.iface.messageBar()):
-                                self.build_layer(
+                                self.layer = self.build_layer(
                                     rlz_or_stat, taxonomy=taxonomy,
                                     loss_type=loss_type, dmg_state=dmg_state)
                                 self.style_maps(self.layer,
@@ -300,7 +305,7 @@ class LoadDamagesRlzsAsLayerDialog(LoadOutputAsLayerDialog):
                     'Creating layer for "%s", taxonomy "%s", loss type "%s"'
                     ' and damage state "%s"...' % (
                         rlz_or_stat, taxonomy, loss_type, dmg_state)):
-                    self.build_layer(
+                    self.layer = self.build_layer(
                         rlz_or_stat, taxonomy=taxonomy, loss_type=loss_type,
                         dmg_state=dmg_state)
             else:  # recovery modeling
@@ -311,5 +316,6 @@ class LoadDamagesRlzsAsLayerDialog(LoadOutputAsLayerDialog):
                     with WaitCursorManager(
                         'Creating layer for "%s" and loss_type "%s"' % (
                             rlz_or_stat, loss_type), self.iface.messageBar()):
-                        self.build_layer(rlz_or_stat, loss_type=loss_type)
+                        self.layer = self.build_layer(
+                            rlz_or_stat, loss_type=loss_type)
                         self.style_curves()

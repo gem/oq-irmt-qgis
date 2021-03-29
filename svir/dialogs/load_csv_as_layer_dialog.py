@@ -41,8 +41,8 @@ class LoadCsvAsLayerDialog(LoadOutputAsLayerDialog):
                  calc_id, output_type, path=None, mode=None,
                  engine_version=None, calculation_mode=None):
         assert output_type in OQ_CSV_TO_LAYER_TYPES, output_type
-        LoadOutputAsLayerDialog.__init__(
-            self, drive_engine_dlg, iface, viewer_dock, session, hostname,
+        super().__init__(
+            drive_engine_dlg, iface, viewer_dock, session, hostname,
             calc_id, output_type=output_type, path=path, mode=mode,
             engine_version=engine_version, calculation_mode=calculation_mode)
         self.create_file_size_indicator()
