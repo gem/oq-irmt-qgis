@@ -47,7 +47,6 @@ from qgis.core import (
                        QgsRectangle,
                        QgsLayerTreeLayer,
                        QgsCoordinateTransformContext,
-                       QgsGraduatedSymbolRenderer,
                        )
 from qgis.gui import QgsMessageBar, QgsMessageBarItem
 from qgis.utils import iface
@@ -72,16 +71,6 @@ from svir.utilities.shared import (
                                    DEFAULT_PLATFORM_PROFILES,
                                    DEFAULT_ENGINE_PROFILES,
                                    )
-
-if Qgis.QGIS_VERSION_INT >= 31000:
-    from qgis.core import (
-                           QgsClassificationCustom,
-                           QgsClassificationEqualInterval,
-                           QgsClassificationQuantile,
-                           QgsClassificationJenks,
-                           QgsClassificationStandardDeviation,
-                           QgsClassificationPrettyBreaks,
-                           )
 
 F32 = numpy.float32
 
@@ -916,10 +905,16 @@ def get_style(layer, message_bar, restore_defaults=False):
             log_msg(msg, level='C', message_bar=message_bar)
             color_to_rgba = DEFAULT_SETTINGS['color_to_rgba']
     color_to = QColor().fromRgba(color_to_rgba)
-    mode = (DEFAULT_SETTINGS['style_mode']
-            if restore_defaults
-            else int(settings.value(
-                'irmt/style_mode', DEFAULT_SETTINGS['style_mode'])))
+    if Qgis.QGIS_VERSION_INT < 31000:
+        style_mode = (DEFAULT_SETTINGS['style_mode']
+                      if restore_defaults
+                      else int(settings.value(
+                          'irmt/style_mode', DEFAULT_SETTINGS['style_mode'])))
+    else:
+        style_mode = (DEFAULT_SETTINGS['style_mode']
+                      if restore_defaults
+                      else settings.value(
+                          'irmt/style_mode', DEFAULT_SETTINGS['style_mode']))
     classes = (DEFAULT_SETTINGS['style_classes']
                if restore_defaults
                else int(settings.value(
@@ -955,7 +950,7 @@ def get_style(layer, message_bar, restore_defaults=False):
     return {
         'color_from': color_from,
         'color_to': color_to,
-        'mode': mode,
+        'style_mode': style_mode,
         'classes': classes,
         'force_restyling': force_restyling
     }
@@ -1291,18 +1286,3 @@ def zoom_to_group(group):
             extent.combineExtentWith(child.layer().extent())
     iface.mapCanvas().setExtent(extent)
     iface.mapCanvas().refresh()
-
-
-def mode2classification_method(mode):
-    if mode == QgsGraduatedSymbolRenderer.Custom:
-        return QgsClassificationCustom()
-    elif mode == QgsGraduatedSymbolRenderer.EqualInterval:
-        return QgsClassificationEqualInterval()
-    elif mode == QgsGraduatedSymbolRenderer.Quantile:
-        return QgsClassificationQuantile()
-    elif mode == QgsGraduatedSymbolRenderer.Jenks:
-        return QgsClassificationJenks()
-    elif mode == QgsGraduatedSymbolRenderer.StdDev:
-        return QgsClassificationStandardDeviation()
-    elif mode == QgsGraduatedSymbolRenderer.Pretty:
-        return QgsClassificationPrettyBreaks()

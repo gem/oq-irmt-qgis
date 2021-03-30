@@ -28,7 +28,8 @@ from qgis.PyQt.QtCore import pyqtSlot, QSettings, Qt
 from qgis.PyQt.QtWidgets import QDialog, QColorDialog, QMessageBox
 from qgis.PyQt.QtGui import QPalette
 
-from qgis.core import QgsGraduatedSymbolRenderer, QgsProject
+from qgis.core import (
+    QgsGraduatedSymbolRenderer, QgsProject, Qgis, QgsApplication)
 from qgis.gui import QgsMessageBar
 
 from requests import Session
@@ -74,21 +75,25 @@ class SettingsDialog(QDialog, FORM_CLASS):
         self.style_color_from.setFocusPolicy(Qt.NoFocus)
         self.style_color_to.setFocusPolicy(Qt.NoFocus)
 
-        # TODO: replace this deprecated definition with QgsClassificationMethod
-        #       and add the missing QgsClassificationLogarithmic and
-        #       QgsClassificationCustom
-        modes = {
-            QgsGraduatedSymbolRenderer.EqualInterval: self.tr(
-                'Equal Interval'),
-            QgsGraduatedSymbolRenderer.Quantile: self.tr(
-                'Quantile (Equal Count)'),
-            QgsGraduatedSymbolRenderer.Jenks: self.tr(
-                'Natural Breaks (Jenks)'),
-            QgsGraduatedSymbolRenderer.StdDev: self.tr('Standard Deviation'),
-            QgsGraduatedSymbolRenderer.Pretty: self.tr('Pretty Breaks'),
-        }
-        for key in modes:
-            self.style_mode.addItem(modes[key], key)
+        if Qgis.QGIS_VERSION_INT < 31000:
+            modes = {
+                QgsGraduatedSymbolRenderer.EqualInterval: self.tr(
+                    'Equal Interval'),
+                QgsGraduatedSymbolRenderer.Quantile: self.tr(
+                    'Quantile (Equal Count)'),
+                QgsGraduatedSymbolRenderer.Jenks: self.tr(
+                    'Natural Breaks (Jenks)'),
+                QgsGraduatedSymbolRenderer.StdDev: self.tr(
+                    'Standard Deviation'),
+                QgsGraduatedSymbolRenderer.Pretty: self.tr(
+                    'Pretty Breaks'),
+            }
+            for key in modes:
+                self.style_mode.addItem(modes[key], key)
+        else:
+            modes = QgsApplication.classificationMethodRegistry().methodNames()
+            for mode_name, mode_id in modes.items():
+                self.style_mode.addItem(mode_name, mode_id)
 
         for log_level in sorted(LOG_LEVELS):
             self.log_level_cbx.addItem(LOG_LEVELS[log_level], log_level)
@@ -135,7 +140,7 @@ class SettingsDialog(QDialog, FORM_CLASS):
         self.set_button_color(self.style_color_from, style['color_from'])
         self.set_button_color(self.style_color_to, style['color_to'])
 
-        mode_idx = self.style_mode.findData(style['mode'])
+        mode_idx = self.style_mode.findData(style['style_mode'])
         self.style_mode.setCurrentIndex(mode_idx)
 
         self.style_classes.setValue(style['classes'])

@@ -81,7 +81,6 @@ from svir.utilities.utils import (get_ui_class,
                                   get_file_size,
                                   get_irmt_version,
                                   write_metadata_to_layer,
-                                  mode2classification_method,
                                   )
 from svir.tasks.extract_npz_task import TaskCanceled
 
@@ -551,8 +550,8 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 pass
             else:
                 self.iface.zoomToActiveLayer()
-            log_msg('Layer %s was created successfully' % layer_name, level='S',
-                    message_bar=self.iface.messageBar())
+            log_msg('Layer %s was created successfully' % layer_name,
+                    level='S', message_bar=self.iface.messageBar())
         return self.layer
 
     @staticmethod
@@ -573,7 +572,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         # this is the default, as specified in the user settings
         ramp = QgsGradientColorRamp(
             style['color_from'], style['color_to'])
-        mode = style['mode']
+        style_mode = style['style_mode']
 
         # in most cases, we override the user-specified setting, and use
         # instead a setting that was required by scientists
@@ -585,7 +584,10 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                                'avg_losses-stats',):
                 # options are EqualInterval, Quantile, Jenks, StdDev, Pretty
                 # jenks = natural breaks
-                mode = QgsGraduatedSymbolRenderer.Jenks
+                if Qgis.QGIS_VERSION_INT < 31000:
+                    style_mode = QgsGraduatedSymbolRenderer.Jenks
+                else:
+                    style_mode = 'Jenks'
                 ramp_type_idx = default_color_ramp_names.index('Reds')
                 symbol.setColor(QColor(RAMP_EXTREME_COLORS['Reds']['top']))
                 inverted = False
@@ -594,9 +596,15 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 # options are EqualInterval, Quantile, Jenks, StdDev, Pretty
                 # jenks = natural breaks
                 if output_type == 'ruptures':
-                    mode = QgsGraduatedSymbolRenderer.Pretty
+                    if Qgis.QGIS_VERSION_INT < 31000:
+                        style_mode = QgsGraduatedSymbolRenderer.Pretty
+                    else:
+                        style_mode = 'PrettyBreaks'
                 else:
-                    mode = QgsGraduatedSymbolRenderer.EqualInterval
+                    if Qgis.QGIS_VERSION_INT < 31000:
+                        style_mode = QgsGraduatedSymbolRenderer.EqualInterval
+                    else:
+                        style_mode = 'EqualInterval'
                 ramp_type_idx = default_color_ramp_names.index('Spectral')
                 inverted = True
                 symbol.setColor(QColor(RAMP_EXTREME_COLORS['Reds']['top']))
@@ -605,7 +613,10 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
 
                 # options are EqualInterval, Quantile, Jenks, StdDev, Pretty
                 # jenks = natural breaks
-                mode = QgsGraduatedSymbolRenderer.Pretty
+                if Qgis.QGIS_VERSION_INT < 31000:
+                    style_mode = QgsGraduatedSymbolRenderer.Pretty
+                else:
+                    style_mode = 'PrettyBreaks'
                 try:
                     ramp_type_idx = default_color_ramp_names.index(
                         'SGC_Green2Red_Hmap_Color_Ramp')
@@ -634,7 +645,10 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             elif output_type in ['asset_risk', 'input']:
                 # options are EqualInterval, Quantile, Jenks, StdDev, Pretty
                 # jenks = natural breaks
-                mode = QgsGraduatedSymbolRenderer.EqualInterval
+                if Qgis.QGIS_VERSION_INT < 31000:
+                    style_mode = QgsGraduatedSymbolRenderer.EqualInterval
+                else:
+                    style_mode = 'EqualInterval'
                 # exposure_strings = ['number', 'occupants', 'value']
                 # setting exposure colors by default
                 colors = {'single': RAMP_EXTREME_COLORS['Blues']['top'],
@@ -675,13 +689,17 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                     layer,
                     style_by,
                     min(num_unique_values, style['classes']),
-                    mode,
+                    style_mode,
                     symbol.clone(),
                     ramp)
             else:
                 renderer = QgsGraduatedSymbolRenderer(
                     style_by, [])
-                classification_method = mode2classification_method(mode)
+                # NOTE: the following returns an instance of one of the
+                #       subclasses of QgsClassificationMethod
+                classification_method = \
+                    QgsApplication.classificationMethodRegistry().method(
+                        style_mode)
                 renderer.setClassificationMethod(classification_method)
                 renderer.updateColorRamp(ramp)
                 renderer.updateSymbols(symbol.clone())
@@ -690,7 +708,8 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             if not use_sgc_style:
                 if Qgis.QGIS_VERSION_INT < 31000:
                     label_format = renderer.labelFormat()
-                    # label_format.setTrimTrailingZeroes(True)  # might be useful
+                    # NOTE: the following line might be useful
+                    # label_format.setTrimTrailingZeroes(True)
                     label_format.setPrecision(2)
                     renderer.setLabelFormat(label_format, updateRanges=True)
                 else:

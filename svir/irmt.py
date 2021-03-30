@@ -95,7 +95,6 @@ from svir.utilities.utils import (tr,
                                   get_checksum,
                                   warn_missing_package,
                                   import_layer_from_csv,
-                                  mode2classification_method,
                                   )
 from svir.utilities.shared import (DEBUG,
                                    PROJECT_TEMPLATE,
@@ -1248,14 +1247,18 @@ class Irmt(object):
                 self.iface.activeLayer(),
                 target_field,
                 style['classes'],
-                style['mode'],
+                style['style_mode'],
                 QgsSymbol.defaultSymbol(
                     self.iface.activeLayer().geometryType()),
                 ramp)
         else:
             graduated_renderer = QgsGraduatedSymbolRenderer(
                 target_field, [])
-            classification_method = mode2classification_method(style['mode'])
+            # NOTE: the following returns an instance of one of the
+            #       subclasses of QgsClassificationMethod
+            classification_method = \
+                QgsApplication.classificationMethodRegistry().method(
+                    style['style_mode'])
             graduated_renderer.setClassificationMethod(classification_method)
             graduated_renderer.updateColorRamp(ramp)
             graduated_renderer.updateSymbols(
