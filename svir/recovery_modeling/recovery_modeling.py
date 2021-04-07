@@ -366,7 +366,7 @@ class RecoveryModeling(object):
             for timePoint in range(len(timeList)):
                 simulationRecoveryFunction[timePoint] += \
                     building_level_recovery_function[timePoint]
-            progress_perc = bldg_idx / float(tot_bldgs) * 100
+            progress_perc = int(bldg_idx / float(tot_bldgs) * 100)
             if usage == 'gui':
                 progress.setValue(progress_perc)
         if usage == 'gui':
@@ -496,5 +496,9 @@ def fill_fields_multiselect(fields_multiselect, layer):
                     and field.typeName() in NUMERIC_FIELD_TYPES]
     other_field_names = [field.name() for field in other_fields]
     fields_multiselect.clear()
-    fields_multiselect.add_selected_items(default_field_names)
-    fields_multiselect.add_unselected_items(other_field_names)
+    if default_field_names:
+        fields_multiselect.add_selected_items(default_field_names)
+        fields_multiselect.add_unselected_items(other_field_names)
+    else:
+        # NOTE: it works in most cases, but it could pre-load wrong fields
+        fields_multiselect.add_selected_items(other_field_names)

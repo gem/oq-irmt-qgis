@@ -26,6 +26,7 @@ import zipfile
 import json
 import os
 import configparser
+from qgis.core import QgsProject
 from qgis.PyQt.QtCore import pyqtSignal
 from qgis.PyQt.QtWidgets import (
     QDialog, QVBoxLayout, QDialogButtonBox, QGroupBox, QCheckBox)
@@ -43,11 +44,13 @@ class LoadInputsDialog(QDialog):
     loading_canceled = pyqtSignal(QDialog)
     loading_completed = pyqtSignal(QDialog)
 
-    def __init__(self, drive_engine_dlg, zip_filepath, iface, parent=None):
+    def __init__(self, drive_engine_dlg, zip_filepath, iface, parent=None,
+                 mode=None):
         super().__init__(parent)
         self.drive_engine_dlg = drive_engine_dlg
         self.zip_filepath = zip_filepath
         self.iface = iface
+        self.mode = mode
         ini_str = self.get_ini_str(self.zip_filepath)
         self.multi_peril_csv_dict = self.get_multi_peril_csv_dict(ini_str)
         self.setWindowTitle('Load peril data from csv')
@@ -106,21 +109,31 @@ class LoadInputsDialog(QDialog):
             if header.lower() in GEOM_FIELDNAMES:
                 wkt_field = header
                 break
+        if self.mode == 'testing':
+            add_to_legend = False
+        else:
+            add_to_legend = True
         try:
-            self.layer = import_layer_from_csv(
+            layer = import_layer_from_csv(
                 self, csv_path, layer_name, self.iface, wkt_field=wkt_field,
-                add_to_legend=True, add_on_top=True, zoom_to_layer=True)
+                add_to_legend=add_to_legend, add_on_top=True,
+                zoom_to_layer=True)
         except RuntimeError as exc:
             log_msg(str(exc), level='C', message_bar=self.iface.messageBar(),
                     exception=exc)
             raise exc
-        if 'intensity' in [field.name() for field in self.layer.fields()]:
+        if self.mode == 'testing':
+            root = QgsProject.instance().layerTreeRoot()
+            root.insertLayer(0, layer)
+            self.iface.setActiveLayer(layer)
+            self.iface.zoomToActiveLayer()
+        if 'intensity' in [field.name() for field in layer.fields()]:
             LoadOutputAsLayerDialog.style_maps(
-                self.layer, 'intensity', self.iface, 'input',
+                layer, 'intensity', self.iface, 'input',
                 render_higher_on_top=self.higher_on_top_chk.isChecked())
         user_params = {'peril': peril}
         write_metadata_to_layer(
-            self.drive_engine_dlg, 'input', self.layer, user_params)
+            self.drive_engine_dlg, 'input', layer, user_params)
         log_msg('Layer %s was loaded successfully' % layer_name,
                 level='S', message_bar=self.iface.messageBar())
 

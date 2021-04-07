@@ -35,7 +35,7 @@ import operator
 import requests
 from qgis.core import QgsApplication
 from qgis.utils import iface
-from qgis.testing import unittest
+from qgis.testing import unittest, start_app, stop_app
 from qgis.PyQt.QtCore import QTimer, QSettings
 from svir.irmt import Irmt
 from svir.utilities.shared import (
@@ -53,15 +53,50 @@ from svir.dialogs.show_full_report_dialog import ShowFullReportDialog
 from svir.dialogs.load_inputs_dialog import LoadInputsDialog
 
 
-QGIS_APP = QgsApplication([], True)
+# QgsApplication([], True)
+QGIS_APP = start_app()
 
 LONG_LOADING_TIME = 10  # seconds
+ONLY_OUTPUT_TYPE = os.environ.get('ONLY_OUTPUT_TYPE')
 
 
 def run_all():
     suite = unittest.TestSuite()
+    # OQ_CSV_TO_LAYER_TYPES
+    suite.addTest(unittest.makeSuite(LoadAggRiskTestCase, 'test'))
+    suite.addTest(unittest.makeSuite(LoadAggLossesStatsTestCase, 'test'))
+    suite.addTest(unittest.makeSuite(LoadDmgByEventTestCase, 'test'))
+    suite.addTest(unittest.makeSuite(LoadEventsTestCase, 'test'))
+    suite.addTest(unittest.makeSuite(LoadAggLossTableTestCase, 'test'))
+    suite.addTest(unittest.makeSuite(LoadRealizationsTestCase, 'test'))
+    # OQ_EXTRACT_TO_LAYER_TYPES
+    suite.addTest(unittest.makeSuite(LoadAssetRiskTestCase, 'test'))
+    # NOTE: testing recovery curves starting from damages-rlzs
+    suite.addTest(unittest.makeSuite(LoadDamagesRlzsTestCase, 'test'))
+    suite.addTest(unittest.makeSuite(LoadAvgLossesRlzsTestCase, 'test'))
+    suite.addTest(unittest.makeSuite(LoadAvgLossesStatsTestCase, 'test'))
+    suite.addTest(unittest.makeSuite(LoadGmfDataTestCase, 'test'))
+    suite.addTest(unittest.makeSuite(LoadHcurvesTestCase, 'test'))
+    suite.addTest(unittest.makeSuite(LoadHmapsTestCase, 'test'))
+    suite.addTest(unittest.makeSuite(LoadRupturesTestCase, 'test'))
+    suite.addTest(unittest.makeSuite(LoadUhsTestCase, 'test'))
+    suite.addTest(unittest.makeSuite(LoadDisaggTestCase, 'test'))
+    # OQ_ZIPPED_TYPES
+    suite.addTest(unittest.makeSuite(LoadInputTestCase, 'test'))
+    # OQ_RST_TYPES
+    suite.addTest(unittest.makeSuite(LoadFullReportTestCase, 'test'))
+    # OQ_EXTRACT_TO_VIEW_TYPES
+    suite.addTest(unittest.makeSuite(LoadAggCurvesRlzsTestCase, 'test'))
+    suite.addTest(unittest.makeSuite(LoadAggCurvesStatsTestCase, 'test'))
+    suite.addTest(unittest.makeSuite(LoadDamagesRlzsAggrTestCase, 'test'))
+    suite.addTest(unittest.makeSuite(LoadAvgLossesRlzsAggrTestCase, 'test'))
+    suite.addTest(unittest.makeSuite(LoadAvgLossesStatsAggrTestCase, 'test'))
+
+    # Other tests and checks
+    suite.addTest(unittest.makeSuite(RunCalculationTestCase, 'test'))
     suite.addTest(unittest.makeSuite(
-        LoadOqEngineOutputsTestCase, 'test'))
+        AllLoadableOutputsFoundInDemosTestCase, 'test'))
+    suite.addTest(unittest.makeSuite(AllLoadersAreImplementedTestCase, 'test'))
     unittest.TextTestRunner(verbosity=3, stream=sys.stdout).run(suite)
 
 
@@ -114,50 +149,62 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         else:
             print('ONLY_OUTPUT_TYPE is set. Running tests only for'
                   ' output type: %s' % cls.only_output_type)
-        print("List of tested OQ-Engine demo calculations:")
-        for calc in cls.calc_list:
-            print('\tCalculation %s (%s): %s' % (calc['id'],
-                                                 calc['calculation_mode'],
-                                                 calc['description']))
-            calc_output_list = \
-                cls.irmt.drive_oq_engine_server_dlg.get_output_list(calc['id'])
-            if isinstance(calc_output_list, Exception):
-                raise calc_output_list
-            cls.output_list[calc['id']] = calc_output_list
-            if not cls.only_output_type:
-                print('\t\tOutput types: %s' % ', '.join(
-                    [output['type'] for output in calc_output_list]))
 
     @classmethod
     def tearDownClass(cls):
         QSettings().setValue(
             'irmt/experimental_enabled', cls.initial_experimental_enabled)
-        print("\n\nGLOBAL SUMMARY OF TESTING OQ-ENGINE OUTPUT LOADERS")
-        print("==================================================\n")
-        if cls.global_skipped_attempts:
-            print('\nSkipped:')
-            for skipped_attempt in cls.global_skipped_attempts:
-                print('\tCalculation %s: %s'
-                      % (skipped_attempt['calc_id'],
-                         skipped_attempt['calc_description']))
-                print('\t\tOutput type: %s' % skipped_attempt['output_type'])
-        if not cls.global_failed_attempts:
-            print("All the outputs were loaded successfully")
-        else:
-            print('\nFailed attempts:')
-            for failed_attempt in cls.global_failed_attempts:
-                print('\tCalculation %s (%s): %s'
-                      % (failed_attempt['calc_id'],
-                         failed_attempt['calc_mode'],
-                         failed_attempt['calc_description']))
-                print('\t\tOutput type: %s' % failed_attempt['output_type'])
-        if cls.global_time_consuming_outputs:
-            print('\n\nSome loaders took longer than %s seconds:' %
-                  LONG_LOADING_TIME)
-            for output in sorted(cls.global_time_consuming_outputs,
-                                 key=operator.itemgetter('loading_time'),
-                                 reverse=True):
-                print('\t%s' % output)
+        # print("\n\nGLOBAL SUMMARY OF TESTING OQ-ENGINE OUTPUT LOADERS")
+        # print("==================================================\n")
+        # if cls.global_skipped_attempts:
+        #     print('\nSkipped:')
+        #     for skipped_attempt in cls.global_skipped_attempts:
+        #         print('\tCalculation %s: %s'
+        #               % (skipped_attempt['calc_id'],
+        #                  skipped_attempt['calc_description']))
+        #         print('\t\tOutput type: %s' % skipped_attempt['output_type'])
+        # if not cls.global_failed_attempts:
+        #     print("All the outputs were loaded successfully")
+        # else:
+        #     print('\nFailed attempts:')
+        #     for failed_attempt in cls.global_failed_attempts:
+        #         print('\tCalculation %s (%s): %s'
+        #               % (failed_attempt['calc_id'],
+        #                  failed_attempt['calc_mode'],
+        #                  failed_attempt['calc_description']))
+        #         print('\t\tOutput type: %s' % failed_attempt['output_type'])
+        # if cls.global_time_consuming_outputs:
+        #     print('\n\nSome loaders took longer than %s seconds:' %
+        #           LONG_LOADING_TIME)
+        #     for output in sorted(cls.global_time_consuming_outputs,
+        #                          key=operator.itemgetter('loading_time'),
+        #                          reverse=True):
+        #         print('\t%s' % output)
+        # stop_app()
+
+    def list_calculations_and_outputs(self):
+        print("\n\tList of tested OQ-Engine demo calculations:")
+        for calc in self.calc_list:
+            print('\tCalculation %s (%s): %s' % (calc['id'],
+                                                 calc['calculation_mode'],
+                                                 calc['description']))
+            calc_output_list = \
+                self.irmt.drive_oq_engine_server_dlg.get_output_list(
+                    calc['id'])
+            if isinstance(calc_output_list, Exception):
+                raise calc_output_list
+            self.output_list[calc['id']] = calc_output_list
+            print('\t\tOutput types: %s' % ', '.join(
+                [output['type'] for output in calc_output_list]))
+
+    def get_output_list(self):
+        for calc in self.calc_list:
+            calc_output_list = \
+                self.irmt.drive_oq_engine_server_dlg.get_output_list(
+                    calc['id'])
+            if isinstance(calc_output_list, Exception):
+                raise calc_output_list
+            self.output_list[calc['id']] = calc_output_list
 
     def run_calc(self, input_files, job_type='hazard', calc_id=None):
         if hasattr(self, 'timer'):
@@ -198,28 +245,6 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             print('Calculation #%s was completed' % calc_id)
         return calc_id
 
-    def test_run_calculation(self):
-        if self.only_calc_id or self.only_output_type:
-            print('Skipping test running a new calculation')
-            return
-        risk_demos_path = os.path.join(
-            os.pardir, 'oq-engine', 'demos', 'risk')
-        risk_demos_dirs = glob.glob(os.path.join(risk_demos_path, "*", ""))
-        # NOTE: assuming to find ScenarioDamage folder
-        demo_dir_list = [demo_dir
-                         for demo_dir in risk_demos_dirs
-                         if "ScenarioDamage" in demo_dir]
-        self.assertEquals(len(demo_dir_list), 1,
-                          "Demo directory ScenarioDamage was not found")
-        demo_dir = demo_dir_list[0]
-        filepaths = glob.glob(os.path.join(demo_dir, '*'))
-        hazard_calc_id = self.run_calc(filepaths, 'hazard')
-        risk_calc_id = self.run_calc(filepaths, 'risk', hazard_calc_id)
-        print('Removing calculation #%s' % risk_calc_id)
-        self.irmt.drive_oq_engine_server_dlg.remove_calc(risk_calc_id)
-        print('Removing calculation #%s' % hazard_calc_id)
-        self.irmt.drive_oq_engine_server_dlg.remove_calc(hazard_calc_id)
-
     def get_calc_status(self, calc_id):
         calc_status = self.irmt.drive_oq_engine_server_dlg.get_calc_status(
             calc_id)
@@ -241,71 +266,6 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             return
         if calc_log:
             print(calc_log)
-
-    def test_all_loadable_output_types_found_in_demos(self):
-        if self.only_calc_id or self.only_output_type:
-            print('Skipping test checking if all loadable outputs are found'
-                  ' in demos')
-            return
-        loadable_output_types_found = set()
-        loadable_output_types_not_found = set()
-        for loadable_output_type in OQ_ALL_TYPES:
-            loadable_output_type_found = False
-            for calc in self.calc_list:
-                for output in self.output_list[calc['id']]:
-                    if loadable_output_type == output['type']:
-                        loadable_output_type_found = True
-                        loadable_output_types_found.add(loadable_output_type)
-                        break
-                if loadable_output_type_found:
-                    break
-            if not loadable_output_type_found:
-                loadable_output_types_not_found.add(loadable_output_type)
-        if loadable_output_types_found:
-            print("\nOutput_types found at least in one demo:\n\t%s" %
-                  "\n\t".join(loadable_output_types_found))
-        else:
-            raise RuntimeError("No loadable output type was found in any demo")
-        if loadable_output_types_not_found:
-            print("\nOutput_types not found in any demo:\n\t%s" %
-                  "\n\t".join(loadable_output_types_not_found))
-            if all([output_type.endswith('_aggr')
-                    for output_type in loadable_output_types_not_found]):
-                print("\nThe only missing output types are '_aggr', which are"
-                      " not actual outputs exposed by the engine, but"
-                      " derived outputs accessed through the extract API."
-                      " Therefore, is is ok.")
-            else:
-                print("\nSome missing output types are '_aggr', which are"
-                      " not actual outputs exposed by the engine, but"
-                      " derived outputs accessed through the extract API."
-                      " Therefore, is is ok:\n\t%s" % "\n\t".join([
-                          output_type
-                          for output_type in loadable_output_types_not_found
-                          if output_type.endswith('_aggr')]))
-                raise RuntimeError(
-                    "\nThe following loadable output types were not found in"
-                    " any demo:\n%s" % "\n\t".join([
-                        output_type
-                        for output_type in loadable_output_types_not_found
-                        if not output_type.endswith('_aggr')]))
-
-    def test_all_loaders_are_implemented(self):
-        if self.only_calc_id or self.only_output_type:
-            print('Skipping test checking if any loaders are not implemented')
-            return
-        not_implemented_loaders = set()
-        for calc in self.calc_list:
-            for output in self.output_list[calc['id']]:
-                if output['type'] not in OQ_ALL_TYPES:
-                    not_implemented_loaders.add(output['type'])
-        if not_implemented_loaders:
-            print('\n\nLoaders for the following output types found in the'
-                  ' available calculations have not been implemented yet:')
-            print(", ".join(not_implemented_loaders))
-        else:
-            print("All outputs in the demos have a corresponding loader")
-        # NOTE: We want green tests even when loaders are still missing
 
     def download_output(self, output_id, outtype):
         dest_folder = tempfile.gettempdir()
@@ -506,12 +466,14 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         # outputs might be skipped, therefore it would not be needed
         calc_id = calc['id']
         output_type = output['type']
+        calculation_mode = calc['calculation_mode']
         # NOTE: loading zipped input files only for multi_risk
-        if output_type == 'input' and calc['calculation_mode'] != 'multi_risk':
+        if output_type == 'input' and calculation_mode != 'multi_risk':
             self._store_skipped_attempt(
-                calc_id, calc['calculation_mode'],
+                calc_id, calculation_mode,
                 calc['description'], output_type)
-            print('\t\tSKIPPED')
+            print('\t\tSKIPPED (loading zipped input files only for'
+                  ' multi_risk)')
             return 'skipped'
         if output_type in (OQ_CSV_TO_LAYER_TYPES |
                            OQ_RST_TYPES | OQ_ZIPPED_TYPES):
@@ -533,7 +495,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             if output_type in OQ_ZIPPED_TYPES:
                 dlg = LoadInputsDialog(
                     self.irmt.drive_oq_engine_server_dlg,
-                    filepath, self.irmt.iface)
+                    filepath, self.irmt.iface,
+                    mode='testing')
                 dlg.accept()
                 print('\t\tok')
                 return 'ok'
@@ -541,7 +504,9 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 self.irmt.drive_oq_engine_server_dlg, self.irmt.iface,
                 self.irmt.viewer_dock,
                 self.irmt.drive_oq_engine_server_dlg.session,
-                self.hostname, calc_id, output_type, filepath)
+                self.hostname, calc_id, output_type, filepath,
+                calculation_mode=calculation_mode,
+                mode='testing')
             if dlg.ok_button.isEnabled():
                 dlg.accept()
                 print('\t\tok')
@@ -554,7 +519,9 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 self.irmt.drive_oq_engine_server_dlg, self.irmt.iface,
                 self.irmt.viewer_dock,
                 self.irmt.drive_oq_engine_server_dlg.session,
-                self.hostname, calc_id, output_type, min_mag=6.5)
+                self.hostname, calc_id, output_type, min_mag=6.5,
+                calculation_mode=calculation_mode,
+                mode='testing')
             self.loading_completed[dlg] = False
             self.loading_exception[dlg] = None
             dlg.loading_completed.connect(
@@ -583,10 +550,9 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 self.irmt.drive_oq_engine_server_dlg,
                 self.irmt.iface, self.irmt.viewer_dock,
                 self.irmt.drive_oq_engine_server_dlg.session,
-                self.hostname, calc_id, output_type)
-            if output_type == 'disagg':
-                print('\t\tok')
-                return 'ok'
+                self.hostname, calc_id, output_type,
+                calculation_mode=calculation_mode,
+                mode='testing')
             self.loading_completed[dlg] = False
             self.loading_exception[dlg] = None
             dlg.loading_completed.connect(
@@ -634,7 +600,9 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         self.loading_exception[dlg] = exception
 
     def load_output_type(self, selected_output_type):
-        if self.only_output_type and self.only_output_type != selected_output_type:
+        self.get_output_list()
+        if (self.only_output_type and
+                self.only_output_type != selected_output_type):
             print('\nSkipped output type: %s' % selected_output_type)
             return
         self.failed_attempts = []
@@ -691,14 +659,12 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 print('\t%s' % output)
 
     def load_recovery_curves(self, dlg, approach, n_simulations):
-        # FIXME: skipping test on recovery curves
-        print('\n\nSkipped test on recovery curves!')
-        # self._set_output_type('Recovery Curves')
-        # self.irmt.viewer_dock.approach_cbx.setCurrentIndex(
-        #     self.irmt.viewer_dock.approach_cbx.findText(approach))
-        # self.irmt.viewer_dock.n_simulations_sbx.setValue(n_simulations)
-        # self._change_selection()
-        # self._test_export()
+        self._set_output_type('Recovery Curves')
+        self.irmt.viewer_dock.approach_cbx.setCurrentIndex(
+            self.irmt.viewer_dock.approach_cbx.findText(approach))
+        self.irmt.viewer_dock.n_simulations_sbx.setValue(n_simulations)
+        self._change_selection()
+        self._test_export()
         dlg.loading_completed.emit(dlg)
 
     def load_uhs(self):
@@ -743,7 +709,6 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 n_rows, 2,
                 "The exported file %s has only %s rows" % (
                     exported_file_path, n_rows))
-        print("\t\tSelected data was exported to %s" % exported_file_path)
 
     def _set_output_type(self, output_type):
         self.irmt.viewer_dock.output_type_cbx.setCurrentIndex(-1)
@@ -767,11 +732,298 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         # not necessary ant it made tests much slower in case of many features
 
 
-# For each loadable output type, create dinamically a test that loads it from
-# all available demo calculations
-for output_type in OQ_ALL_TYPES:
-    def test_func(output_type):
-        return lambda self: self.load_output_type(output_type)
-    setattr(LoadOqEngineOutputsTestCase,
-            "test_load_%s" % output_type,
-            test_func(output_type))
+# OQ_CSV_TO_LAYER_TYPES
+
+class LoadAggRiskTestCase(LoadOqEngineOutputsTestCase):
+    @unittest.skipIf(
+        ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'agg_risk',
+        'only testing output type %s' % ONLY_OUTPUT_TYPE)
+    def test_load_agg_risk(self):
+        self.load_output_type('agg_risk')
+
+
+class LoadAggLossesStatsTestCase(LoadOqEngineOutputsTestCase):
+    @unittest.skipIf(
+        ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'agg_losses-stats',
+        'only testing output type %s' % ONLY_OUTPUT_TYPE)
+    def test_load_agg_losses_stats(self):
+        self.load_output_type('agg_losses-stats')
+
+
+class LoadDmgByEventTestCase(LoadOqEngineOutputsTestCase):
+    @unittest.skipIf(
+        ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'dmg_by_event',
+        'only testing output type %s' % ONLY_OUTPUT_TYPE)
+    def test_load_dmg_by_event(self):
+        self.load_output_type('dmg_by_event')
+
+
+class LoadEventsTestCase(LoadOqEngineOutputsTestCase):
+    @unittest.skipIf(
+        ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'events',
+        'only testing output type %s' % ONLY_OUTPUT_TYPE)
+    def test_load_events(self):
+        self.load_output_type('events')
+
+
+class LoadAggLossTableTestCase(LoadOqEngineOutputsTestCase):
+    @unittest.skipIf(
+        ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'agg_loss_table',
+        'only testing output type %s' % ONLY_OUTPUT_TYPE)
+    def test_load_agg_loss_table(self):
+        self.load_output_type('agg_loss_table')
+
+
+class LoadRealizationsTestCase(LoadOqEngineOutputsTestCase):
+    @unittest.skipIf(
+        ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'realizations',
+        'only testing output type %s' % ONLY_OUTPUT_TYPE)
+    def test_load_realizations(self):
+        self.load_output_type('realizations')
+
+
+# OQ_EXTRACT_TO_LAYER_TYPES
+
+class LoadAssetRiskTestCase(LoadOqEngineOutputsTestCase):
+    @unittest.skipIf(
+        ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'asset_risk',
+        'only testing output type %s' % ONLY_OUTPUT_TYPE)
+    def test_load_asset_risk(self):
+        self.load_output_type('asset_risk')
+
+
+class LoadDamagesRlzsTestCase(LoadOqEngineOutputsTestCase):
+    @unittest.skipIf(
+        ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'damages-rlzs',
+        'only testing output type %s' % ONLY_OUTPUT_TYPE)
+    def test_load_damages_rlzs(self):
+        self.load_output_type('damages-rlzs')
+
+
+class LoadAvgLossesRlzsTestCase(LoadOqEngineOutputsTestCase):
+    @unittest.skipIf(
+        ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'avg_losses-rlzs',
+        'only testing output type %s' % ONLY_OUTPUT_TYPE)
+    def test_load_avg_losses_rlzs(self):
+        self.load_output_type('avg_losses-rlzs')
+
+
+class LoadAvgLossesStatsTestCase(LoadOqEngineOutputsTestCase):
+    @unittest.skipIf(
+        ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'avg_losses-stats',
+        'only testing output type %s' % ONLY_OUTPUT_TYPE)
+    def test_load_avg_losses_stats(self):
+        self.load_output_type('avg_losses-stats')
+
+
+class LoadGmfDataTestCase(LoadOqEngineOutputsTestCase):
+    @unittest.skipIf(
+        ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'gmf_data',
+        'only testing output type %s' % ONLY_OUTPUT_TYPE)
+    def test_load_gmf_data(self):
+        self.load_output_type('gmf_data')
+
+
+class LoadHcurvesTestCase(LoadOqEngineOutputsTestCase):
+    @unittest.skipIf(
+        ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'hcurves',
+        'only testing output type %s' % ONLY_OUTPUT_TYPE)
+    def test_load_hcurves(self):
+        self.load_output_type('hcurves')
+
+
+class LoadHmapsTestCase(LoadOqEngineOutputsTestCase):
+    @unittest.skipIf(
+        ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'hmaps',
+        'only testing output type %s' % ONLY_OUTPUT_TYPE)
+    def test_load_hmaps(self):
+        self.load_output_type('hmaps')
+
+
+class LoadRupturesTestCase(LoadOqEngineOutputsTestCase):
+    @unittest.skipIf(
+        ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'ruptures',
+        'only testing output type %s' % ONLY_OUTPUT_TYPE)
+    def test_load_ruptures(self):
+        self.load_output_type('ruptures')
+
+
+class LoadUhsTestCase(LoadOqEngineOutputsTestCase):
+    @unittest.skipIf(
+        ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'uhs',
+        'only testing output type %s' % ONLY_OUTPUT_TYPE)
+    def test_load_uhs(self):
+        self.load_output_type('uhs')
+
+
+class LoadDisaggTestCase(LoadOqEngineOutputsTestCase):
+    @unittest.skipIf(
+        ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'disagg',
+        'only testing output type %s' % ONLY_OUTPUT_TYPE)
+    def test_load_disagg(self):
+        self.load_output_type('disagg')
+
+
+# OQ_ZIPPED_TYPES
+
+class LoadInputTestCase(LoadOqEngineOutputsTestCase):
+    @unittest.skipIf(
+        ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'input',
+        'only testing output type %s' % ONLY_OUTPUT_TYPE)
+    def test_load_input(self):
+        self.load_output_type('input')
+
+
+# OQ_RST_TYPES
+
+class LoadFullReportTestCase(LoadOqEngineOutputsTestCase):
+    @unittest.skipIf(
+        ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'full_report',
+        'only testing output type %s' % ONLY_OUTPUT_TYPE)
+    def test_load_full_report(self):
+        self.load_output_type('full_report')
+
+
+# OQ_EXTRACT_TO_VIEW_TYPES
+
+class LoadAggCurvesRlzsTestCase(LoadOqEngineOutputsTestCase):
+    @unittest.skipIf(
+        ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'agg_curves-rlzs',
+        'only testing output type %s' % ONLY_OUTPUT_TYPE)
+    def test_load_agg_curves_rlzs(self):
+        self.load_output_type('agg_curves-rlzs')
+
+
+class LoadAggCurvesStatsTestCase(LoadOqEngineOutputsTestCase):
+    @unittest.skipIf(
+        ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'agg_curves-stats',
+        'only testing output type %s' % ONLY_OUTPUT_TYPE)
+    def test_load_agg_curves_stats(self):
+        self.load_output_type('agg_curves-stats')
+
+
+class LoadDamagesRlzsAggrTestCase(LoadOqEngineOutputsTestCase):
+    @unittest.skipIf(
+        ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'damages-rlzs_aggr',
+        'only testing output type %s' % ONLY_OUTPUT_TYPE)
+    def test_load_damages_rlzs_aggr(self):
+        self.load_output_type('damages-rlzs_aggr')
+
+
+class LoadAvgLossesRlzsAggrTestCase(LoadOqEngineOutputsTestCase):
+    @unittest.skipIf(
+        ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'avg_losses-rlzs_aggr',
+        'only testing output type %s' % ONLY_OUTPUT_TYPE)
+    def test_load_avg_losses_rlzs_aggr(self):
+        self.load_output_type('avg_losses-rlzs_aggr')
+
+
+class LoadAvgLossesStatsAggrTestCase(LoadOqEngineOutputsTestCase):
+    @unittest.skipIf(
+        ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'avg_losses-stats_aggr',
+        'only testing output type %s' % ONLY_OUTPUT_TYPE)
+    def test_load_avg_losses_stats_aggr(self):
+        self.load_output_type('avg_losses-stats_aggr')
+
+
+# Other tests and checks
+
+class AllLoadableOutputsFoundInDemosTestCase(LoadOqEngineOutputsTestCase):
+    @unittest.skipIf(ONLY_OUTPUT_TYPE,
+        'only testing output type %s' % ONLY_OUTPUT_TYPE)
+    def test_all_loadable_output_types_found_in_demos(self):
+        self.list_calculations_and_outputs()
+        if self.only_calc_id or self.only_output_type:
+            print('Skipping test checking if all loadable outputs are found'
+                  ' in demos')
+            return
+        loadable_output_types_found = set()
+        loadable_output_types_not_found = set()
+        for loadable_output_type in OQ_ALL_TYPES:
+            loadable_output_type_found = False
+            for calc in self.calc_list:
+                for output in self.output_list[calc['id']]:
+                    if loadable_output_type == output['type']:
+                        loadable_output_type_found = True
+                        loadable_output_types_found.add(loadable_output_type)
+                        break
+                if loadable_output_type_found:
+                    break
+            if not loadable_output_type_found:
+                loadable_output_types_not_found.add(loadable_output_type)
+        if loadable_output_types_found:
+            print("\nOutput_types found at least in one demo:\n\t%s" %
+                  "\n\t".join(loadable_output_types_found))
+        else:
+            raise RuntimeError("No loadable output type was found in any demo")
+        if loadable_output_types_not_found:
+            print("\nOutput_types not found in any demo:\n\t%s" %
+                  "\n\t".join(loadable_output_types_not_found))
+            if all([output_type.endswith('_aggr')
+                    for output_type in loadable_output_types_not_found]):
+                print("\nThe only missing output types are '_aggr', which are"
+                      " not actual outputs exposed by the engine, but"
+                      " derived outputs accessed through the extract API."
+                      " Therefore, is is ok.")
+            else:
+                print("\nSome missing output types are '_aggr', which are"
+                      " not actual outputs exposed by the engine, but"
+                      " derived outputs accessed through the extract API."
+                      " Therefore, is is ok:\n\t%s" % "\n\t".join([
+                          output_type
+                          for output_type in loadable_output_types_not_found
+                          if output_type.endswith('_aggr')]))
+                raise RuntimeError(
+                    "\nThe following loadable output types were not found in"
+                    " any demo:\n%s" % "\n\t".join([
+                        output_type
+                        for output_type in loadable_output_types_not_found
+                        if not output_type.endswith('_aggr')]))
+
+
+class AllLoadersAreImplementedTestCase(LoadOqEngineOutputsTestCase):
+    @unittest.skipIf(ONLY_OUTPUT_TYPE,
+        'only testing output type %s' % ONLY_OUTPUT_TYPE)
+    def test_all_loaders_are_implemented(self):
+        self.list_calculations_and_outputs()
+        if self.only_calc_id or self.only_output_type:
+            print('Skipping test checking if any loaders are not implemented')
+            return
+        not_implemented_loaders = set()
+        for calc in self.calc_list:
+            for output in self.output_list[calc['id']]:
+                if output['type'] not in OQ_ALL_TYPES:
+                    not_implemented_loaders.add(output['type'])
+        if not_implemented_loaders:
+            print('\n\nLoaders for the following output types found in the'
+                  ' available calculations have not been implemented yet:')
+            print(", ".join(not_implemented_loaders))
+        else:
+            print("All outputs in the demos have a corresponding loader")
+        # NOTE: We want green tests even when loaders are still missing
+
+
+class RunCalculationTestCase(LoadOqEngineOutputsTestCase):
+    @unittest.skipIf(ONLY_OUTPUT_TYPE,
+        'only testing output type %s' % ONLY_OUTPUT_TYPE)
+    def test_run_calculation(self):
+        if self.only_calc_id or self.only_output_type:
+            print('Skipping test running a new calculation')
+            return
+        risk_demos_path = os.path.join(
+            os.pardir, 'oq-engine', 'demos', 'risk')
+        risk_demos_dirs = glob.glob(os.path.join(risk_demos_path, "*", ""))
+        # NOTE: assuming to find ScenarioDamage folder
+        demo_dir_list = [demo_dir
+                         for demo_dir in risk_demos_dirs
+                         if "ScenarioDamage" in demo_dir]
+        self.assertEqual(len(demo_dir_list), 1,
+                         "Demo directory ScenarioDamage was not found")
+        demo_dir = demo_dir_list[0]
+        filepaths = glob.glob(os.path.join(demo_dir, '*'))
+        hazard_calc_id = self.run_calc(filepaths, 'hazard')
+        risk_calc_id = self.run_calc(filepaths, 'risk', hazard_calc_id)
+        print('Removing calculation #%s' % risk_calc_id)
+        self.irmt.drive_oq_engine_server_dlg.remove_calc(risk_calc_id)
+        print('Removing calculation #%s' % hazard_calc_id)
+        self.irmt.drive_oq_engine_server_dlg.remove_calc(hazard_calc_id)

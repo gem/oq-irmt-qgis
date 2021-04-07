@@ -39,8 +39,8 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
                  calc_id, output_type='hmaps', path=None, mode=None,
                  engine_version=None, calculation_mode=None):
         assert output_type == 'hmaps'
-        LoadOutputAsLayerDialog.__init__(
-            self, drive_engine_dlg, iface, viewer_dock, session, hostname,
+        super().__init__(
+            drive_engine_dlg, iface, viewer_dock, session, hostname,
             calc_id, output_type=output_type, path=path, mode=mode,
             engine_version=engine_version, calculation_mode=calculation_mode)
 
@@ -232,6 +232,7 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
             if not added_ok:
                 msg = 'There was a problem adding features to the layer.'
                 log_msg(msg, level='C', message_bar=self.iface.messageBar())
+        return self.layer
 
     def load_from_npz(self):
         ret_per_groups = {}
@@ -248,7 +249,7 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
         if self.load_single_layer_ckb.isChecked():
             with WaitCursorManager(
                     'Creating layer...', self.iface.messageBar()):
-                self.build_layer()
+                self.layer = self.build_layer()
                 style_manager = self.layer.styleManager()
                 for field_name in [field.name()
                                    for field in self.layer.fields()]:
@@ -273,7 +274,7 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
                     with WaitCursorManager(
                             'Creating layer for "%s"...' % rlz_or_stat,
                             self.iface.messageBar()):
-                        self.build_layer(rlz_or_stat)
+                        self.layer = self.build_layer(rlz_or_stat)
                         style_manager = self.layer.styleManager()
                         for field_name in [field.name()
                                            for field in self.layer.fields()]:
@@ -302,7 +303,7 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
                                     'Creating layer for "%s, %s, %s"...' % (
                                         rlz_or_stat, imt, poe),
                                     self.iface.messageBar()):
-                                self.build_layer(
+                                self.layer = self.build_layer(
                                     rlz_or_stat, imt=imt, poe=poe,
                                     add_to_group=ret_per_groups[poe])
                                 # NOTE: set sgc_style=True to use SGC settings
@@ -312,3 +313,4 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
                                                 self.iface,
                                                 self.output_type,
                                                 use_sgc_style=False)
+        return self.layer

@@ -27,7 +27,15 @@ from collections import OrderedDict
 from qgis.PyQt.QtCore import QSettings
 from qgis.PyQt.QtGui import QColor
 from configparser import ConfigParser
-from qgis.core import QgsGraduatedSymbolRenderer
+from qgis.core import Qgis
+
+if Qgis.QGIS_VERSION_INT < 31000:
+    from qgis.core import QgsGraduatedSymbolRenderer
+    # the following is an enum
+    DEFAULT_STYLE_MODE = QgsGraduatedSymbolRenderer.Quantile
+else:
+    # Quantile is the id of QgsClassificationQuantile
+    DEFAULT_STYLE_MODE = 'Quantile'
 
 DEBUG = QSettings().value('/irmt/developer_mode', False, type=bool)
 
@@ -265,7 +273,7 @@ LOG_LEVELS = {'I': 'Info (high verbosity)',
 DEFAULT_SETTINGS = dict(
     color_from_rgba=QColor('#FFEBEB').rgba(),
     color_to_rgba=QColor('red').rgba(),
-    style_mode=QgsGraduatedSymbolRenderer.Quantile,
+    style_mode=DEFAULT_STYLE_MODE,
     style_classes=10,
     force_restyling=True,
     experimental_enabled=False,

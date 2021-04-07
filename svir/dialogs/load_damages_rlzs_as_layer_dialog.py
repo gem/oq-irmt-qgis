@@ -44,8 +44,8 @@ class LoadDamagesRlzsAsLayerDialog(LoadOutputAsLayerDialog):
                  path=None, mode=None, zonal_layer_path=None,
                  engine_version=None, calculation_mode=None):
         assert output_type == 'damages-rlzs'
-        LoadOutputAsLayerDialog.__init__(
-            self, drive_engine_dlg, iface, viewer_dock, session, hostname,
+        super().__init__(
+            drive_engine_dlg, iface, viewer_dock, session, hostname,
             calc_id, output_type=output_type, path=path, mode=mode,
             zonal_layer_path=zonal_layer_path, engine_version=engine_version,
             calculation_mode=calculation_mode)
@@ -170,19 +170,31 @@ class LoadDamagesRlzsAsLayerDialog(LoadOutputAsLayerDialog):
             self.default_field_name = "%s_%s" % (
                 self.loss_type_cbx.currentText(),
                 self.dmg_state_cbx.currentText())
-        # NOTE: assuming that all fields are numeric
-        field_types = {field_name: 'F' for field_name in field_names}
+        if self.aggregate_by_site_ckb.isChecked():
+            field_types = {field_name: 'F' for field_name in field_names}
+        else:
+            field_types = {}
+            for field_name in field_names:
+                try:
+                    field_types[field_name] = self.dataset.dtype[
+                        field_name].kind
+                except KeyError:
+                    field_types[field_name] = 'F'
         return field_types
 
     def read_npz_into_layer(self, field_types, **kwargs):
         if self.aggregate_by_site_ckb.isChecked():
-            self.read_npz_into_layer_aggr_by_site(field_types, **kwargs)
+            self.layer = self.read_npz_into_layer_aggr_by_site(
+                field_types, **kwargs)
         else:
             # do not aggregate by site, then aggregate by zone afterwards if
             # required
-            self.read_npz_into_layer_no_aggr(field_types, **kwargs)
+            self.layer = self.read_npz_into_layer_no_aggr(
+                field_types, **kwargs)
+        return self.layer
 
     def read_npz_into_layer_no_aggr(self, field_types, **kwargs):
+        field_names = list(field_types)
         rlz_or_stat = kwargs['rlz_or_stat']
         loss_type = kwargs['loss_type']
         with edit(self.layer):
@@ -191,7 +203,7 @@ class LoadDamagesRlzsAsLayerDialog(LoadOutputAsLayerDialog):
             for row in data:
                 # add a feature
                 feat = QgsFeature(self.layer.fields())
-                for field_name, field_type in field_types.items():
+                for field_name in field_names:
                     if field_name in ['lon', 'lat']:
                         continue
                     elif field_name in data.dtype.names:
@@ -209,8 +221,10 @@ class LoadDamagesRlzsAsLayerDialog(LoadOutputAsLayerDialog):
             if not added_ok:
                 msg = 'There was a problem adding features to the layer.'
                 log_msg(msg, level='C', message_bar=self.iface.messageBar())
+        return self.layer
 
     def read_npz_into_layer_aggr_by_site(self, field_types, **kwargs):
+        field_names = list(field_types)
         rlz_or_stat = kwargs['rlz_or_stat']
         loss_type = kwargs['loss_type']
         taxonomy = kwargs['taxonomy']
@@ -222,16 +236,13 @@ class LoadDamagesRlzsAsLayerDialog(LoadOutputAsLayerDialog):
             for row in grouped_by_site:
                 # add a feature
                 feat = QgsFeature(self.layer.fields())
-                field_idx = 0
-                for field_name, field_type in field_types.items():
+                for field_name_idx, field_name in enumerate(field_names):
                     if field_name in ['lon', 'lat']:
-                        field_idx += 1
                         continue
-                    value = row[field_idx].item()
+                    value = row[field_name_idx].item()
                     if isinstance(value, bytes):
                         value = value.decode('utf8')
                     feat.setAttribute(field_name, value)
-                    field_idx += 1
                 feat.setGeometry(QgsGeometry.fromPointXY(
                     QgsPointXY(row['lon'], row['lat'])))
                 feats.append(feat)
@@ -239,6 +250,7 @@ class LoadDamagesRlzsAsLayerDialog(LoadOutputAsLayerDialog):
             if not added_ok:
                 msg = 'There was a problem adding features to the layer.'
                 log_msg(msg, level='C', message_bar=self.iface.messageBar())
+        return self.layer
 
     def group_by_site(self, npz, rlz_or_stat, loss_type, dmg_state,
                       taxonomy='All'):
@@ -279,7 +291,7 @@ class LoadDamagesRlzsAsLayerDialog(LoadOutputAsLayerDialog):
                                     ' damage state "%s"...' % (
                                     rlz_or_stat, taxonomy, loss_type,
                                     dmg_state), self.iface.messageBar()):
-                                self.build_layer(
+                                self.layer = self.build_layer(
                                     rlz_or_stat, taxonomy=taxonomy,
                                     loss_type=loss_type, dmg_state=dmg_state)
                                 self.style_maps(self.layer,
@@ -293,7 +305,7 @@ class LoadDamagesRlzsAsLayerDialog(LoadOutputAsLayerDialog):
                     'Creating layer for "%s", taxonomy "%s", loss type "%s"'
                     ' and damage state "%s"...' % (
                         rlz_or_stat, taxonomy, loss_type, dmg_state)):
-                    self.build_layer(
+                    self.layer = self.build_layer(
                         rlz_or_stat, taxonomy=taxonomy, loss_type=loss_type,
                         dmg_state=dmg_state)
             else:  # recovery modeling
@@ -304,5 +316,6 @@ class LoadDamagesRlzsAsLayerDialog(LoadOutputAsLayerDialog):
                     with WaitCursorManager(
                         'Creating layer for "%s" and loss_type "%s"' % (
                             rlz_or_stat, loss_type), self.iface.messageBar()):
-                        self.build_layer(rlz_or_stat, loss_type=loss_type)
+                        self.layer = self.build_layer(
+                            rlz_or_stat, loss_type=loss_type)
                         self.style_curves()

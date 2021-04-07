@@ -46,6 +46,7 @@ from qgis.core import (
                        Qgis,
                        QgsRectangle,
                        QgsLayerTreeLayer,
+                       QgsCoordinateTransformContext,
                        )
 from qgis.gui import QgsMessageBar, QgsMessageBarItem
 from qgis.utils import iface
@@ -433,8 +434,8 @@ def reload_attrib_cbx(
     :type layer: QgsVectorLayer
     :param prepend_empty_item: if to prepend an empty item to the combo
     :type layer: Bool
-    :param \*valid_field_types: multiple tuples containing types
-    :type \*valid_field_types: tuple, tuple, ...
+    :param `*valid_field_types`: multiple tuples containing types
+    :type `*valid_field_types`: tuple, tuple, ...
     """
     field_types = set()
     for field_type in valid_field_types:
@@ -625,11 +626,11 @@ def ask_for_destination_full_path_name(
     :param parent: the parent dialog
     :param text: the dialog's title text
     :param filter:
-        filter files by specific formats. Default: 'Shapefiles (\*.shp)'
+        filter files by specific formats. Default: 'Shapefiles (`*.shp`)'
         A more elaborate example:
 
-        "Images (\*.png \*.xpm \*.jpg);;
-        Text files (\*.txt);;XML files (\*.xml)"
+        "Images (`*.png *.xpm *.jpg`);;
+        Text files (`*.txt`);;XML files (`*.xml`)"
 
     :returns: full path name of the destination file
     """
@@ -877,8 +878,18 @@ def save_layer_as(orig_layer, dest_path, save_format, crs=None):
         crs = orig_layer.crs()
     old_lc_numeric = locale.getlocale(locale.LC_NUMERIC)
     locale.setlocale(locale.LC_NUMERIC, 'C')
-    writer_error = QgsVectorFileWriter.writeAsVectorFormat(
-        orig_layer, dest_path, 'utf-8', crs, save_format)
+    if Qgis.QGIS_VERSION_INT < 31003:
+        writer_error = QgsVectorFileWriter.writeAsVectorFormat(
+            orig_layer, dest_path, 'utf-8', crs, save_format)
+    else:
+        options = QgsVectorFileWriter.SaveVectorOptions()
+        options.fileEncoding = 'utf8'
+        options.driverName = save_format
+        ctc = QgsCoordinateTransformContext()
+        if crs is not None:
+            ctc.addCoordinateOperation(orig_layer.crs(), crs, 'proj')
+        writer_error = QgsVectorFileWriter.writeAsVectorFormatV2(
+            orig_layer, dest_path, ctc, options)
     locale.setlocale(locale.LC_NUMERIC, old_lc_numeric)
     return writer_error
 
@@ -922,10 +933,16 @@ def get_style(layer, message_bar, restore_defaults=False):
             log_msg(msg, level='C', message_bar=message_bar)
             color_to_rgba = DEFAULT_SETTINGS['color_to_rgba']
     color_to = QColor().fromRgba(color_to_rgba)
-    mode = (DEFAULT_SETTINGS['style_mode']
-            if restore_defaults
-            else int(settings.value(
-                'irmt/style_mode', DEFAULT_SETTINGS['style_mode'])))
+    if Qgis.QGIS_VERSION_INT < 31000:
+        style_mode = (DEFAULT_SETTINGS['style_mode']
+                      if restore_defaults
+                      else int(settings.value(
+                          'irmt/style_mode', DEFAULT_SETTINGS['style_mode'])))
+    else:
+        style_mode = (DEFAULT_SETTINGS['style_mode']
+                      if restore_defaults
+                      else settings.value(
+                          'irmt/style_mode', DEFAULT_SETTINGS['style_mode']))
     classes = (DEFAULT_SETTINGS['style_classes']
                if restore_defaults
                else int(settings.value(
@@ -961,7 +978,7 @@ def get_style(layer, message_bar, restore_defaults=False):
     return {
         'color_from': color_from,
         'color_to': color_to,
-        'mode': mode,
+        'style_mode': style_mode,
         'classes': classes,
         'force_restyling': force_restyling
     }

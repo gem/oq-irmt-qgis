@@ -42,8 +42,8 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
                  calc_id, output_type='ruptures', min_mag=4, path=None,
                  mode=None, engine_version=None, calculation_mode=None):
         assert output_type == 'ruptures'
-        LoadOutputAsLayerDialog.__init__(
-            self, drive_engine_dlg, iface, viewer_dock, session, hostname,
+        super().__init__(
+            drive_engine_dlg, iface, viewer_dock, session, hostname,
             calc_id, output_type=output_type, path=path, mode=mode,
             engine_version=engine_version, calculation_mode=calculation_mode)
         self.style_by_items = OrderedDict([
@@ -134,11 +134,14 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
             with WaitCursorManager(
                     'Creating layer for "%s" ruptures...' % layer_geom_type,
                     self.iface.messageBar()):
-                self.build_layer(boundaries=boundaries,
-                                 geometry_type=layer_geom_type,
-                                 wkt_geom_type=wkt_geom_type,
-                                 row_wkt_geom_types=row_wkt_geom_types,
-                                 add_to_group=rup_group)
+                # NOTE: adding to map in this method
+                self.layer = self.build_layer(
+                    boundaries=boundaries,
+                    geometry_type=layer_geom_type,
+                    wkt_geom_type=wkt_geom_type,
+                    row_wkt_geom_types=row_wkt_geom_types,
+                    add_to_group=rup_group,
+                    add_to_map=False)
             style_by = self.style_by_cbx.itemData(
                 self.style_by_cbx.currentIndex())
             if style_by == 'mag':
@@ -146,10 +149,19 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
                                 self.iface, self.output_type)
             else:  # 'trt'
                 self.style_categorized(layer=self.layer, style_by=style_by)
-            log_msg('Layer %s was loaded successfully' % self.layer_name,
+            if rup_group:
+                tree_node = rup_group
+            else:
+                tree_node = QgsProject.instance().layerTreeRoot()
+            QgsProject.instance().addMapLayer(self.layer, False)
+            tree_node.insertLayer(0, self.layer)
+            self.iface.setActiveLayer(self.layer)
+            log_msg('Layer %s was loaded successfully' % self.layer.name(),
                     level='S', message_bar=self.iface.messageBar())
         if rup_group:
             zoom_to_group(rup_group)
+        else:
+            self.iface.zoomToActiveLayer()
 
     def read_npz_into_layer(
             self, field_types, rlz_or_stat, boundaries,
@@ -175,3 +187,4 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
             if not added_ok:
                 msg = 'There was a problem adding features to the layer.'
                 log_msg(msg, level='C', message_bar=self.iface.messageBar())
+        return self.layer

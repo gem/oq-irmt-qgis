@@ -26,12 +26,14 @@ import copy
 import json
 import numpy as np
 from qgis.core import (
-    QgsFeature, QgsGeometry, edit, QgsProject, QgsVectorLayer, QgsPointXY)
+    QgsFeature, QgsGeometry, edit, QgsProject, QgsVectorLayer, QgsPointXY,
+    QgsTask, QgsApplication)
 from svir.utilities.utils import (
     log_msg, WaitCursorManager, extract_npz, get_irmt_version,
     write_metadata_to_layer)
 from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
 from svir.calculations.calculate_utils import add_attribute
+from svir.tasks.extract_npz_task import ExtractNpzTask
 
 
 class LoadDisaggAsLayerDialog(LoadOutputAsLayerDialog):
@@ -43,28 +45,30 @@ class LoadDisaggAsLayerDialog(LoadOutputAsLayerDialog):
                  calc_id, output_type='disagg', path=None, mode=None,
                  engine_version=None, calculation_mode=None):
         assert output_type == 'disagg'
-        LoadOutputAsLayerDialog.__init__(
-            self, drive_engine_dlg, iface, viewer_dock, session, hostname,
+        super().__init__(
+            drive_engine_dlg, iface, viewer_dock, session, hostname,
             calc_id, output_type=output_type, path=path, mode=mode,
             engine_version=engine_version, calculation_mode=calculation_mode)
+        self.disagg = None
         # self.setWindowTitle('Load disaggregation as layer')
         # self.populate_out_dep_widgets()
         # self.adjustSize()
         self.ok_button.setEnabled(True)
-        self.accept()
+        log_msg('Extracting disagg. Watch progress in QGIS task bar',
+                level='I', message_bar=self.iface.messageBar())
+        self.extract_npz_task = ExtractNpzTask(
+            'Extract disagg', QgsTask.CanCancel, self.session,
+            self.hostname, self.calc_id, 'disagg_layer', self.finalize_init,
+            self.on_extract_error)
+        QgsApplication.taskManager().addTask(self.extract_npz_task)
+
+    def finalize_init(self, extracted_disagg):
+        self.disagg = extracted_disagg
+        self.init_done.emit(self)
+        if self.mode != 'testing':
+            self.accept()
 
     def accept(self):
-        with WaitCursorManager(
-                'Extracting disagg_layer...',
-                message_bar=self.iface.messageBar()):
-            log_msg('Extracting disagg_layer', level='I',
-                    print_to_stdout=True)
-            disagg = extract_npz(
-                self.session, self.hostname, self.calc_id,
-                'disagg_layer',
-                message_bar=self.iface.messageBar())
-        if disagg is None:
-            return
         with WaitCursorManager(
                 'Extracting custom site ids...',
                 message_bar=self.iface.messageBar()):
@@ -81,18 +85,17 @@ class LoadDisaggAsLayerDialog(LoadOutputAsLayerDialog):
                        'OQ-GeoViewer projects. Using "sids" instead.')
                 log_msg(msg, level='W', print_to_stdout=True,
                         message_bar=self.iface.messageBar())
-        if disagg is None:
-            return
         with WaitCursorManager(
                 'Creating disaggregation layer',
                 self.iface.messageBar()):
             log_msg('Creating disagg_layer', level='I',
                     print_to_stdout=True)
             log_msg('Getting disagg array', level='I', print_to_stdout=True)
-            disagg_array = disagg['array']
+            disagg_array = self.disagg['array']
             lons = disagg_array['lon']
             lats = disagg_array['lat']
-            self.build_layer(disagg, disagg_array, lons, lats, custom_site_ids)
+            self.layer = self.build_layer(
+                self.disagg, disagg_array, lons, lats, custom_site_ids)
             if custom_site_ids is not None:
                 self.build_custom_site_ids_layer(lons, lats, custom_site_ids)
             self.style_curves()
@@ -115,7 +118,7 @@ class LoadDisaggAsLayerDialog(LoadOutputAsLayerDialog):
         custom_site_id_layer = QgsVectorLayer(
             "%s?crs=epsg:4326" % 'point', layer_name, "memory")
         add_attribute('custom_site_id', 'I', custom_site_id_layer)
-        self.read_custom_site_ids_into_layer(
+        custom_site_id_layer = self.read_custom_site_ids_into_layer(
             custom_site_id_layer, lons, lats, custom_site_ids)
         custom_site_id_layer.setCustomProperty(
             'output_type', '%s-%s' % (self.output_type, 'custom_site_ids'))
@@ -125,10 +128,14 @@ class LoadDisaggAsLayerDialog(LoadOutputAsLayerDialog):
         irmt_version = get_irmt_version()
         custom_site_id_layer.setCustomProperty('irmt_version', irmt_version)
         custom_site_id_layer.setCustomProperty('calc_id', self.calc_id)
-        QgsProject.instance().addMapLayer(custom_site_id_layer, False)
+        if self.mode != 'testing':
+            # NOTE: the following commented line would cause (unexpectedly)
+            #       "QGIS died on signal 11" and double creation of some
+            #       layers during integration tests
+            QgsProject.instance().addMapLayer(custom_site_id_layer, False)
         tree_node = QgsProject.instance().layerTreeRoot()
         tree_node.insertLayer(0, custom_site_id_layer)
-        self.iface.setActiveLayer(custom_site_id_layer)
+        # self.iface.setActiveLayer(custom_site_id_layer)
         log_msg('Layer %s was created successfully' % layer_name, level='S',
                 message_bar=self.iface.messageBar(),
                 print_to_stdout=True)
@@ -148,6 +155,7 @@ class LoadDisaggAsLayerDialog(LoadOutputAsLayerDialog):
             if not added_ok:
                 msg = 'There was a problem adding features to the layer.'
                 log_msg(msg, level='C', message_bar=self.iface.messageBar())
+        return custom_site_id_layer
 
     def build_layer(self, disagg, disagg_array, lons, lats, custom_site_ids):
         log_msg('Done getting disagg array', level='I', print_to_stdout=True)
@@ -175,7 +183,7 @@ class LoadDisaggAsLayerDialog(LoadOutputAsLayerDialog):
                 modified_field_types[added_field_name] = field_type
         field_types = copy.copy(modified_field_types)
 
-        self.read_npz_into_layer(
+        self.layer = self.read_npz_into_layer(
             field_types, disagg_array, lons, lats, custom_site_ids)
         self.layer.setCustomProperty('output_type', self.output_type)
         if self.engine_version is not None:
@@ -198,13 +206,18 @@ class LoadDisaggAsLayerDialog(LoadOutputAsLayerDialog):
         write_metadata_to_layer(
             self.drive_engine_dlg, self.output_type, self.layer,
             disagg_params=disagg_params)
-        QgsProject.instance().addMapLayer(self.layer, False)
+        if self.mode != 'testing':
+            # NOTE: the following commented line would cause (unexpectedly)
+            #       "QGIS died on signal 11" and double creation of some
+            #       layers during integration tests
+            QgsProject.instance().addMapLayer(self.layer, False)
         tree_node = QgsProject.instance().layerTreeRoot()
         tree_node.insertLayer(0, self.layer)
         self.iface.setActiveLayer(self.layer)
         log_msg('Layer %s was created successfully' % layer_name, level='S',
                 message_bar=self.iface.messageBar(),
                 print_to_stdout=True)
+        return self.layer
 
     def read_npz_into_layer(
             self, field_types, disagg_array, lons, lats, custom_site_ids):
@@ -253,3 +266,4 @@ class LoadDisaggAsLayerDialog(LoadOutputAsLayerDialog):
             if not added_ok:
                 msg = 'There was a problem adding features to the layer.'
                 log_msg(msg, level='C', message_bar=self.iface.messageBar())
+        return self.layer
