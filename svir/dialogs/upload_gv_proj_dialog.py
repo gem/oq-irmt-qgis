@@ -32,7 +32,7 @@ from qgis.core import (
     QgsApplication, QgsProcessingContext, QgsProcessingFeedback, QgsProject,
     QgsProcessingUtils, QgsField, QgsFields, QgsFeature, QgsGeometry,
     QgsWkbTypes, QgsMemoryProviderUtils, QgsCoordinateReferenceSystem,
-    QgsTask, QgsMapLayerType)
+    QgsTask, QgsMapLayerType, QgsVectorLayer)
 from qgis.PyQt.QtCore import QVariant, QDir, QFile
 from qgis.PyQt.QtWidgets import (
     QDialog, QDialogButtonBox, QMessageBox)
@@ -224,7 +224,8 @@ class UploadGvProjDialog(QDialog, FORM_CLASS):
     def check_crs(self):
         layers = list(QgsProject.instance().mapLayers().values())
         for layer in layers:
-            if layer.geometryType() == QgsWkbTypes.NullGeometry:
+            if (isinstance(layer, QgsVectorLayer)
+                    and layer.geometryType() == QgsWkbTypes.NullGeometry):
                 continue
             if not layer.crs().isValid():
                 msg = ("Layer '%s' does not have a valid coordinate"
