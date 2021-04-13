@@ -52,19 +52,19 @@ class ImportGvMapDialog(QDialog, FORM_CLASS):
         self.setupUi(self)
         self.session = Session()
         self.authenticate()
-        map_list = self.get_map_list()
-        if not map_list:
+        map_list = self.get_published_map_list()
+        if map_list:
+            self.show_map_list(map_list)
+        else:
+            log_msg('There are no published maps available',
+                    level='W', message_bar=self.message_bar)
             self.reject()
-            return
-        self.show_map_list(map_list)
 
     def authenticate(self):
         self.hostname, username, password = get_credentials('geoviewer')
         geoviewer_login(self.hostname, username, password, self.session)
 
     def show_map_list(self, map_list):
-        if not map_list:
-            return
         fields_to_display = list(map_list[0]['fields'])
         name_idx = fields_to_display.index('name')
         fields_to_display.pop(name_idx)
@@ -95,7 +95,12 @@ class ImportGvMapDialog(QDialog, FORM_CLASS):
     def download_url(self, url, save_path, chunk_size=128):
         r = requests.get(url, stream=True)
         if not r.ok:
-            msg = 'Unable to download the selected map: %s' % r.reason
+            msg = 'Unable to download the selected map.'
+            if r.reason == 'Forbidden':
+                msg += (' Most likely, the map is set as published but the'
+                        ' corresponding project is not set as downloadable.')
+            else:
+                msg += ' ' + r.reason
             log_msg(msg, level='C', message_bar=self.message_bar)
             self.reject()
             return False
@@ -124,7 +129,7 @@ class ImportGvMapDialog(QDialog, FORM_CLASS):
                 project.read(qgsfilepath)
                 break
 
-    def get_map_list(self):
+    def get_published_map_list(self):
         map_list_url = self.hostname + '/api/map_list/'
         try:
             resp = self.session.get(map_list_url, timeout=10)
@@ -140,4 +145,6 @@ class ImportGvMapDialog(QDialog, FORM_CLASS):
             self.reject()
             return
         map_list = json.loads(resp.text)
-        return map_list
+        published_map_list = [map for map in map_list
+                        if map['fields']['published']]
+        return published_map_list
