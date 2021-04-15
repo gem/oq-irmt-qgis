@@ -248,6 +248,7 @@ class UploadGvProjDialog(QDialog, FORM_CLASS):
             msg = ("A project named %s already exists" % project_name)
             log_msg(msg, level='C', message_bar=self.message_bar)
             return
+        QgsProject.instance().write()
         super().accept()
         self.consolidate(project_name)
 
