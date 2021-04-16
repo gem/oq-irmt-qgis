@@ -39,6 +39,9 @@
      <property name="text">
       <string>Automatically create a map associated to the project</string>
      </property>
+     <property name="checked">
+      <bool>true</bool>
+     </property>
     </widget>
    </item>
    <item>
