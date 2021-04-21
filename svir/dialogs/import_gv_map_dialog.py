@@ -29,7 +29,7 @@ import requests
 import zipfile
 import os
 from requests import Session
-from qgis.core import QgsProject
+from qgis.core import QgsProject, QgsRasterLayer
 from qgis.PyQt.QtWidgets import (
     QDialog, QTableWidgetItem, QPushButton)
 from svir.utilities.utils import (
@@ -122,12 +122,21 @@ class ImportGvMapDialog(QDialog, FORM_CLASS):
             zip_ref.extractall(dirpath)
         log_msg('The project was downloaded into the folder: %s' % dirpath,
                 level='S')
+        qgsfilepath = None
         for filename in os.listdir(dirpath):
             if filename.endswith('.qgs'):
                 qgsfilepath = os.path.join(dirpath, filename)
-                project = QgsProject.instance()
-                project.read(qgsfilepath)
                 break
+        if qgsfilepath is None:
+            raise RuntimeError('No .qgs file was found in %s' % dirpath)
+        project = QgsProject.instance()
+        project.read(qgsfilepath)
+        root = project.layerTreeRoot()
+        basemaps_group = root.addGroup('Basemaps')
+        basemaps_group.setIsMutuallyExclusive(True)
+        for maplayer in project.mapLayers().values():
+            if isinstance(maplayer, QgsRasterLayer):
+                basemaps_group.insertLayer(0, maplayer)
 
     def get_published_map_list(self):
         map_list_url = self.hostname + '/api/map_list/'
@@ -146,5 +155,5 @@ class ImportGvMapDialog(QDialog, FORM_CLASS):
             return
         map_list = json.loads(resp.text)
         published_map_list = [map for map in map_list
-                        if map['fields']['published']]
+                              if map['fields']['published']]
         return published_map_list
