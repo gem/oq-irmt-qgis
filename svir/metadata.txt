@@ -179,7 +179,7 @@ changelog=
     * The cursor does not switch to "waiting" while refreshing the OQ-Engine calculation list
     * When feedback is shown outside the dialog that drives the OQ-Engine, a message suggests the user where to look
     3.2.4
-    * Added loaders for dmg_by_event and losses_by_event, from csv (disabled for event-based calculations)
+    * Added loaders for risk_by_event and losses_by_event, from csv (disabled for event-based calculations)
     * Outputs of a selected oq-engine calculation are sorted by name in alphabetical order
     3.2.3
     * The button to download a calculation datastore remains disabled until the calculation is complete (and its size is known)

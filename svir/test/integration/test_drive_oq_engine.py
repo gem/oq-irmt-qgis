@@ -752,10 +752,10 @@ class LoadAggLossesStatsTestCase(LoadOqEngineOutputsTestCase):
 
 class LoadDmgByEventTestCase(LoadOqEngineOutputsTestCase):
     @unittest.skipIf(
-        ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'dmg_by_event',
+        ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'risk_by_event',
         'only testing output type %s' % ONLY_OUTPUT_TYPE)
-    def test_load_dmg_by_event(self):
-        self.load_output_type('dmg_by_event')
+    def test_load_risk_by_event(self):
+        self.load_output_type('risk_by_event')
 
 
 class LoadEventsTestCase(LoadOqEngineOutputsTestCase):

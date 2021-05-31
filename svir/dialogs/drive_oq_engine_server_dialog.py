@@ -119,7 +119,7 @@ OUTPUT_TYPE_LOADERS = {
     'ruptures': LoadRupturesAsLayerDialog,
     'realizations': LoadCsvAsLayerDialog,
     'events': LoadCsvAsLayerDialog,
-    'dmg_by_event': LoadCsvAsLayerDialog,
+    'risk_by_event': LoadCsvAsLayerDialog,
     'agg_loss_table': LoadCsvAsLayerDialog,
     'agg_losses-stats': LoadCsvAsLayerDialog,
     'agg_risk': LoadCsvAsLayerDialog,
