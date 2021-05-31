@@ -768,10 +768,10 @@ class LoadEventsTestCase(LoadOqEngineOutputsTestCase):
 
 class LoadAggLossTableTestCase(LoadOqEngineOutputsTestCase):
     @unittest.skipIf(
-        ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'agg_loss_table',
+        ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'risk_by_event',
         'only testing output type %s' % ONLY_OUTPUT_TYPE)
-    def test_load_agg_loss_table(self):
-        self.load_output_type('agg_loss_table')
+    def test_load_risk_by_event(self):
+        self.load_output_type('risk_by_event')
 
 
 class LoadRealizationsTestCase(LoadOqEngineOutputsTestCase):

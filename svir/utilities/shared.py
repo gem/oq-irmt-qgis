@@ -232,7 +232,6 @@ OQ_CSV_TO_LAYER_TYPES = set([
     'agg_losses-stats',
     'risk_by_event',
     'events',
-    'agg_loss_table',
     'realizations',
 ])
 OQ_EXTRACT_TO_LAYER_TYPES = set([
