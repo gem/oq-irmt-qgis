@@ -27,6 +27,7 @@ import traceback
 import os
 import csv
 import numpy
+import urllib
 from datetime import datetime
 from collections import OrderedDict
 
@@ -997,8 +998,11 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                     for tag_value in self.tags[tag_name]['values']:
                         if self.tags[tag_name]['values'][tag_value]:
                             # (if it is selected)
+                            # NOTE: workaround for a bug in the engine, that is
+                            # making a urlencode on tag values, removing +
                             tag_value_idx = list(
-                                self.agg_curves[tag_name]).index(tag_value)
+                                self.agg_curves[tag_name]).index(
+                                    urllib.parse.unquote_plus(tag_value))
                             tag_value_idxs[tag_name].append(tag_value_idx)
             else:
                 for tag_name in self.aggregate_by:
@@ -1029,6 +1033,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         ordinates = self.agg_curves['array']
         loss_type_idx = self.loss_type_cbx.currentIndex()
         unit = self.agg_curves['units'][loss_type_idx]
+        if unit == 'people':
+            unit = 'fatalities'
         self.plot.clear()
         if not ordinates.any():  # too much filtering
             self.plot_canvas.draw()
@@ -1086,7 +1092,12 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.plot.set_xscale('log')
         self.plot.set_yscale('linear')
         self.plot.set_xlabel('Return period (years)')
-        self.plot.set_ylabel('Loss (%s)' % unit)
+        if self.abs_rel_cbx.currentText() == 'Absolute':
+            self.plot.set_ylabel('Loss (%s)' % unit)
+        elif unit == 'fatalities':
+            self.plot.set_ylabel('Fatalities loss ratio')
+        else:
+            self.plot.set_ylabel('Economic loss ratio')
         title = 'Loss type: %s' % self.loss_type_cbx.currentText()
         self.plot.set_title(title)
         self.plot.grid(which='both')
