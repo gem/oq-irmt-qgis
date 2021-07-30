@@ -526,13 +526,13 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                        'imt': imt}
         write_metadata_to_layer(
             self.drive_engine_dlg, self.output_type, self.layer, user_params)
-        try:
-            if (self.zonal_layer_cbx.currentText()
-                    and self.zonal_layer_gbx.isChecked()):
-                return
-        except AttributeError:
-            # the aggregation stuff might not exist for some loaders
-            pass
+        # try:
+        #     if (self.zonal_layer_cbx.currentText()
+        #             and self.zonal_layer_gbx.isChecked()):
+        #         return self.layer
+        # except AttributeError:
+        #     # the aggregation stuff might not exist for some loaders
+        #     pass
         if add_to_map:
             if add_to_group:
                 tree_node = add_to_group
@@ -741,14 +741,19 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 rule_renderer.refineRuleCategoris(not_null_rule, renderer)
             for rule in rule_renderer.rootRule().children()[1].children():
                 label = rule.label()
-                # by default, labels are like:
+                # NOTE: in old QGIS versions,
+                # by default, labels were like:
                 # ('"collapse-structural-ASH_DRY_sum" >= 0.0000 AND
                 # "collapse-structural-ASH_DRY_sum" <= 2.3949')
-                first, second = label.split(" AND ")
-                bottom = first.rsplit(" ", 1)[1]
-                top = second.rsplit(" ", 1)[1]
-                simplified = "%s - %s" % (bottom, top)
-                rule.setLabel(simplified)
+                # whereas in newer versions they are like '0 - 0.02'
+                # and we want to convert the old format in the new one if
+                # needed
+                if 'AND' in label:
+                    first, second = label.split(" AND ")
+                    bottom = first.rsplit(" ", 1)[1]
+                    top = second.rsplit(" ", 1)[1]
+                    simplified = "%s - %s" % (bottom, top)
+                    rule.setLabel(simplified)
             root_rule.removeChildAt(0)
             renderer = rule_renderer
         if render_higher_on_top:
