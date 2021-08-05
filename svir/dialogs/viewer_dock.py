@@ -1036,9 +1036,11 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         if unit == 'people':
             unit = 'fatalities'
         self.plot.clear()
-        if not ordinates.any():  # too much filtering
-            self.plot_canvas.draw()
-            return
+        # if not ordinates.any():  # too much filtering
+        #     self.plot_canvas.draw()
+        #     log_msg('No data corresponding to the selected items',
+        #             level='W', message_bar=self.iface.messageBar())
+        #     return
         marker = dict()
         line_style = dict()
         color_hex = dict()
