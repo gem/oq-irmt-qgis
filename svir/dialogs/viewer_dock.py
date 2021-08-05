@@ -1033,8 +1033,6 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         ordinates = self.agg_curves['array']
         loss_type_idx = self.loss_type_cbx.currentIndex()
         unit = self.agg_curves['units'][loss_type_idx]
-        if unit == 'people':
-            unit = 'fatalities'
         self.plot.clear()
         # if not ordinates.any():  # too much filtering
         #     self.plot_canvas.draw()
@@ -1095,11 +1093,16 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.plot.set_yscale('linear')
         self.plot.set_xlabel('Return period (years)')
         if self.abs_rel_cbx.currentText() == 'Absolute':
-            self.plot.set_ylabel('Loss (%s)' % unit)
-        elif unit == 'fatalities':
-            self.plot.set_ylabel('Fatalities loss ratio')
+            if unit in ('people', 'fatalities'):
+                ylabel = 'Loss (fatalities)'
+            else:
+                ylabel = 'Economic loss (%s)' % unit
         else:
-            self.plot.set_ylabel('Economic loss ratio')
+            if unit in ('people', 'fatalities'):
+                ylabel = 'Fatalities loss ratio'
+            else:
+                ylabel = 'Economic loss ratio'
+        self.plot.set_ylabel(ylabel)
         title = 'Loss type: %s' % self.loss_type_cbx.currentText()
         self.plot.set_title(title)
         self.plot.grid(which='both')
