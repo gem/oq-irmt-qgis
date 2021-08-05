@@ -543,6 +543,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             params['kind'] = 'rlzs'
         else:
             raise NotImplementedError(self.output_type)
+        # FIXME: in the esample with aggregated materials, whatever I put into
+        # params[tag_name], even values that do not exist, I get the same curve
         if self.aggregate_by is not None and len(self.aggregate_by):
             for tag_name in self.aggregate_by:
                 tag_value = [val for val in self.tags[tag_name]['values']
@@ -801,6 +803,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         for tag_idx, tag_name in enumerate(tag_names):
             tag_values = sorted([
                 value for value in self.exposure_metadata[tag_name]
+                # if value != '?']) + ['*']
                 if value != '?'])
             self.tags[tag_name] = {
                 'selected': True if tag_idx == 0 else False,
