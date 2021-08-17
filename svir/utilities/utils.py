@@ -916,10 +916,17 @@ def get_style(layer, message_bar, restore_defaults=False):
             log_msg(msg, level='C', message_bar=message_bar)
             color_to_rgba = DEFAULT_SETTINGS['color_to_rgba']
     color_to = QColor().fromRgba(color_to_rgba)
-    mode = (DEFAULT_SETTINGS['style_mode']
-            if restore_defaults
-            else int(settings.value(
-                'irmt/style_mode', DEFAULT_SETTINGS['style_mode'])))
+    try:
+        mode = (DEFAULT_SETTINGS['style_mode']
+                if restore_defaults
+                else int(settings.value(
+                    'irmt/style_mode', DEFAULT_SETTINGS['style_mode'])))
+    except TypeError:
+        # NOTE: fallback for backward compatibility
+        mode = (DEFAULT_SETTINGS['style_mode']
+                if restore_defaults
+                else settings.value(
+                    'irmt/style_mode', DEFAULT_SETTINGS['style_mode']))
     classes = (DEFAULT_SETTINGS['style_classes']
                if restore_defaults
                else int(settings.value(
