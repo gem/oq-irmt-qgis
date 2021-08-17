@@ -33,9 +33,9 @@ import csv
 import time
 import operator
 import requests
-from qgis.core import QgsApplication
+# from qgis.core import QgsApplication
 from qgis.utils import iface
-from qgis.testing import unittest, start_app, stop_app
+from qgis.testing import unittest, start_app  # , stop_app
 from qgis.PyQt.QtCore import QTimer, QSettings
 from svir.irmt import Irmt
 from svir.utilities.shared import (
@@ -752,10 +752,10 @@ class LoadAggLossesStatsTestCase(LoadOqEngineOutputsTestCase):
 
 class LoadDmgByEventTestCase(LoadOqEngineOutputsTestCase):
     @unittest.skipIf(
-        ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'dmg_by_event',
+        ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'risk_by_event',
         'only testing output type %s' % ONLY_OUTPUT_TYPE)
-    def test_load_dmg_by_event(self):
-        self.load_output_type('dmg_by_event')
+    def test_load_risk_by_event(self):
+        self.load_output_type('risk_by_event')
 
 
 class LoadEventsTestCase(LoadOqEngineOutputsTestCase):
@@ -768,10 +768,10 @@ class LoadEventsTestCase(LoadOqEngineOutputsTestCase):
 
 class LoadAggLossTableTestCase(LoadOqEngineOutputsTestCase):
     @unittest.skipIf(
-        ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'agg_loss_table',
+        ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'risk_by_event',
         'only testing output type %s' % ONLY_OUTPUT_TYPE)
-    def test_load_agg_loss_table(self):
-        self.load_output_type('agg_loss_table')
+    def test_load_risk_by_event(self):
+        self.load_output_type('risk_by_event')
 
 
 class LoadRealizationsTestCase(LoadOqEngineOutputsTestCase):
@@ -930,7 +930,7 @@ class LoadAvgLossesStatsAggrTestCase(LoadOqEngineOutputsTestCase):
 
 class AllLoadableOutputsFoundInDemosTestCase(LoadOqEngineOutputsTestCase):
     @unittest.skipIf(ONLY_OUTPUT_TYPE,
-        'only testing output type %s' % ONLY_OUTPUT_TYPE)
+                     'only testing output type %s' % ONLY_OUTPUT_TYPE)
     def test_all_loadable_output_types_found_in_demos(self):
         self.list_calculations_and_outputs()
         if self.only_calc_id or self.only_output_type:
@@ -983,7 +983,7 @@ class AllLoadableOutputsFoundInDemosTestCase(LoadOqEngineOutputsTestCase):
 
 class AllLoadersAreImplementedTestCase(LoadOqEngineOutputsTestCase):
     @unittest.skipIf(ONLY_OUTPUT_TYPE,
-        'only testing output type %s' % ONLY_OUTPUT_TYPE)
+                     'only testing output type %s' % ONLY_OUTPUT_TYPE)
     def test_all_loaders_are_implemented(self):
         self.list_calculations_and_outputs()
         if self.only_calc_id or self.only_output_type:
@@ -1005,7 +1005,7 @@ class AllLoadersAreImplementedTestCase(LoadOqEngineOutputsTestCase):
 
 class RunCalculationTestCase(LoadOqEngineOutputsTestCase):
     @unittest.skipIf(ONLY_OUTPUT_TYPE,
-        'only testing output type %s' % ONLY_OUTPUT_TYPE)
+                     'only testing output type %s' % ONLY_OUTPUT_TYPE)
     def test_run_calculation(self):
         if self.only_calc_id or self.only_output_type:
             print('Skipping test running a new calculation')

@@ -230,9 +230,8 @@ RECOVERY_DEFAULTS['n_recovery_based_dmg_states'] = len(
 OQ_CSV_TO_LAYER_TYPES = set([
     'agg_risk',
     'agg_losses-stats',
-    'dmg_by_event',
+    'risk_by_event',
     'events',
-    'agg_loss_table',
     'realizations',
 ])
 OQ_EXTRACT_TO_LAYER_TYPES = set([

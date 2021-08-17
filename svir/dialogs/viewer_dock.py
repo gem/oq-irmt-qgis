@@ -27,6 +27,7 @@ import traceback
 import os
 import csv
 import numpy
+import urllib
 from datetime import datetime
 from collections import OrderedDict
 
@@ -546,7 +547,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             for tag_name in self.aggregate_by:
                 tag_value = [val for val in self.tags[tag_name]['values']
                              if self.tags[tag_name]['values'][val]][0]
-                params[tag_name] = tag_value
+                # NOTE: the oq-engine makes a urlencode on tag values
+                params[tag_name] = urllib.parse.quote_plus(tag_value)
         with WaitCursorManager(
                 'Extracting...', message_bar=self.iface.messageBar()):
             self.agg_curves = extract_npz(
@@ -800,6 +802,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         for tag_idx, tag_name in enumerate(tag_names):
             tag_values = sorted([
                 value for value in self.exposure_metadata[tag_name]
+                # if value != '?']) + ['*']
                 if value != '?'])
             self.tags[tag_name] = {
                 'selected': True if tag_idx == 0 else False,
@@ -996,7 +999,6 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                     #     continue
                     for tag_value in self.tags[tag_name]['values']:
                         if self.tags[tag_name]['values'][tag_value]:
-                            # (if it is selected)
                             tag_value_idx = list(
                                 self.agg_curves[tag_name]).index(tag_value)
                             tag_value_idxs[tag_name].append(tag_value_idx)
@@ -1030,9 +1032,11 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         loss_type_idx = self.loss_type_cbx.currentIndex()
         unit = self.agg_curves['units'][loss_type_idx]
         self.plot.clear()
-        if not ordinates.any():  # too much filtering
-            self.plot_canvas.draw()
-            return
+        # if not ordinates.any():  # too much filtering
+        #     self.plot_canvas.draw()
+        #     log_msg('No data corresponding to the selected items',
+        #             level='W', message_bar=self.iface.messageBar())
+        #     return
         marker = dict()
         line_style = dict()
         color_hex = dict()
@@ -1086,7 +1090,17 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.plot.set_xscale('log')
         self.plot.set_yscale('linear')
         self.plot.set_xlabel('Return period (years)')
-        self.plot.set_ylabel('Loss (%s)' % unit)
+        if self.abs_rel_cbx.currentText() == 'Absolute':
+            if unit in ('people', 'fatalities'):
+                ylabel = 'Loss (fatalities)'
+            else:
+                ylabel = 'Economic loss (%s)' % unit
+        else:
+            if unit in ('people', 'fatalities'):
+                ylabel = 'Fatalities loss ratio'
+            else:
+                ylabel = 'Economic loss ratio'
+        self.plot.set_ylabel(ylabel)
         title = 'Loss type: %s' % self.loss_type_cbx.currentText()
         self.plot.set_title(title)
         self.plot.grid(which='both')
