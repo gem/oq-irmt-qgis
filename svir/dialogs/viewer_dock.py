@@ -543,13 +543,12 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             params['kind'] = 'rlzs'
         else:
             raise NotImplementedError(self.output_type)
-        # FIXME: in the esample with aggregated materials, whatever I put into
-        # params[tag_name], even values that do not exist, I get the same curve
         if self.aggregate_by is not None and len(self.aggregate_by):
             for tag_name in self.aggregate_by:
                 tag_value = [val for val in self.tags[tag_name]['values']
                              if self.tags[tag_name]['values'][val]][0]
-                params[tag_name] = tag_value
+                # NOTE: the oq-engine makes a urlencode on tag values
+                params[tag_name] = urllib.parse.quote_plus(tag_value)
         with WaitCursorManager(
                 'Extracting...', message_bar=self.iface.messageBar()):
             self.agg_curves = extract_npz(
@@ -1000,12 +999,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                     #     continue
                     for tag_value in self.tags[tag_name]['values']:
                         if self.tags[tag_name]['values'][tag_value]:
-                            # (if it is selected)
-                            # NOTE: workaround for a bug in the engine, that is
-                            # making a urlencode on tag values, removing +
                             tag_value_idx = list(
-                                self.agg_curves[tag_name]).index(
-                                    urllib.parse.unquote_plus(tag_value))
+                                self.agg_curves[tag_name]).index(tag_value)
                             tag_value_idxs[tag_name].append(tag_value_idx)
             else:
                 for tag_name in self.aggregate_by:
