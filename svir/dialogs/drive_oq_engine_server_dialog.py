@@ -880,12 +880,15 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 item.setData(Qt.ToolTipRole, tooltip)
                 self.output_list_tbl.setItem(row, col, item)
             outtypes = output_list[row]['outtypes']
+            additional_cols = len(selected_keys)  # start after "Id, Name"
+            load_action_button_was_added = False
+            aggregate_action_button_was_added = False
             for col, outtype in enumerate(outtypes, len(selected_keys)):
-                additional_cols = 2  # start after "Id, Name"
                 # Additional buttons with respect to the webui
-                if output['type'] in (OQ_TO_LAYER_TYPES |
-                                      OQ_RST_TYPES |
-                                      OQ_EXTRACT_TO_VIEW_TYPES):
+                if (not load_action_button_was_added and
+                        output['type'] in (OQ_TO_LAYER_TYPES |
+                                           OQ_RST_TYPES |
+                                           OQ_EXTRACT_TO_VIEW_TYPES)):
                     if output['type'] in (OQ_RST_TYPES |
                                           OQ_EXTRACT_TO_VIEW_TYPES):
                         action = 'Show'
@@ -902,6 +905,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                                 row, additional_cols, button)
                             self.calc_list_tbl.setColumnWidth(
                                 additional_cols, BUTTON_WIDTH)
+                            additional_cols + 1
                             continue
                     elif output['type'] in OQ_CSV_TO_LAYER_TYPES:
                         action = 'Load table'
@@ -913,7 +917,9 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                     self.output_list_tbl.setCellWidget(
                         row, additional_cols, button)
                     additional_cols += 1
-                if "%s_aggr" % output['type'] in OQ_EXTRACT_TO_VIEW_TYPES:
+                    load_action_button_was_added = True
+                if (not aggregate_action_button_was_added and
+                        "%s_aggr" % output['type'] in OQ_EXTRACT_TO_VIEW_TYPES):
                     mod_output = copy.deepcopy(output)
                     mod_output['type'] = "%s_aggr" % output['type']
                     button = QPushButton()
@@ -923,6 +929,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                     self.output_list_tbl.setCellWidget(
                         row, additional_cols, button)
                     additional_cols += 1
+                    aggregate_action_button_was_added = True
                 # For each output id, add a Download btn per each output type
                 # (like in the webui)
                 action = 'Download'
@@ -933,6 +940,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                     row, additional_cols, button)
                 self.calc_list_tbl.setColumnWidth(
                     additional_cols, BUTTON_WIDTH)
+                additional_cols += 1
         col_names = [key.capitalize() for key in selected_keys]
         empty_col_names = ['' for outtype in range(max_actions)]
         headers = col_names + empty_col_names
