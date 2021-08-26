@@ -24,6 +24,7 @@ email=staff.it@globalquakemodel.org
 # Uncomment the following line and add your changelog entries:
 changelog=
     3.11.4
+    * Fixed a bug that was preventing the possibility to download oq-engine outputs in all available formats
     * Improved some plot labels in loss curves
     * Fixed zonal aggregation
     * Fixed an encoding issue in the retrieval of loss curves
