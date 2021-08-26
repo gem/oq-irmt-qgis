@@ -529,7 +529,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             dlg.loading_exception.connect(
                 lambda dlg, exception: self.on_loading_exception(
                     dlg, exception))
-            timeout = 10
+            timeout = 30
             start_time = time.time()
             dlg.accept()
             while time.time() - start_time < timeout:
