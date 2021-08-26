@@ -67,7 +67,9 @@ class LoadHazardCurvesAsLayerDialog(LoadOutputAsLayerDialog):
         self.dataset = self.npz_file['all']
 
     def populate_rlz_or_stat_cbx(self):
-        self.rlzs_or_stats = self.npz_file['all'].dtype.names[2:]
+        self.rlzs_or_stats = [
+            name for name in self.npz_file['all'].dtype.names
+            if name not in ('custom_site_id', 'lon', 'lat')]
         for rlz_or_stat in self.rlzs_or_stats:
             self.rlz_or_stat_cbx.addItem(rlz_or_stat)
 
