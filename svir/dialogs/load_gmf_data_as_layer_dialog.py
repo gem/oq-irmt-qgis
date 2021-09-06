@@ -238,8 +238,11 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
             fields = self.layer.fields()
             layer_field_names = [field.name() for field in fields]
             dataset_field_names = list(self.get_field_types())
+            dataset_field_names_to_layer = [
+                field_name for field_name in dataset_field_names
+                if field_name not in ('lon', 'lat')]
             d2l_field_names = dict(
-                list(zip(dataset_field_names[2:], layer_field_names)))
+                list(zip(dataset_field_names_to_layer, layer_field_names)))
             rlz_name = 'rlz-%03d' % rlz_or_stat
             for row in self.npz_file[rlz_name]:
                 # add a feature
