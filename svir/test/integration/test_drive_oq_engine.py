@@ -86,7 +86,6 @@ def run_all():
     # OQ_RST_TYPES
     suite.addTest(unittest.makeSuite(LoadFullReportTestCase, 'test'))
     # OQ_EXTRACT_TO_VIEW_TYPES
-    suite.addTest(unittest.makeSuite(LoadAggCurvesRlzsTestCase, 'test'))
     suite.addTest(unittest.makeSuite(LoadAggCurvesStatsTestCase, 'test'))
     suite.addTest(unittest.makeSuite(LoadDamagesRlzsAggrTestCase, 'test'))
     suite.addTest(unittest.makeSuite(LoadAvgLossesRlzsAggrTestCase, 'test'))
