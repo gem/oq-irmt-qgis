@@ -256,7 +256,6 @@ OQ_RST_TYPES = set([
     'fullreport',
 ])
 OQ_EXTRACT_TO_VIEW_TYPES = set([
-     'agg_curves-rlzs',
      'agg_curves-stats',
      'damages-rlzs_aggr',
      'avg_losses-rlzs_aggr',

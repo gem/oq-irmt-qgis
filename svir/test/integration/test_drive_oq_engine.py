@@ -886,14 +886,6 @@ class LoadFullReportTestCase(LoadOqEngineOutputsTestCase):
 
 # OQ_EXTRACT_TO_VIEW_TYPES
 
-class LoadAggCurvesRlzsTestCase(LoadOqEngineOutputsTestCase):
-    @unittest.skipIf(
-        ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'agg_curves-rlzs',
-        'only testing output type %s' % ONLY_OUTPUT_TYPE)
-    def test_load_agg_curves_rlzs(self):
-        self.load_output_type('agg_curves-rlzs')
-
-
 class LoadAggCurvesStatsTestCase(LoadOqEngineOutputsTestCase):
     @unittest.skipIf(
         ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'agg_curves-stats',
