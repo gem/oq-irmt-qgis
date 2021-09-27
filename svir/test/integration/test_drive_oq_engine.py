@@ -744,10 +744,10 @@ class LoadAggRiskTestCase(LoadOqEngineOutputsTestCase):
 
 class LoadAggLossesStatsTestCase(LoadOqEngineOutputsTestCase):
     @unittest.skipIf(
-        ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'agg_losses-stats',
+        ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'aggrisk',
         'only testing output type %s' % ONLY_OUTPUT_TYPE)
     def test_load_agg_losses_stats(self):
-        self.load_output_type('agg_losses-stats')
+        self.load_output_type('aggrisk')
 
 
 class LoadDmgByEventTestCase(LoadOqEngineOutputsTestCase):
