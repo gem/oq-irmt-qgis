@@ -887,10 +887,10 @@ class LoadFullReportTestCase(LoadOqEngineOutputsTestCase):
 
 class LoadAggCurvesStatsTestCase(LoadOqEngineOutputsTestCase):
     @unittest.skipIf(
-        ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'agg_curves-stats',
+        ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'aggcurves',
         'only testing output type %s' % ONLY_OUTPUT_TYPE)
     def test_load_agg_curves_stats(self):
-        self.load_output_type('agg_curves-stats')
+        self.load_output_type('aggcurves')
 
 
 class LoadDamagesRlzsAggrTestCase(LoadOqEngineOutputsTestCase):
