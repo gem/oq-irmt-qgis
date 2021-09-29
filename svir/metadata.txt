@@ -80,7 +80,7 @@ changelog=
     * The management of profiles for the connection to the OpenQuake Platform was fixed.
     * The output type selector in the Data Viewer was disabled, so it still shows the output type but it can not be modified by the user.
     * OQ-Engine outputs to be loaded as tables from csv are loaded directly with a single click, instead of prior displaying a dialog showing the file size.
-    * OQ-Engine outputs agg_curves-rlzs and agg_curves-stats for event_based_risk and ebrisk calculations can be visualized in the Data Viewer if experimental features of the plugin are enabled.
+    * OQ-Engine outputs aggcurves for event_based_risk calculations can be visualized in the Data Viewer if experimental features of the plugin are enabled.
     * OQ-Engine input files can be downloaded as zip.
     * Added loader for OQ-Engine outputs 'agglosses'
     * The plugin is also a Processing Toolbox algorithm provider, offering an extensible set of field transformation functions

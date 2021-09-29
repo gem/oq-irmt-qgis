@@ -158,8 +158,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             ('', ''),
             ('hcurves', 'Hazard Curves'),
             ('uhs', 'Uniform Hazard Spectra'),
-            ('agg_curves-rlzs', 'Aggregate loss curves (realizations)'),
-            ('agg_curves-stats', 'Aggregate loss curves (statistics)'),
+            ('aggcurves', 'Aggregate loss curves (statistics)'),
             ('damages-rlzs_aggr', 'Damage distribution'),
             ('avg_losses-rlzs_aggr', 'Loss distribution'),
             ('avg_losses-stats_aggr', 'Average assets losses (statistics)'),
@@ -537,10 +536,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         params['loss_type'] = self.loss_type_cbx.currentText()
         params['absolute'] = (
             True if self.abs_rel_cbx.currentText() == 'Absolute' else False)
-        if self.output_type == 'agg_curves-stats':
+        if self.output_type == 'aggcurves':
             params['kind'] = 'stats'
-        elif self.output_type == 'agg_curves-rlzs':
-            params['kind'] = 'rlzs'
         else:
             raise NotImplementedError(self.output_type)
         if self.aggregate_by is not None and len(self.aggregate_by):
@@ -611,7 +608,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         elif self.output_type in ('avg_losses-rlzs_aggr',
                                   'avg_losses-stats_aggr'):
             self.filter_avg_losses_rlzs_aggr()
-        elif self.output_type in ['agg_curves-rlzs', 'agg_curves-stats']:
+        elif self.output_type == 'aggcurves':
             self.filter_agg_curves()
 
     def update_selected_tag_values(self, tag_name):
@@ -624,8 +621,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.filter_damages_rlzs_aggr()
         elif self.output_type in ('avg_losses-rlzs_aggr',
                                   'avg_losses-stats_aggr',
-                                  'agg_curves-rlzs',
-                                  'agg_curves-stats'):
+                                  'aggcurves'):
             if "*" in cbx.get_selected_items():
                 self.tag_with_all_values = tag_name
             elif (self.tag_with_all_values == tag_name and
@@ -634,7 +630,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             if self.output_type in ('avg_losses-rlzs_aggr',
                                     'avg_losses-stats_aggr'):
                 self.filter_avg_losses_rlzs_aggr()
-            elif self.output_type in ['agg_curves-rlzs', 'agg_curves-stats']:
+            elif self.output_type == 'aggcurves':
                 self.filter_agg_curves()
 
     def get_list_selected_tags_str(self):
@@ -689,13 +685,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.create_stats_multiselect()
             self.stats_multiselect.selection_changed.connect(
                 self.refresh_feature_selection)
-        elif new_output_type == 'agg_curves-rlzs':
-            self.create_loss_type_selector()
-            self.create_rlzs_multiselect()
-            self.create_abs_rel_selector()
-            self.rlzs_multiselect.selection_changed.connect(
-                lambda: self.draw_agg_curves(new_output_type))
-        elif new_output_type == 'agg_curves-stats':
+        elif new_output_type == 'aggcurves':
             self.create_loss_type_selector()
             self.create_stats_multiselect()
             self.create_abs_rel_selector()
@@ -743,7 +733,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.engine_version = engine_version
         self.setVisible(True)
         self.raise_()
-        if output_type in ['agg_curves-rlzs', 'agg_curves-stats']:
+        if output_type == 'aggcurves':
             self.load_agg_curves(calc_id, session, hostname, output_type)
         elif output_type == 'damages-rlzs_aggr':
             self.load_damages_rlzs_aggr(
@@ -898,10 +888,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
 
     def load_agg_curves(self, calc_id, session, hostname, output_type):
         params = {}
-        if output_type == 'agg_curves-stats':
+        if output_type == 'aggcurves':
             params['kind'] = 'stats'
-        elif output_type == 'agg_curves-rlzs':
-            params['kind'] = 'rlzs'
         else:
             raise NotImplementedError(output_type)
         with WaitCursorManager(
@@ -951,18 +939,12 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.agg_curves = extract_npz(
                 session, hostname, calc_id, 'agg_curves',
                 message_bar=self.iface.messageBar(), params=params)
-        if output_type == 'agg_curves-stats':
+        if output_type == 'aggcurves':
             self.stats = self.agg_curves['kind']
             self.stats_multiselect.blockSignals(True)
             self.stats_multiselect.clear()
             self.stats_multiselect.add_selected_items(self.stats)
             self.stats_multiselect.blockSignals(False)
-        elif output_type == 'agg_curves-rlzs':
-            self.rlzs = self.agg_curves['kind']
-            self.rlzs_multiselect.blockSignals(True)
-            self.rlzs_multiselect.clear()
-            self.rlzs_multiselect.add_selected_items(self.rlzs)
-            self.rlzs_multiselect.blockSignals(False)
         else:
             raise NotImplementedError(
                 'Unable to draw outputs of type %s' % output_type)
@@ -970,21 +952,13 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.filter_agg_curves()
 
     def _get_idxs(self):
-        if self.output_type == 'agg_curves-rlzs':
-            rlzs_or_stats = list(
-                self.rlzs_multiselect.get_selected_items())
-        else:  # agg_curves-stats
-            rlzs_or_stats = list(
-                self.stats_multiselect.get_selected_items())
+        # aggcurves
+        rlzs_or_stats = list(
+            self.stats_multiselect.get_selected_items())
         rlzs_or_stats_idxs = []
-        if self.output_type == 'agg_curves-rlzs':
-            for rlz_idx, rlz in enumerate(self.agg_curves['kind']):
-                if rlz in rlzs_or_stats:
-                    rlzs_or_stats_idxs.append(rlz_idx)
-        else:  # agg_curves-stats
-            for stat_idx, stat in enumerate(self.agg_curves['kind']):
-                if stat in rlzs_or_stats:
-                    rlzs_or_stats_idxs.append(stat_idx)
+        for stat_idx, stat in enumerate(self.agg_curves['kind']):
+            if stat in rlzs_or_stats:
+                rlzs_or_stats_idxs.append(stat_idx)
         if self.aggregate_by is not None and len(self.aggregate_by):
             tag_name_idxs = {}
             tag_value_idxs = {}
@@ -1015,10 +989,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         return rlzs_or_stats_idxs, tag_name_idxs, tag_value_idxs
 
     def draw_agg_curves(self, output_type):
-        if output_type == 'agg_curves-rlzs':
-            rlzs_or_stats = list(
-                self.rlzs_multiselect.get_selected_items())
-        elif output_type == 'agg_curves-stats':
+        if output_type == 'aggcurves':
             rlzs_or_stats = list(
                 self.stats_multiselect.get_selected_items())
         else:
@@ -1075,10 +1046,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         for ys, rlz_or_stat in zip(
                 ordinates.T, rlzs_or_stats):
             rlz_or_stat_idx = rlzs_or_stats.index(rlz_or_stat)
-            if output_type == 'agg_curves-rlzs':
-                label = "Rlz_%s" % rlz_or_stat_idx
-            else:
-                label = rlz_or_stat
+            label = rlz_or_stat
             self.plot.plot(
                 abscissa,
                 ys,
@@ -1718,10 +1686,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
 
     @pyqtSlot(str)
     def on_loss_type_changed(self, loss_type):
-        if self.output_type == 'agg_curves-rlzs':
-            self.filter_agg_curves()
-            # self.draw_agg_curves(self.output_type)
-        elif self.output_type == 'agg_curves-stats':
+        if self.output_type == 'aggcurves':
             self.filter_agg_curves()
         elif self.output_type == 'damages-rlzs_aggr':
             self.filter_damages_rlzs_aggr()
@@ -1782,7 +1747,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 os.path.expanduser(
                     '~/uniform_hazard_spectra_%s.csv' % self.calc_id),
                 '*.csv')
-        elif self.output_type in ['agg_curves-rlzs', 'agg_curves-stats']:
+        elif self.output_type == 'aggcurves':
             loss_type = self.loss_type_cbx.currentText()
             filename, _ = QFileDialog.getSaveFileName(
                 self,
@@ -1900,33 +1865,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                     if values:
                         row.extend(values)
                     writer.writerow(row)
-            elif self.output_type == 'agg_curves-rlzs':
-                rlzs_idxs, tag_name_idxs, tag_value_idxs = self._get_idxs()
-                loss_type = self.loss_type_cbx.currentText()
-                abs_rel = self.abs_rel_cbx.currentText()
-                loss_type_idx = self.loss_type_cbx.currentIndex()
-                unit = self.agg_curves['units'][loss_type_idx]
-                csv_file.write("# Loss type: %s\r\n" % loss_type)
-                csv_file.write("# Absolute or relative: %s\r\n" % abs_rel)
-                csv_file.write("# Measurement unit: %s\r\n" % unit)
-                if self.aggregate_by is not None and len(self.aggregate_by):
-                    csv_file.write(
-                        "# Tags: %s\r\n" % (
-                            self.get_list_selected_tags_str() or 'None'))
-                rlzs = list(self.rlzs_multiselect.get_selected_items())
-                headers = ['return_period']
-                headers.extend(rlzs)
-                writer.writerow(headers)
-                for i, return_period in enumerate(
-                        self.agg_curves['return_period']):
-                    tup = (slice(None), rlzs_idxs)
-                    if tag_value_idxs is not None:
-                        tup += tuple(tag_value_idxs.values())
-                    values = self.agg_curves['array'][tup]
-                    row = [return_period]
-                    row.extend([value for value in values[i]])
-                    writer.writerow(row)
-            elif self.output_type == 'agg_curves-stats':
+            elif self.output_type == 'aggcurves':
                 stats = list(self.stats_multiselect.get_selected_items())
                 loss_type = self.loss_type_cbx.currentText()
                 abs_rel = self.abs_rel_cbx.currentText()
@@ -2031,9 +1970,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
     def on_bw_chk_clicked(self):
         if self.output_type in OQ_TO_LAYER_TYPES | set('recovery_curves'):
             self.layer_changed()
-        if self.output_type == 'agg_curves-rlzs':
-            self.draw_agg_curves(self.output_type)
-        elif self.output_type == 'agg_curves-stats':
+        if self.output_type == 'aggcurves':
             # self.draw_agg_curves(self.output_type)
             self.filter_agg_curves()
         elif self.output_type == 'damages-rlzs_aggr':
