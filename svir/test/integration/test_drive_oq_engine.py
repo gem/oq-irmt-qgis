@@ -86,7 +86,7 @@ def run_all():
     # OQ_RST_TYPES
     suite.addTest(unittest.makeSuite(LoadFullReportTestCase, 'test'))
     # OQ_EXTRACT_TO_VIEW_TYPES
-    suite.addTest(unittest.makeSuite(LoadAggCurvesStatsTestCase, 'test'))
+    suite.addTest(unittest.makeSuite(LoadAggCurvesTestCase, 'test'))
     suite.addTest(unittest.makeSuite(LoadDamagesRlzsAggrTestCase, 'test'))
     suite.addTest(unittest.makeSuite(LoadAvgLossesRlzsAggrTestCase, 'test'))
     suite.addTest(unittest.makeSuite(LoadAvgLossesStatsAggrTestCase, 'test'))
@@ -319,6 +319,9 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             n_simulations=None):
         calc_id = calc['id']
         for output in self.output_list[calc_id]:
+            if (selected_output_type == 'aggcurves' and
+                    calc['calculation_mode'] == 'event_based_damage'):
+                continue
             if (output['type'] != selected_output_type and
                     "%s_aggr" % output['type'] != selected_output_type):
                 continue
@@ -885,11 +888,11 @@ class LoadFullReportTestCase(LoadOqEngineOutputsTestCase):
 
 # OQ_EXTRACT_TO_VIEW_TYPES
 
-class LoadAggCurvesStatsTestCase(LoadOqEngineOutputsTestCase):
+class LoadAggCurvesTestCase(LoadOqEngineOutputsTestCase):
     @unittest.skipIf(
         ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'aggcurves',
         'only testing output type %s' % ONLY_OUTPUT_TYPE)
-    def test_load_agg_curves_stats(self):
+    def test_load_agg_curves(self):
         self.load_output_type('aggcurves')
 
 
