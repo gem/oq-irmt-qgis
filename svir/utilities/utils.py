@@ -1046,8 +1046,9 @@ def import_layer_from_csv(parent,
             return
         writer_error = save_layer_as(
             layer, dest_filename, save_format)
-        if writer_error != QgsVectorFileWriter.NoError:
-            raise RuntimeError('Could not save layer: %s' % writer_error)
+        if writer_error != QgsVectorFileWriter.WriterError.NoError:
+            raise RuntimeError(
+                'Could not save layer. Error code: %s' % writer_error)
         layer = QgsVectorLayer(dest_filename, layer_name, 'ogr')
     if layer.isValid():
         if add_to_legend:

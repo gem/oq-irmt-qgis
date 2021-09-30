@@ -771,12 +771,11 @@ class Irmt(object):
             else:
                 raise RuntimeError('Layer invalid')
         else:
-            writer_error, error_msg = save_layer_as(
+            writer_error = save_layer_as(
                 layer, dest_filename, 'GPKG')
             if writer_error:
                 raise RuntimeError(
-                    'Could not save geopackage. %s: %s' % (writer_error,
-                                                           error_msg))
+                    'Could not save geopackage. Error code: %s' % writer_error)
             layer = QgsVectorLayer(
                 dest_filename, 'Socioeconomic data', 'ogr')
             if layer.isValid():
