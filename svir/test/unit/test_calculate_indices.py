@@ -325,10 +325,7 @@ class CalculateCompositeVariableTestCase(unittest.TestCase):
             write_output(self.layer, self.data_dir_name, res_layer_name)
 
         _, out_layer_path = tempfile.mkstemp(suffix='.gpkg')
-        writer_error = save_layer_as(self.layer, out_layer_path, 'GPKG')
-        if writer_error != QgsVectorFileWriter.WriterError.NoError:
-            raise RuntimeError(
-                'Could not save geopackage. Error code: %s' % writer_error)
+        save_layer_as(self.layer, out_layer_path, 'GPKG')
         out_layer = QgsVectorLayer(
             out_layer_path, 'svi_calculation_first_round', 'ogr')
 
@@ -359,10 +356,7 @@ class CalculateCompositeVariableTestCase(unittest.TestCase):
         self.assertEqual(proj_def, proj_def_svi_calc_first_round)
 
         _, out_layer_path = tempfile.mkstemp(suffix='.gpkg')
-        writer_error = save_layer_as(self.layer, out_layer_path, 'GPKG')
-        if writer_error != QgsVectorFileWriter.WriterError.NoError:
-            raise RuntimeError(
-                'Could not save geopackage. Error code: %s' % writer_error)
+        save_layer_as(self.layer, out_layer_path, 'GPKG')
         out_layer = QgsVectorLayer(
             out_layer_path, 'svi_calculation_second_round', 'ogr')
 
@@ -394,11 +388,7 @@ def calculate_education_node(proj_def, operator, layer):
 
 def write_output(res_layer, data_dir_name, res_layer_name):
     res_layer_path = os.path.join(data_dir_name, res_layer_name + '.gpkg')
-    writer_error = save_layer_as(
-        res_layer, res_layer_path, 'GPKG')
-    if writer_error != QgsVectorFileWriter.WriterError.NoError:
-        raise RuntimeError(
-            'Could not save geopackage. Error code: %s' % writer_error)
+    save_layer_as(res_layer, res_layer_path, 'GPKG')
 
 
 proj_def_svi_calc_first_round = {

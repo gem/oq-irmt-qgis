@@ -867,7 +867,7 @@ def save_layer_as(orig_layer, dest_path, save_format, crs=None):
             writer_error = QgsVectorFileWriter.writeAsVectorFormatV3(
                 orig_layer, dest_path, ctc, options)
     locale.setlocale(locale.LC_NUMERIC, old_lc_numeric)
-    return writer_error
+    check_writer_error(writer_error)
 
 
 def _check_type(
@@ -1044,11 +1044,7 @@ def import_layer_from_csv(parent,
                 dest_filename += fmt
         else:
             return
-        writer_error = save_layer_as(
-            layer, dest_filename, save_format)
-        if writer_error != QgsVectorFileWriter.WriterError.NoError:
-            raise RuntimeError(
-                'Could not save layer. Error code: %s' % writer_error)
+        save_layer_as(layer, dest_filename, save_format)
         layer = QgsVectorLayer(dest_filename, layer_name, 'ogr')
     if layer.isValid():
         if add_to_legend:
@@ -1064,6 +1060,17 @@ def import_layer_from_csv(parent,
     else:
         raise RuntimeError('Unable to load layer')
     return layer
+
+
+def check_writer_error(writer_error):
+    if hasattr(QgsVectorFileWriter.WriterError, 'NoError'):
+        if writer_error != QgsVectorFileWriter.WriterError.NoError:
+            raise RuntimeError(
+                'Could not save layer. Error code: %s' % writer_error)
+    else:
+        if writer_error:
+            raise RuntimeError(
+                'Could not save layer. %s: %s' % writer_error)
 
 
 def listdir_fullpath(path):
