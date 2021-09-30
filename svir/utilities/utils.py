@@ -1064,13 +1064,13 @@ def import_layer_from_csv(parent,
 
 def check_writer_error(writer_error):
     if hasattr(QgsVectorFileWriter.WriterError, 'NoError'):
-        if writer_error != QgsVectorFileWriter.WriterError.NoError:
+        if writer_error[0] != QgsVectorFileWriter.WriterError.NoError:
             raise RuntimeError(
-                'Could not save layer. Error code: %s' % writer_error)
+                'Could not save layer. %s: %s' % writer_error[:2])
     else:
-        if writer_error:
+        if writer_error[0] != 0:
             raise RuntimeError(
-                'Could not save layer. %s: %s' % writer_error)
+                'Could not save layer. %s: %s' % writer_error[:2])
 
 
 def listdir_fullpath(path):
