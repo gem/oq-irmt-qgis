@@ -1063,6 +1063,12 @@ def import_layer_from_csv(parent,
 
 
 def check_writer_error(writer_error):
+    # NOTE: depending on the QGIS version, writer_error has a different number
+    # of elements (in newer versions, some additional information like the path
+    # of saved data is added). However, the first 2 elements are the always the
+    # error code and the error message (that might be empty in case of
+    # success). The enum specifying the NoError code was not present in old
+    # QGIS versions.
     if hasattr(QgsVectorFileWriter.WriterError, 'NoError'):
         if writer_error[0] != QgsVectorFileWriter.WriterError.NoError:
             raise RuntimeError(
