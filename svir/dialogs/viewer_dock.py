@@ -1001,7 +1001,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self._get_idxs()
         ordinates = self.agg_curves['array']
         loss_type_idx = self.loss_type_cbx.currentIndex()
-        unit = self.agg_curves['units'][loss_type_idx]
+        unit = self.agg_curves['units'].split()[loss_type_idx]
         self.plot.clear()
         # if not ordinates.any():  # too much filtering
         #     self.plot_canvas.draw()
@@ -1870,7 +1870,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 loss_type = self.loss_type_cbx.currentText()
                 abs_rel = self.abs_rel_cbx.currentText()
                 loss_type_idx = self.loss_type_cbx.currentIndex()
-                unit = self.agg_curves['units'][loss_type_idx]
+                unit = self.agg_curves['units'].split()[loss_type_idx]
                 csv_file.write("# Loss type: %s\r\n" % loss_type)
                 csv_file.write("# Absolute or relative: %s\r\n" % abs_rel)
                 csv_file.write("# Measurement unit: %s\r\n" % unit)
