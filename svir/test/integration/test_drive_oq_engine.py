@@ -36,7 +36,8 @@ import requests
 # from qgis.core import QgsApplication
 from qgis.utils import iface
 from qgis.testing import unittest, start_app  # , stop_app
-from qgis.PyQt.QtCore import QTimer, QSettings
+from qgis.PyQt.QtCore import QTimer, QSettings, Qt
+from qgis.PyQt.QtTest import QTest
 from svir.irmt import Irmt
 from svir.utilities.shared import (
                                    OQ_CSV_TO_LAYER_TYPES,
@@ -435,7 +436,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 dlg.category_cbx.count(), 0, 'No category was found')
             dlg.category_cbx.setCurrentIndex(0)
         if dlg.ok_button.isEnabled():
-            dlg.accept()
+            QTest.mouseClick(dlg.ok_button, Qt.LeftButton)
             if dlg.output_type == 'asset_risk':
                 # NOTE: avoiding to emit loading_completed for asset_risk,
                 # because in this case there's a second asynchronous call to
@@ -491,7 +492,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             self.irmt.iface.newProject()
             if output_type == 'fullreport':
                 dlg = ShowFullReportDialog(filepath)
-                dlg.accept()
+                QTest.mouseClick(dlg.ok_button, Qt.LeftButton)
                 print('\t\tok')
                 return 'ok'
             if output_type in OQ_ZIPPED_TYPES:
@@ -499,7 +500,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                     self.irmt.drive_oq_engine_server_dlg,
                     filepath, self.irmt.iface,
                     mode='testing')
-                dlg.accept()
+                QTest.mouseClick(dlg.ok_button, Qt.LeftButton)
                 print('\t\tok')
                 return 'ok'
             dlg = OUTPUT_TYPE_LOADERS[output_type](
@@ -510,7 +511,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 calculation_mode=calculation_mode,
                 mode='testing')
             if dlg.ok_button.isEnabled():
-                dlg.accept()
+                QTest.mouseClick(dlg.ok_button, Qt.LeftButton)
                 print('\t\tok')
                 return 'ok'
             else:
@@ -533,7 +534,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                     dlg, exception))
             timeout = 30
             start_time = time.time()
-            dlg.accept()
+            QTest.mouseClick(dlg.ok_button, Qt.LeftButton)
             while time.time() - start_time < timeout:
                 QGIS_APP.processEvents()
                 if self.loading_completed[dlg]:
