@@ -79,7 +79,7 @@ jobs:
           fi
           docker exec qgis sh -c "git clone -q -b $ENGINE_BR --depth=1 https://github.com/gem/oq-engine.git && echo 'Running against oq-engine/$GITHUB_BR'"
           docker exec qgis sh -c "qgis_setup.sh svir"
-          docker exec -t qgis sh -c "cd /tests_directory && export LD_PRELOAD=/lib/x86_64-linux-gnu/libSegFault.so qgis_testrunner.sh svir.test.integration.test_drive_oq_engine"
+          docker exec -t qgis sh -c "cd /tests_directory && LD_PRELOAD=/lib/x86_64-linux-gnu/libSegFault.so qgis_testrunner.sh svir.test.integration.test_drive_oq_engine"
       - name: 📖 Make documentation
         run: |
           set -x
