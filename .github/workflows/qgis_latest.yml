@@ -59,7 +59,7 @@ jobs:
       - name: ℧ Run unit test
         run: |
           set -x
-          docker exec -t qgis bash -c "export PYTHONPATH=/usr/share/qgis/python/plugins/:$PYTHONPATH; OGR_SQLITE_JOURNAL=delete LD_PRELOAD=/lib/x86_64-linux-gnu/libSegFault.so pytest -v /tests_directory/svir/test/unit/"
+          docker exec -t qgis bash -c "export PYTHONPATH=/usr/share/qgis/python/plugins/:$PYTHONPATH; OGR_SQLITE_JOURNAL=delete pytest -v /tests_directory/svir/test/unit/"
       - name: ⨕ Run Integration test
         run: |
           set -x
