@@ -53,8 +53,8 @@ jobs:
           DOCKER_HOST=`ip -4 addr show docker0 | grep -Po 'inet \K[\d.]+'`
           ENGINE_HOST=`echo http://$DOCKER_HOST:8800`
           docker run -d --name qgis -v /tmp/.X11-unix:/tmp/.X11-unix -v `pwd`:/tests_directory -e DISPLAY=:99 \
-          -e WITH_QT5=ON \
-          -e WITH_QT6=OFF \
+          -e WITH_QT5=OFF \
+          -e WITH_QT6=ON \
           -e WITH_QUICK=ON \
           -e WITH_3D=ON \
           -e PATCH_QT_3D=true \
