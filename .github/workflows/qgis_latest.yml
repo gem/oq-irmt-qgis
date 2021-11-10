@@ -59,7 +59,7 @@ jobs:
           -e WITH_3D=ON \
           -e PATCH_QT_3D=true \
           -e LD_PRELOAD=/lib/x86_64-linux-gnu/libSegFault.so \
-          -e SEGFAULT_SIGNALS="abrt segv" \
+          -e SEGFAULT_SIGNALS="all" \
           -e OQ_ENGINE_HOST='http://172.17.0.1:8800' \
           -e BRANCH="$IRMT_BR" -e ONLY_CALC_ID="$ONLY_CALC_ID" -e ONLY_OUTPUT_TYPE="$ONLY_OUTPUT_TYPE"  -e GEM_QGIS_TEST=y qgis/qgis:latest
           docker exec qgis bash -c "apt update --allow-releaseinfo-change; DEBIAN_FRONTEND=noninteractive apt install -y python3-scipy python3-matplotlib python3-pyqt5.qtwebkit"
