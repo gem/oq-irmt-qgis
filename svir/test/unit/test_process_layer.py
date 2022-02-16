@@ -34,11 +34,11 @@ from svir.utilities.shared import (INT_FIELD_TYPE_NAME,
                                    STRING_FIELD_TYPE_NAME)
 
 
-from qgis.testing import start_app
-from qgis.testing.mocked import get_iface
+# from qgis.testing import start_app
+# from qgis.testing.mocked import get_iface
 
-QGIS_APP = start_app()
-IFACE = get_iface()
+# QGIS_APP = start_app()
+# IFACE = get_iface()
 
 
 class CheckProjectionsTestCase(unittest.TestCase):

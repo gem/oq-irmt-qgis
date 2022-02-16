@@ -23,6 +23,7 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 # import qgis libs so that we set the correct sip api version
+import pytest
 import os
 import glob
 import sys
@@ -34,7 +35,7 @@ import time
 import operator
 import requests
 # from qgis.core import QgsApplication
-from qgis.utils import iface
+# from qgis.utils import iface
 from qgis.testing import unittest, start_app  # , stop_app
 from qgis.PyQt.QtCore import QTimer, QSettings, Qt
 from qgis.PyQt.QtTest import QTest
@@ -55,7 +56,7 @@ from svir.dialogs.load_inputs_dialog import LoadInputsDialog
 
 
 # QgsApplication([], True)
-QGIS_APP = start_app()
+# QGIS_APP = start_app()
 
 LONG_LOADING_TIME = 10  # seconds
 ONLY_OUTPUT_TYPE = os.environ.get('ONLY_OUTPUT_TYPE')
@@ -106,6 +107,7 @@ class FailedAttempts(Exception):
 
 class LoadOqEngineOutputsTestCase(unittest.TestCase):
 
+    @pytest.fixture()
     @classmethod
     def setUpClass(cls):
         # NOTE: recovery modeling is an exprimental feature
@@ -114,7 +116,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             DEFAULT_SETTINGS['experimental_enabled'],
             type=bool)
         QSettings().setValue('irmt/experimental_enabled', True)
-        cls.irmt = Irmt(iface)
+        cls.irmt = Irmt(qgis_iface)
         cls.irmt.initGui()
         cls.hostname = os.environ.get('OQ_ENGINE_HOST',
                                       'http://localhost:8800')
@@ -206,6 +208,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 raise calc_output_list
             self.output_list[calc['id']] = calc_output_list
 
+    @pytest.fixture()
     def run_calc(self, input_files, job_type='hazard', calc_id=None):
         if hasattr(self, 'timer'):
             self.timer.stop()
@@ -221,7 +224,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         timeout = 240
         start_time = time.time()
         while time.time() - start_time < timeout:
-            QGIS_APP.processEvents()
+            qgis_app.processEvents()
             if not self.timer.isActive():
                 self.timer.timeout.disconnect()
                 break
@@ -462,6 +465,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         self.skipped_attempts.append(skipped_attempt)
         self.global_skipped_attempts.append(skipped_attempt)
 
+    @pytest.fixture()
     def load_output(
             self, calc, output, taxonomy_idx=None, aggregate_by_site=None,
             approach=None, n_simulations=None):
@@ -536,7 +540,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             start_time = time.time()
             QTest.mouseClick(dlg.ok_button, Qt.LeftButton)
             while time.time() - start_time < timeout:
-                QGIS_APP.processEvents()
+                qgis_app.processEvents()
                 if self.loading_completed[dlg]:
                     print('\t\tok')
                     return 'ok'
@@ -573,7 +577,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             timeout = 10
             start_time = time.time()
             while time.time() - start_time < timeout:
-                QGIS_APP.processEvents()
+                qgis_app.processEvents()
                 if self.loading_completed[dlg]:
                     print('\t\tok')
                     return 'ok'

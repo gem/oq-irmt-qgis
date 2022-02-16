@@ -27,7 +27,8 @@ import os
 import sys
 import tempfile
 from copy import deepcopy
-from qgis.core import QgsVectorLayer, QgsVectorFileWriter
+from qgis.core import QgsVectorLayer
+from qgis.utils import iface
 
 from svir.calculations.calculate_utils import (calculate_node,
                                                get_node_attr_id_and_name,
@@ -39,11 +40,11 @@ from svir.utilities.utils import (set_operator,
                                   save_layer_as,
                                   )
 from svir.utilities.shared import OPERATORS_DICT, DiscardedFeature
-from qgis.testing import start_app
-from qgis.testing.mocked import get_iface
+# from qgis.testing import start_app
+# from qgis.testing.mocked import get_iface
 
-QGIS_APP = start_app()
-IFACE = get_iface()
+# QGIS_APP = start_app()
+# IFACE = get_iface()
 
 
 PROJ_DEF_STD_OPERATORS = {
@@ -310,7 +311,7 @@ class CalculateCompositeVariableTestCase(unittest.TestCase):
         proj_def = deepcopy(self.project_definition)
         svi_node = proj_def['children'][1]
         added_attrs_ids, discarded_feats, edited_node, any_change = \
-            calculate_composite_variable(IFACE, self.layer, svi_node)
+            calculate_composite_variable(iface, self.layer, svi_node)
         proj_def['children'][1] = edited_node
         self.assertEqual(added_attrs_ids, set([10, 11, 12]))
         expected_discarded_feats = set([DiscardedFeature(1, 'Missing value'),
@@ -345,7 +346,7 @@ class CalculateCompositeVariableTestCase(unittest.TestCase):
         # the first round
         svi_node = proj_def['children'][1]
         added_attrs_ids, discarded_feats, edited_node, any_change = \
-            calculate_composite_variable(IFACE, self.layer, svi_node)
+            calculate_composite_variable(iface, self.layer, svi_node)
         proj_def['children'][1] = edited_node
         self.assertEqual(added_attrs_ids, set([]))
         expected_discarded_feats = set([DiscardedFeature(1, 'Missing value'),

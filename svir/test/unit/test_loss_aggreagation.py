@@ -23,6 +23,7 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 # import qgis libs so that we set the correct sip api version
+import pytest
 import os.path
 import unittest
 import tempfile
@@ -32,11 +33,11 @@ from qgis.core import QgsVectorLayer
 from svir.calculations.process_layer import ProcessLayer
 from svir.calculations.aggregate_loss_by_zone import calculate_zonal_stats
 
-from qgis.testing import start_app
-from qgis.testing.mocked import get_iface
+# from qgis.testing import start_app
+# from qgis.testing.mocked import get_iface
 
-QGIS_APP = start_app()
-IFACE = get_iface()
+# QGIS_APP = start_app()
+# IFACE = get_iface()
 
 
 class AggregateLossByZoneTestCase(unittest.TestCase):
@@ -49,6 +50,7 @@ class AggregateLossByZoneTestCase(unittest.TestCase):
         self.loss_attr_names = ['FATALITIES', 'STRUCTURAL']
         self.loss_layer_is_vector = True
 
+    @pytest.fixture()
     def test_sum_point_values_by_zone(self):
         # NOTE: it shouldn't be necessary to make copies of gpkg files, because
         # they are not modified by the test. However, when QGIS opens a gpkg
@@ -77,7 +79,7 @@ class AggregateLossByZoneTestCase(unittest.TestCase):
         timeout = 5
         start_time = time.time()
         while time.time() - start_time < timeout:
-            QGIS_APP.processEvents()
+            qgis_app.processEvents()
             time.sleep(0.01)
             print(self.is_test_complete)
             if self.is_test_complete:

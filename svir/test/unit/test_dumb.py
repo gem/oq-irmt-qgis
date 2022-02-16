@@ -26,11 +26,11 @@
 
 import unittest
 
-from qgis.testing import start_app
-from qgis.testing.mocked import get_iface
+# from qgis.testing import start_app
+# from qgis.testing.mocked import get_iface
 
-QGIS_APP = start_app()
-IFACE = get_iface()
+# QGIS_APP = start_app()
+# IFACE = get_iface()
 
 
 class DumbTest(unittest.TestCase):

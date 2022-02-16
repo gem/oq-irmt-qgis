@@ -29,12 +29,9 @@ from svir.ui.multi_select_combo_box import MultiSelectComboBox
 
 class MultiSelectComboBoxMultiTestCase(unittest.TestCase):
 
-    @classmethod
-    def setUpClass(cls):
-        cls.wdg = QWidget()
-        cls.mscb = MultiSelectComboBox(cls.wdg)
-
     def setUp(self):
+        self.wdg = QWidget()
+        self.mscb = MultiSelectComboBox(self.wdg)
         self.mscb.clear()
 
     def test_addItem(self):
@@ -155,12 +152,9 @@ class MultiSelectComboBoxMultiTestCase(unittest.TestCase):
 
 class MultiSelectComboBoxMonoTestCase(unittest.TestCase):
 
-    @classmethod
-    def setUpClass(cls):
-        cls.wdg = QWidget()
-        cls.mscb = MultiSelectComboBox(cls.wdg, mono=True)
-
     def setUp(self):
+        self.wdg = QWidget()
+        self.mscb = MultiSelectComboBox(self.wdg, mono=True)
         self.mscb.clear()
 
     def test_addItem(self):
