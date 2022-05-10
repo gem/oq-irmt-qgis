@@ -797,6 +797,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             iface.mapCanvas().refresh()
 
     def style_categorized(self, layer=None, style_by=None):
+        return  # FIXME
         if layer is None:
             layer = self.layer
         if style_by is None:
@@ -836,6 +837,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.iface.mapCanvas().refresh()
 
     def style_curves(self):
+        return  # FIXME
         registry = QgsApplication.symbolLayerRegistry()
         symbol_props = {
             'name': 'cross2',
