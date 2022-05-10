@@ -559,7 +559,6 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                    perils=None, add_null_class=False,
                    render_higher_on_top=False, repaint=True,
                    use_sgc_style=False):
-        return  # FIXME
         symbol = QgsSymbol.defaultSymbol(layer.geometryType())
         # see properties at:
         # https://qgis.org/api/qgsmarkersymbollayerv2_8cpp_source.html#l01073
@@ -797,7 +796,6 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             iface.mapCanvas().refresh()
 
     def style_categorized(self, layer=None, style_by=None):
-        return  # FIXME
         if layer is None:
             layer = self.layer
         if style_by is None:
@@ -837,7 +835,6 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.iface.mapCanvas().refresh()
 
     def style_curves(self):
-        return  # FIXME
         registry = QgsApplication.symbolLayerRegistry()
         symbol_props = {
             'name': 'cross2',

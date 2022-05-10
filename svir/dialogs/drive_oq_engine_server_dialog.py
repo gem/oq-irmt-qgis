@@ -1098,10 +1098,10 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.notify_downloaded(output_id, output_type, filepath)
         load_inputs_dlg = LoadInputsDialog(self, filepath, self.iface)
         self.open_output_dlgs[self] = load_inputs_dlg
-        load_inputs_dlg.loading_completed.connect(
-            lambda dlg: self.del_dlg(dlg))
-        load_inputs_dlg.loading_canceled.connect(
-            lambda dlg: self.del_dlg(dlg))
+        # load_inputs_dlg.loading_completed.connect(
+        #     lambda dlg: self.del_dlg(dlg))
+        # load_inputs_dlg.loading_canceled.connect(
+        #     lambda dlg: self.del_dlg(dlg))
         load_inputs_dlg.show()
 
     def notify_error(self, exc):
