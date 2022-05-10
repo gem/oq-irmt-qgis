@@ -145,10 +145,8 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
             style_by = self.style_by_cbx.itemData(
                 self.style_by_cbx.currentIndex())
             if style_by == 'mag':
-                pass
-                # FIXME
-                # self.style_maps(self.layer, style_by,
-                #                 self.iface, self.output_type)
+                self.style_maps(self.layer, style_by,
+                                self.iface, self.output_type)
             else:  # 'trt'
                 self.style_categorized(layer=self.layer, style_by=style_by)
             if rup_group:

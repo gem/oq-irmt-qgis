@@ -559,6 +559,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                    perils=None, add_null_class=False,
                    render_higher_on_top=False, repaint=True,
                    use_sgc_style=False):
+        return  # FIXME
         symbol = QgsSymbol.defaultSymbol(layer.geometryType())
         # see properties at:
         # https://qgis.org/api/qgsmarkersymbollayerv2_8cpp_source.html#l01073
