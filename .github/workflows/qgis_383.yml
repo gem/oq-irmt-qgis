@@ -1,9 +1,8 @@
 name: QGIS 3_8_3 unit and integration test
 on:
   push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+    branches:
+      - '**'
   schedule:
     - cron: "0 1 * * *"
 
