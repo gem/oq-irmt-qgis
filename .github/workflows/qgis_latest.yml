@@ -1,5 +1,6 @@
 name: QGIS LATEST unit and integration test
 on: [pull_request, workflow_dispatch]
+on:
   push:
     branches: [ master ]
   schedule:

@@ -1,5 +1,6 @@
 name: QGIS 3_8_3 unit and integration test
 on: [pull_request, workflow_dispatch]
+on:
   push:
     branches: [ master ]
   schedule:
