@@ -599,7 +599,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                     if Qgis.QGIS_VERSION_INT < 31000:
                         style_mode = QgsGraduatedSymbolRenderer.Pretty
                     else:
-                        style_mode = 'PrettyBreaks'
+                        style_mode = 'Pretty'
                 else:
                     if Qgis.QGIS_VERSION_INT < 31000:
                         style_mode = QgsGraduatedSymbolRenderer.EqualInterval
@@ -616,7 +616,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 if Qgis.QGIS_VERSION_INT < 31000:
                     style_mode = QgsGraduatedSymbolRenderer.Pretty
                 else:
-                    style_mode = 'PrettyBreaks'
+                    style_mode = 'Pretty'
                 try:
                     ramp_type_idx = default_color_ramp_names.index(
                         'SGC_Green2Red_Hmap_Color_Ramp')
