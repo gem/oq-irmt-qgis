@@ -1,5 +1,8 @@
 name: QGIS 3_8_3 unit and integration test
 on:
+  workflow_dispatch:
+    branches:
+      - '**'
   push:
     branches:
       - '**'
