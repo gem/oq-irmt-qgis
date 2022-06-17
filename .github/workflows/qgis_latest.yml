@@ -1,9 +1,8 @@
 name: QGIS LATEST unit and integration test
 on:
-  pull_request
-  workflow_dispatch
   push:
-    branches: [ master ]
+    branches:
+      - '**'
   schedule:
     - cron: "0 1 * * *"
 
