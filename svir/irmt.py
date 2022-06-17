@@ -22,7 +22,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
-import qgis  # NOQA: it loads the environment
+import qgis  # NOQA: it loads the environment!
 
 import os
 import tempfile
@@ -771,12 +771,7 @@ class Irmt(object):
             else:
                 raise RuntimeError('Layer invalid')
         else:
-            writer_error, error_msg = save_layer_as(
-                layer, dest_filename, 'GPKG')
-            if writer_error:
-                raise RuntimeError(
-                    'Could not save geopackage. %s: %s' % (writer_error,
-                                                           error_msg))
+            save_layer_as(layer, dest_filename, 'GPKG')
             layer = QgsVectorLayer(
                 dest_filename, 'Socioeconomic data', 'ogr')
             if layer.isValid():

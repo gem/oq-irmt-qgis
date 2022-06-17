@@ -70,15 +70,11 @@ class UploadWorker(AbstractWorker):
             # we need to build a shapefile from it
             self.set_message.emit(tr(
                 'Writing the shapefile to be uploaded...'))
-            writer_error, error_msg = save_layer_as(
+            save_layer_as(
                 self.current_layer, data_file,
                 'ESRI Shapefile',
                 crs=QgsCoordinateReferenceSystem(
                     4326, QgsCoordinateReferenceSystem.EpsgCrsId))
-            if writer_error:
-                raise RuntimeError(
-                    'Could not save shapefile. %s: %s' % (writer_error,
-                                                          error_msg))
         file_size_mb = os.path.getsize(data_file)
         file_size_mb += os.path.getsize(self.file_stem + '.shx')
         file_size_mb += os.path.getsize(self.file_stem + '.dbf')

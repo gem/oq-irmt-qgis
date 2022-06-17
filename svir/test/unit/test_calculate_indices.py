@@ -388,11 +388,7 @@ def calculate_education_node(proj_def, operator, layer):
 
 def write_output(res_layer, data_dir_name, res_layer_name):
     res_layer_path = os.path.join(data_dir_name, res_layer_name + '.gpkg')
-    writer_error, error_msg = save_layer_as(
-        res_layer, res_layer_path, 'GPKG')
-    if writer_error:
-        raise RuntimeError('Could not save geopackage. %s: %s' % (writer_error,
-                                                                  error_msg))
+    save_layer_as(res_layer, res_layer_path, 'GPKG')
 
 
 proj_def_svi_calc_first_round = {

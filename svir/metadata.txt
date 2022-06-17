@@ -25,6 +25,8 @@ email=staff.it@globalquakemodel.org
 changelog=
     3.11.5
     * Fix styling maps, following an undocumented recent change in QGIS API renaming 'PrettyBreaks' -> 'Pretty'
+    * Installation instructions in the README were updated to be consistent with the user manual
+    * Improved plugin packaging procedure
     3.11.4
     * Fixed a bug that was preventing the possibility to download oq-engine outputs in all available formats
     * Improved some plot labels in loss curves

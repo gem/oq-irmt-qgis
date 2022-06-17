@@ -860,10 +860,14 @@ def save_layer_as(orig_layer, dest_path, save_format, crs=None):
         ctc = QgsCoordinateTransformContext()
         if crs is not None:
             ctc.addCoordinateOperation(orig_layer.crs(), crs, 'proj')
-        writer_error = QgsVectorFileWriter.writeAsVectorFormatV2(
-            orig_layer, dest_path, ctc, options)
+        if Qgis.QGIS_VERSION_INT < 32000:
+            writer_error = QgsVectorFileWriter.writeAsVectorFormatV2(
+                orig_layer, dest_path, ctc, options)
+        else:
+            writer_error = QgsVectorFileWriter.writeAsVectorFormatV3(
+                orig_layer, dest_path, ctc, options)
     locale.setlocale(locale.LC_NUMERIC, old_lc_numeric)
-    return writer_error
+    check_writer_error(writer_error)
 
 
 def _check_type(
@@ -1040,12 +1044,7 @@ def import_layer_from_csv(parent,
                 dest_filename += fmt
         else:
             return
-        writer_error, error_msg = save_layer_as(
-            layer, dest_filename, save_format)
-        if writer_error:
-            raise RuntimeError(
-                'Could not save layer. %s: %s' % (writer_error,
-                                                  error_msg))
+        save_layer_as(layer, dest_filename, save_format)
         layer = QgsVectorLayer(dest_filename, layer_name, 'ogr')
     if layer.isValid():
         if add_to_legend:
@@ -1061,6 +1060,23 @@ def import_layer_from_csv(parent,
     else:
         raise RuntimeError('Unable to load layer')
     return layer
+
+
+def check_writer_error(writer_error):
+    # NOTE: depending on the QGIS version, writer_error has a different number
+    # of elements (in newer versions, some additional information like the path
+    # of saved data is added). However, the first 2 elements are the always the
+    # error code and the error message (that might be empty in case of
+    # success). The enum specifying the NoError code was not present in old
+    # QGIS versions.
+    if hasattr(QgsVectorFileWriter.WriterError, 'NoError'):
+        if writer_error[0] != QgsVectorFileWriter.WriterError.NoError:
+            raise RuntimeError(
+                'Could not save layer. %s: %s' % writer_error[:2])
+    else:
+        if writer_error[0] != 0:
+            raise RuntimeError(
+                'Could not save layer. %s: %s' % writer_error[:2])
 
 
 def listdir_fullpath(path):
