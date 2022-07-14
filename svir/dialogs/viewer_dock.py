@@ -1239,9 +1239,18 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.clear_plot()
             return
 
+        num_plottable_curves = 0
         for rlz_or_stat in selected_rlzs_or_stats:
             for i, (site, curve) in enumerate(
                     self.current_selection[rlz_or_stat].items()):
+                # NOTE: it is needed if we need the y-axis to be log scale
+                if self.output_type == 'hcurves':
+                    if not any(curve['ordinates']):
+                        log_msg(
+                            'A flat hazard curve with all zero values was'
+                            ' found. It will not be displayed in the plot.',
+                            level='W', message_bar=self.iface.messageBar())
+                        continue
                 # NOTE: we associated the same cumulative curve to all the
                 # selected points (ugly), and here we need to get only one
                 if self.output_type == 'recovery_curves' and i > 0:
@@ -1265,6 +1274,14 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 )
                 if self.output_type == 'recovery_curves':
                     self.create_annot()
+                num_plottable_curves += 1
+        if num_plottable_curves == 0:
+            self.clear_plot()
+            log_msg(
+                'No curves could be plotted.',
+                level='W', message_bar=self.iface.messageBar())
+            return
+
         if self.output_type == 'hcurves':
             self.plot.set_xscale('log')
             self.plot.set_yscale('log')
