@@ -51,3 +51,11 @@ except ImportError:
     IS_MATPLOTLIB_INSTALLED = False
 else:
     IS_MATPLOTLIB_INSTALLED = True
+
+IS_PILLOW_INSTALLED = None
+try:
+    import PIL  # NOQA
+except ImportError:
+    IS_PILLOW_INSTALLED = False
+else:
+    IS_PILLOW_INSTALLED = True

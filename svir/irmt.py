@@ -93,7 +93,7 @@ from svir.utilities.utils import (tr,
                                   save_layer_as,
                                   get_style,
                                   get_checksum,
-                                  warn_missing_package,
+                                  warn_missing_packages,
                                   import_layer_from_csv,
                                   )
 from svir.utilities.shared import (DEBUG,
@@ -109,13 +109,19 @@ from svir.processing_provider.provider import Provider
 # noinspection PyUnresolvedReferences
 import svir.resources_rc  # pylint: disable=unused-import  # NOQA
 
-from svir import IS_SCIPY_INSTALLED, IS_MATPLOTLIB_INSTALLED
+from svir import (
+    IS_SCIPY_INSTALLED, IS_MATPLOTLIB_INSTALLED, IS_PILLOW_INSTALLED)
 
 
 class Irmt(object):
     def __init__(self, iface):
+        missing_packages = []
         if not IS_MATPLOTLIB_INSTALLED:
-            warn_missing_package('matplotlib')
+            missing_packages.append('matplotlib')
+        if not IS_PILLOW_INSTALLED:
+            missing_packages.append('Pillow')
+        if missing_packages:
+            warn_missing_packages(missing_packages)
             return
 
         # Save reference to the QGIS interface
@@ -189,7 +195,7 @@ class Irmt(object):
         QgsApplication.processingRegistry().addProvider(self.provider)
 
     def initGui(self):
-        if not IS_MATPLOTLIB_INSTALLED:
+        if not IS_MATPLOTLIB_INSTALLED or not IS_PILLOW_INSTALLED:
             # the warning should have already been displayed by the __init__
             return
         self.initProcessing()
@@ -354,7 +360,7 @@ class Irmt(object):
             dlg = RecoveryModelingDialog(self.iface)
             dlg.exec_()
         else:
-            warn_missing_package('scipy', self.iface.messageBar())
+            warn_missing_packages(['scipy'], self.iface.messageBar())
 
     def recovery_settings(self):
         dlg = RecoverySettingsDialog(self.iface)
@@ -595,7 +601,7 @@ class Irmt(object):
         """
         Remove all plugin's actions and corresponding buttons and connects
         """
-        if not IS_MATPLOTLIB_INSTALLED:
+        if not IS_MATPLOTLIB_INSTALLED or not IS_PILLOW_INSTALLED:
             return
         # stop any running timers
         if self.drive_oq_engine_server_dlg is not None:
