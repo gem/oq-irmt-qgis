@@ -65,7 +65,7 @@ class LoadUhsAsLayerDialog(LoadOutputAsLayerDialog):
     def populate_dataset(self):
         self.rlzs_or_stats = [
             key for key in sorted(self.npz_file['all'].dtype.names)
-            if key not in ('lon', 'lat')]
+            if key not in ('custom_site_id', 'lon', 'lat')]
         self.dataset = self.npz_file['all']
         self.poes = self.dataset[self.rlzs_or_stats[0]].dtype.names
         self.poe_cbx.clear()
