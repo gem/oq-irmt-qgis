@@ -256,7 +256,7 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
                         value = value.decode('utf8')
                     feat.setAttribute(layer_field_name, value)
                 feat.setGeometry(QgsGeometry.fromPointXY(
-                    QgsPointXY(row[0], row[1])))
+                    QgsPointXY(row['lon'], row['lat'])))
                 feats.append(feat)
             added_ok = self.layer.addFeatures(feats)
             if not added_ok:
