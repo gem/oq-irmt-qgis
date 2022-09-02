@@ -24,6 +24,7 @@ email=staff.it@globalquakemodel.org
 # Uncomment the following line and add your changelog entries:
 changelog=
     3.14.2
+    * Ground motion fields are read identifying site coordinates through field names instead of positionally, making it robust to the addition of fields such as 'custom_site_id'
     * A clearer error message is given if Pillow is missing when loading the plugin
     * If any hazard curve is flat with all zeros values, a warning is displayed and the curve is excluded from the plot. If no hazard curve can be plotted, the plot is reset.
     3.14.1
