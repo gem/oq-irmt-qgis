@@ -1131,13 +1131,14 @@ def get_params_from_comment_line(comment_line):
     return params_dict
 
 
-def warn_missing_package(package_name, message_bar=None):
+def warn_missing_packages(package_names, message_bar=None):
     if message_bar is None:
         message_bar = iface.messageBar()
-    msg = ("%s (for Python3) is required."
+    msg = ("Packages %s (for Python3) are required."
            " Please follow the instructions in the user manual of the plugin"
            " (see https://docs.openquake.org/oq-irmt-qgis/)"
-           " to install %s, then restart QGIS." % (package_name, package_name))
+           " to install the missing dependencies, then restart QGIS."
+           % package_names)
     log_msg(msg, level='C', message_bar=message_bar)
 
 
