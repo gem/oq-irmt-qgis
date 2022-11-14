@@ -843,7 +843,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.tags = {}
         for tag in tags_list:
             # tags are in the format 'city=Benicia' (tag_name=tag_value)
-            tag_name, tag_value = tag.split('=')
+            tag_name, tag_value = tag.split('=', 1)
             if tag_name not in self.tags:
                 self.tags[tag_name] = {
                     'selected': False,
@@ -1195,7 +1195,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             #        'taxonomy=Stone-Masonry',
             #        'taxonomy=Unreinforced-Brick-Masonry',
             #        'taxonomy=Concrete'], dtype='|S35')
-            tag_values = [tag.split('=')[1] + '  ' for tag in tags]
+            tag_values = [tag.split('=', 1)[1] + '  ' for tag in tags]
             self.table.setVerticalHeaderLabels(tag_values)
         else:  # NOTE: case without '*'
             tag_values = []
@@ -2016,7 +2016,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                             for tag in self.avg_losses_rlzs_aggr['tags']]
                     tag = tags[0]
                     # a tag is like 'taxonomy=Wood'
-                    tag_name = tag.split('=')[0]
+                    tag_name = tag.split('=', 1)[0]
                     headers = [tag_name]
                 except KeyError:
                     tags = None
@@ -2033,7 +2033,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                             self.avg_losses_rlzs_aggr['array']):
                         tag = tags[row_idx]
                         # a tag is like 'taxonomy=Wood'
-                        tag_value = tag.split('=')[1]
+                        tag_value = tag.split('=', 1)[1]
                         values = [tag_value]
                         values.extend(losses_array[row_idx])
                         writer.writerow(values)
