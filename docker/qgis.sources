@@ -1,0 +1,7 @@
+# QGIS repo 
+Types: deb deb-src 
+URIs: https://qgis.org/debian
+Suites: bullseye 
+Architectures: amd64 
+Components: main 
+Signed-By: /etc/apt/keyrings/qgis-archive-keyring.gpg
