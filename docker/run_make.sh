@@ -14,6 +14,8 @@ if [ -f .osgeo_credentials ]; then . .osgeo_credentials; fi
 
 # Make sure XDG home structure exists
 mkdir -p ${HOME}/.local/share/QGIS
+echo "USER ID: $(id -u)"
+ls -lrt /io
 
 # Start Xvfb on :99
 /sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -ac -screen 0 1280x1024x16 2>&1 >/dev/null &
