@@ -2,7 +2,7 @@
 FROM debian:bullseye
 MAINTAINER GEM Foundation <devops@openquake.org>
 #  ovveride the value with --build-arg uid=$(id -u)
-ARG uid=1001
+ARG uid=998
 
 ENV DEBIAN_FRONTEND noninteractive
 
@@ -13,8 +13,7 @@ RUN apt update && apt full-upgrade -y && apt -q install -y gnupg2 \
                    python3-pyqt5.qtwebkit python3-pip \
                    python3-mock python3-nose \
                    python3-nose-exclude python3-scipy \
-                   ghostscript \
-                   texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended && \
+                   ghostscript texlive-full && \
     pip3 install sphinx==1.4.9 sphinx_rtd_theme && \
     locale-gen en_US.UTF-8
 #
