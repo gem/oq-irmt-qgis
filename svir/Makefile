@@ -198,21 +198,27 @@ clean:
 # build documentation with sphinx
 doc: build_manual  # build_apidoc
 
-build_manual: build_manual_latex build_manual_html
-
-build_manual_html:
+build_manual: # build_manual_latex build_manual_html
+# build_manual:
 	@echo
-	@echo "-------------------------------------------------"
-	@echo "Building html version of the manual using sphinx."
-	@echo "-------------------------------------------------"
-	cd help; make html
+	@echo "---------------------------------------"
+	@echo "Building the manual inside QGIS docker."
+	@echo "---------------------------------------"
+	cd ../scripts; ./make_doc.sh
 
-build_manual_latex:
-	@echo
-	@echo "----------------------------------------------------------"
-	@echo "Building pdf version of the manual using sphinx and latex."
-	@echo "----------------------------------------------------------"
-	cd help; make latexpdf
+# build_manual_html:
+# 	@echo
+# 	@echo "-------------------------------------------------"
+# 	@echo "Building html version of the manual using sphinx."
+# 	@echo "-------------------------------------------------"
+# 	cd help; make html
+
+# build_manual_latex:
+# 	@echo
+# 	@echo "----------------------------------------------------------"
+# 	@echo "Building pdf version of the manual using sphinx and latex."
+# 	@echo "----------------------------------------------------------"
+# 	cd help; make latexpdf
 
 build_apidoc:
 	@echo
