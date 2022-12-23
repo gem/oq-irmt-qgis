@@ -41,7 +41,7 @@ PLUGIN_UPLOAD = ../scripts/plugin_upload.py
 QGISDIR=.qgis2
 
 ifndef VERSION
-	VERSION=HEAD
+	VERSION="v$(shell grep 'version=' metadata.txt | cut -d '=' -f 2)"
 endif
 
 default: compile
@@ -117,8 +117,8 @@ package: compile doc
 	rm -f $(PLUGINNAME)/$(PLUGINNAME).zip
 	git archive --prefix=$(PLUGINNAME)/ -o $(PLUGINNAME).zip $(VERSION)
 	# to save more space, we can use /ebook instead of /printer (but it would reduce the resolution of images)
-	gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dPDFSETTINGS=/printer -dNOPAUSE -dQUIET -dBATCH -sOutputFile=help/build/html/_downloads/resized-irmt.pdf help/build/latex/irmt.pdf;
-	mv -f help/build/html/_downloads/resized-irmt.pdf help/build/html/_downloads/irmt.pdf
+	gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dPDFSETTINGS=/printer -dNOPAUSE -dQUIET -dBATCH -sOutputFile=resized-irmt.pdf help/build/latex/irmt.pdf
+	mv -f resized-irmt.pdf $(shell ls -d help/build/html/_downloads/*/)irmt.pdf
 	mkdir -p $(PLUGINNAME)/help/build; rm -r $(PLUGINNAME)/help/build/html; cp -r help/build/html $(PLUGINNAME)/help/build/html;
 	# mkdir -p $(PLUGINNAME)/apidoc/_build; rm -r $(PLUGINNAME)/apidoc/_build/html; cp -r apidoc/_build/html $(PLUGINNAME)/apidoc/_build/html
 	zip -r $(PLUGINNAME).zip $(PLUGINNAME)/help/build/html
@@ -199,12 +199,12 @@ clean:
 doc: build_manual  # build_apidoc
 
 build_manual: # build_manual_latex build_manual_html
-# build_manual:
 	@echo
 	@echo "---------------------------------------"
 	@echo "Building the manual inside QGIS docker."
 	@echo "---------------------------------------"
 	cd ../scripts; ./make_doc.sh
+	sudo chown -R $(USER) help/build/
 
 # build_manual_html:
 # 	@echo
