@@ -34,16 +34,14 @@ from svir.utilities.utils import (
                                   clear_progress_message_bar,
                                   get_layer_setting,
                                   WaitCursorManager,
-                                  warn_missing_packages,
                                   )
 from svir.utilities.shared import NUMERIC_FIELD_TYPES, RECOVERY_DEFAULTS
+from svir import IS_MATPLOTLIB_INSTALLED
 
-try:
+if IS_MATPLOTLIB_INSTALLED:
     import matplotlib
-except ImportError:
-    warn_missing_packages(['matplotlib'])
-matplotlib.use('Qt5Agg')
-import matplotlib.pyplot as plt  # NOQA
+    matplotlib.use('Qt5Agg')
+    import matplotlib.pyplot as plt  # NOQA
 
 DAYS_BEFORE_EVENT = 0
 MARGIN_DAYS_AFTER = 400
