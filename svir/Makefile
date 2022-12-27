@@ -145,10 +145,6 @@ upload_plugin: package tag
 	$(PLUGIN_UPLOAD) $(PLUGINNAME).zip
 
 tag:
-ifndef NEW_VERSION
-	$(error NEW_VERSION is not defined)
-endif
-	$(eval VERSION := $(NEW_VERSION))
 	@echo
 	@echo "------------------------------------------------"
 	@echo "Tagging version $(VERSION).                   "
