@@ -122,6 +122,7 @@ class Irmt(object):
             missing_packages.append('Pillow')
         if missing_packages:
             warn_missing_packages(missing_packages)
+        if not IS_MATPLOTLIB_INSTALLED:
             return
 
         # Save reference to the QGIS interface
@@ -195,7 +196,7 @@ class Irmt(object):
         QgsApplication.processingRegistry().addProvider(self.provider)
 
     def initGui(self):
-        if not IS_MATPLOTLIB_INSTALLED or not IS_PILLOW_INSTALLED:
+        if not IS_MATPLOTLIB_INSTALLED:
             # the warning should have already been displayed by the __init__
             return
         self.initProcessing()
@@ -329,7 +330,8 @@ class Irmt(object):
                            enable=True,
                            add_to_toolbar=True)
 
-        self._create_viewer_dock()
+        if IS_MATPLOTLIB_INSTALLED:
+            self._create_viewer_dock()
 
         # Action to open the plugin's manual
         self.add_menu_item("help",
@@ -601,7 +603,7 @@ class Irmt(object):
         """
         Remove all plugin's actions and corresponding buttons and connects
         """
-        if not IS_MATPLOTLIB_INSTALLED or not IS_PILLOW_INSTALLED:
+        if not IS_MATPLOTLIB_INSTALLED:
             return
         # stop any running timers
         if self.drive_oq_engine_server_dlg is not None:
