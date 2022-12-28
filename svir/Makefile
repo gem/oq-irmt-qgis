@@ -115,7 +115,7 @@ package: compile doc
 	@echo "Exporting plugin to zip package.	"
 	@echo "------------------------------------"
 	rm -f $(PLUGINNAME)/$(PLUGINNAME).zip
-	git archive --prefix=$(PLUGINNAME)/ -o $(PLUGINNAME).zip $(VERSION)
+	git archive --prefix=$(PLUGINNAME)/ -o $(PLUGINNAME).zip HEAD
 	# to save more space, we can use /ebook instead of /printer (but it would reduce the resolution of images)
 	gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dPDFSETTINGS=/printer -dNOPAUSE -dQUIET -dBATCH -sOutputFile=resized-irmt.pdf help/build/latex/irmt.pdf
 	mv -f resized-irmt.pdf $(shell ls -d help/build/html/_downloads/*/)irmt.pdf
@@ -128,7 +128,7 @@ package: compile doc
 	echo "Created package: $(PLUGINNAME).zip"
 
 package_no_compile:
-	git archive --prefix=$(PLUGINNAME)/ -o $(PLUGINNAME).zip $(VERSION)
+	git archive --prefix=$(PLUGINNAME)/ -o $(PLUGINNAME).zip HEAD
 
 upload_doc: doc
 	@echo
