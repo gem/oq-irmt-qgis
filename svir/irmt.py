@@ -109,8 +109,7 @@ from svir.processing_provider.provider import Provider
 # noinspection PyUnresolvedReferences
 import svir.resources_rc  # pylint: disable=unused-import  # NOQA
 
-from svir import (
-    IS_SCIPY_INSTALLED, IS_MATPLOTLIB_INSTALLED, IS_PILLOW_INSTALLED)
+from svir import IS_SCIPY_INSTALLED, IS_MATPLOTLIB_INSTALLED
 
 
 class Irmt(object):
@@ -118,8 +117,6 @@ class Irmt(object):
         missing_packages = []
         if not IS_MATPLOTLIB_INSTALLED:
             missing_packages.append('matplotlib')
-        if not IS_PILLOW_INSTALLED:
-            missing_packages.append('Pillow')
         if missing_packages:
             warn_missing_packages(missing_packages)
         if not IS_MATPLOTLIB_INSTALLED:
