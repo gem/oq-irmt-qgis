@@ -25,7 +25,7 @@ email=staff.it@globalquakemodel.org
 changelog=
     3.11.8
     * The user manual is built via docker and the makefile was improved to retrieve plugin version and experimental tag from metadata and update the online documentation accordingly
-    * The Pillow requirement was relaxed, so it is not needed anymore by users who don't need the social vulnerability functionalities (that require it)
+    * The Pillow requirement was relaxed
     3.11.7
     * (backported) Accepting also taxonomies that include the character '='
     3.11.6

@@ -1,5 +1,3 @@
-set -x
-
 EXPERIMENTAL=$(grep 'experimental=' ../svir/metadata.txt | cut -d '=' -f 2)
 if [$EXPERIMENTAL == True]
 then
