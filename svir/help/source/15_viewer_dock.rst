@@ -37,7 +37,7 @@ the `user manual of the OpenQuake Engine <https://docs.openquake.org/oq-engine/s
 In :ref:`chap-drive-oq-engine` (:ref:`fig-hazard-map`) you can see an example of a hazard map loaded by the
 plugin into a QGIS vector layer. In that case the IRMT Data Viewer is
 not needed to display the data. Other kinds of outputs, such as hazard curves, can not
-be displayed in a map as QGIS layers. The IRMT Data Viewer has the purpose to display
+be displayed in a map as QGIS layers. The IRMT Data Viewer has the purpose of displaying
 multi-dimensional data in an interactive way, linking the selection of sites in the map canvas
 to the plotting of corresponding curves.
 
