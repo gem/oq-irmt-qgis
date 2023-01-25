@@ -1,5 +1,6 @@
 EXPERIMENTAL=$(grep 'experimental=' ../svir/metadata.txt | cut -d '=' -f 2)
-if [$EXPERIMENTAL == True]
+echo EXPERIMENTAL=$EXPERIMENTAL
+if [ $EXPERIMENTAL = "True" ]
 then
     BUILD=latest
 else
