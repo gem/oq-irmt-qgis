@@ -41,7 +41,7 @@ PLUGIN_UPLOAD = ../scripts/plugin_upload.py
 QGISDIR=.qgis2
 
 ifndef VERSION
-	VERSION=HEAD
+	VERSION="v$(shell grep 'version=' metadata.txt | cut -d '=' -f 2)"
 endif
 
 default: compile
@@ -115,10 +115,11 @@ package: compile doc
 	@echo "Exporting plugin to zip package.	"
 	@echo "------------------------------------"
 	rm -f $(PLUGINNAME)/$(PLUGINNAME).zip
-	git archive --prefix=$(PLUGINNAME)/ -o $(PLUGINNAME).zip $(VERSION)
+	git archive --prefix=$(PLUGINNAME)/ -o $(PLUGINNAME).zip HEAD
 	# to save more space, we can use /ebook instead of /printer (but it would reduce the resolution of images)
-	gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dPDFSETTINGS=/printer -dNOPAUSE -dQUIET -dBATCH -sOutputFile=help/build/html/_downloads/resized-irmt.pdf help/build/latex/irmt.pdf;
-	mv -f help/build/html/_downloads/resized-irmt.pdf help/build/html/_downloads/irmt.pdf
+	gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dPDFSETTINGS=/printer -dNOPAUSE -dQUIET -dBATCH -sOutputFile=resized-irmt.pdf help/build/latex/irmt.pdf
+	# NOTE: assuming that _downloads contains a single folder with a unique name (otherwise you must identify the right folder and delete the others manually)
+	mv -f resized-irmt.pdf $(shell ls -d help/build/html/_downloads/*/)irmt.pdf
 	mkdir -p $(PLUGINNAME)/help/build; rm -r $(PLUGINNAME)/help/build/html; cp -r help/build/html $(PLUGINNAME)/help/build/html;
 	# mkdir -p $(PLUGINNAME)/apidoc/_build; rm -r $(PLUGINNAME)/apidoc/_build/html; cp -r apidoc/_build/html $(PLUGINNAME)/apidoc/_build/html
 	zip -r $(PLUGINNAME).zip $(PLUGINNAME)/help/build/html
@@ -128,7 +129,7 @@ package: compile doc
 	echo "Created package: $(PLUGINNAME).zip"
 
 package_no_compile:
-	git archive --prefix=$(PLUGINNAME)/ -o $(PLUGINNAME).zip $(VERSION)
+	git archive --prefix=$(PLUGINNAME)/ -o $(PLUGINNAME).zip HEAD
 
 upload_doc: doc
 	@echo
@@ -145,10 +146,6 @@ upload_plugin: package tag
 	$(PLUGIN_UPLOAD) $(PLUGINNAME).zip
 
 tag:
-ifndef NEW_VERSION
-	$(error NEW_VERSION is not defined)
-endif
-	$(eval VERSION := $(NEW_VERSION))
 	@echo
 	@echo "------------------------------------------------"
 	@echo "Tagging version $(VERSION).                   "
@@ -198,21 +195,15 @@ clean:
 # build documentation with sphinx
 doc: build_manual  # build_apidoc
 
-build_manual: build_manual_latex build_manual_html
-
-build_manual_html:
+build_manual:
 	@echo
-	@echo "-------------------------------------------------"
-	@echo "Building html version of the manual using sphinx."
-	@echo "-------------------------------------------------"
-	cd help; make html
-
-build_manual_latex:
-	@echo
-	@echo "----------------------------------------------------------"
-	@echo "Building pdf version of the manual using sphinx and latex."
-	@echo "----------------------------------------------------------"
-	cd help; make latexpdf
+	@echo "---------------------------------------"
+	@echo "Building the manual inside QGIS docker."
+	@echo "---------------------------------------"
+	cd ../scripts; ./make_doc.sh
+	# NOTE: it would be better if we could let the docker create files owned by
+	#       the user launching the script instead of making them owned by root
+	sudo chown -R $(USER) help/build/
 
 build_apidoc:
 	@echo
