@@ -26,7 +26,7 @@ modifying markers, labels, axes, zooming level and other parameters, saving the
 plot to file and exporting the selected curves into a csv format.
 
 
-Visulalizing outputs of hazard calculations
+Visualizing outputs of hazard calculations
 ===========================================
 
 This section describes how to drive the user interface of the plugin to visualize
