@@ -885,7 +885,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             for col, outtype in enumerate(outtypes, len(selected_keys)):
                 # Additional buttons with respect to the webui
                 if (not load_action_button_was_added and
-                        not (output['type'] == 'aggcurves'
+                        not (output['type'] in ('aggcurves', 'aggcurves-stats')
                              and calculation_mode == 'event_based_damage') and
                         output['type'] in (OQ_TO_LAYER_TYPES |
                                            OQ_RST_TYPES |
