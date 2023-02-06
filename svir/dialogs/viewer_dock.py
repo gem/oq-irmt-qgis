@@ -205,6 +205,18 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.annot.set_text("%.0f days, %.0f%%" % (xlab, ylab))
         self.annot.get_bbox_patch().set_alpha(0.4)
 
+    def create_dmg_loss_selector(self):
+        self.dmg_loss_lbl = QLabel('Distribution')
+        self.dmg_loss_lbl.setSizePolicy(
+            QSizePolicy.Minimum, QSizePolicy.Minimum)
+        self.dmg_loss_cbx = QComboBox()
+        self.dmg_loss_cbx.currentIndexChanged['QString'].connect(
+            self.on_dmg_loss_changed)
+        self.add_widget_to_type_dep_layout(
+            self.dmg_loss_lbl, 'dmg_loss_lbl', self.typeDepHLayout2)
+        self.add_widget_to_type_dep_layout(
+            self.dmg_loss_cbx, 'dmg_loss_cbx', self.typeDepHLayout2)
+
     def create_loss_type_selector(self):
         self.loss_type_lbl = QLabel('Loss Type')
         self.loss_type_lbl.setSizePolicy(
@@ -485,7 +497,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         cbx.setEnabled(
             tag_name in self.tag_names_multiselect.get_selected_items())
 
-    def filter_damages_rlzs_aggr(self):
+    def filter_damages_rlzs_aggr(self, output_type='damages_rlzs_aggr'):
         # NOTE: self.tags is structured like:
         # {'taxonomy': {
         #     'selected': True,
@@ -517,11 +529,11 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                             params[tag_name].append(value)
                         else:
                             params[tag_name] = [value]
-        output_type = 'agg_damages/%s' % self.loss_type_cbx.currentText()
+        to_extract = 'agg_damages/%s' % self.loss_type_cbx.currentText()
         with WaitCursorManager(
                 'Extracting...', message_bar=self.iface.messageBar()):
             self.damages_rlzs_aggr = extract_npz(
-                self.session, self.hostname, self.calc_id, output_type,
+                self.session, self.hostname, self.calc_id, to_extract,
                 message_bar=self.iface.messageBar(), params=params)
         if (self.damages_rlzs_aggr is None
                 or 'array' not in self.damages_rlzs_aggr):
@@ -578,21 +590,40 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                             params[tag_name].append(value)
                         else:
                             params[tag_name] = [value]
-        to_extract = 'agg_losses/%s' % self.loss_type_cbx.currentText()
-        with WaitCursorManager(
-                'Extracting...', message_bar=self.iface.messageBar()):
-            self.avg_losses_rlzs_aggr = extract_npz(
-                self.session, self.hostname, self.calc_id, to_extract,
-                message_bar=self.iface.messageBar(), params=params)
-        if (self.avg_losses_rlzs_aggr is None
-                or 'array' not in self.avg_losses_rlzs_aggr):
-            msg = 'No data corresponds to the current selection'
-            log_msg(msg, level='W', message_bar=self.iface.messageBar(),
-                    duration=5)
-            self.table.clear()
-            self.table.setRowCount(0)
-            self.table.setColumnCount(0)
-            return
+        ####
+        if False:
+            to_extract = 'agg_losses/%s' % self.loss_type_cbx.currentText()
+            with WaitCursorManager(
+                    'Extracting...', message_bar=self.iface.messageBar()):
+                self.avg_losses_rlzs_aggr = extract_npz(
+                    self.session, self.hostname, self.calc_id, to_extract,
+                    message_bar=self.iface.messageBar(), params=params)
+            if (self.avg_losses_rlzs_aggr is None
+                    or 'array' not in self.avg_losses_rlzs_aggr):
+                msg = 'No data corresponds to the current selection'
+                log_msg(msg, level='W', message_bar=self.iface.messageBar(),
+                        duration=5)
+                self.table.clear()
+                self.table.setRowCount(0)
+                self.table.setColumnCount(0)
+                return
+        else:
+            to_extract = 'damages-rlzs'
+            with WaitCursorManager(
+                    'Extracting...', message_bar=self.iface.messageBar()):
+                self.avg_losses_rlzs_aggr = extract_npz(
+                    self.session, self.hostname, self.calc_id, to_extract,
+                    message_bar=self.iface.messageBar(), params=params)
+            if (self.avg_losses_rlzs_aggr is None
+                    or 'array' not in self.avg_losses_rlzs_aggr):
+                msg = 'No data corresponds to the current selection'
+                log_msg(msg, level='W', message_bar=self.iface.messageBar(),
+                        duration=5)
+                self.table.clear()
+                self.table.setRowCount(0)
+                self.table.setColumnCount(0)
+                return
+
         self.draw_avg_losses_rlzs_aggr()
 
     def update_selected_tag_names(self):
@@ -705,6 +736,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 # lambda: self.draw_agg_curves(new_output_type))
                 self.filter_agg_curves)
         elif new_output_type == 'damages-rlzs_aggr':
+            # self.create_dmg_loss_selector()
             self.create_loss_type_selector()
             self.create_rlz_selector()
             self.create_tag_names_multiselect(monovalue=True)
@@ -765,24 +797,27 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 message_bar=self.iface.messageBar())
         if composite_risk_model_attrs is None:
             return
-        limit_states = composite_risk_model_attrs['limit_states']
-        self.dmg_states = numpy.append(['no damage'], limit_states)
         self._get_tags(session, hostname, calc_id, self.iface.messageBar(),
                        with_star=False)
+        if output_type == 'damages-rlzs_aggr':
+            limit_states = composite_risk_model_attrs['limit_states']
+            self.dmg_states = numpy.append(['no damage'], limit_states)
 
-        with WaitCursorManager(
-                'Extracting...', message_bar=self.iface.messageBar()):
-            rlzs_npz = extract_npz(
-                session, hostname, calc_id, 'realizations',
-                message_bar=self.iface.messageBar())
-        if rlzs_npz is None:
-            return
-        # rlz[1] is the branch-path field
-        rlzs = [rlz[1].decode('utf8').strip('"') for rlz in rlzs_npz['array']]
-        self.rlz_cbx.blockSignals(True)
-        self.rlz_cbx.clear()
-        self.rlz_cbx.addItems(rlzs)
-        self.rlz_cbx.blockSignals(False)
+            with WaitCursorManager(
+                    'Extracting...', message_bar=self.iface.messageBar()):
+                rlzs_npz = extract_npz(
+                    session, hostname, calc_id, 'realizations',
+                    message_bar=self.iface.messageBar())
+            if rlzs_npz is None:
+                return
+            # rlz[1] is the branch-path field
+            rlzs = [rlz[1].decode('utf8').strip('"') for rlz in rlzs_npz['array']]
+            self.rlz_cbx.blockSignals(True)
+            self.rlz_cbx.clear()
+            self.rlz_cbx.addItems(rlzs)
+            self.rlz_cbx.blockSignals(False)
+        elif output_type != 'avg_losses-rlzs_aggr':
+            raise NotImplementedError(output_type)
 
         loss_types = composite_risk_model_attrs['loss_types']
         self.loss_type_cbx.blockSignals(True)
@@ -794,8 +829,14 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         tag_names = sorted(self.tags.keys())
         self.tag_names_multiselect.add_unselected_items(tag_names)
         self.clear_tag_values_multiselects(tag_names)
+        # self.filter_damages_rlzs_aggr(output_type)
 
-        self.filter_damages_rlzs_aggr()
+        if output_type == 'damages-rlzs_aggr':
+            self.filter_damages_rlzs_aggr()
+        elif output_type == 'avg_losses-rlzs_aggr':
+            self.filter_avg_losses_rlzs_aggr()
+        else:
+            raise NotImplementedError(output_type)
 
     def _build_tags(self):
         tag_names = sorted(self.exposure_metadata['tagnames'])
@@ -1169,8 +1210,17 @@ class ViewerDock(QDockWidget, FORM_CLASS):
     def draw_avg_losses_rlzs_aggr(self):
         self.plot_canvas.hide()
         self.table.show()
-        losses_array = self.avg_losses_rlzs_aggr['array']
-        losses_array = self._to_2d(losses_array)
+        # losses_array = self.avg_losses_rlzs_aggr['array']
+        # losses_array = self._to_2d(losses_array)
+
+        # FIXME: instead of 'losses' I should have a selector for consequences
+        # losses_array = self.avg_losses_rlzs_aggr[
+        #     self.rlz_cbx.currentText()][
+        #         self.loss_type_cbx.currentText()]['losses']
+        losses_array = self.avg_losses_rlzs_aggr
+        # we can get losses from
+        # self.avg_losses_rlzs_aggr[rlz][loss_type][consequence]
+        # where consequence can be 'losses'
         tags = None
         try:
             # NOTE: case with '*'
@@ -1732,6 +1782,11 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.redraw_current_selection()
 
     @pyqtSlot(str)
+    def on_dmg_loss_changed(self, distribution):
+        self.was_dmg_loss_switched = True
+        self.redraw_current_selection()
+
+    @pyqtSlot(str)
     def on_loss_type_changed(self, loss_type):
         if self.output_type in ('aggcurves', 'aggcurves-stats'):
             self.filter_agg_curves()
@@ -2035,7 +2090,16 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         for output_type, output_type_name in list(
                 self.output_types_names.items()):
             if output_type_name == otname:
+                # if (output_type == 'damages-rlzs_aggr'
+                #         and otname == 'Loss distribution'):
+                #     output_type = 'avg_losses-rlzs_aggr'
                 self.set_output_type_and_its_gui(output_type)
+                # if output_type == 'avg_losses-rlzs_aggr':
+                #     self.load_avg_losses_rlzs_aggr(
+                #         self.calc_id, self.session, self.hostname, output_type)
+                if otname == 'Loss distribution':
+                    self.load_damages_rlzs_aggr(
+                        self.calc_id, self.session, self.hostname, output_type)
                 if output_type not in OQ_EXTRACT_TO_VIEW_TYPES:
                     self.layer_changed()
                 return

@@ -1203,6 +1203,7 @@ def extract_npz(
     dic = {}
     for k, v in extracted_content.items():
         if k == 'json':
+            print(json.loads(bytes(v)))
             dic.update(json.loads(bytes(v)))
         else:
             dic[k] = v
