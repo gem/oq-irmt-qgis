@@ -158,7 +158,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             ('', ''),
             ('hcurves', 'Hazard Curves'),
             ('uhs', 'Uniform Hazard Spectra'),
-            ('aggcurves', 'Aggregate loss curves'),
+            ('aggcurves', 'Aggregate loss curves (realizations)'),
             ('aggcurves-stats', 'Aggregate loss curves (statistics)'),
             ('damages-rlzs_aggr', 'Damage distribution'),
             ('avg_losses-rlzs_aggr', 'Loss distribution'),
@@ -929,7 +929,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.aggregate_by = None
         if 'aggregate_by' in oqparam and len(oqparam['aggregate_by']):
             self._build_tags()
-            self.aggregate_by = oqparam['aggregate_by']
+            self.aggregate_by = oqparam['aggregate_by'][0]
             for tag_name in self.aggregate_by:
                 tag_values = self.tags[tag_name]['values'].keys()
                 self.create_tag_values_selector(
