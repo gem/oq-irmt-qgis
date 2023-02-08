@@ -766,6 +766,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         if composite_risk_model_attrs is None:
             return
         limit_states = composite_risk_model_attrs['limit_states']
+        self.consequences = composite_risk_model_attrs['consequences']
         self.dmg_states = numpy.append(['no damage'], limit_states)
         self._get_tags(session, hostname, calc_id, self.iface.messageBar(),
                        with_star=False)
@@ -1122,7 +1123,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         # TODO: re-add error bars when stddev will become available again
         # means = self.damages_rlzs_aggr['array'][rlz]['mean']
         # stddevs = self.damages_rlzs_aggr['array'][rlz]['stddev']
-        means = self.damages_rlzs_aggr['array'][rlz]
+        D = len(self.dmg_states)  # including 'no damage' (FIXME it should be
+                                  # called self.limit_states)
+        means = self.damages_rlzs_aggr['array'][rlz][:D]
         if (means < 0).any():
             msg = ('The results displayed include negative damage estimates'
                    ' for one or more damage states. Please check the fragility'
@@ -1159,6 +1162,27 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.plot.margins(.15, 0)
         self.plot.yaxis.grid()
         self.plot_canvas.draw()
+        if self.consequences:
+            self.table.show()
+            consequences_array = self.damages_rlzs_aggr['array'][rlz]
+            nrows = 1
+            ncols = len(self.consequences)
+            self.table.setRowCount(nrows)
+            self.table.setColumnCount(ncols)
+            # FIXME: perhaps write measurement unit instead of total? If so,
+            # should we do the same for avg_losses_rlzs_aggr?
+            self.table.setVerticalHeaderLabels(['Total  '])
+            self.table.setHorizontalHeaderLabels(self.consequences)
+            for col in range(ncols):
+                self.table.setItem(
+                    0, col, QTableWidgetItem(str(consequences_array[col])))
+            # NOTE: vertical headers are not resized properly with respect to
+            # contents (they are cut on the right). I couldn't find any proper
+            # way to fix it, so I am adding a tail of 2 spaces to each header
+            # as a workaround (hack)
+            self.table.resizeColumnsToContents()
+            self.table.resizeRowsToContents()
+            # FIXME: the table occupies a lot of useless vertical space
 
     def _to_2d(self, array):
         # convert 1d array into 2d, unless already 2d
