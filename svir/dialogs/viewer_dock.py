@@ -681,7 +681,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.aggregate_by = None
         self.dmg_states = None
         self.exposure_metadata = None
-        self.current_selection = None
+        self.current_selection = {}
         self.was_imt_switched = None
         self.was_poe_switched = None
         self.was_loss_type_switched = None
