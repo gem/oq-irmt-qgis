@@ -1045,7 +1045,14 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         abscissa = self.agg_curves['return_period']
         rlzs_or_stats_idxs, tag_name_idxs, tag_value_idxs = \
             self._get_idxs(output_type)
-        ordinates = self.agg_curves['array']
+        try:
+            ordinates = self.agg_curves['array']
+        except KeyError:
+            msg = 'No data corresponds to the current selection'
+            log_msg(msg, level='W', message_bar=self.iface.messageBar(),
+                    duration=5)
+            self.clear_plot()
+            return
         loss_type_idx = self.loss_type_cbx.currentIndex()
         unit = self.agg_curves['units'][loss_type_idx]
         self.plot.clear()
