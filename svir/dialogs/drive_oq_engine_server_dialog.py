@@ -121,8 +121,11 @@ OUTPUT_TYPE_LOADERS = {
     'events': LoadCsvAsLayerDialog,
     'risk_by_event': LoadCsvAsLayerDialog,
     'aggrisk': LoadCsvAsLayerDialog,
+    'aggrisk-stats': LoadCsvAsLayerDialog,
     'agg_risk': LoadCsvAsLayerDialog,
     'damages-rlzs': LoadDamagesRlzsAsLayerDialog,
+    # NOTE: counterintuitive difference between damages-rlzs and damages-stats
+    'damages-stats': LoadCsvAsLayerDialog,
     'gmf_data': LoadGmfDataAsLayerDialog,
     'hmaps': LoadHazardMapsAsLayerDialog,
     'hcurves': LoadHazardCurvesAsLayerDialog,
