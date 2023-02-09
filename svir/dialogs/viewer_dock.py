@@ -671,6 +671,21 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 delattr(self, widget_name)
 
     def set_output_type_and_its_gui(self, new_output_type):
+        self.rlzs = None
+        self.stats = None
+        self.rlzs_or_stats = None
+        self.selected_rlzs_or_stats = None
+        self.consequences = None
+        self.agg_curves = None
+        self.damages_rlzs_aggr = None
+        self.aggregate_by = None
+        self.dmg_states = None
+        self.exposure_metadata = None
+        self.current_selection = None
+        self.was_imt_switched = None
+        self.was_poe_switched = None
+        self.was_loss_type_switched = None
+
         # clear type dependent widgets
         # NOTE: typeDepVLayout contains typeDepHLayout1 and typeDepHLayout2,
         #       that will be cleared recursively
@@ -1167,6 +1182,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             consequences_array = self.damages_rlzs_aggr['array'][rlz][D:]
             nrows = 1
             ncols = len(self.consequences)
+            self.table.clear()
             self.table.setRowCount(nrows)
             self.table.setColumnCount(ncols)
             # FIXME: perhaps write measurement unit instead of total? If so,
@@ -1193,7 +1209,6 @@ class ViewerDock(QDockWidget, FORM_CLASS):
 
     def draw_avg_losses_rlzs_aggr(self):
         self.plot_canvas.hide()
-        self.table.show()
         losses_array = self.avg_losses_rlzs_aggr['array']
         losses_array = self._to_2d(losses_array)
         tags = None
@@ -1205,6 +1220,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             # NOTE: case without '*'
             pass
         nrows, ncols = losses_array.shape
+        self.table.clear()
         self.table.setRowCount(nrows)
         self.table.setColumnCount(ncols)
         if self.output_type == 'avg_losses-rlzs_aggr':
@@ -1242,6 +1258,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         # to fix it, so I am adding a tail of 2 spaces to each header as a
         # workaround (hack)
         self.table.resizeColumnsToContents()
+        self.table.show()
 
     def draw(self):
         self.plot.clear()
