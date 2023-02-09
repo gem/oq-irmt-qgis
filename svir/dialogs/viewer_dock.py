@@ -1123,8 +1123,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         # TODO: re-add error bars when stddev will become available again
         # means = self.damages_rlzs_aggr['array'][rlz]['mean']
         # stddevs = self.damages_rlzs_aggr['array'][rlz]['stddev']
-        D = len(self.dmg_states)  # including 'no damage' (FIXME it should be
-                                  # called self.limit_states)
+
+        # including 'no damage' (FIXME it should be called self.limit_states)
+        D = len(self.dmg_states)
         means = self.damages_rlzs_aggr['array'][rlz][:D]
         if (means < 0).any():
             msg = ('The results displayed include negative damage estimates'
@@ -1163,8 +1164,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.plot.yaxis.grid()
         self.plot_canvas.draw()
         if self.consequences:
-            self.table.show()
-            consequences_array = self.damages_rlzs_aggr['array'][rlz]
+            consequences_array = self.damages_rlzs_aggr['array'][rlz][D:]
             nrows = 1
             ncols = len(self.consequences)
             self.table.setRowCount(nrows)
@@ -1182,6 +1182,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             # as a workaround (hack)
             self.table.resizeColumnsToContents()
             self.table.resizeRowsToContents()
+            self.table.show()
             # FIXME: the table occupies a lot of useless vertical space
 
     def _to_2d(self, array):
@@ -1998,7 +1999,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 csv_file.write(
                     "# Tags: %s\r\n" % (
                         self.get_list_selected_tags_str() or 'None'))
-                headers = self.dmg_states
+                headers = list(self.dmg_states)
+                if self.consequences:
+                    headers.extend(self.consequences)
                 writer.writerow(headers)
                 values = self.damages_rlzs_aggr[
                     'array'][self.rlz_cbx.currentIndex()]
