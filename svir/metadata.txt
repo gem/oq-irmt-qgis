@@ -24,6 +24,7 @@ email=staff.it@globalquakemodel.org
 # Uncomment the following line and add your changelog entries:
 changelog=
     3.16.0
+    * When loading a csv as layer, the user is asked to confirm in case the csv is bigger than 10 MB
     * For 'Asset Risk Distributions', also a table of consequences is shown if available
     * The visualization of 'aggcurves' and 'aggcurves-stats' was updated according to changes in the OQ-Engine extract API
     * The 'Load table' button was added also for OQ-Engine outputs 'damages-stats' and 'aggrisk-stats'
