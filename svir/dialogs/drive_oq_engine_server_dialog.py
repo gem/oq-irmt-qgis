@@ -124,7 +124,7 @@ OUTPUT_TYPE_LOADERS = {
     'aggrisk-stats': LoadCsvAsLayerDialog,
     'agg_risk': LoadCsvAsLayerDialog,
     'damages-rlzs': LoadDamagesRlzsAsLayerDialog,
-    # NOTE: counterintuitive difference between damages-rlzs and damages-stats
+    # NOTE: damages-rlzs and damages-stats are handled completely differently
     'damages-stats': LoadCsvAsLayerDialog,
     'gmf_data': LoadGmfDataAsLayerDialog,
     'hmaps': LoadHazardMapsAsLayerDialog,
@@ -861,12 +861,11 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 num_actions += 1
             max_actions = max(max_actions, num_actions)
 
-        # NOTE: avg_losses-rlzs must be handled as a special case:
-        #       if avg_losses-stats is available, avg_losses-rlzs should allow
-        #       only to download the csv, but should not allow 'Load layer' nor
-        #       'aggregate'. This is because the OQ engine extract api returns
-        #       rlzs only if stats are not available, otherwise it returns
-        #       stats even if rlzs are requested
+        # NOTE: if avg_losses-stats is available, avg_losses-rlzs should allow
+        #       only to download the csv. It should not allow 'Load layer' nor
+        #       'aggregate', becasue the OQ engine extract api returns rlzs
+        #       only if stats are not available, otherwise it returns stats
+        #       even if rlzs are requested
         output_types = [output['type'] for output in output_list]
 
         self.output_list_tbl.setRowCount(len(output_list))
