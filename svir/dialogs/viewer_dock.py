@@ -673,7 +673,6 @@ class ViewerDock(QDockWidget, FORM_CLASS):
     def set_output_type_and_its_gui(self, new_output_type):
         self.rlzs = None
         self.stats = None
-        self.rlzs_or_stats = None
         self.selected_rlzs_or_stats = None
         self.consequences = None
         self.agg_curves = None
@@ -681,7 +680,6 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.aggregate_by = None
         self.dmg_states = None
         self.exposure_metadata = None
-        # self.current_selection = {}
         self.was_imt_switched = None
         self.was_poe_switched = None
         self.was_loss_type_switched = None
