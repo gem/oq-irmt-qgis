@@ -53,7 +53,15 @@ class LoadCsvAsLayerDialog(LoadOutputAsLayerDialog):
         # TODO: add a warning in case the file size exceeds a threshold
         # self.show()
         if self.ok_button.isEnabled():
-            self.accept()
+            if os.stat(self.path).st_size < 10485760:  # 10 MB
+                self.accept()
+            else:
+                lbl = self.file_size_lbl.text()
+                lbl += (f'\n\n{self.path} is bigger than 10 MB. Are you sure'
+                        f' you want to load it anyway?')
+                self.file_size_lbl.setText(lbl)
+                self.show()
+                self.adjustSize()
         else:
             self.show()
 
