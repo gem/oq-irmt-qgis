@@ -13,7 +13,7 @@ name=OpenQuake Integrated Risk Modelling Toolkit
 qgisMinimumVersion=3.0
 description=Tools to drive the OpenQuake Engine, to develop composite indicators and integrate them with physical risk estimations, and to predict building recovery times following an earthquake
 about=This plugin allows users to drive OpenQuake Engine calculations (https://github.com/gem/oq-engine) of physical hazard and risk, and to load the corresponding outputs as QGIS layers. For those outputs, data visualization tools are provided. The toolkit also enables users to develop composite indicators to measure and quantify social characteristics, and combine them with estimates of human or infrastructure loss. The plugin can interact with the OpenQuake Platform (https://platform.openquake.org), to browse and download socio-economic data or existing projects, edit projects locally in QGIS and upload and share them with the scientific community. A post-earthquake recovery modeling framework is incorporated into the toolkit, to produce building level and/or community level recovery functions.
-version=3.15.2
+version=3.16.0
 author=GEM Foundation
 email=staff.it@globalquakemodel.org
 
@@ -23,6 +23,11 @@ email=staff.it@globalquakemodel.org
 
 # Uncomment the following line and add your changelog entries:
 changelog=
+    3.16.0
+    * For 'Asset Risk Distributions', also a table of consequences is shown if available
+    * The visualization of 'aggcurves' and 'aggcurves-stats' was updated according to changes in the OQ-Engine extract API
+    * The 'Load table' button was added also for OQ-Engine outputs 'damages-stats' and 'aggrisk-stats'
+ Disable Load layer and Aggregate buttons for avg_losses-rlzs in case avg_losses-stats is present
     3.15.2
     * The user manual is built via docker and the makefile was improved to retrieve plugin version and experimental tag from metadata and update the online documentation accordingly
     3.15.1
@@ -251,7 +256,7 @@ tracker=https://github.com/gem/oq-irmt-qgis/issues
 repository=https://github.com/gem/oq-irmt-qgis
 icon=resources/icon.svg
 # experimental flag
-experimental=True
+experimental=False
 
 # deprecated flag (applies to the whole plugin, not just a single version
 deprecated=False
