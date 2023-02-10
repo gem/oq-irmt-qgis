@@ -121,8 +121,11 @@ OUTPUT_TYPE_LOADERS = {
     'events': LoadCsvAsLayerDialog,
     'risk_by_event': LoadCsvAsLayerDialog,
     'aggrisk': LoadCsvAsLayerDialog,
+    'aggrisk-stats': LoadCsvAsLayerDialog,
     'agg_risk': LoadCsvAsLayerDialog,
     'damages-rlzs': LoadDamagesRlzsAsLayerDialog,
+    # NOTE: damages-rlzs and damages-stats are handled completely differently
+    'damages-stats': LoadCsvAsLayerDialog,
     'gmf_data': LoadGmfDataAsLayerDialog,
     'hmaps': LoadHazardMapsAsLayerDialog,
     'hcurves': LoadHazardCurvesAsLayerDialog,
@@ -858,6 +861,13 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 num_actions += 1
             max_actions = max(max_actions, num_actions)
 
+        # NOTE: if avg_losses-stats is available, avg_losses-rlzs should allow
+        #       only to download the csv. It should not allow 'Load layer' nor
+        #       'aggregate', becasue the OQ engine extract api returns rlzs
+        #       only if stats are not available, otherwise it returns stats
+        #       even if rlzs are requested
+        output_types = [output['type'] for output in output_list]
+
         self.output_list_tbl.setRowCount(len(output_list))
         self.output_list_tbl.setColumnCount(len(selected_keys) + max_actions)
         # NOTE: uncomment if some buttons need to be set as experimental
@@ -885,7 +895,10 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             for col, outtype in enumerate(outtypes, len(selected_keys)):
                 # Additional buttons with respect to the webui
                 if (not load_action_button_was_added and
-                        not (output['type'] == 'aggcurves'
+                        # see note above
+                        not (output['type'] == 'avg_losses-rlzs'
+                             and 'avg_losses-stats' in output_types) and
+                        not (output['type'] in ('aggcurves', 'aggcurves-stats')
                              and calculation_mode == 'event_based_damage') and
                         output['type'] in (OQ_TO_LAYER_TYPES |
                                            OQ_RST_TYPES |
@@ -920,7 +933,10 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                     additional_cols += 1
                     load_action_button_was_added = True
                 if (not aggregate_action_button_was_added and
-                        "%s_aggr" % output['type'] in OQ_EXTRACT_TO_VIEW_TYPES):
+                        "%s_aggr" % output['type'] in OQ_EXTRACT_TO_VIEW_TYPES
+                        # see note above
+                        and not (output['type'] == 'avg_losses-rlzs'
+                                 and 'avg_losses-stats' in output_types)):
                     mod_output = copy.deepcopy(output)
                     mod_output['type'] = "%s_aggr" % output['type']
                     button = QPushButton()
@@ -1059,7 +1075,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
 
     def open_full_report(
             self, output_id=None, output_type=None, filepath=None):
-        assert(filepath is not None)
+        assert filepath is not None
         # NOTE: it might be created here directly instead, but this way
         # we can use the qt-designer
         self.full_report_dlg = ShowFullReportDialog(filepath)
@@ -1071,7 +1087,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
     def open_output(
             self, output_id=None, output_type=None, filepath=None,
             calculation_mode=None):
-        assert(output_type is not None)
+        assert output_type is not None
         if output_type not in OUTPUT_TYPE_LOADERS:
             raise NotImplementedError(output_type)
         open_output_dlg = OUTPUT_TYPE_LOADERS[output_type](
@@ -1086,7 +1102,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
 
     def notify_downloaded(
             self, output_id=None, output_type=None, filepath=None):
-        assert(filepath is not None)
+        assert filepath is not None
         if output_id is not None:
             msg = 'Calculation %s was saved as %s' % (output_id, filepath)
         else:
