@@ -637,13 +637,17 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 self.filter_agg_curves()
 
     def get_list_selected_tags_str(self):
+        selected_tags = {tag_name: self.tags[tag_name]['values']
+                         for tag_name in self.tags
+                         if self.tags[tag_name]['selected']}
         selected_tags_str = ''
-        if not hasattr(self, 'aggregate_by') or self.aggregate_by is None:
-            return selected_tags_str
-        for tag_name in self.aggregate_by:
-            for tag_value in self.tags[tag_name]['values']:
-                if self.tags[tag_name]['values'][tag_value]:
-                    selected_tags_str += '%s="%s" ' % (tag_name, tag_value)
+        for tag_name in selected_tags:
+            selected_tags_str += f'{tag_name}="'
+            tag_values = selected_tags[tag_name]
+            for tag_value in tag_values:
+                if tag_values[tag_value]:
+                    selected_tags_str += f'{tag_value}" '
+                    continue
         return selected_tags_str
 
     def refresh_feature_selection(self):
