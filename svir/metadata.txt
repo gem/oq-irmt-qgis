@@ -29,7 +29,7 @@ changelog=
     * For 'Asset Risk Distributions', also a table of consequences is shown if available
     * The visualization of 'aggcurves' and 'aggcurves-stats' was updated according to changes in the OQ-Engine extract API
     * The 'Load table' button was added also for OQ-Engine outputs 'damages-stats' and 'aggrisk-stats'
- Disable Load layer and Aggregate buttons for avg_losses-rlzs in case avg_losses-stats is present
+    * The 'Load layer' and 'Aggregate' buttons for avg_losses-rlzs are not available in case 'avg_losses-stats' is present (because in that case the OQ-Engine only extract statistics and not all the separate realizations)
     3.15.2
     * The user manual is built via docker and the makefile was improved to retrieve plugin version and experimental tag from metadata and update the online documentation accordingly
     3.15.1
