@@ -24,7 +24,7 @@ email=staff.it@globalquakemodel.org
 # Uncomment the following line and add your changelog entries:
 changelog=
     3.16.0
-    * Same as 3.15.3, but not 'experimental'
+    * Aligned with OQ-Engine 3.16
     3.15.3
     * When exporting data from the Data Viewer, selected tags (if present) are correctly reported in the output csv
     * When loading a csv as layer, the user is asked to confirm in case the csv is bigger than 10 MB
