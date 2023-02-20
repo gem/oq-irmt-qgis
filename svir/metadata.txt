@@ -24,7 +24,7 @@ email=staff.it@globalquakemodel.org
 # Uncomment the following line and add your changelog entries:
 changelog=
     3.17.1
-    * Fix loader of OQ-Engine disaggregation realizations, that were renamed from 'disagg' to 'disagg-rlzs' in OQ 3.17
+    * The loader of OQ-Engine disaggregation realizations was fixed, following the renaming of the 'disagg' output into 'disagg-rlzs' in OQ 3.17
     3.17.0
     * Aligned with OQ-Engine 3.17
     3.16.0
