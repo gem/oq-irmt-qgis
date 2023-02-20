@@ -36,15 +36,16 @@ from svir.calculations.calculate_utils import add_attribute
 from svir.tasks.extract_npz_task import ExtractNpzTask
 
 
-class LoadDisaggAsLayerDialog(LoadOutputAsLayerDialog):
+class LoadDisaggRlzsAsLayerDialog(LoadOutputAsLayerDialog):
     """
-    Dialog to load disaggregation from an oq-engine output, as layer
+    Dialog to load disaggregation realizations from an oq-engine output,
+    as layer
     """
 
     def __init__(self, drive_engine_dlg, iface, viewer_dock, session, hostname,
-                 calc_id, output_type='disagg', path=None, mode=None,
+                 calc_id, output_type='disagg-rlzs', path=None, mode=None,
                  engine_version=None, calculation_mode=None):
-        assert output_type == 'disagg'
+        assert output_type == 'disagg-rlzs'
         super().__init__(
             drive_engine_dlg, iface, viewer_dock, session, hostname,
             calc_id, output_type=output_type, path=path, mode=mode,
@@ -54,10 +55,10 @@ class LoadDisaggAsLayerDialog(LoadOutputAsLayerDialog):
         # self.populate_out_dep_widgets()
         # self.adjustSize()
         self.ok_button.setEnabled(True)
-        log_msg('Extracting disagg. Watch progress in QGIS task bar',
+        log_msg('Extracting disagg_layer. Watch progress in QGIS task bar',
                 level='I', message_bar=self.iface.messageBar())
         self.extract_npz_task = ExtractNpzTask(
-            'Extract disagg', QgsTask.CanCancel, self.session,
+            'Extract disagg-rlzs', QgsTask.CanCancel, self.session,
             self.hostname, self.calc_id, 'disagg_layer', self.finalize_init,
             self.on_extract_error)
         QgsApplication.taskManager().addTask(self.extract_npz_task)

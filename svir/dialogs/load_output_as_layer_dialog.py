@@ -850,7 +850,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         # NOTE: Cross symbols rendered for OQ-Engine disaggregation outputs are
         # opaque, wider and thicker than those used for other outputs (e.g.
         # hcurves)
-        if self.output_type == 'disagg':
+        if self.output_type == 'disagg-rlzs':
             cross.setSize(3)
             cross.setStrokeWidth(0.5)
             opacity = 1
