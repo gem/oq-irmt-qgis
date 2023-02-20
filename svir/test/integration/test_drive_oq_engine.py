@@ -81,7 +81,7 @@ def run_all():
     suite.addTest(unittest.makeSuite(LoadHmapsTestCase, 'test'))
     suite.addTest(unittest.makeSuite(LoadRupturesTestCase, 'test'))
     suite.addTest(unittest.makeSuite(LoadUhsTestCase, 'test'))
-    suite.addTest(unittest.makeSuite(LoadDisaggTestCase, 'test'))
+    suite.addTest(unittest.makeSuite(LoadDisaggRlzsTestCase, 'test'))
     # OQ_ZIPPED_TYPES
     suite.addTest(unittest.makeSuite(LoadInputTestCase, 'test'))
     # OQ_RST_TYPES
@@ -859,12 +859,12 @@ class LoadUhsTestCase(LoadOqEngineOutputsTestCase):
         self.load_output_type('uhs')
 
 
-class LoadDisaggTestCase(LoadOqEngineOutputsTestCase):
+class LoadDisaggRlzsTestCase(LoadOqEngineOutputsTestCase):
     @unittest.skipIf(
-        ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'disagg',
+        ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'disagg-rlzs',
         'only testing output type %s' % ONLY_OUTPUT_TYPE)
-    def test_load_disagg(self):
-        self.load_output_type('disagg')
+    def test_load_disagg_rlzs(self):
+        self.load_output_type('disagg-rlzs')
 
 
 # OQ_ZIPPED_TYPES
