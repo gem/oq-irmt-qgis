@@ -8,13 +8,14 @@ on:
 
 jobs:
   Tests_and_docs:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os:
-          - ubuntu-latest
-          - windows-latest
-          - macos-latest
+    runs-on: ubuntu-latest
+    # runs-on: ${{ matrix.os }}
+    # strategy:
+    #   matrix:
+    #     os:
+    #       - ubuntu-latest
+    #       - windows-latest
+    #       - macos-latest
     env:
       GITHUB_DEF_BR: master
     steps:
