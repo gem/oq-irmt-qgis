@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # This script uploads a plugin package on the server
 #
 # Author: A. Pasotti, V. Picavet
