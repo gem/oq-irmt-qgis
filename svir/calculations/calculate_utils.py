@@ -63,7 +63,7 @@ class InvalidFormula(Exception):
 
 
 def add_attribute(proposed_attr_name, dtype, layer):
-    # TODO: map numpy types to qt types more precisely to optimize
+    # TODO: map numpy types to qt types more precisely to optimize storage
     if dtype == 'S':
         qtype = QVariant.String
         qname = 'String'
