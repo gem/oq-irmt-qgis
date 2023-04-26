@@ -63,15 +63,19 @@ class InvalidFormula(Exception):
 
 
 def add_attribute(proposed_attr_name, dtype, layer):
+    # TODO: map numpy types to qt types more precisely to optimize storage
     if dtype == 'S':
         qtype = QVariant.String
         qname = 'String'
-    elif dtype in ('U', 'I'):  # FIXME: what for unsigned int?
-        qtype = QVariant.Int
-        qname = 'integer'
-    else:  # FIXME: treating everything else as double (it might be wrong)
+    elif dtype == 'U':
+        qtype = QVariant.ULongLong
+        qname = 'ULongLong'
+    elif dtype == 'I':
+        qtype = QVariant.LongLong
+        qname = 'LongLong'
+    else:  # NOTE: treating everything else (including 'F') as double
         qtype = QVariant.Double
-        qname = 'double'
+        qname = 'Double'
     field = QgsField(proposed_attr_name, qtype)
     field.setTypeName(qname)
     assigned_attr_names = ProcessLayer(layer).add_attributes(
