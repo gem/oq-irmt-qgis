@@ -24,6 +24,7 @@ email=staff.it@globalquakemodel.org
 # Uncomment the following line and add your changelog entries:
 changelog=
     3.17.3
+    * The button to retrieve the OQ Engine calculation parameters is properly reset similarly to what was already correctly done for the button to download the datastore
     * Numpy integer and unsigned integer types are mapped to QT LongLong and ULongLong types, to be able to represent e.g. big rupture ids
     3.17.2
     * The loader for OQ-Engine Asset Risk Distributions is compliant with a change in the NPZ output produced by OQ 3.17

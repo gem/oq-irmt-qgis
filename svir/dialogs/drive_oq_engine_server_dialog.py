@@ -846,6 +846,9 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             self.clear_output_list()
             self.download_datastore_btn.setEnabled(False)
             self.download_datastore_btn.setText('Download HDF5 datastore')
+            self.show_calc_params_btn.setEnabled(False)
+            self.show_calc_params_btn.setText(
+                'Show parameters for calculation')
             return
         output_list.sort(key=itemgetter('name'))
         exclude = ['url', 'outtypes', 'type', 'size_mb']
