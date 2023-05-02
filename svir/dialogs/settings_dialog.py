@@ -35,6 +35,7 @@ from qgis.gui import QgsMessageBar
 from requests import Session
 from svir.dialogs.connection_profile_dialog import ConnectionProfileDialog
 from svir.utilities.utils import (
+                                  get_irmt_version,
                                   get_ui_class,
                                   get_style,
                                   platform_login,
@@ -67,6 +68,8 @@ class SettingsDialog(QDialog, FORM_CLASS):
         # Set up the user interface from Designer.
         self.setupUi(self)
         self.message_bar = QgsMessageBar(self)
+        irmt_version = get_irmt_version()
+        self.setWindowTitle('OpenQuake IRMT v%s Settings' % irmt_version)
         self.layout().insertWidget(0, self.message_bar)
         link_text = ('<a href="%s">Register to the OpenQuake Platform</a>'
                      % PLATFORM_REGISTRATION_URL)
