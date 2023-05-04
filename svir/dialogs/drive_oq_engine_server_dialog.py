@@ -118,6 +118,8 @@ BUTTON_WIDTH = 75
 
 OUTPUT_TYPE_LOADERS = {
     'ruptures': LoadRupturesAsLayerDialog,
+    'rates_by_src': LoadCsvAsLayerDialog,
+    'mean_disagg_bysrc': LoadCsvAsLayerDialog,
     'realizations': LoadCsvAsLayerDialog,
     'events': LoadCsvAsLayerDialog,
     'risk_by_event': LoadCsvAsLayerDialog,
