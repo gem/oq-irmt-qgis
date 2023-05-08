@@ -239,12 +239,14 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
         for imt in self.imts:
             for poe in self.imts[imt]:
                 poes.add(poe)
-        for poe in poes:
-            if (not self.load_all_poes_chk.isChecked()
-                    and poe != self.poe_cbx.currentText()):
-                continue
-            root = QgsProject.instance().layerTreeRoot()
-            ret_per_groups[poe] = root.insertGroup(0, 'POE_%s' % poe)
+        if (not self.load_single_layer_ckb.isChecked() and
+                not self.load_one_layer_per_stat_ckb.isChecked()):
+            for poe in poes:
+                if (not self.load_all_poes_chk.isChecked()
+                        and poe != self.poe_cbx.currentText()):
+                    continue
+                root = QgsProject.instance().layerTreeRoot()
+                ret_per_groups[poe] = root.insertGroup(0, 'POE_%s' % poe)
         if self.load_single_layer_ckb.isChecked():
             with WaitCursorManager(
                     'Creating layer...', self.iface.messageBar()):

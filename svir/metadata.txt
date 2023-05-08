@@ -24,6 +24,7 @@ email=staff.it@globalquakemodel.org
 # Uncomment the following line and add your changelog entries:
 changelog=
     3.17.4
+    * Layer groups for hazard maps are created only when they will contain at least one layer
     * The title of the IRMT Settings dialog now displays also the plugin version
     3.17.3
     * The button to retrieve the OQ Engine calculation parameters is properly reset similarly to what was already correctly done for the button to download the datastore
