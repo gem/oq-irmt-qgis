@@ -22,11 +22,14 @@
     <widget class="QTextBrowser" name="text_browser">
      <property name="font">
       <font>
-       <family>Monospace</family>
+       <family>Courier</family>
       </font>
      </property>
      <property name="autoFormatting">
       <set>QTextEdit::AutoAll</set>
+     </property>
+     <property name="lineWrapMode">
+      <enum>QTextEdit::NoWrap</enum>
      </property>
      <property name="acceptRichText">
       <bool>false</bool>
