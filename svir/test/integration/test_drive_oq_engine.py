@@ -954,14 +954,11 @@ class AllLoadableOutputsFoundInDemosTestCase(LoadOqEngineOutputsTestCase):
         if loadable_output_types_not_found:
             print("\nOutput_types not found in any demo:\n\t%s" %
                   "\n\t".join(loadable_output_types_not_found))
-            if (all([output_type.endswith('_aggr') or
-                    output_type in OQ_CSV_TO_LAYER_TYPES
-                    for output_type in loadable_output_types_not_found])
-                and (any([output_type in OQ_CSV_TO_LAYER_TYPES
-                          for output_type in loadable_output_types_not_found])
-                     and any([output_type in OQ_CSV_TO_LAYER_TYPES
-                              for output_type in
-                              loadable_output_types_found]))):
+            if (all([output_type.endswith('_aggr')
+                     or (output_type in OQ_CSV_TO_LAYER_TYPES
+                         and any([otype in OQ_CSV_TO_LAYER_TYPES
+                                  for otype in loadable_output_types_found]))
+                     for output_type in loadable_output_types_not_found])):
                 print("\nThe only missing output types are '_aggr',"
                       " which are not actual outputs exposed by the"
                       " engine, but derived outputs accessed through"
