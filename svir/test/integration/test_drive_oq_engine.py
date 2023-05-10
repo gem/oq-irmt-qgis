@@ -954,16 +954,24 @@ class AllLoadableOutputsFoundInDemosTestCase(LoadOqEngineOutputsTestCase):
         if loadable_output_types_not_found:
             print("\nOutput_types not found in any demo:\n\t%s" %
                   "\n\t".join(loadable_output_types_not_found))
-            if all([output_type.endswith('_aggr')
-                    for output_type in loadable_output_types_not_found]):
-                print("\nThe only missing output types are '_aggr', which are"
-                      " not actual outputs exposed by the engine, but"
-                      " derived outputs accessed through the extract API."
-                      " Therefore, is is ok.")
+            if (all([output_type.endswith('_aggr') or
+                    output_type in OQ_CSV_TO_LAYER_TYPES
+                    for output_type in loadable_output_types_not_found])
+                and (any([output_type in OQ_CSV_TO_LAYER_TYPES
+                          for output_type in loadable_output_types_not_found])
+                     and any([output_type in OQ_CSV_TO_LAYER_TYPES
+                              for output_type in
+                              loadable_output_types_found]))):
+                print("\nThe only missing output types are '_aggr',"
+                      " which are not actual outputs exposed by the"
+                      " engine, but derived outputs accessed through"
+                      " the extract API, or CSV outputs that are"
+                      " loaded in a commmon way. Therefore, it is ok.")
             else:
                 print("\nSome missing output types are '_aggr', which are"
                       " not actual outputs exposed by the engine, but"
-                      " derived outputs accessed through the extract API."
+                      " derived outputs accessed through the extract API,"
+                      " or CSV outputs that are loaded in a common way."
                       " Therefore, is is ok:\n\t%s" % "\n\t".join([
                           output_type
                           for output_type in loadable_output_types_not_found
