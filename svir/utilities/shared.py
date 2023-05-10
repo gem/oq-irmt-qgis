@@ -235,8 +235,8 @@ OQ_CSV_TO_LAYER_TYPES = set([
     'risk_by_event',
     'events',
     'realizations',
-    'rates_by_src',
-    'mean_disagg_bysrc',
+    'mean_rates_by_src',
+    'mean_disagg_by_src',
 ])
 OQ_EXTRACT_TO_LAYER_TYPES = set([
     'asset_risk',
