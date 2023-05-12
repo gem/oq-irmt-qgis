@@ -24,6 +24,7 @@ email=staff.it@globalquakemodel.org
 # Uncomment the following line and add your changelog entries:
 changelog=
     3.17.4
+    * Also OQ-Engine outputs 'mean_rates_by_src' and 'mean_disagg_by_src' are loadable automatically as layers
     * The dialog displaying OQ-Engine calculation reports or logs does not wrap text and contains Courier monospace font for better compatibility across operating systems
     * Layer groups for hazard maps are created only when they will contain at least one layer
     * The title of the IRMT Settings dialog now displays also the plugin version

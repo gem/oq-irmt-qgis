@@ -118,15 +118,8 @@ BUTTON_WIDTH = 75
 
 OUTPUT_TYPE_LOADERS = {
     'ruptures': LoadRupturesAsLayerDialog,
-    'realizations': LoadCsvAsLayerDialog,
-    'events': LoadCsvAsLayerDialog,
-    'risk_by_event': LoadCsvAsLayerDialog,
-    'aggrisk': LoadCsvAsLayerDialog,
-    'aggrisk-stats': LoadCsvAsLayerDialog,
-    'agg_risk': LoadCsvAsLayerDialog,
-    'damages-rlzs': LoadDamagesRlzsAsLayerDialog,
     # NOTE: damages-rlzs and damages-stats are handled completely differently
-    'damages-stats': LoadCsvAsLayerDialog,
+    'damages-rlzs': LoadDamagesRlzsAsLayerDialog,
     'gmf_data': LoadGmfDataAsLayerDialog,
     'hmaps': LoadHazardMapsAsLayerDialog,
     'hcurves': LoadHazardCurvesAsLayerDialog,
@@ -137,6 +130,9 @@ OUTPUT_TYPE_LOADERS = {
     'disagg-rlzs': LoadDisaggRlzsAsLayerDialog,
     'input': LoadInputsDialog,
 }
+for output_type in OQ_CSV_TO_LAYER_TYPES:
+    OUTPUT_TYPE_LOADERS[output_type] = LoadCsvAsLayerDialog
+
 assert set(OUTPUT_TYPE_LOADERS) == OQ_TO_LAYER_TYPES, (
     OUTPUT_TYPE_LOADERS, OQ_TO_LAYER_TYPES)
 
