@@ -288,6 +288,10 @@ DEFAULT_PLATFORM_PROFILES = (
     '{"OpenQuake Platform": {'
     '"username": "", "password": "",'
     '"hostname": "https://platform.openquake.org"}}')
+DEFAULT_GEOVIEWER_PROFILES = (
+    '{"Local OpenQuake GeoViewer": {'
+    '"username": "", "password": "",'
+    '"hostname": "http://localhost:8000"}}')
 DEFAULT_ENGINE_PROFILES = (
     '{"Local OpenQuake Engine Server": {'
     '"username": "", "password": "",'
@@ -324,3 +328,21 @@ RAMP_EXTREME_COLORS = {
 }
 
 GEOM_FIELDNAMES = ('geom', 'the_geom', 'geometry', 'wkt')
+
+LICENSES = (
+    ('CC0', 'http://creativecommons.org/about/cc0'),
+    ('CC BY 3.0 ', 'http://creativecommons.org/licenses/by/3.0/'),
+    ('CC BY-SA 3.0', 'http://creativecommons.org/licenses/by-sa/3.0/'),
+    ('CC BY-NC-SA 3.0', 'http://creativecommons.org/licenses/by-nc-sa/3.0/'),
+    ('CC BY 4.0', 'https://creativecommons.org/licenses/by/4.0/'),
+    ('CC BY-SA 4.0', 'https://creativecommons.org/licenses/by-sa/4.0/'),
+    ('CC BY-NC-SA 4.0', 'https://creativecommons.org/licenses/by-nc-sa/4.0/')
+)
+DEFAULT_LICENSE = LICENSES[5]  # CC BY-SA 4.0
+
+PROJECT_KINDS = (
+    ('normal', 'Normal'),
+    ('gem_explorer', 'GEM Risk Explorer'),
+    ('disag', 'Disaggregation')
+)
+DEFAULT_PROJECT_KIND = 'normal'

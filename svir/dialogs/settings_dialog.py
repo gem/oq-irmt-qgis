@@ -39,6 +39,7 @@ from svir.utilities.utils import (
                                   get_ui_class,
                                   get_style,
                                   platform_login,
+                                  geoviewer_login,
                                   engine_login,
                                   log_msg,
                                   WaitCursorManager,
@@ -48,6 +49,7 @@ from svir.utilities.shared import (
                                    PLATFORM_REGISTRATION_URL,
                                    DEFAULT_SETTINGS,
                                    DEFAULT_PLATFORM_PROFILES,
+                                   DEFAULT_GEOVIEWER_PROFILES,
                                    DEFAULT_ENGINE_PROFILES,
                                    LOG_LEVELS,
                                    )
@@ -115,6 +117,7 @@ class SettingsDialog(QDialog, FORM_CLASS):
         mySettings = QSettings()
 
         self.refresh_profile_cbxs('platform', restore_defaults)
+        self.refresh_profile_cbxs('geoviewer', restore_defaults)
         self.refresh_profile_cbxs('engine', restore_defaults)
 
         developer_mode = (DEFAULT_SETTINGS['developer_mode']
@@ -152,36 +155,42 @@ class SettingsDialog(QDialog, FORM_CLASS):
         self.developer_mode_ckb.setChecked(developer_mode)
         self.enable_experimental_ckb.setChecked(experimental_enabled)
 
-    def refresh_profile_cbxs(self, platform_or_engine, restore_defaults=False):
-        assert platform_or_engine in ('platform', 'engine'), platform_or_engine
-        if platform_or_engine == 'platform':
+    def refresh_profile_cbxs(self, server, restore_defaults=False):
+        assert server in ('platform', 'engine', 'geoviewer'), server
+        if server == 'platform':
             self.platform_profile_cbx.blockSignals(True)
             self.platform_profile_cbx.clear()
             self.platform_profile_cbx.blockSignals(False)
+            default_profiles = DEFAULT_PLATFORM_PROFILES
+        elif server == 'geoviewer':
+            self.geoviewer_profile_cbx.blockSignals(True)
+            self.geoviewer_profile_cbx.clear()
+            self.geoviewer_profile_cbx.blockSignals(False)
+            default_profiles = DEFAULT_GEOVIEWER_PROFILES
         else:  # 'engine'
             self.engine_profile_cbx.blockSignals(True)
             self.engine_profile_cbx.clear()
             self.engine_profile_cbx.blockSignals(False)
+            default_profiles = DEFAULT_ENGINE_PROFILES
         mySettings = QSettings()
         if restore_defaults:
-            profiles = json.loads(
-                DEFAULT_PLATFORM_PROFILES if platform_or_engine == 'platform'
-                else DEFAULT_ENGINE_PROFILES)
+            profiles = json.loads(default_profiles)
             cur_profile = list(profiles.keys())[0]
         else:
             profiles = json.loads(
                 mySettings.value(
-                    'irmt/%s_profiles' % platform_or_engine,
-                    (DEFAULT_PLATFORM_PROFILES
-                     if platform_or_engine == 'platform'
-                     else DEFAULT_ENGINE_PROFILES)))
+                    'irmt/%s_profiles' % server, default_profiles))
             cur_profile = mySettings.value(
-                'irmt/current_%s_profile' % platform_or_engine)
+                'irmt/current_%s_profile' % server)
         for profile in sorted(profiles, key=str.lower):
-            if platform_or_engine == 'platform':
+            if server == 'platform':
                 self.platform_profile_cbx.blockSignals(True)
                 self.platform_profile_cbx.addItem(profile)
                 self.platform_profile_cbx.blockSignals(False)
+            elif server == 'geoviewer':
+                self.geoviewer_profile_cbx.blockSignals(True)
+                self.geoviewer_profile_cbx.addItem(profile)
+                self.geoviewer_profile_cbx.blockSignals(False)
             else:  # engine
                 self.engine_profile_cbx.blockSignals(True)
                 self.engine_profile_cbx.addItem(profile)
@@ -189,18 +198,21 @@ class SettingsDialog(QDialog, FORM_CLASS):
         if cur_profile is None:
             cur_profile = list(profiles.keys())[0]
             mySettings.setValue(
-                'irmt/current_%s_profile' % platform_or_engine,
+                'irmt/current_%s_profile' % server,
                 cur_profile)
-        if platform_or_engine == 'platform':
+        if server == 'platform':
             self.platform_profile_cbx.setCurrentIndex(
                 self.platform_profile_cbx.findText(cur_profile))
+            self.pla_remove_btn.setEnabled(
+                self.platform_profile_cbx.count() > 1)
+        elif server == 'geoviewer':
+            self.geoviewer_profile_cbx.setCurrentIndex(
+                self.geoviewer_profile_cbx.findText(cur_profile))
+            self.gv_remove_btn.setEnabled(
+                self.geoviewer_profile_cbx.count() > 1)
         else:  # engine
             self.engine_profile_cbx.setCurrentIndex(
                 self.engine_profile_cbx.findText(cur_profile))
-        if platform_or_engine == 'platform':
-            self.pla_remove_btn.setEnabled(
-                self.platform_profile_cbx.count() > 1)
-        else:  # engine
             self.eng_remove_btn.setEnabled(
                 self.engine_profile_cbx.count() > 1)
 
@@ -222,11 +234,15 @@ class SettingsDialog(QDialog, FORM_CLASS):
             self.log_level_cbx.itemData(self.log_level_cbx.currentIndex()))
 
         cur_pla_profile = self.platform_profile_cbx.currentText()
+        cur_gv_profile = self.geoviewer_profile_cbx.currentText()
         cur_eng_profile = self.engine_profile_cbx.currentText()
 
         platform_profiles = json.loads(mySettings.value(
             'irmt/platform_profiles', DEFAULT_PLATFORM_PROFILES))
         platform_profile = platform_profiles[cur_pla_profile]
+        geoviewer_profiles = json.loads(mySettings.value(
+            'irmt/geoviewer_profiles', DEFAULT_GEOVIEWER_PROFILES))
+        geoviewer_profile = geoviewer_profiles[cur_gv_profile]
         engine_profiles = json.loads(mySettings.value(
             'irmt/engine_profiles', DEFAULT_ENGINE_PROFILES))
         engine_profile = engine_profiles[cur_eng_profile]
@@ -237,6 +253,12 @@ class SettingsDialog(QDialog, FORM_CLASS):
                             platform_profile['username'])
         mySettings.setValue('irmt/platform_password',
                             platform_profile['password'])
+        mySettings.setValue('irmt/geoviewer_hostname',
+                            geoviewer_profile['hostname'])
+        mySettings.setValue('irmt/geoviewer_username',
+                            geoviewer_profile['username'])
+        mySettings.setValue('irmt/geoviewer_password',
+                            geoviewer_profile['password'])
         mySettings.setValue('irmt/engine_hostname',
                             engine_profile['hostname'])
         mySettings.setValue('irmt/engine_username',
@@ -297,51 +319,79 @@ class SettingsDialog(QDialog, FORM_CLASS):
         QSettings().setValue('irmt/current_platform_profile', profile)
 
     @pyqtSlot(int)
+    def on_geoviewer_profile_cbx_currentIndexChanged(self, idx):
+        profile = self.geoviewer_profile_cbx.itemText(idx)
+        QSettings().setValue('irmt/current_geoviewer_profile', profile)
+
+    @pyqtSlot(int)
     def on_engine_profile_cbx_currentIndexChanged(self, idx):
         profile = self.engine_profile_cbx.itemText(idx)
         QSettings().setValue('irmt/current_engine_profile', profile)
 
+    def edit_profile(self, profile_name, server):
+        self.profile_dlg = ConnectionProfileDialog(
+            server, profile_name, parent=self)
+        if self.profile_dlg.exec_():
+            self.refresh_profile_cbxs(server)
+
+    def new_profile(self, server):
+        self.profile_dlg = ConnectionProfileDialog(server, parent=self)
+        if self.profile_dlg.exec_():
+            self.refresh_profile_cbxs(server)
+
+    def test_profile(self, profile_name, server):
+        with WaitCursorManager('Logging in...', self.message_bar):
+            self._attempt_login(server, profile_name)
+
     @pyqtSlot()
     def on_pla_edit_btn_clicked(self):
-        profile_name = self.platform_profile_cbx.currentText()
-        self.profile_dlg = ConnectionProfileDialog(
-            'platform', profile_name, parent=self)
-        if self.profile_dlg.exec_():
-            self.refresh_profile_cbxs('platform')
+        self.edit_profile(
+            self.platform_profile_cbx.currentText(), 'platform')
+
+    @pyqtSlot()
+    def on_gv_edit_btn_clicked(self):
+        self.edit_profile(
+            self.geoviewer_profile_cbx.currentText(), 'geoviewer')
 
     @pyqtSlot()
     def on_eng_edit_btn_clicked(self):
-        profile_name = self.engine_profile_cbx.currentText()
-        self.profile_dlg = ConnectionProfileDialog(
-            'engine', profile_name, parent=self)
-        if self.profile_dlg.exec_():
-            self.refresh_profile_cbxs('engine')
+        self.edit_profile(
+            self.engine_profile_cbx.currentText(), 'engine')
 
     @pyqtSlot()
     def on_pla_new_btn_clicked(self):
-        self.profile_dlg = ConnectionProfileDialog(
-            'platform', parent=self)
-        if self.profile_dlg.exec_():
-            self.refresh_profile_cbxs('platform')
+        self.new_profile('platform')
+
+    @pyqtSlot()
+    def on_gv_new_btn_clicked(self):
+        self.new_profile('geoviewer')
+
+    @pyqtSlot()
+    def on_eng_new_btn_clicked(self):
+        self.new_profile('engine')
 
     @pyqtSlot()
     def on_pla_test_btn_clicked(self):
-        server = 'platform'
-        profile_name = self.platform_profile_cbx.currentText()
-        with WaitCursorManager('Logging in...', self.message_bar):
-            self._attempt_login(server, profile_name)
+        self.test_profile(
+             self.platform_profile_cbx.currentText(), 'platform')
+
+    @pyqtSlot()
+    def on_gv_test_btn_clicked(self):
+        self.test_profile(
+             self.geoviewer_profile_cbx.currentText(), 'geoviewer')
 
     @pyqtSlot()
     def on_eng_test_btn_clicked(self):
-        server = 'engine'
-        profile_name = self.engine_profile_cbx.currentText()
-        with WaitCursorManager('Logging in...', self.message_bar):
-            self._attempt_login(server, profile_name)
+        self.test_profile(
+             self.engine_profile_cbx.currentText(), 'engine')
 
     def _attempt_login(self, server, profile_name):
         if server == 'platform':
             default_profiles = DEFAULT_PLATFORM_PROFILES
             login_func = platform_login
+        elif server == 'geoviewer':
+            default_profiles = DEFAULT_GEOVIEWER_PROFILES
+            login_func = geoviewer_login
         elif server == 'engine':
             default_profiles = DEFAULT_ENGINE_PROFILES
             login_func = engine_login
@@ -380,22 +430,19 @@ class SettingsDialog(QDialog, FORM_CLASS):
             log_msg(msg, level='S', message_bar=self.message_bar, duration=3)
 
     @pyqtSlot()
-    def on_eng_new_btn_clicked(self):
-        self.profile_dlg = ConnectionProfileDialog(
-            'engine', parent=self)
-        if self.profile_dlg.exec_():
-            self.refresh_profile_cbxs('engine')
-
-    @pyqtSlot()
     def on_pla_remove_btn_clicked(self):
         self.remove_selected_profile('platform')
+
+    @pyqtSlot()
+    def on_gv_remove_btn_clicked(self):
+        self.remove_selected_profile('geoviewer')
 
     @pyqtSlot()
     def on_eng_remove_btn_clicked(self):
         self.remove_selected_profile('engine')
 
-    def remove_selected_profile(self, platform_or_engine):
-        assert platform_or_engine in ('platform', 'engine'), platform_or_engine
+    def remove_selected_profile(self, server):
+        assert server in ('platform', 'geoviewer', 'engine'), server
         if QMessageBox.question(
                 self,
                 'Remove connection profile',
@@ -404,19 +451,21 @@ class SettingsDialog(QDialog, FORM_CLASS):
                 QMessageBox.Yes | QMessageBox.No) != QMessageBox.Yes:
             return
         profiles = json.loads(
-            QSettings().value('irmt/%s_profiles' % platform_or_engine))
-        if platform_or_engine == 'platform':
+            QSettings().value('irmt/%s_profiles' % server))
+        if server == 'platform':
             cur_profile = self.platform_profile_cbx.currentText()
+        elif server == 'geoviewer':
+            cur_profile = self.geoviewer_profile_cbx.currentText()
         else:  # engine
             cur_profile = self.engine_profile_cbx.currentText()
         del profiles[cur_profile]
-        QSettings().remove('irmt/current_%s_profile' % platform_or_engine)
-        self.save_profiles(platform_or_engine, profiles)
-        self.refresh_profile_cbxs(platform_or_engine)
+        QSettings().remove('irmt/current_%s_profile' % server)
+        self.save_profiles(server, profiles)
+        self.refresh_profile_cbxs(server)
 
-    def save_profiles(self, platform_or_engine, profiles):
-        assert platform_or_engine in ('platform', 'engine'), platform_or_engine
-        QSettings().setValue('irmt/%s_profiles' % platform_or_engine,
+    def save_profiles(self, server, profiles):
+        assert server in ('platform', 'geoviewer', 'engine'), server
+        QSettings().setValue('irmt/%s_profiles' % server,
                              json.dumps(profiles))
 
     def select_color(self, button):

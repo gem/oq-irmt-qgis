@@ -69,6 +69,7 @@ from svir.utilities.shared import (
                                    DEBUG,
                                    DEFAULT_SETTINGS,
                                    DEFAULT_PLATFORM_PROFILES,
+                                   DEFAULT_GEOVIEWER_PROFILES,
                                    DEFAULT_ENGINE_PROFILES,
                                    )
 
@@ -525,6 +526,33 @@ def platform_login(host, username, password, session):
     """
     login_url = host + '/account/ajax_login'
     _login(login_url, username, password, session)
+
+
+def geoviewer_login(host, username, password, session):
+    """
+    Logs in a session to a geoviewer
+
+    :param host: The host url
+    :type host: str
+    :param username: The username
+    :type username: str
+    :param password: The password
+    :type password: str
+    :param session: The session to be autenticated
+    :type session: Session
+    """
+    session.auth = (username, password)
+    login_url = host + '/api/authenticate/'
+    try:
+        session_resp = session.post(login_url,
+                                    timeout=10)
+    except Exception:
+        msg = "Unable to login. %s" % traceback.format_exc()
+        raise SvNetworkError(msg)
+    if session_resp.status_code != 200:  # 200 means successful:OK
+        error_message = ('Unable to login: %s' %
+                         session_resp.text)
+        raise SvNetworkError(error_message)
 
 
 def engine_login(host, username, password, session):
@@ -1144,21 +1172,25 @@ def warn_missing_packages(package_names, message_bar=None):
 
 def get_credentials(server):
     """
-    Get from the QSettings the credentials to access the OpenQuake Engine
-    or the OpenQuake Platform.
+    Get from the QSettings the credentials to access the OpenQuake Engine,
+    the OpenQuake Platform or the OpenQuake GeoViewer.
     If those settings are not found, use defaults instead.
 
-    :param server: it can be either 'platform' or 'engine'
+    :param server: it can be either 'platform', 'geoviewer' or 'engine'
 
     :returns: tuple (hostname, username, password)
 
     """
     qs = QSettings()
+    if server == 'platform':
+        default_profiles = DEFAULT_PLATFORM_PROFILES
+    elif server == 'geoviewer':
+        default_profiles = DEFAULT_GEOVIEWER_PROFILES
+    elif server == 'engine':
+        default_profiles = DEFAULT_ENGINE_PROFILES
     default_profiles = json.loads(
         qs.value(
-            'irmt/%s_profiles',
-            (DEFAULT_PLATFORM_PROFILES if server == 'platform'
-                else DEFAULT_ENGINE_PROFILES)))
+            'irmt/%s_profiles', default_profiles))
     default_profile = default_profiles[list(default_profiles.keys())[0]]
     hostname = qs.value('irmt/%s_hostname' % server,
                         default_profile['hostname'])
