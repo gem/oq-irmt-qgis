@@ -3,11 +3,12 @@
 #
 # Author: A. Pasotti, V. Picavet
 
-import xmlrpclib
 import sys
 import getpass
 import os
 from optparse import OptionParser
+from xmlrpc import client
+from django.core.files.uploadedfile import SimpleUploadedFile
 
 # Configuration
 PROTOCOL = 'http'
@@ -22,19 +23,23 @@ def main(options, args):
         PROTOCOL, options.username, options.password,
         options.server, options.port, ENDPOINT)
     print("Connecting to: %s" % hidepassword(address))
-    server = xmlrpclib.ServerProxy(address, verbose=VERBOSE)
+    server = client.ServerProxy(address, verbose=VERBOSE)
     try:
+        with open(args[0], "rb") as file:
+            uploaded_file = SimpleUploadedFile(
+                args[0], file.read(),
+                content_type="application/zip")
         plugin_id, version_id = server.plugin.upload(
-            xmlrpclib.Binary(open(args[0]).read()))
+            client.Binary(open(args[0], 'rb').read()))
         print("Plugin ID: %s" % plugin_id)
         print("Version ID: %s" % version_id)
-    except xmlrpclib.ProtocolError as err:
+    except client.ProtocolError as err:
         print("A protocol error occurred")
         print("URL: %s" % hidepassword(err.url, 0))
         print("HTTP/HTTPS headers: %s" % err.headers)
         print("Error code: %d" % err.errcode)
         print("Error message: %s" % err.errmsg)
-    except xmlrpclib.Fault as err:
+    except client.Fault as err:
         print("A fault occurred")
         print("Fault code: %d" % err.faultCode)
         print("Fault string: %s" % err.faultString)
@@ -72,7 +77,7 @@ if __name__ == "__main__":
             # interactive mode
             username = getpass.getuser()
             print("Please enter user name [%s] :" % username,)
-            res = raw_input()
+            res = input()
             if res != "":
                 options.username = res
             else:
