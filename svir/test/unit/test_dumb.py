@@ -24,9 +24,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
-import unittest
-
-from qgis.testing import start_app
+from qgis.testing import unittest, start_app
 from qgis.testing.mocked import get_iface
 
 QGIS_APP = start_app()

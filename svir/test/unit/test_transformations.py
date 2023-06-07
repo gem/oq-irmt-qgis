@@ -22,13 +22,15 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
-import unittest
 import numpy as np
 
 from svir.calculations.transformation_algs import (
     transform,
     TRANSFORMATION_ALGS)
 from qgis.core import NULL
+from qgis.testing import unittest, start_app
+
+start_app()
 
 
 class MissingValuesTestCase(unittest.TestCase):

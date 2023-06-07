@@ -22,9 +22,11 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
-import unittest
 from qgis.PyQt.QtWidgets import QWidget
+from qgis.testing import unittest, start_app
 from svir.ui.multi_select_combo_box import MultiSelectComboBox
+
+start_app()
 
 
 class MultiSelectComboBoxMultiTestCase(unittest.TestCase):

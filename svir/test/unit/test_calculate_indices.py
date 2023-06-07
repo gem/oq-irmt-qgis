@@ -22,7 +22,6 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
-import unittest
 import os
 import sys
 import tempfile
@@ -39,7 +38,7 @@ from svir.utilities.utils import (set_operator,
                                   save_layer_as,
                                   )
 from svir.utilities.shared import OPERATORS_DICT, DiscardedFeature
-from qgis.testing import start_app
+from qgis.testing import unittest, start_app
 from qgis.testing.mocked import get_iface
 
 QGIS_APP = start_app()

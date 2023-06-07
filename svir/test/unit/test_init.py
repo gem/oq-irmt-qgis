@@ -1,7 +1,7 @@
 import os
-import unittest
 import logging
 import configparser
+from qgis.testing import unittest, start_app
 
 # coding=utf-8
 """Tests for map creation in QGIS plugin."""
@@ -14,6 +14,8 @@ __copyright__ = 'Copyright 2012, Australia Indonesia Facility for '
 __copyright__ += 'Disaster Reduction'
 
 LOGGER = logging.getLogger('OpenQuake')
+
+start_app()
 
 
 class TestInit(unittest.TestCase):

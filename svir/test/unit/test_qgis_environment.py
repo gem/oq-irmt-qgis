@@ -17,13 +17,8 @@ __date__ = '20/01/2011'
 __copyright__ = ('Copyright 2012, Australia Indonesia Facility for '
                  'Disaster Reduction')
 
-import unittest
-
 from qgis.core import QgsProviderRegistry
-
-
-
-from qgis.testing import start_app
+from qgis.testing import unittest, start_app
 from qgis.testing.mocked import get_iface
 
 QGIS_APP = start_app()

@@ -24,7 +24,6 @@
 
 # import qgis libs so that we set the correct sip api version
 import os.path
-import unittest
 from qgis.core import QgsVectorLayer, QgsField
 
 from qgis.PyQt.QtCore import QVariant
@@ -33,8 +32,7 @@ from svir.calculations.process_layer import ProcessLayer
 from svir.utilities.shared import (INT_FIELD_TYPE_NAME,
                                    STRING_FIELD_TYPE_NAME)
 
-
-from qgis.testing import start_app
+from qgis.testing import unittest, start_app
 from qgis.testing.mocked import get_iface
 
 QGIS_APP = start_app()

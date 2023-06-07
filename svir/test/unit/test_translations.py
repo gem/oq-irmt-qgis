@@ -16,12 +16,10 @@ __author__ = 'ismailsunni@yahoo.co.id'
 __date__ = '12/10/2011'
 __copyright__ = ('Copyright 2012, Australia Indonesia Facility for '
                  'Disaster Reduction')
-import unittest
 import os
 
 from qgis.PyQt.QtCore import QCoreApplication, QTranslator
-
-from qgis.testing import start_app
+from qgis.testing import unittest, start_app
 from qgis.testing.mocked import get_iface
 
 QGIS_APP = start_app()
