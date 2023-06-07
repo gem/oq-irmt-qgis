@@ -33,10 +33,12 @@ class MultiSelectComboBoxMultiTestCase(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         cls.wdg = QWidget()
         cls.mscb = MultiSelectComboBox(cls.wdg)
 
     def setUp(self):
+        super().setUp()
         self.mscb.clear()
 
     def test_addItem(self):
@@ -159,10 +161,12 @@ class MultiSelectComboBoxMonoTestCase(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         cls.wdg = QWidget()
         cls.mscb = MultiSelectComboBox(cls.wdg, mono=True)
 
     def setUp(self):
+        super().setUp()
         self.mscb.clear()
 
     def test_addItem(self):

@@ -42,11 +42,11 @@ class IrmtTest(unittest.TestCase):
 
     def setUp(self):
         """Runs before each test."""
-        pass
+        super().setUp()
 
     def tearDown(self):
         """Runs after each test."""
-        pass
+        super().tearDown()
 
     def test_icon_png(self):
         """Test we can click OK."""

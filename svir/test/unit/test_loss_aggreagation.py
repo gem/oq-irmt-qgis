@@ -41,6 +41,7 @@ IFACE = get_iface()
 class AggregateLossByZoneTestCase(unittest.TestCase):
 
     def setUp(self):
+        super().setUp()
         # Load dummy layers
         curr_dir_name = os.path.dirname(__file__)
         self.data_dir_name = os.path.join(

@@ -134,6 +134,7 @@ class CalculateCompositeVariableTestCase(unittest.TestCase):
     REBUILD_OUTPUTS = False
 
     def setUp(self):
+        super().setUp()
 
         self.project_definition = PROJ_DEF_STD_OPERATORS
 

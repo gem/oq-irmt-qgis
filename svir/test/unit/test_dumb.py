@@ -36,11 +36,11 @@ class DumbTest(unittest.TestCase):
 
     def setUp(self):
         """Runs before each test."""
-        pass
+        super().setUp()
 
     def tearDown(self):
         """Runs after each test."""
-        pass
+        super().tearDown()
 
     def test_dumb(self):
         pass
