@@ -24,7 +24,6 @@
 
 # import qgis libs so that we set the correct sip api version
 import os.path
-import unittest
 import tempfile
 import shutil
 import time
@@ -32,7 +31,7 @@ from qgis.core import QgsVectorLayer
 from svir.calculations.process_layer import ProcessLayer
 from svir.calculations.aggregate_loss_by_zone import calculate_zonal_stats
 
-from qgis.testing import start_app
+from qgis.testing import unittest, start_app
 from qgis.testing.mocked import get_iface
 
 QGIS_APP = start_app()
@@ -42,6 +41,7 @@ IFACE = get_iface()
 class AggregateLossByZoneTestCase(unittest.TestCase):
 
     def setUp(self):
+        super().setUp()
         # Load dummy layers
         curr_dir_name = os.path.dirname(__file__)
         self.data_dir_name = os.path.join(

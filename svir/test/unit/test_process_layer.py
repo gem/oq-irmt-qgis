@@ -24,7 +24,6 @@
 
 # import qgis libs so that we set the correct sip api version
 import os.path
-import unittest
 from qgis.core import QgsVectorLayer, QgsField
 
 from qgis.PyQt.QtCore import QVariant
@@ -33,8 +32,7 @@ from svir.calculations.process_layer import ProcessLayer
 from svir.utilities.shared import (INT_FIELD_TYPE_NAME,
                                    STRING_FIELD_TYPE_NAME)
 
-
-from qgis.testing import start_app
+from qgis.testing import unittest, start_app
 from qgis.testing.mocked import get_iface
 
 QGIS_APP = start_app()
@@ -43,6 +41,7 @@ IFACE = get_iface()
 
 class CheckProjectionsTestCase(unittest.TestCase):
     def setUp(self):
+        super().setUp()
         curr_dir_name = os.path.dirname(__file__)
         data_dir_name = os.path.join(
             curr_dir_name, os.pardir,
@@ -78,6 +77,7 @@ class CheckProjectionsTestCase(unittest.TestCase):
 class CompareLayerContentTestCase(unittest.TestCase):
 
     def setUp(self):
+        super().setUp()
         # a and b are equal
         # c is longer than a and b but they have the same partial content
         # d is different with respect to all the others
@@ -113,6 +113,7 @@ class CompareLayerContentTestCase(unittest.TestCase):
 class AddAttributesTestCase(unittest.TestCase):
 
     def setUp(self):
+        super().setUp()
         uri = 'Point?crs=epsg:4326'
         self.layer = QgsVectorLayer(uri, 'TestLayer', 'memory')
 

@@ -24,11 +24,9 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
-import unittest
-
 from qgis.PyQt.QtGui import QIcon
 
-from qgis.testing import start_app
+from qgis.testing import unittest, start_app
 from qgis.testing.mocked import get_iface
 
 QGIS_APP = start_app()
@@ -44,11 +42,11 @@ class IrmtTest(unittest.TestCase):
 
     def setUp(self):
         """Runs before each test."""
-        pass
+        super().setUp()
 
     def tearDown(self):
         """Runs after each test."""
-        pass
+        super().tearDown()
 
     def test_icon_png(self):
         """Test we can click OK."""
