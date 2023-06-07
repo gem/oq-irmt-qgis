@@ -22,13 +22,15 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
-import unittest
 import numpy as np
 
 from svir.calculations.transformation_algs import (
     transform,
     TRANSFORMATION_ALGS)
 from qgis.core import NULL
+from qgis.testing import unittest, start_app
+
+start_app()
 
 
 class MissingValuesTestCase(unittest.TestCase):
@@ -64,6 +66,7 @@ class MissingValuesTestCase(unittest.TestCase):
 class RankTestCase(unittest.TestCase):
 
     def setUp(self):
+        super().setUp()
         self.alg = TRANSFORMATION_ALGS["RANK"]
         self.input_list = [2, 0, 2, 1, 2, 3, 2]
 
@@ -121,6 +124,7 @@ class RankTestCase(unittest.TestCase):
 class MinMaxTestCase(unittest.TestCase):
 
     def setUp(self):
+        super().setUp()
         self.alg = TRANSFORMATION_ALGS["MIN_MAX"]
         self.input_list = [2, 0, 2, 1, 2, 3, 2]
 
@@ -148,6 +152,7 @@ class MinMaxTestCase(unittest.TestCase):
 class ZScoreTestCase(unittest.TestCase):
 
     def setUp(self):
+        super().setUp()
         self.alg = TRANSFORMATION_ALGS["Z_SCORE"]
         self.input_list = [2, 0, 2, 1, 2, 3, 2]
 
@@ -179,6 +184,7 @@ class ZScoreTestCase(unittest.TestCase):
 class Log10TestCase(unittest.TestCase):
 
     def setUp(self):
+        super().setUp()
         self.alg = TRANSFORMATION_ALGS["LOG10"]
 
     def test_log10_all_positive_values(self):
@@ -270,6 +276,7 @@ class Log10TestCase(unittest.TestCase):
 class QuadraticTestCase(unittest.TestCase):
 
     def setUp(self):
+        super().setUp()
         self.alg = TRANSFORMATION_ALGS["QUADRATIC"]
         self.input_list = [80089,
                            83696,
@@ -329,6 +336,7 @@ class QuadraticTestCase(unittest.TestCase):
 class SigmoidTestCase(unittest.TestCase):
 
     def setUp(self):
+        super().setUp()
         self.alg = TRANSFORMATION_ALGS["SIGMOID"]
 
     def test_sigmoid_direct(self):

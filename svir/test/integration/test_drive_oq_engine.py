@@ -108,6 +108,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         # NOTE: recovery modeling is an exprimental feature
         cls.initial_experimental_enabled = QSettings().value(
             '/irmt/experimental_enabled',
@@ -152,6 +153,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
+        super().tearDownClass()
         QSettings().setValue(
             'irmt/experimental_enabled', cls.initial_experimental_enabled)
         # print("\n\nGLOBAL SUMMARY OF TESTING OQ-ENGINE OUTPUT LOADERS")
