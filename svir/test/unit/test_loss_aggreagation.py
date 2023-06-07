@@ -46,7 +46,7 @@ class AggregateLossByZoneTestCase(unittest.TestCase):
         curr_dir_name = os.path.dirname(__file__)
         self.data_dir_name = os.path.join(
             curr_dir_name, os.pardir, 'data', 'aggregation', 'dummy')
-        self.loss_attr_names = ['FATALITIES', 'STRUCTURAL']
+        self.loss_attr_names = ['PEOPLE', 'STRUCTURAL']
         self.loss_layer_is_vector = True
 
     def test_sum_point_values_by_zone(self):
