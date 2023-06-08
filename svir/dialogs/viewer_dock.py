@@ -1054,6 +1054,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                     duration=5)
             self.clear_plot()
             return
+        loss_type = self.loss_type_cbx.currentText()
         loss_type_idx = self.loss_type_cbx.currentIndex()
         unit = self.agg_curves['units'][loss_type_idx]
         self.plot.clear()
@@ -1113,20 +1114,20 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.plot.set_yscale('linear')
         self.plot.set_xlabel('Return period (years)')
         if self.abs_rel_cbx.currentText() == 'Absolute':
-            if unit == 'people':
+            if loss_type == 'people':
                 ylabel = 'Loss (people)'
-            elif unit == 'area':
+            elif loss_type == 'area':
                 ylabel = 'Area loss (%s)' % unit
-            elif unit == 'number':
+            elif loss_type == 'number':
                 ylabel = 'Number loss (%s)' % unit
             else:
                 ylabel = 'Economic loss (%s)' % unit
         else:
-            if unit == 'people':
+            if loss_type == 'people':
                 ylabel = 'People loss ratio'
-            elif unit == 'area':
+            elif loss_type == 'area':
                 ylabel = 'Area loss ratio'
-            elif unit == 'number':
+            elif loss_type == 'number':
                 ylabel = 'Number loss ratio'
             else:
                 ylabel = 'Economic loss ratio'
