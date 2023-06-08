@@ -1113,13 +1113,21 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.plot.set_yscale('linear')
         self.plot.set_xlabel('Return period (years)')
         if self.abs_rel_cbx.currentText() == 'Absolute':
-            if unit in ('people', 'fatalities'):
-                ylabel = 'Loss (fatalities)'
+            if unit == 'people':
+                ylabel = 'Loss (people)'
+            elif unit == 'area':
+                ylabel = 'Area loss (%s)' % unit
+            elif unit == 'number':
+                ylabel = 'Number loss (%s)' % unit
             else:
                 ylabel = 'Economic loss (%s)' % unit
         else:
-            if unit in ('people', 'fatalities'):
-                ylabel = 'Fatalities loss ratio'
+            if unit == 'people':
+                ylabel = 'People loss ratio'
+            elif unit == 'area':
+                ylabel = 'Area loss ratio'
+            elif unit == 'number':
+                ylabel = 'Number loss ratio'
             else:
                 ylabel = 'Economic loss ratio'
         self.plot.set_ylabel(ylabel)
