@@ -794,12 +794,12 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self._get_tags(session, hostname, calc_id, self.iface.messageBar(),
                        with_star=False)
 
-        self.rlzs = self.get_rlzs(calc_id, session, hostname, oqparam)
-        if self.rlzs is None:
+        rlzs = self.get_rlzs(calc_id, session, hostname, oqparam)
+        if rlzs is None:
             return
         self.rlz_cbx.blockSignals(True)
         self.rlz_cbx.clear()
-        self.rlz_cbx.addItems(self.rlzs)
+        self.rlz_cbx.addItems(rlzs)
         self.rlz_cbx.blockSignals(False)
 
         loss_types = composite_risk_model_attrs['loss_types']
