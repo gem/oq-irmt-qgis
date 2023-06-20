@@ -761,20 +761,26 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.engine_version = engine_version
         self.setVisible(True)
         self.raise_()
+        with WaitCursorManager(
+                'Extracting...', message_bar=self.iface.messageBar()):
+            oqparam = extract_npz(
+                session, hostname, calc_id, 'oqparam',
+                message_bar=self.iface.messageBar())
         if output_type in ('aggcurves', 'aggcurves-stats'):
-            self.load_agg_curves(calc_id, session, hostname, output_type)
+            self.load_agg_curves(
+                calc_id, session, hostname, output_type, oqparam)
         elif output_type == 'damages-rlzs_aggr':
             self.load_damages_rlzs_aggr(
-                calc_id, session, hostname, output_type)
+                calc_id, session, hostname, output_type, oqparam)
         elif output_type in ('avg_losses-rlzs_aggr',
                              'avg_losses-stats_aggr'):
             self.load_avg_losses_rlzs_aggr(
-                calc_id, session, hostname, output_type)
+                calc_id, session, hostname, output_type, oqparam)
         else:
             raise NotImplementedError(output_type)
 
     def load_damages_rlzs_aggr(
-            self, calc_id, session, hostname, output_type):
+            self, calc_id, session, hostname, output_type, oqparam):
         with WaitCursorManager(
                 'Extracting...', message_bar=self.iface.messageBar()):
             composite_risk_model_attrs = extract_npz(
@@ -788,15 +794,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self._get_tags(session, hostname, calc_id, self.iface.messageBar(),
                        with_star=False)
 
-        with WaitCursorManager(
-                'Extracting...', message_bar=self.iface.messageBar()):
-            rlzs_npz = extract_npz(
-                session, hostname, calc_id, 'realizations',
-                message_bar=self.iface.messageBar())
-        if rlzs_npz is None:
+        rlzs = self.get_rlzs(calc_id, session, hostname, oqparam)
+        if rlzs is None:
             return
-        # rlz[1] is the branch-path field
-        rlzs = [rlz[1].decode('utf8').strip('"') for rlz in rlzs_npz['array']]
         self.rlz_cbx.blockSignals(True)
         self.rlz_cbx.clear()
         self.rlz_cbx.addItems(rlzs)
@@ -872,18 +872,26 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             if with_star:
                 self.tags[tag_name]['values']['*'] = False
 
-    def load_avg_losses_rlzs_aggr(
-            self, calc_id, session, hostname, output_type):
-        if self.output_type == 'avg_losses-rlzs_aggr':
-            with WaitCursorManager(
-                    'Extracting...', message_bar=self.iface.messageBar()):
-                rlzs_npz = extract_npz(
-                    session, hostname, calc_id, 'realizations',
-                    message_bar=self.iface.messageBar())
+    def get_rlzs(self, calc_id, session, hostname, oqparam):
+        with WaitCursorManager(
+                'Extracting...', message_bar=self.iface.messageBar()):
+            rlzs_npz = extract_npz(
+                session, hostname, calc_id, 'realizations',
+                message_bar=self.iface.messageBar())
             if rlzs_npz is None:
+                return None
+            rlzs = [rlz[1].decode('utf-8')  # branch_path
+                    for rlz in rlzs_npz['array']]
+            if oqparam['collect_rlzs']:
+                rlzs = [rlzs[0]]
+            return rlzs
+
+    def load_avg_losses_rlzs_aggr(
+            self, calc_id, session, hostname, output_type, oqparam):
+        if self.output_type == 'avg_losses-rlzs_aggr':
+            self.rlzs = self.get_rlzs(calc_id, session, hostname, oqparam)
+            if self.rlzs is None:
                 return
-            self.rlzs = [rlz[1].decode('utf-8')  # branch_path
-                         for rlz in rlzs_npz['array']]
         self._get_tags(session, hostname, calc_id, self.iface.messageBar(),
                        with_star=True)
 
@@ -914,7 +922,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
 
         self.filter_avg_losses_rlzs_aggr()
 
-    def load_agg_curves(self, calc_id, session, hostname, output_type):
+    def load_agg_curves(
+            self, calc_id, session, hostname, output_type, oqparam):
         params = {}
         if self.output_type == 'aggcurves':
             params['kind'] = 'rlzs'
@@ -935,13 +944,6 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 session, hostname, calc_id, 'exposure_metadata',
                 message_bar=self.iface.messageBar())
         if self.exposure_metadata is None:
-            return
-        with WaitCursorManager(
-                'Extracting...', message_bar=self.iface.messageBar()):
-            oqparam = extract_npz(
-                session, hostname, calc_id, 'oqparam',
-                message_bar=self.iface.messageBar())
-        if oqparam is None:
             return
         self.aggregate_by = None
         if 'aggregate_by' in oqparam and len(oqparam['aggregate_by']):
@@ -971,6 +973,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 message_bar=self.iface.messageBar(), params=params)
         if output_type == 'aggcurves':
             self.rlzs = self.agg_curves['kind']
+            if oqparam['collect_rlzs']:
+                self.rlzs = [self.rlzs[0]]
             self.rlzs_multiselect.blockSignals(True)
             self.rlzs_multiselect.clear()
             self.rlzs_multiselect.add_selected_items(self.rlzs)
