@@ -1118,7 +1118,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.plot.set_yscale('linear')
         self.plot.set_xlabel('Return period (years)')
         if self.abs_rel_cbx.currentText() == 'Absolute':
-            if loss_type == 'people':
+            if loss_type in ['occupants', 'residents']:
                 ylabel = 'Loss (people)'
             elif loss_type == 'area':
                 ylabel = 'Area loss (%s)' % unit
@@ -1127,7 +1127,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             else:
                 ylabel = 'Economic loss (%s)' % unit
         else:
-            if loss_type == 'people':
+            if loss_type in ['occupants', 'residents']:
                 ylabel = 'People loss ratio'
             elif loss_type == 'area':
                 ylabel = 'Area loss ratio'
