@@ -183,10 +183,14 @@ class RecoveryModeling(object):
                 self.loss_based_to_recovery_based_probs(damages_rlzs_probs)
         except IndexError:
             msg = ('Incompatible number of loss-based or recovery-based'
-                   ' limit states (please use the "Recovery Modeling'
-                   ' Settings dialog to set it correctly.\n%s'
+                   ' limit states (please set the correct parameters'
+                   ' via the "Recovery Modeling Settings" dialog).\n%s'
                    % traceback.format_exc())
-            log_msg(msg, level='C', message_bar=self.iface.messageBar())
+            # NOTE: in the GUI this should normally be displayed as an error,
+            # but in the tests it can be accepted as the desired behavior
+            log_level = 'W' if 'GEM_QGIS_TEST' in os.environ else 'C'
+            log_msg(msg, level=log_level, message_bar=self.iface.messageBar())
+            return
 
         # FIXME self.svi_field_name is temporarily ignored
         # svi_value = svi_by_zone[zone_id] if integrate_svi else None

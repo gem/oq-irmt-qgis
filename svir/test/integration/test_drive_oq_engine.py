@@ -625,7 +625,6 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                         aggregate_by_site=aggregate_by_site)
                 # for damages-rlzs also test recovery modeling
                 if selected_output_type == 'damages-rlzs':
-                    # FIXME
                     for approach in ['Disaggregate', 'Aggregate']:
                         self.load_calc_output(
                             calc, selected_output_type,
