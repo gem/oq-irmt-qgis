@@ -1607,6 +1607,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             recovery.generate_community_level_recovery_curve(
                 'ALL', zonal_damages_rlzs_probs, zonal_asset_refs,
                 n_simulations=n_simulations)
+        if not recovery_function:
+            return
         self.current_abscissa = list(range(len(recovery_function)))
         color = QColor('black')
         color_hex = color.name()

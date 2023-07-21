@@ -25,6 +25,7 @@
 import os
 import json
 import bisect
+import traceback
 from collections import defaultdict
 from qgis.PyQt.QtCore import QSettings
 from qgis.core import QgsFeatureRequest
@@ -35,6 +36,7 @@ from svir.utilities.utils import (
                                   get_layer_setting,
                                   WaitCursorManager,
                                   warn_missing_packages,
+                                  log_msg,
                                   )
 from svir.utilities.shared import NUMERIC_FIELD_TYPES, RECOVERY_DEFAULTS
 
@@ -165,12 +167,26 @@ class RecoveryModeling(object):
         # TODO: use svi_by_zone[zone_id] to adjust recovery times (how?)
 
         damages_rlzs_probs = zonal_damages_rlzs_probs[zone_id]
+
+        # FIXME: check compatibility between len(damages_rlzs_probs[0]) and
+        #        n_recovery_based_dmg_states, and in case log an error message
+        # n_recovery_based_dmg_states = QSettings().value(
+        #     '/irmt/n_recovery_based_dmg_states', 0, type=int)
+
         asset_refs = zonal_asset_refs[zone_id]
 
-        (LossBasedDamageStateProbabilities,
-            RecoveryBasedDamageStateProbabilities,
-            fractionCollapsedAndIrreparableBuildings) = \
-            self.loss_based_to_recovery_based_probs(damages_rlzs_probs)
+        # FIXME: the try/except should not be needed if the check above is done
+        try:
+            (LossBasedDamageStateProbabilities,
+                RecoveryBasedDamageStateProbabilities,
+                fractionCollapsedAndIrreparableBuildings) = \
+                self.loss_based_to_recovery_based_probs(damages_rlzs_probs)
+        except IndexError:
+            msg = ('Incompatible number of loss-based or recovery-based'
+                   ' limit states (please use the "Recovery Modeling'
+                   ' Settings dialog to set it correctly.\n%s'
+                   % traceback.format_exc())
+            log_msg(msg, level='C', message_bar=self.iface.messageBar())
 
         # FIXME self.svi_field_name is temporarily ignored
         # svi_value = svi_by_zone[zone_id] if integrate_svi else None

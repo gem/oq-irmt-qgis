@@ -237,6 +237,14 @@ OQ_CSV_TO_LAYER_TYPES = set([
     'realizations',
     'mean_rates_by_src',
     'mean_disagg_by_src',
+    'infra-avg_loss',
+    'infra-node_el',
+    'infra-taz_cl',
+    'infra-dem_cl',
+    'infra-event_ccl',
+    'infra-event_pcl',
+    'infra-event_wcl',
+    'infra-event_efl',
 ])
 OQ_EXTRACT_TO_LAYER_TYPES = set([
     'asset_risk',
