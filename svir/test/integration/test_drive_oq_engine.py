@@ -669,7 +669,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             self.irmt.viewer_dock.approach_cbx.findText(approach))
         self.irmt.viewer_dock.n_simulations_sbx.setValue(n_simulations)
         self._change_selection()
-        self._test_export()
+        self._test_export(empty_is_ok=True)
         dlg.loading_completed.emit(dlg)
 
     def load_uhs(self):
@@ -685,9 +685,14 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         self._change_selection()
         self._test_export()
 
-    def _test_export(self):
+    def _test_export(self, empty_is_ok=False):
+        # NOTE: param empty_is_ok is to handle a corner case in which recovery
+        # curves can not be computed due to an incompatible setting of
+        # recover-based damage states. In this case, the plugin correctly
+        # gives instructions to the user and the plot area remains empty.
         _, exported_file_path = tempfile.mkstemp(suffix=".csv")
-        self.irmt.viewer_dock.write_export_file(exported_file_path)
+        self.irmt.viewer_dock.write_export_file(exported_file_path,
+                                                empty_is_ok)
         # NOTE: we are only checking that the exported CSV has at least 2 rows
         # and 3 columns per row. We are avoiding more precise checks, because
         # CSV tests are very fragile. On different platforms the numbers could

@@ -1889,7 +1889,12 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         if filename:
             self.write_export_file(filename)
 
-    def write_export_file(self, filename):
+    def write_export_file(self, filename, empty_is_ok=False):
+        # NOTE: param empty_is_ok is to handle a corner case in which recovery
+        # curves can not be computed due to an incompatible setting of
+        # recover-based damage states. In this case, the plugin correctly
+        # gives instructions to the user and the plot area remains empty.
+
         # The header should be like:
         # Generated DATETIME by OpenQuake Engine vX.Y.Z
         # and OpenQuake Integrated Risk Modelling Toolkit vX.Y.Z
@@ -1923,7 +1928,16 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 feature = self.iface.activeLayer().selectedFeatures()[0]
                 lon = feature.geometry().asPoint().x()
                 lat = feature.geometry().asPoint().y()
-                values = list(self.current_selection[None].values())[0]
+                try:
+                    values = list(self.current_selection[None].values())[0]
+                except IndexError:
+                    if empty_is_ok:
+                        msg = 'Empty data exported to %s' % filename
+                        log_msg(msg, level='W',
+                                message_bar=self.iface.messageBar())
+                        return
+                    else:
+                        raise
                 row = [lon, lat]
                 if values:
                     row.extend(values['ordinates'])

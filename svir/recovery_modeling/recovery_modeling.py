@@ -170,19 +170,17 @@ class RecoveryModeling(object):
         if self.n_recovery_based_dmg_states != len(damages_rlzs_probs[0]):
             # NOTE: in the GUI this should normally be displayed as an error,
             # but in the tests it can be accepted as the desired behavior
-            log_msg(f"GEM_QGIS_TEST: {'GEM_QGIS_TEST' in os.environ}",
-                    level='I', message_bar=self.iface.messageBar())
             log_level = 'W' if 'GEM_QGIS_TEST' in os.environ else 'C'
-            log_msg(f'log_level: {log_level}', level='I',
-                    message_bar=self.iface.messageBar())
-            msg = (f'Incompatible number of recovery-based damage states'
-                   f' (please set the correct parameters'
-                   f' via the "Recovery Modeling Settings" dialog).\n'
-                   f'Transfer probabilities:\n{self.transferProbabilities}\n'
-                   f'Damages_rlzs_probs:\n{damages_rlzs_probs}\n'
-                   f'Expected number of recovery-based damage states:'
-                   f' {self.n_recovery_based_dmg_states}\n'
-                   f'Got: {len(damages_rlzs_probs[0])}')
+            msg = 'Incompatible number of recovery-based damage states'
+            if log_level == 'C':
+                msg += (f' (please set the correct parameters'
+                        f' via the "Recovery Modeling Settings" dialog).\n'
+                        f'Transfer probabilities:\n'
+                        f'{self.transferProbabilities}\n'
+                        f'Damages_rlzs_probs:\n{damages_rlzs_probs}\n'
+                        f'Expected number of recovery-based damage states:'
+                        f' {self.n_recovery_based_dmg_states}\n'
+                        f'Got: {len(damages_rlzs_probs[0])}')
             log_msg(msg, level=log_level, message_bar=self.iface.messageBar())
             return
 
