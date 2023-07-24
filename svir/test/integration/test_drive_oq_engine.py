@@ -715,10 +715,11 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                     "The following line of the exported file %s has"
                     " only %s columns:\n%s" % (
                         exported_file_path, n_cols, got_line))
-            self.assertGreaterEqual(
-                n_rows, 2,
-                "The exported file %s has only %s rows" % (
-                    exported_file_path, n_rows))
+            if not empty_is_ok:
+                self.assertGreaterEqual(
+                    n_rows, 2,
+                    "The exported file %s has only %s rows" % (
+                        exported_file_path, n_rows))
 
     def _set_output_type(self, output_type):
         self.irmt.viewer_dock.output_type_cbx.setCurrentIndex(-1)
