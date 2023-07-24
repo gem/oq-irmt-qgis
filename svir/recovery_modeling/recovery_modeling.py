@@ -25,7 +25,6 @@
 import os
 import json
 import bisect
-import traceback
 from collections import defaultdict
 from qgis.PyQt.QtCore import QSettings
 from qgis.core import QgsFeatureRequest
@@ -168,29 +167,27 @@ class RecoveryModeling(object):
 
         damages_rlzs_probs = zonal_damages_rlzs_probs[zone_id]
 
-        # FIXME: check compatibility between len(damages_rlzs_probs[0]) and
-        #        n_recovery_based_dmg_states, and in case log an error message
-        # n_recovery_based_dmg_states = QSettings().value(
-        #     '/irmt/n_recovery_based_dmg_states', 0, type=int)
-
-        asset_refs = zonal_asset_refs[zone_id]
-
-        # FIXME: the try/except should not be needed if the check above is done
-        try:
-            (LossBasedDamageStateProbabilities,
-                RecoveryBasedDamageStateProbabilities,
-                fractionCollapsedAndIrreparableBuildings) = \
-                self.loss_based_to_recovery_based_probs(damages_rlzs_probs)
-        except IndexError:
-            msg = ('Incompatible number of loss-based or recovery-based'
-                   ' limit states (please set the correct parameters'
-                   ' via the "Recovery Modeling Settings" dialog).\n%s'
-                   % traceback.format_exc())
+        if self.n_recovery_based_dmg_states != len(damages_rlzs_probs[0]):
             # NOTE: in the GUI this should normally be displayed as an error,
             # but in the tests it can be accepted as the desired behavior
             log_level = 'W' if 'GEM_QGIS_TEST' in os.environ else 'C'
+            msg = (f'Incompatible number of recovery-based damage states'
+                   f' (please set the correct parameters'
+                   f' via the "Recovery Modeling Settings" dialog).\n'
+                   f'Transfer probabilities:\n{self.transferProbabilities}\n'
+                   f'Damages_rlzs_probs:\n{damages_rlzs_probs}\n'
+                   f'Expected number of recovery-based damage states:'
+                   f' {self.n_recovery_based_dmg_states}\n'
+                   f'Got: {len(damages_rlzs_probs[0])}')
             log_msg(msg, level=log_level, message_bar=self.iface.messageBar())
             return
+
+        asset_refs = zonal_asset_refs[zone_id]
+
+        (LossBasedDamageStateProbabilities,
+            RecoveryBasedDamageStateProbabilities,
+            fractionCollapsedAndIrreparableBuildings) = \
+            self.loss_based_to_recovery_based_probs(damages_rlzs_probs)
 
         # FIXME self.svi_field_name is temporarily ignored
         # svi_value = svi_by_zone[zone_id] if integrate_svi else None
