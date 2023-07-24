@@ -71,6 +71,7 @@ class RecoveryModelingDialog(QDialog, FORM_CLASS):
         self.n_simulations_lbl.setToolTip(simulations_explanation)
         self.n_simulations_sbx.setToolTip(simulations_explanation)
         self.save_bldg_curves_check.setChecked(False)
+        self.svi_layer = None
         self.populate_layers_in_combos()
         self.restore_state()
         self.set_ok_button()
