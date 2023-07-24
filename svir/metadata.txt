@@ -24,6 +24,7 @@ email=staff.it@globalquakemodel.org
 # Uncomment the following line and add your changelog entries:
 changelog=
     3.17.7
+    * A clear error message is displayed if recovery modeling runs with an incompatible number of damage states with respect to what's specified in the recovery modeling settings
     * Measurement units for oq-engine loss data types 'residents' and 'occupants' were fixed
     3.17.6
     * oqparam['collect_rlzs'] is taken into account while retrieveing the list of realizations of an oq-engine calculation
