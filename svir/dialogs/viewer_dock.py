@@ -2021,10 +2021,13 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 else:
                     stats = list(self.stats_multiselect.get_selected_items())
                 loss_type = self.loss_type_cbx.currentText()
+                ep = self.ep_cbx.currentText()
+                ep_idx = self.ep_cbx.currentIndex()
                 abs_rel = self.abs_rel_cbx.currentText()
                 loss_type_idx = self.loss_type_cbx.currentIndex()
                 unit = self.agg_curves['units'][loss_type_idx]
                 csv_file.write("# Loss type: %s\r\n" % loss_type)
+                csv_file.write("# Exceedance Probability: %s\r\n" % ep)
                 csv_file.write("# Absolute or relative: %s\r\n" % abs_rel)
                 csv_file.write("# Measurement unit: %s\r\n" % unit)
                 if self.aggregate_by is not None and len(self.aggregate_by):
@@ -2057,7 +2060,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                         self.agg_curves['return_period']):
                     row = [return_period]
                     if has_single_tag_value or has_single_tag_value is None:
-                        tup = (return_period_idx, rlzs_or_stats_idxs)
+                        tup = (rlzs_or_stats_idxs, return_period_idx, ep_idx)
                     else:
                         # FIXME: using only the first stat
                         tup = (return_period_idx, rlzs_or_stats_idxs[0])
