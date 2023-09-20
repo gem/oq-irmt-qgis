@@ -268,6 +268,18 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.add_widget_to_type_dep_layout(
             self.imt_cbx, 'imt_cbx', self.typeDepHLayout1)
 
+    def create_ep_selector(self):
+        self.ep_lbl = QLabel('Exceedance Probability')
+        self.ep_lbl.setSizePolicy(
+            QSizePolicy.Minimum, QSizePolicy.Minimum)
+        self.ep_cbx = QComboBox()
+        self.ep_cbx.currentIndexChanged['QString'].connect(
+            self.on_ep_changed)
+        self.add_widget_to_type_dep_layout(
+            self.ep_lbl, "ep_lbl", self.typeDepVLayout)
+        self.add_widget_to_type_dep_layout(
+            self.ep_cbx, "ep_cbx", self.typeDepVLayout)
+
     def create_abs_rel_selector(self):
         self.abs_rel_lbl = QLabel('Absolute or relative')
         self.abs_rel_lbl.setSizePolicy(
@@ -708,6 +720,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         elif new_output_type == 'aggcurves':
             self.create_loss_type_selector()
             self.create_rlzs_multiselect()
+            self.create_ep_selector()
             self.create_abs_rel_selector()
             # NOTE: tag_names_multiselect is created dynamically afterwards
             self.rlzs_multiselect.selection_changed.connect(
@@ -716,6 +729,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         elif new_output_type == 'aggcurves-stats':
             self.create_loss_type_selector()
             self.create_stats_multiselect()
+            self.create_ep_selector()
             self.create_abs_rel_selector()
             # NOTE: tag_names_multiselect is created dynamically afterwards
             self.stats_multiselect.selection_changed.connect(
@@ -971,6 +985,10 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.agg_curves = extract_npz(
                 session, hostname, calc_id, 'agg_curves',
                 message_bar=self.iface.messageBar(), params=params)
+        self.ep_cbx.blockSignals(True)
+        self.ep_cbx.clear()
+        self.ep_cbx.addItems(self.agg_curves['ep_field'])
+        self.ep_cbx.blockSignals(False)
         if output_type == 'aggcurves':
             self.rlzs = self.agg_curves['kind']
             if oqparam['collect_rlzs']:
@@ -1060,6 +1078,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             return
         loss_type = self.loss_type_cbx.currentText()
         loss_type_idx = self.loss_type_cbx.currentIndex()
+        ep_idx = self.ep_cbx.currentIndex()
         unit = self.agg_curves['units'][loss_type_idx]
         self.plot.clear()
         # if not ordinates.any():  # too much filtering
@@ -1097,13 +1116,15 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 color = QColor(color_name)
                 color_hex[rlz_or_stat_idx] = color.darker(120).name()
                 line_style[rlz_or_stat_idx] = "-"  # solid
-        tup = (slice(None), rlzs_or_stats_idxs)
+        # chosen rlz or stat index, all return periods, all ep_fields
+        tup = (rlzs_or_stats_idxs, slice(None), ep_idx)
+        # add to the tuple the indices of chosen tag values
         if tag_value_idxs is not None:
             value_idxs = tag_value_idxs.values()
             tup += tuple(value_idxs)
         ordinates = self.agg_curves['array'][tup]
         for ys, rlz_or_stat in zip(
-                ordinates.T, rlzs_or_stats):
+                ordinates, rlzs_or_stats):
             rlz_or_stat_idx = rlzs_or_stats.index(rlz_or_stat)
             label = rlz_or_stat
             self.plot.plot(
@@ -1796,6 +1817,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.was_imt_switched = True
         self.redraw_current_selection()
 
+    def on_ep_changed(self):
+        self.filter_agg_curves()
+
     @pyqtSlot(str)
     def on_loss_type_changed(self, loss_type):
         if self.output_type in ('aggcurves', 'aggcurves-stats'):
@@ -1997,10 +2021,13 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 else:
                     stats = list(self.stats_multiselect.get_selected_items())
                 loss_type = self.loss_type_cbx.currentText()
+                ep = self.ep_cbx.currentText()
+                ep_idx = self.ep_cbx.currentIndex()
                 abs_rel = self.abs_rel_cbx.currentText()
                 loss_type_idx = self.loss_type_cbx.currentIndex()
                 unit = self.agg_curves['units'][loss_type_idx]
                 csv_file.write("# Loss type: %s\r\n" % loss_type)
+                csv_file.write("# Exceedance Probability: %s\r\n" % ep)
                 csv_file.write("# Absolute or relative: %s\r\n" % abs_rel)
                 csv_file.write("# Measurement unit: %s\r\n" % unit)
                 if self.aggregate_by is not None and len(self.aggregate_by):
@@ -2033,7 +2060,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                         self.agg_curves['return_period']):
                     row = [return_period]
                     if has_single_tag_value or has_single_tag_value is None:
-                        tup = (return_period_idx, rlzs_or_stats_idxs)
+                        tup = (rlzs_or_stats_idxs, return_period_idx, ep_idx)
                     else:
                         # FIXME: using only the first stat
                         tup = (return_period_idx, rlzs_or_stats_idxs[0])
