@@ -47,6 +47,7 @@ from qgis.core import (QgsVectorLayer,
                        NULL,
                        QgsSimpleMarkerSymbolLayerBase,
                        Qgis,
+                       QgsRectangle,
                        )
 from qgis.gui import QgsSublayersDialog
 from qgis.PyQt.QtCore import pyqtSignal, QDir, QSettings, QFileInfo, Qt
@@ -500,6 +501,19 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             boundaries=boundaries, geometry_type=geometry_type,
             wkt_geom_type=wkt_geom_type,
             row_wkt_geom_types=row_wkt_geom_types)
+        # if we are creating a layer with empty extent, increase the
+        # extent by a small delta in order to allow zooming to layer
+        if (self.layer.featureCount() > 0
+                and self.layer.extent().area() == 0.0):
+            delta = 0.1
+            ext = self.layer.extent()
+            xmax = ext.xMaximum()
+            xmin = ext.xMinimum()
+            ymax = ext.yMaximum()
+            ymin = ext.yMinimum()
+            grown_extent = QgsRectangle(
+                xmin - delta, ymin - delta, xmax + delta, ymax + delta)
+            self.layer.setExtent(grown_extent)
         if (self.output_type == 'damages-rlzs' and
                 not self.aggregate_by_site_ckb.isChecked()):
             self.layer.setCustomProperty('output_type', 'recovery_curves')
