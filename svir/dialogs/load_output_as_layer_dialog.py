@@ -503,7 +503,8 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             row_wkt_geom_types=row_wkt_geom_types)
         # if we are creating a layer with empty extent, increase the
         # extent by a small delta in order to allow zooming to layer
-        if self.layer.extent().area() == 0.0:
+        if (self.layer.featureCount() > 0
+                and self.layer.extent().area() == 0.0):
             delta = 0.1
             ext = self.layer.extent()
             xmax = ext.xMaximum()
