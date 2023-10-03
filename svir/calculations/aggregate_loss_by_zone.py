@@ -92,6 +92,10 @@ def calculate_zonal_stats(callback, zonal_layer, points_layer, join_fields,
     processing.Processing.initialize()
     alg = QgsApplication.processingRegistry().algorithmById(
         'qgis:joinbylocationsummary')
+    if not isinstance(
+            alg, processing.algs.qgis.SpatialJoinSummary.SpatialJoinSummary):
+        raise ImportError('Unable to retrieve processing algorithm'
+                          ' qgis:joinbylocationsummary')
     # make sure to use the actual lists of predicates and summaries as defined
     # in the algorithm when it is instantiated
     predicate_keys = [predicate[0] for predicate in alg.predicates]
