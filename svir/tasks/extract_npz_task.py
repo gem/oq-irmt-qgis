@@ -108,7 +108,7 @@ class ExtractNpzTask(QgsTask):
                 # actually kill the get, so the machine remains busy until a
                 # response is produced
                 # self.extract_thread.deleteLater()
-                del(self.extract_thread)
+                del self.extract_thread
                 raise TaskCanceled
 
     @pyqtSlot(float)
@@ -179,7 +179,8 @@ class ExtractThread(QThread):
             return
         try:
             extracted_npz = numpy.load(
-                io.BytesIO(resp.content), allow_pickle=False)
+                io.BytesIO(resp.content), allow_pickle=False,
+                max_header_size=100000)
         except Exception as exc:
             self.exception_sig.emit(exc)
             return
