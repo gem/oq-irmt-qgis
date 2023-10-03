@@ -178,6 +178,11 @@ class ExtractThread(QThread):
                 "%s: returned an empty content" % err_msg))
             return
         try:
+            # NOTE: on numpy versions >= 1.24 we could use allow_pickle=False
+            # and add the parameter max_header_size=100000 (the default value
+            # is 10000). We must be careful avoiding to put pickled objects
+            # engine-side in the extractors, otherwise we can easily fall into
+            # compatibility issues.
             extracted_npz = numpy.load(
                 io.BytesIO(resp.content), allow_pickle=True)
         except Exception as exc:
