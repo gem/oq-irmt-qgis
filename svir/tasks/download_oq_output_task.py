@@ -111,7 +111,7 @@ class DownloadOqOutputTask(QgsTask):
                 # actually kill the get, so the machine remains busy until a
                 # response is produced
                 # self.download_thread.deleteLater()
-                del(self.download_thread)
+                del self.download_thread
                 raise TaskCanceled
 
     @pyqtSlot(float)
