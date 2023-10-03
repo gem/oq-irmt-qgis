@@ -24,6 +24,7 @@ email=staff.it@globalquakemodel.org
 # Uncomment the following line and add your changelog entries:
 changelog=
     3.18.0
+    * Increased numpy.load parameter max_header_size to 100000 in order to prevent errors extracting some hazard curves
     * Added visualization of OEP and AEP for event-based risk and damage calculations
     3.17.8
     * The extent of layers having at least one feature but empty extent is increased by a small delta in order to allow zooming to layer
