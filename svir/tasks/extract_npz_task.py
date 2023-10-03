@@ -179,8 +179,7 @@ class ExtractThread(QThread):
             return
         try:
             extracted_npz = numpy.load(
-                io.BytesIO(resp.content), allow_pickle=False,
-                max_header_size=100000)
+                io.BytesIO(resp.content), allow_pickle=True)
         except Exception as exc:
             self.exception_sig.emit(exc)
             return
