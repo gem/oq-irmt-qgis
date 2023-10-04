@@ -524,7 +524,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 self.irmt.drive_oq_engine_server_dlg, self.irmt.iface,
                 self.irmt.viewer_dock,
                 self.irmt.drive_oq_engine_server_dlg.session,
-                self.hostname, calc_id, output_type, min_mag=6.5,
+                self.hostname, calc_id, output_type,
                 calculation_mode=calculation_mode,
                 mode='testing')
             self.loading_completed[dlg] = False
