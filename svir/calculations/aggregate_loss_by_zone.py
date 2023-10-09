@@ -92,15 +92,19 @@ def calculate_zonal_stats(callback, zonal_layer, points_layer, join_fields,
     processing.Processing.initialize()
     alg = QgsApplication.processingRegistry().algorithmById(
         'qgis:joinbylocationsummary')
-    if not isinstance(
-            alg, processing.algs.qgis.SpatialJoinSummary.SpatialJoinSummary):
+    if alg is None:
         raise ImportError('Unable to retrieve processing algorithm'
                           ' qgis:joinbylocationsummary')
-    # make sure to use the actual lists of predicates and summaries as defined
-    # in the algorithm when it is instantiated
-    predicate_keys = [predicate[0] for predicate in alg.predicates]
+    # NOTE: predicates are no more retrieavable in the c++ version of the
+    # algorithm, so we can't make sure to use the actual lists of predicates
+    # and summaries as defined in the algorithm when it is instantiated
+    predicate_keys = ['intersects', 'contains', 'isEqual', 'touches',
+                      'overlaps', 'within', 'crosses']
     PREDICATES = dict(zip(predicate_keys, range(len(predicate_keys))))
-    summary_keys = [statistic[0] for statistic in alg.statistics]
+    summary_keys = [
+        'count', 'unique', 'min', 'max', 'range', 'sum', 'mean', 'median',
+        'stddev', 'minority', 'majority', 'q1', 'q3', 'iqr', 'empty', 'filled',
+        'min_length', 'max_length', 'mean_length']
     SUMMARIES = dict(zip(summary_keys, range(len(summary_keys))))
 
     context = QgsProcessingContext()
