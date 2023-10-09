@@ -21,6 +21,7 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
+import sys
 import time
 import processing
 from functools import partial
@@ -92,6 +93,8 @@ def calculate_zonal_stats(callback, zonal_layer, points_layer, join_fields,
     processing.Processing.initialize()
     alg = QgsApplication.processingRegistry().algorithmById(
         'qgis:joinbylocationsummary')
+    sys.stdout.write('Retrieved algorithm: %s' % type(alg))
+    sys.stdout.write('dir(alg): %s' % dir(alg))
     if not isinstance(
             alg, processing.algs.qgis.SpatialJoinSummary.SpatialJoinSummary):
         raise ImportError('Unable to retrieve processing algorithm'
