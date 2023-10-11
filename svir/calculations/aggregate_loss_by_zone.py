@@ -65,10 +65,6 @@ def calculate_zonal_stats(callback, zonal_layer, points_layer, join_fields,
     The full description of the algorithm can be obtained as follows:
     processing.algorithmHelp('qgis:joinbylocationsummary') and it includes
     the lists of predicates and summaries.
-    The code of the algorithm is here:
-    https://github.com/qgis/QGIS/blob
-    /483b4ff977e3d36b166fac792254c31e89e3aeae/python/plugins/processing/algs
-    /qgis/SpatialJoinSummary.py  # NOQA
 
     :param callback: function to be called once the aggregation is complete,
         passing the output zonal layer as a parameter
