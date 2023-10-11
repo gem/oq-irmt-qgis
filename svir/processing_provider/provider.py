@@ -32,8 +32,6 @@ from svir.processing_provider.z_score_alg import ZScoreAlgorithm
 from svir.processing_provider.log10_alg import Log10Algorithm
 from svir.processing_provider.simple_quadratic_alg import (
     SimpleQuadraticAlgorithm)
-from svir.processing_provider.spatial_join_summary_style import (
-    SpatialJoinSummaryStyle)
 
 
 class Provider(QgsProcessingProvider):
@@ -46,8 +44,6 @@ class Provider(QgsProcessingProvider):
         self.addAlgorithm(SimpleQuadraticAlgorithm())
         self.addAlgorithm(ZScoreAlgorithm())
         self.addAlgorithm(Log10Algorithm())
-        # Zonal aggregation
-        self.addAlgorithm(SpatialJoinSummaryStyle())
 
     def id(self, *args, **kwargs):
         """The ID of your plugin, used for identifying the provider.
