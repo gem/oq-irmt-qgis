@@ -26,6 +26,7 @@ changelog=
     3.16.3
     * Following the migration to c++ of the processing algorithm qgis:joinbylocationsummary, the plugin uses the new version
       and applies styling separately instead of running it within a postprocessing phase of an inherited algorithm
+    * When loading npz data from oq-engine calculations, set max_header_size properly for numpy >= 1.24.0
     3.16.2
     * The extent of layers having at least one feature but empty extent is increased by a small delta in order to allow zooming to layer
     3.16.1
