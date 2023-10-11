@@ -46,6 +46,7 @@ from qgis.core import (
                        QgsApplication,
                        QgsWkbTypes,
                        )
+from qgis.utils import iface
 
 from qgis.PyQt.QtCore import (
                               QSettings,
@@ -55,7 +56,8 @@ from qgis.PyQt.QtCore import (
                               QUrl,
                               Qt,
                               )
-from qgis.PyQt.QtWidgets import QAction, QFileDialog, QApplication, QMenu
+from qgis.PyQt.QtWidgets import (
+    QAction, QFileDialog, QApplication, QMenu, QInputDialog)
 from qgis.PyQt.QtGui import QIcon, QDesktopServices, QColor
 
 from svir.dialogs.viewer_dock import ViewerDock
@@ -74,6 +76,7 @@ from svir.dialogs.taxtweb_dialog import TaxtwebDialog
 from svir.dialogs.taxonomy_dialog import TaxonomyDialog
 from svir.dialogs.drive_oq_engine_server_dialog import (
     DriveOqEngineServerDialog)
+from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
 
 from svir.thread_worker.abstract_worker import start_worker
 from svir.thread_worker.download_platform_data_worker import (
@@ -368,12 +371,20 @@ class Irmt(object):
 
     def aggregate(self):
         processing.Processing.initialize()
-        alg_id = 'irmt:joinbylocationsummarystyle'
+        alg_id = 'qgis:joinbylocationsummary'
         alg = QgsApplication.processingRegistry().algorithmById(alg_id)
-        # make sure to use the actual lists of predicates and summaries as
-        # defined in the algorithm when it is instantiated
-        predicate_keys = [predicate[0] for predicate in alg.predicates]
+        # NOTE: predicates are no more retrieavable in the c++ version of the
+        # algorithm, so we can't make sure to use the actual lists of
+        # predicates and summaries as defined in the algorithm when it is
+        # instantiated
+        predicate_keys = ['intersects', 'contains', 'isEqual', 'touches',
+                          'overlaps', 'within', 'crosses']
         PREDICATES = dict(zip(predicate_keys, range(len(predicate_keys))))
+        summary_keys = [
+            'count', 'unique', 'min', 'max', 'range', 'sum', 'mean', 'median',
+            'stddev', 'minority', 'majority', 'q1', 'q3', 'iqr', 'empty',
+            'filled', 'min_length', 'max_length', 'mean_length']
+        SUMMARIES = dict(zip(summary_keys, range(len(summary_keys))))
         default_predicates = ['intersects']
         summary_keys = [statistic[0] for statistic in alg.statistics]
         SUMMARIES = dict(zip(summary_keys, range(len(summary_keys))))
@@ -400,6 +411,17 @@ class Irmt(object):
         res = processing.execAlgorithmDialog(alg_id, initial_params)
         if 'OUTPUT' in res:
             processed_layer = res['OUTPUT']
+            added_fieldnames = [
+                fieldname for fieldname in processed_layer.fields().names()
+                if fieldname not in zonal_layer.fields().names()]
+            if len(added_fieldnames) > 1:
+                style_by = QInputDialog.getItem(
+                    iface.mainWindow(), "Style output by", "Field",
+                    added_fieldnames, editable=False)[0]
+            else:
+                style_by = added_fieldnames[0]
+            LoadOutputAsLayerDialog.style_maps(
+                processed_layer, style_by, iface)
             QgsProject.instance().addMapLayer(processed_layer)
             self.iface.setActiveLayer(processed_layer)
             self.iface.zoomToActiveLayer()
