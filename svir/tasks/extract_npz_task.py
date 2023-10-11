@@ -178,9 +178,13 @@ class ExtractThread(QThread):
                 "%s: returned an empty content" % err_msg))
             return
         try:
-            extracted_npz = numpy.load(
-                io.BytesIO(resp.content), allow_pickle=False,
-                max_header_size=100000)
+            if numpy.__version__ >= '1.24.0':
+                extracted_npz = numpy.load(
+                    io.BytesIO(resp.content), allow_pickle=False,
+                    max_header_size=100000)
+            else:
+                extracted_npz = numpy.load(
+                    io.BytesIO(resp.content), allow_pickle=False)
         except Exception as exc:
             self.exception_sig.emit(exc)
             return
