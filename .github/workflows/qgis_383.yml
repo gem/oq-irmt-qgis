@@ -52,7 +52,10 @@ jobs:
           mkdir ~/oqdata
           oq restore https://artifacts.openquake.org/travis/oqdata-${ENGINE_BR}.zip ~/oqdata
           oq webui start 172.17.0.1:8800 --skip-browser &> webui.log &
-          sleep 10 
+          echo "Waiting WEBUI up on port 8800...."
+          while ! nc -z 172.17.0.1 8800; do
+            sleep 5
+          done
           curl http://172.17.0.1:8800/v1/engine_version
           #
           DOCKER_HOST=`ip -4 addr show docker0 | grep -Po 'inet \K[\d.]+'`
