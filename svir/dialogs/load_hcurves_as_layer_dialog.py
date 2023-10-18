@@ -71,10 +71,10 @@ class LoadHazardCurvesAsLayerDialog(LoadOutputAsLayerDialog):
             name for name in self.npz_file['all'].dtype.names
             if name not in ('custom_site_id', 'lon', 'lat')]
         for rlz_or_stat in self.rlzs_or_stats:
-            self.rlz_or_stat_cbx.addItem(rlz_or_stat)
+            self.rlz_or_stat_cbx.addItem(rlz_or_stat, rlz_or_stat)
 
     def on_rlz_or_stat_changed(self):
-        rlz_or_stat = self.rlz_or_stat_cbx.currentText()
+        rlz_or_stat = self.rlz_or_stat_cbx.currentData()
         dataset = self.npz_file['all'][rlz_or_stat]
         self.imts = [imt for imt in dataset.dtype.names]
         self.imt_cbx.clear()
@@ -102,7 +102,7 @@ class LoadHazardCurvesAsLayerDialog(LoadOutputAsLayerDialog):
         field_types = {}
         for rlz_or_stat in self.rlzs_or_stats:
             if (not self.load_all_rlzs_or_stats_chk.isChecked()
-                    and rlz_or_stat != self.rlz_or_stat_cbx.currentText()):
+                    and rlz_or_stat != self.rlz_or_stat_cbx.currentData()):
                 continue
             for imt in self.dataset[rlz_or_stat].dtype.names:
                 if (not self.load_all_imts_chk.isChecked()
