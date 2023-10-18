@@ -101,7 +101,7 @@ class LoadAvgLossesRlzsAsLayerDialog(LoadOutputAsLayerDialog):
         self.ok_button.setEnabled(True)
 
     def on_rlz_or_stat_changed(self):
-        self.dataset = self.npz_file[self.rlz_or_stat_cbx.currentText()]
+        self.dataset = self.npz_file[self.rlz_or_stat_cbx.currentData()]
         self.taxonomies = numpy.unique(self.dataset['taxonomy']).tolist()
         self.taxonomies = [taxonomy.decode('utf8')
                            for taxonomy in self.taxonomies]
@@ -171,7 +171,7 @@ class LoadAvgLossesRlzsAsLayerDialog(LoadOutputAsLayerDialog):
     def load_from_npz(self):
         for rlz_or_stat in self.rlzs_or_stats:
             if (self.load_selected_only_ckb.isChecked()
-                    and rlz_or_stat != self.rlz_or_stat_cbx.currentText()):
+                    and rlz_or_stat != self.rlz_or_stat_cbx.currentData()):
                 continue
             for taxonomy in self.taxonomies:
                 if (self.load_selected_only_ckb.isChecked()

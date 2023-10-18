@@ -82,7 +82,7 @@ class LoadUhsAsLayerDialog(LoadOutputAsLayerDialog):
         self.show_num_sites()
 
     def on_rlz_or_stat_changed(self):
-        self.dataset = self.npz_file['all'][self.rlz_or_stat_cbx.currentText()]
+        self.dataset = self.npz_file['all'][self.rlz_or_stat_cbx.currentData()]
         self.poes = self.dataset.dtype.names
         self.poe_cbx.clear()
         self.poe_cbx.setEnabled(True)
