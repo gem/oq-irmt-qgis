@@ -380,7 +380,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.set_ok_button()
 
     def on_rlz_or_stat_changed(self):
-        self.dataset = self.npz_file[self.rlz_or_stat_cbx.currentText()]
+        self.dataset = self.npz_file[self.rlz_or_stat_cbx.currentData()]
         self.set_ok_button()
 
     def on_loss_type_changed(self):
@@ -410,7 +410,10 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                               if key not in ('imtls', 'array')]
         self.rlz_or_stat_cbx.clear()
         self.rlz_or_stat_cbx.setEnabled(True)
-        self.rlz_or_stat_cbx.addItems(self.rlzs_or_stats)
+        if len(self.rlzs_or_stats) == 1:
+            self.rlz_or_stat_cbx.addItem('mean', self.rlzs_or_stats[0])
+        else:
+            self.rlz_or_stat_cbx.addItems(self.rlzs_or_stats)
 
     def populate_loss_type_cbx(self, loss_types):
         self.loss_type_cbx.clear()
@@ -422,7 +425,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         #       which currently is always true.
         #       If different realizations have a different number of sites, we
         #       need to move this block of code inside on_rlz_or_stat_changed()
-        rlz_or_stat_data = self.npz_file[self.rlz_or_stat_cbx.currentText()]
+        rlz_or_stat_data = self.npz_file[self.rlz_or_stat_cbx.currentData()]
         self.num_sites_lbl.setText(
             self.num_sites_msg % rlz_or_stat_data.shape)
 

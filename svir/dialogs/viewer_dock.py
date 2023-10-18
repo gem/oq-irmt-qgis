@@ -799,7 +799,10 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         rlzs = [rlz[1].decode('utf8').strip('"') for rlz in rlzs_npz['array']]
         self.rlz_cbx.blockSignals(True)
         self.rlz_cbx.clear()
-        self.rlz_cbx.addItems(rlzs)
+        if len(rlzs) == 1:
+            self.rlz_cbx.addItem('mean', rlzs[0])
+        else:
+            self.rlz_cbx.addItems(rlzs)
         self.rlz_cbx.blockSignals(False)
 
         loss_types = composite_risk_model_attrs['loss_types']
