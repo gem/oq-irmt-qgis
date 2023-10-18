@@ -413,7 +413,8 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         if len(self.rlzs_or_stats) == 1:
             self.rlz_or_stat_cbx.addItem('mean', self.rlzs_or_stats[0])
         else:
-            self.rlz_or_stat_cbx.addItems(self.rlzs_or_stats)
+            for rlz_or_stat in self.rlzs_or_stats:
+                self.rlz_or_stat_cbx.addItem(rlz_or_stat, rlz_or_stat)
 
     def populate_loss_type_cbx(self, loss_types):
         self.loss_type_cbx.clear()

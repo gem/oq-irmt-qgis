@@ -70,7 +70,8 @@ class LoadHazardCurvesAsLayerDialog(LoadOutputAsLayerDialog):
         self.rlzs_or_stats = [
             name for name in self.npz_file['all'].dtype.names
             if name not in ('custom_site_id', 'lon', 'lat')]
-        self.rlz_or_stat_cbx.addItems(self.rlzs_or_stats)
+        for rlz_or_stat in self.rlzs_or_stats:
+            self.rlz_or_stat_cbx.addItem(rlz_or_stat, rlz_or_stat)
 
     def on_rlz_or_stat_changed(self):
         rlz_or_stat = self.rlz_or_stat_cbx.currentData()
