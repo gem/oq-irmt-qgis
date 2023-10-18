@@ -117,7 +117,8 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
             if name not in ('custom_site_id', 'lon', 'lat', 'vs30')]
         self.rlz_or_stat_cbx.clear()
         self.rlz_or_stat_cbx.setEnabled(True)
-        self.rlz_or_stat_cbx.addItems(self.rlzs_or_stats)
+        for rlz_or_stat in self.rlzs_or_stats:
+            self.rlz_or_stat_cbx.addItem(rlz_or_stat, rlz_or_stat)
 
     def on_rlz_or_stat_changed(self):
         self.dataset = self.npz_file['all'][self.rlz_or_stat_cbx.currentData()]

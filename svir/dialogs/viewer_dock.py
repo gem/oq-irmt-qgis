@@ -802,7 +802,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         if len(rlzs) == 1:
             self.rlz_cbx.addItem('mean', rlzs[0])
         else:
-            self.rlz_cbx.addItems(rlzs)
+            for rlz in rlzs:
+                self.rlz_cbx.addItem(rlz, rlz)
         self.rlz_cbx.blockSignals(False)
 
         loss_types = composite_risk_model_attrs['loss_types']
@@ -2050,7 +2051,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                     writer.writerow(row)
             elif self.output_type == 'damages-rlzs_aggr':
                 csv_file.write(
-                    "# Realization: %s\r\n" % self.rlz_cbx.currentText())
+                    "# Realization: %s\r\n" % self.rlz_cbx.currentData())
                 csv_file.write(
                     "# Loss type: %s\r\n" % self.loss_type_cbx.currentText())
                 csv_file.write(
