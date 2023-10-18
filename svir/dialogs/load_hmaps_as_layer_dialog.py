@@ -120,7 +120,7 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
         self.rlz_or_stat_cbx.addItems(self.rlzs_or_stats)
 
     def on_rlz_or_stat_changed(self):
-        self.dataset = self.npz_file['all'][self.rlz_or_stat_cbx.currentText()]
+        self.dataset = self.npz_file['all'][self.rlz_or_stat_cbx.currentData()]
         self.imts = {imt: self.dataset[imt].dtype.names
                      for imt in self.dataset.dtype.names}
         self.imt_cbx.clear()
@@ -134,7 +134,7 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
         #       If different realizations have a different number of sites, we
         #       need to move this block of code inside on_rlz_or_stat_changed()
         rlz_or_stat_data = self.npz_file['all'][
-            self.rlz_or_stat_cbx.currentText()]
+            self.rlz_or_stat_cbx.currentData()]
         self.num_sites_lbl.setText(
             self.num_sites_msg % rlz_or_stat_data.shape)
 
@@ -149,7 +149,7 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
     def build_layer_name(self, rlz_or_stat=None, **kwargs):
         investigation_time = self.get_investigation_time()
         if self.load_single_layer_ckb.isChecked():
-            rlz_or_stat = self.rlz_or_stat_cbx.currentText()
+            rlz_or_stat = self.rlz_or_stat_cbx.currentData()
             imt = self.imt_cbx.currentText()
             poe = self.poe_cbx.currentText()
             self.default_field_name = '%s-%s-%s' % (rlz_or_stat, imt, poe)
@@ -269,7 +269,7 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
         else:
             for rlz_or_stat in self.rlzs_or_stats:
                 if (not self.load_all_rlzs_or_stats_chk.isChecked()
-                        and rlz_or_stat != self.rlz_or_stat_cbx.currentText()):
+                        and rlz_or_stat != self.rlz_or_stat_cbx.currentData()):
                     continue
                 elif self.load_one_layer_per_stat_ckb.isChecked():
                     with WaitCursorManager(
