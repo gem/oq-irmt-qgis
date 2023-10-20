@@ -322,9 +322,6 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             n_simulations=None):
         calc_id = calc['id']
         for output in self.output_list[calc_id]:
-            if (selected_output_type == 'aggcurves' and
-                    calc['calculation_mode'] == 'event_based_damage'):
-                continue
             if (output['type'] != selected_output_type and
                     "%s_aggr" % output['type'] != selected_output_type):
                 continue

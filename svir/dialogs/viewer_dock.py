@@ -556,7 +556,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         else:
             raise NotImplementedError(self.output_type)
         if self.aggregate_by is not None and len(self.aggregate_by):
-            for tag_name in self.aggregate_by:
+            for tag_name in sorted(self.aggregate_by):
                 tag_value = [val for val in self.tags[tag_name]['values']
                              if self.tags[tag_name]['values'][val]][0]
                 # NOTE: the oq-engine makes a urlencode on tag values
@@ -967,7 +967,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         if 'aggregate_by' in oqparam and len(oqparam['aggregate_by']):
             self._build_tags()
             self.aggregate_by = oqparam['aggregate_by'][0]
-            for tag_name in self.aggregate_by:
+            for tag_name in sorted(self.aggregate_by):
                 tag_values = self.tags[tag_name]['values'].keys()
                 self.create_tag_values_selector(
                     tag_name,
@@ -1074,7 +1074,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self._get_idxs(output_type)
         try:
             ordinates = self.agg_curves['array']
-        except KeyError:
+            if not numpy.any(ordinates):
+                raise ValueError
+        except (KeyError, ValueError):
             msg = 'No data corresponds to the current selection'
             log_msg(msg, level='W', message_bar=self.iface.messageBar(),
                     duration=5)
