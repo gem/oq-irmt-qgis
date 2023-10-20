@@ -24,6 +24,7 @@ email=staff.it@globalquakemodel.org
 # Uncomment the following line and add your changelog entries:
 changelog=
     3.18.0
+    * Added visualization of aggcurves and aggcurves-stats for event_based_damage oq-engine calculations
     * When only one realization is extracted from the engine, it is considered as the mean
     * Increased numpy.load parameter max_header_size to 100000 in order to prevent errors extracting some hazard curves
     * Added visualization of OEP and AEP for event-based risk and damage calculations
