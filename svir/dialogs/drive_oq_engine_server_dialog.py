@@ -898,8 +898,6 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                         # see note above
                         not (output['type'] == 'avg_losses-rlzs'
                              and 'avg_losses-stats' in output_types) and
-                        not (output['type'] in ('aggcurves', 'aggcurves-stats')
-                             and calculation_mode == 'event_based_damage') and
                         output['type'] in (OQ_TO_LAYER_TYPES |
                                            OQ_RST_TYPES |
                                            OQ_EXTRACT_TO_VIEW_TYPES)):
