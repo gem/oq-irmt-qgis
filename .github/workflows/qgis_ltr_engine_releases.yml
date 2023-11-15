@@ -1,4 +1,4 @@
-name: QGIS LTR unit and integration test vs Engine LTR
+name: QGIS LTR unit and integration test vs Engine LTR and latest
 on:
   # FIXME: enable only scheduled or triggered manually
   push:
