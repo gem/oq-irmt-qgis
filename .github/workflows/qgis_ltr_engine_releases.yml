@@ -20,9 +20,9 @@ jobs:
     strategy:
       matrix:
         # FIXME: it would be better to point to lts and latest if possible
-        ENGINE_RELEASE: [engine-3.16, engine-3.18]
+        RELEASE_VERSION: [engine-3.16, engine-3.18]
     # env:
-    #   ENGINE_RELEASE: engine-3.16
+    #   RELEASE_VERSION: engine-3.16
     steps:
       - uses: actions/checkout@v2
       - name: 🐍 Set up Python
@@ -32,7 +32,7 @@ jobs:
       - name: ⏳ Clone engine and restore oqdata and docker container
         run: |
           set -x
-          IRMT_BR=$ENGINE_RELEASE
+          IRMT_BR=${{ matrix.RELEASE_VERSION }}
           ENGINE_BR=$IRMT_BR
           if [ "$(git ls-remote --heads https://github.com/gem/oq-engine.git ${ENGINE_BR})" == "" ]; then
               exit 1
@@ -70,15 +70,7 @@ jobs:
       - name: ⨕ Run Integration test
         run: |
           set -x
-          echo " Check if this is a pull request or not"
-          if [ -z "$GITHUB_HEAD_REF" ]
-             then
-              echo " Is not a pull request, use branch: $ENGINE_RELEASE"
-              IRMT_BR=$ENGINE_RELEASE
-             else
-              echo " Is a pull request, use branch: $GITHUB_HEAD_REF"
-              IRMT_BR=$GITHUB_HEAD_REF
-          fi
+          IRMT_BR=${{ matrix.RELEASE_VERSION }}
           ENGINE_BR=$IRMT_BR
           if [ "$(git ls-remote --heads https://github.com/gem/oq-engine.git ${ENGINE_BR})" == "" ]; then
               ENGINE_BR='master';
