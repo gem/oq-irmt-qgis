@@ -45,7 +45,7 @@ jobs:
           echo $PY_VER
           cd oq-engine
           export PIP_DEFAULT_TIMEOUT=100
-          python3 install.py devel
+          python3 install.py devel --version $ENGINE_BR
           cd ..
           echo "Restore OQ-Engine demos for $ENGINE_BR branch "
           source $HOME/openquake/bin/activate
