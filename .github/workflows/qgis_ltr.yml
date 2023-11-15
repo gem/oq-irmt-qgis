@@ -48,8 +48,8 @@ jobs:
           python3 install.py devel
           cd ..
           echo "Restore OQ-Engine demos for $ENGINE_BR branch "
-          oq reset -y
           source $HOME/openquake/bin/activate
+          oq reset -y
           oq restore https://artifacts.openquake.org/travis/oqdata-${ENGINE_BR}.zip ~/oqdata
           oq webui start 172.17.0.1:8800 --skip-browser &> webui.log &
           echo "Waiting WEBUI up on port 8800...."
