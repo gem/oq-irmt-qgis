@@ -38,7 +38,7 @@ jobs:
               exit 1
           fi
           # git clone -b $ENGINE_BR --depth=1 https://github.com/gem/oq-engine.git
-          git clone -b $ENGINE_BR --depth=1 https://github.com/gem/oq-engine.git
+          git clone -b $ENGINE_BR https://github.com/gem/oq-engine.git
           PY_VER=`echo py${{ matrix.python-version }} | tr -d .`
           echo $PY_VER
           cd oq-engine
