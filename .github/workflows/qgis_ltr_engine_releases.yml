@@ -38,10 +38,11 @@ jobs:
               exit 1
           fi
           # git clone -b $ENGINE_BR --depth=1 https://github.com/gem/oq-engine.git
-          git clone -b master --depth=1 https://github.com/gem/oq-engine.git
+          git clone -b $ENGINE_BR --depth=1 https://github.com/gem/oq-engine.git
           PY_VER=`echo py${{ matrix.python-version }} | tr -d .`
           echo $PY_VER
           cd oq-engine
+          git checkout master -- install.py
           export PIP_DEFAULT_TIMEOUT=100
           python3 install.py devel --version $ENGINE_BR
           cd ..
