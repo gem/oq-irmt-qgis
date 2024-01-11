@@ -42,13 +42,11 @@ jobs:
           ENGINE_BR=$IRMT_BR
           curl -O https://raw.githubusercontent.com/gem/oq-engine/master/install.py
           ls -lrt install.py
-          echo ${branch}
+          echo ${ENGINE_BR}
           if [ "$(git ls-remote --heads https://github.com/gem/oq-engine.git ${ENGINE_BR})" == "" ]; then
               exit 1
           fi
-          python3 install.py user --version=${branch}
-          PY_VER=`echo py${{ matrix.python-version }} | tr -d .`
-          echo $PY_VER
+          python3 install.py user --version=${ENGINE_BR}
           export PIP_DEFAULT_TIMEOUT=100
           echo "Restore OQ-Engine demos for $ENGINE_BR branch "
           source $HOME/openquake/bin/activate
@@ -74,7 +72,7 @@ jobs:
           set -x
           IRMT_BR=${{ matrix.RELEASE_VERSION }}
           ENGINE_BR=$IRMT_BR
-          docker exec qgis sh -c "git clone -q -b $ENGINE_BR --depth=1 https://github.com/gem/oq-engine.git && echo 'Running against oq-engine/$GITHUB_BR'"
+          docker exec qgis sh -c "git clone -q -b $ENGINE_BR --depth=1 https://github.com/gem/oq-engine.git && echo 'Running against oq-engine/$ENGINE_BR'"
           docker exec qgis sh -c "qgis_setup.sh svir"
           docker exec -t qgis sh -c "cd /tests_directory && qgis_testrunner.sh svir.test.integration.test_drive_oq_engine"
       - name: ㏒ Display web logs

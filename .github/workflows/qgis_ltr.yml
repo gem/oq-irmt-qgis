@@ -40,13 +40,14 @@ jobs:
           if [ "$(git ls-remote --heads https://github.com/gem/oq-engine.git ${ENGINE_BR})" == "" ]; then
               ENGINE_BR='master';
           fi
-          git clone -b $ENGINE_BR --depth=1 https://github.com/gem/oq-engine.git
-          PY_VER=`echo py${{ matrix.python-version }} | tr -d .`
-          echo $PY_VER
-          cd oq-engine
+          curl -O https://raw.githubusercontent.com/gem/oq-engine/master/install.py
+          ls -lrt install.py
+          echo ${ENGINE_BR}
+          if [ "$(git ls-remote --heads https://github.com/gem/oq-engine.git ${ENGINE_BR})" == "" ]; then
+              exit 1
+          fi
+          python3 install.py user --version=${ENGINE_BR}
           export PIP_DEFAULT_TIMEOUT=100
-          python3 install.py user --version $ENGINE_BR
-          cd ..
           echo "Restore OQ-Engine demos for $ENGINE_BR branch "
           source $HOME/openquake/bin/activate
           oq reset -y
