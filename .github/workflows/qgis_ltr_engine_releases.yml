@@ -71,7 +71,7 @@ jobs:
       - name: ⨕ Run Integration test
         run: |
           set -x
-          IRMT_BR=${{ matrix.RELEASE_VERSION }}
+          IRMT_BR=engine-${{ matrix.RELEASE_VERSION }}
           ENGINE_BR=$IRMT_BR
           docker exec qgis sh -c "git clone -q -b $ENGINE_BR --depth=1 https://github.com/gem/oq-engine.git && echo 'Running against oq-engine/$ENGINE_BR'"
           docker exec qgis sh -c "qgis_setup.sh svir"
