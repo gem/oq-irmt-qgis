@@ -1,4 +1,4 @@
-name: QGIS LTR unit and integration test vs Engine LTR and latest
+name: QGIS LTR integration tests IRMT vs Engine (LTR and latest)
 on:
   # FIXME: enable only scheduled or triggered manually
   workflow_dispatch:
@@ -58,7 +58,6 @@ jobs:
           oq reset -y
           oq restore https://artifacts.openquake.org/travis/oqdata-${ENGINE_BR}.zip ~/oqdata
           oq webui start 172.17.0.1:8800 --skip-browser &> webui.log &
-          git checkout $ENGINE_BR
           echo "Waiting WEBUI up on port 8800...."
           while ! nc -z 172.17.0.1 8800; do
             sleep 5
@@ -73,10 +72,6 @@ jobs:
           docker exec qgis bash -c "apt update --allow-releaseinfo-change; DEBIAN_FRONTEND=noninteractive apt install -y python3-scipy python3-matplotlib python3-pyqt5.qtwebkit"
           docker exec qgis bash -c "python3 -m pip install pytest"
           # OGR_SQLITE_JOURNAL=delete prevents QGIS from using WAL, which modifies geopackages even if they are just read
-      - name: ℧ Run unit test
-        run: |
-          set -x
-          docker exec -t qgis bash -c "export PYTHONPATH=/usr/share/qgis/python/plugins/:$PYTHONPATH; OGR_SQLITE_JOURNAL=delete pytest -v /tests_directory/svir/test/unit/"
       - name: ⨕ Run Integration test
         run: |
           set -x
@@ -88,11 +83,6 @@ jobs:
           docker exec qgis sh -c "git clone -q -b $ENGINE_BR --depth=1 https://github.com/gem/oq-engine.git && echo 'Running against oq-engine/$GITHUB_BR'"
           docker exec qgis sh -c "qgis_setup.sh svir"
           docker exec -t qgis sh -c "cd /tests_directory && qgis_testrunner.sh svir.test.integration.test_drive_oq_engine"
-      - name: 📖 Make documentation
-        run: |
-          set -x
-          docker exec qgis sh -c "apt update --allow-releaseinfo-change; DEBIAN_FRONTEND=noninteractive apt install -y latexmk texlive-latex-extra python3-matplotlib python3-sphinx python3-sphinx-rtd-theme dvipng"
-          docker exec -t qgis sh -c "export PYTHONPATH=$PYTHONPATH:/tests_directory; cd /tests_directory/svir/help; make latexpdf; make html"
       - name: ㏒ Display web logs
         run: |
           set -x
