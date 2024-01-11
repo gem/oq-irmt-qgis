@@ -40,19 +40,16 @@ jobs:
           set -x
           IRMT_BR=${{ matrix.RELEASE_VERSION }}
           ENGINE_BR=$IRMT_BR
+          curl -O https://raw.githubusercontent.com/gem/oq-engine/master/install.py
+          ls -lrt install.py
+          echo ${branch}
           if [ "$(git ls-remote --heads https://github.com/gem/oq-engine.git ${ENGINE_BR})" == "" ]; then
               exit 1
           fi
-          # git clone -b $ENGINE_BR --depth=1 https://github.com/gem/oq-engine.git
-          git clone https://github.com/gem/oq-engine.git
+          python3 install.py user --version=${branch}
           PY_VER=`echo py${{ matrix.python-version }} | tr -d .`
           echo $PY_VER
-          cd oq-engine
-          git checkout $ENGINE_BR
-          git checkout master -- install.py
           export PIP_DEFAULT_TIMEOUT=100
-          python3 install.py devel --version $ENGINE_BR
-          cd ..
           echo "Restore OQ-Engine demos for $ENGINE_BR branch "
           source $HOME/openquake/bin/activate
           oq reset -y
@@ -67,7 +64,7 @@ jobs:
           DOCKER_HOST=`ip -4 addr show docker0 | grep -Po 'inet \K[\d.]+'`
           ENGINE_HOST=`echo http://$DOCKER_HOST:8800`
           docker run -d --name qgis -v /tmp/.X11-unix:/tmp/.X11-unix -v `pwd`:/tests_directory -e DISPLAY=:99  -e OQ_ENGINE_HOST='http://172.17.0.1:8800' \
-          # NOTE: release-3_28 needs to be updated to the current LTS
+          # NOTE: release-3_28 needs to be kept updated to the current LTS
           -e BRANCH="$IRMT_BR" -e ONLY_CALC_ID="$ONLY_CALC_ID" -e ONLY_OUTPUT_TYPE="$ONLY_OUTPUT_TYPE"  -e GEM_QGIS_TEST=y qgis/qgis:release-3_28
           docker exec qgis bash -c "apt update --allow-releaseinfo-change; DEBIAN_FRONTEND=noninteractive apt install -y python3-scipy python3-matplotlib python3-pyqt5.qtwebkit"
           docker exec qgis bash -c "python3 -m pip install pytest"
@@ -77,9 +74,6 @@ jobs:
           set -x
           IRMT_BR=${{ matrix.RELEASE_VERSION }}
           ENGINE_BR=$IRMT_BR
-          # if [ "$(git ls-remote --heads https://github.com/gem/oq-engine.git ${ENGINE_BR})" == "" ]; then
-          #     ENGINE_BR='master';
-          # fi
           docker exec qgis sh -c "git clone -q -b $ENGINE_BR --depth=1 https://github.com/gem/oq-engine.git && echo 'Running against oq-engine/$GITHUB_BR'"
           docker exec qgis sh -c "qgis_setup.sh svir"
           docker exec -t qgis sh -c "cd /tests_directory && qgis_testrunner.sh svir.test.integration.test_drive_oq_engine"
@@ -87,4 +81,3 @@ jobs:
         run: |
           set -x
           cat webui.log
-
