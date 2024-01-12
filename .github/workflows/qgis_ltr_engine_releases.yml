@@ -63,8 +63,7 @@ jobs:
         run: |
           set -x
           IRMT_BR=engine-${{ matrix.RELEASE_VERSION }}
-          ENGINE_BR=$IRMT_BR
-          docker exec qgis sh -c "git clone -q -b $ENGINE_BR --depth=1 https://github.com/gem/oq-engine.git && echo 'Running against oq-engine/$ENGINE_BR'"
+          docker exec qgis sh -c "git checkout $IRMT_BR"
           docker exec qgis sh -c "qgis_setup.sh svir"
           docker exec -t qgis sh -c "cd /tests_directory && qgis_testrunner.sh svir.test.integration.test_drive_oq_engine"
       - name: ㏒ Display web logs

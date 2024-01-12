@@ -31,13 +31,13 @@ jobs:
           echo "Python version to use: $PY_VER"
           python3 --version
           python$PY_VER --version
-          echo " Check if this is a pull request or not"
+          echo "Check if this is a pull request or not"
           if [ -z "$GITHUB_HEAD_REF" ]
              then
-              echo " Is not a pull request, use branch: $GITHUB_DEF_BR"
+              echo "It is not a pull request, use branch: $GITHUB_DEF_BR"
               IRMT_BR=$GITHUB_DEF_BR
              else
-              echo " Is a pull request, use branch: $GITHUB_HEAD_REF"
+              echo "It is a pull request, use branch: $GITHUB_HEAD_REF"
               IRMT_BR=$GITHUB_HEAD_REF
           fi
           ENGINE_BR=$IRMT_BR
@@ -83,11 +83,7 @@ jobs:
               echo " Is a pull request, use branch: $GITHUB_HEAD_REF"
               IRMT_BR=$GITHUB_HEAD_REF
           fi
-          ENGINE_BR=$IRMT_BR
-          if [ "$(git ls-remote --heads https://github.com/gem/oq-engine.git ${ENGINE_BR})" == "" ]; then
-              ENGINE_BR='master';
-          fi
-          docker exec qgis sh -c "git clone -q -b $ENGINE_BR --depth=1 https://github.com/gem/oq-engine.git && echo 'Running against oq-engine/$GITHUB_BR'"
+          docker exec qgis sh -c "git checkout $IRMT_BR"
           docker exec qgis sh -c "qgis_setup.sh svir"
           docker exec -t qgis sh -c "cd /tests_directory && qgis_testrunner.sh svir.test.integration.test_drive_oq_engine"
       - name: 📖 Make documentation
