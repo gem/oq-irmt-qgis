@@ -43,9 +43,6 @@ jobs:
           curl -O https://raw.githubusercontent.com/gem/oq-engine/master/install.py
           ls -lrt install.py
           echo ${ENGINE_BR}
-          if [ "$(git ls-remote --heads https://github.com/gem/oq-engine.git ${ENGINE_BR})" == "" ]; then
-              exit 1
-          fi
           python3 install.py user --version=${ENGINE_BR}
           export PIP_DEFAULT_TIMEOUT=100
           echo "Restore OQ-Engine demos for $ENGINE_BR branch "
