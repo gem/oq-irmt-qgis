@@ -83,7 +83,6 @@ jobs:
               echo " Is a pull request, use branch: $GITHUB_HEAD_REF"
               IRMT_BR=$GITHUB_HEAD_REF
           fi
-          docker exec qgis sh -c "git checkout $IRMT_BR"
           docker exec qgis sh -c "qgis_setup.sh svir"
           docker exec -t qgis sh -c "cd /tests_directory && qgis_testrunner.sh svir.test.integration.test_drive_oq_engine"
       - name: 📖 Make documentation
