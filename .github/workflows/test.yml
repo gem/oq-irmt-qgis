@@ -1,4 +1,4 @@
-name: QGIS LTR unit and integration test
+name: Unit and integration tests
 on:
   push:
     branches:
@@ -16,6 +16,9 @@ jobs:
     #       - ubuntu-latest
     #       - windows-latest
     #       - macos-latest
+    strategy:
+      matrix:
+        QGIS_DOCKER_VERSION: ['qgis/qgis:final-3_8_3', 'qgis/qgis:release-3_28', 'qgis/qgis:latest']
     env:
       GITHUB_DEF_BR: master
     steps:
@@ -23,7 +26,7 @@ jobs:
       - name: 🐍 Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: 3.8
+          python-version: '3.11'
       - name: ⏳ Clone engine and restore oqdata and docker container
         run: |
           set -x
@@ -45,7 +48,7 @@ jobs:
           echo $PY_VER
           cd oq-engine
           export PIP_DEFAULT_TIMEOUT=100
-          pip3 install -r requirements-py38-linux64.txt
+          pip3 install -r requirements-py311-linux64.txt
           pip3 install -e .
           cd ..
           echo "Restore OQ-Engine demos for $ENGINE_BR branch "
@@ -61,7 +64,7 @@ jobs:
           DOCKER_HOST=`ip -4 addr show docker0 | grep -Po 'inet \K[\d.]+'`
           ENGINE_HOST=`echo http://$DOCKER_HOST:8800`
           docker run -d --name qgis -v /tmp/.X11-unix:/tmp/.X11-unix -v `pwd`:/tests_directory -e DISPLAY=:99  -e OQ_ENGINE_HOST='http://172.17.0.1:8800' \
-          -e BRANCH="$IRMT_BR" -e ONLY_CALC_ID="$ONLY_CALC_ID" -e ONLY_OUTPUT_TYPE="$ONLY_OUTPUT_TYPE"  -e GEM_QGIS_TEST=y qgis/qgis:release-3_28
+          -e BRANCH="$IRMT_BR" -e ONLY_CALC_ID="$ONLY_CALC_ID" -e ONLY_OUTPUT_TYPE="$ONLY_OUTPUT_TYPE"  -e GEM_QGIS_TEST=y ${{ matrix.QGIS_DOCKER_VERSION }}
           docker exec qgis bash -c "apt update --allow-releaseinfo-change; DEBIAN_FRONTEND=noninteractive apt install -y python3-scipy python3-matplotlib python3-pyqt5.qtwebkit"
           docker exec qgis bash -c "python3 -m pip install pytest"
           # OGR_SQLITE_JOURNAL=delete prevents QGIS from using WAL, which modifies geopackages even if they are just read
@@ -97,4 +100,3 @@ jobs:
         run: |
           set -x
           cat webui.log
-
