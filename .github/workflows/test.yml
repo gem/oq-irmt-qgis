@@ -23,13 +23,14 @@ jobs:
       - name: 🐍 Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: ${{ matrix.PY_VERSION }}
+          python-version: ${{ matrix.PYTHON_VERSION }}
       - name: ⏳ Install engine and restore oqdata and docker container
         run: |
           set -x
           PY_VER=${{ matrix.PYTHON_VERSION }}
           echo "Python version to use: $PY_VER"
-          python --version
+          python3 --version
+          python$PY_VER --version
           echo " Check if this is a pull request or not"
           if [ -z "$GITHUB_HEAD_REF" ]
              then
