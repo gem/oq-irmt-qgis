@@ -29,7 +29,7 @@ jobs:
           set -x
           PY_VER=${{ matrix.PYTHON_VERSION }}
           echo "Python version to use: $PY_VER"
-          python3 --version
+          python --version
           echo " Check if this is a pull request or not"
           if [ -z "$GITHUB_HEAD_REF" ]
              then
@@ -46,7 +46,7 @@ jobs:
           curl -O https://raw.githubusercontent.com/gem/oq-engine/master/install.py
           ls -lrt install.py
           echo "Engine branch: ${ENGINE_BR}"
-          python3 install.py user --version=${ENGINE_BR}
+          python$PY_VER install.py user --version=${ENGINE_BR}
           export PIP_DEFAULT_TIMEOUT=100
           echo "Restore OQ-Engine demos for $ENGINE_BR branch "
           source $HOME/openquake/bin/activate
@@ -64,7 +64,7 @@ jobs:
           docker run -d --name qgis -v /tmp/.X11-unix:/tmp/.X11-unix -v `pwd`:/tests_directory -e DISPLAY=:99  -e OQ_ENGINE_HOST='http://172.17.0.1:8800' \
           -e BRANCH="$IRMT_BR" -e ONLY_CALC_ID="$ONLY_CALC_ID" -e ONLY_OUTPUT_TYPE="$ONLY_OUTPUT_TYPE"  -e GEM_QGIS_TEST=y ${{ matrix.QGIS_DOCKER_VERSION }}
           docker exec qgis bash -c "apt update --allow-releaseinfo-change; DEBIAN_FRONTEND=noninteractive apt install -y python3-scipy python3-matplotlib python3-pyqt5.qtwebkit"
-          docker exec qgis bash -c "python3 -m pip install pytest"
+          docker exec qgis bash -c "python$PY_VER -m pip install pytest"
           # OGR_SQLITE_JOURNAL=delete prevents QGIS from using WAL, which modifies geopackages even if they are just read
       - name: ℧ Run unit test
         run: |
