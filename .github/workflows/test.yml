@@ -14,6 +14,7 @@ jobs:
         # os: [ubuntu-latest, windows-latest, macos-latest]
         os: [ubuntu-latest]
         QGIS_DOCKER_VERSION: ['qgis/qgis:final-3_8_3', 'qgis/qgis:release-3_28', 'qgis/qgis:latest']
+        # NOTE: qgis uses its own python, but we want to check if there are problems interfacing with the engine while it uses different python versions
         PYTHON_VERSION: ['3.9', '3.10', '3.11']
     runs-on: ${{ matrix.os }}
     env:
