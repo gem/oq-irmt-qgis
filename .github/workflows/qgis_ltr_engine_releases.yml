@@ -1,15 +1,15 @@
 name: QGIS LTR integration tests IRMT vs Engine (LTR and latest)
 on:
-  # FIXME: enable only scheduled or triggered manually
+  # NOTE: enables only scheduled or triggered manually, NOT on pull requests
   workflow_dispatch:
     inputs:
       git-ref:
         description: Git Ref
         default: master
         required: true
-  push:
-    branches:
-      - '**'
+  # push:
+  #   branches:
+  #     - '**'
   schedule:
     - cron: "0 2 * * *"
 
@@ -77,9 +77,7 @@ jobs:
           set -x
           IRMT_BR=engine-${{ matrix.RELEASE_VERSION }}
           ENGINE_BR=$IRMT_BR
-          if [ "$(git ls-remote --heads https://github.com/gem/oq-engine.git ${ENGINE_BR})" == "" ]; then
-              exit 1;
-          fi
+          # NOTE: the check on the existence of the engine branch is already done in the previous step
           # NOTE: we needto clone the engine inside the qgis docker in order to have demos folders available
           docker exec qgis sh -c "git clone -q -b $ENGINE_BR --depth=1 https://github.com/gem/oq-engine.git && echo 'Running against oq-engine/$GITHUB_BR'"
           docker exec qgis sh -c "qgis_setup.sh svir"
