@@ -1015,12 +1015,11 @@ class RunCalculationTestCase(LoadOqEngineOutputsTestCase):
         if self.only_calc_id or self.only_output_type:
             print('Skipping test running a new calculation')
             return
-        # NOTE: assuming we are doing a user installation of the engine with
-        # the universal installer, that stores the engine code inside the venv
-        # directory
-        venv_dir = os.path.join(os.path.expanduser('~'), 'openquake')
+        # NOTE: running tests from within the qgis docker, we need
+        #       the engine clone within the docker machine in order
+        #       to access demos folders
         risk_demos_path = os.path.join(
-            venv_dir, 'demos', 'risk')
+            os.pardir, 'oq-engine', 'demos', 'risk')
         risk_demos_dirs = glob.glob(os.path.join(risk_demos_path, "*", ""))
         # NOTE: assuming to find ScenarioDamage folder
         demo_dir_list = [demo_dir

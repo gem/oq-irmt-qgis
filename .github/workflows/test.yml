@@ -84,6 +84,12 @@ jobs:
               echo " Is a pull request, use branch: $GITHUB_HEAD_REF"
               IRMT_BR=$GITHUB_HEAD_REF
           fi
+          # NOTE: we needto clone the engine inside the qgis docker in order to have demos folders available
+          ENGINE_BR=$IRMT_BR
+          if [ "$(git ls-remote --heads https://github.com/gem/oq-engine.git ${ENGINE_BR})" == "" ]; then
+              ENGINE_BR='master';
+          fi
+          docker exec qgis sh -c "git clone -q -b $ENGINE_BR --depth=1 https://github.com/gem/oq-engine.git && echo 'Running against oq-engine/$GITHUB_BR'"
           docker exec qgis sh -c "qgis_setup.sh svir"
           docker exec -t qgis sh -c "cd /tests_directory && qgis_testrunner.sh svir.test.integration.test_drive_oq_engine"
       - name: 📖 Make documentation
