@@ -30,6 +30,9 @@ jobs:
         #   File "/home/runner/openquake/lib/python3.10/site-packages/openquake/calculators/extract.py", line 746, in extract_agg_curves
         #     agg_id = lst.index(','.join(tagvalues))
         RELEASE_VERSION: ['3.18']
+        # QGIS_DOCKER_VERSION: ['qgis/qgis:final-3_8_3', 'qgis/qgis:release-3_28', 'qgis/qgis:latest']
+        # NOTE: keep it updated with QGIS ltr
+        QGIS_DOCKER_VERSION: ['qgis/qgis:release-3_28']
     steps:
       - uses: actions/checkout@v2
       - name: 🐍 Set up Python
@@ -65,7 +68,7 @@ jobs:
           ENGINE_HOST=`echo http://$DOCKER_HOST:8800`
           # NOTE: release-3_28 needs to be kept updated to the current LTS
           docker run -d --name qgis -v /tmp/.X11-unix:/tmp/.X11-unix -v `pwd`:/tests_directory -e DISPLAY=:99  -e OQ_ENGINE_HOST='http://172.17.0.1:8800' \
-          -e BRANCH="$IRMT_BR" -e ONLY_CALC_ID="$ONLY_CALC_ID" -e ONLY_OUTPUT_TYPE="$ONLY_OUTPUT_TYPE"  -e GEM_QGIS_TEST=y qgis/qgis:release-3_28
+          -e BRANCH="$IRMT_BR" -e ONLY_CALC_ID="$ONLY_CALC_ID" -e ONLY_OUTPUT_TYPE="$ONLY_OUTPUT_TYPE"  -e GEM_QGIS_TEST=y ${{ matrix.QGIS_DOCKER_VERSION }}
           docker exec qgis bash -c "apt update --allow-releaseinfo-change; DEBIAN_FRONTEND=noninteractive apt install -y python3-scipy python3-matplotlib python3-pyqt5.qtwebkit"
           docker exec qgis bash -c "python3 -m pip install pytest"
           # OGR_SQLITE_JOURNAL=delete prevents QGIS from using WAL, which modifies geopackages even if they are just read
@@ -73,6 +76,8 @@ jobs:
         run: |
           set -x
           IRMT_BR=engine-${{ matrix.RELEASE_VERSION }}
+          # NOTE: we needto clone the engine inside the qgis docker in order to have demos folders available
+          docker exec qgis sh -c "git clone -q -b $ENGINE_BR --depth=1 https://github.com/gem/oq-engine.git && echo 'Running against oq-engine/$GITHUB_BR'"
           docker exec qgis sh -c "qgis_setup.sh svir"
           docker exec -t qgis sh -c "cd /tests_directory && qgis_testrunner.sh svir.test.integration.test_drive_oq_engine"
       - name: ㏒ Display web logs
