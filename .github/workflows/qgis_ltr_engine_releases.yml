@@ -76,6 +76,10 @@ jobs:
         run: |
           set -x
           IRMT_BR=engine-${{ matrix.RELEASE_VERSION }}
+          ENGINE_BR=$IRMT_BR
+          if [ "$(git ls-remote --heads https://github.com/gem/oq-engine.git ${ENGINE_BR})" == "" ]; then
+              exit 1;
+          fi
           # NOTE: we needto clone the engine inside the qgis docker in order to have demos folders available
           docker exec qgis sh -c "git clone -q -b $ENGINE_BR --depth=1 https://github.com/gem/oq-engine.git && echo 'Running against oq-engine/$GITHUB_BR'"
           docker exec qgis sh -c "qgis_setup.sh svir"
