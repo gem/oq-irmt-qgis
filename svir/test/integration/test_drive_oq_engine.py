@@ -1015,8 +1015,12 @@ class RunCalculationTestCase(LoadOqEngineOutputsTestCase):
         if self.only_calc_id or self.only_output_type:
             print('Skipping test running a new calculation')
             return
+        # NOTE: assuming we are doing a user installation of the engine with
+        # the universal installer, that stores the engine code inside the venv
+        # directory
+        venv_dir = os.path.join(os.path.expanduser('~'), 'openquake')
         risk_demos_path = os.path.join(
-            os.pardir, 'oq-engine', 'demos', 'risk')
+            venv_dir, 'oq-engine', 'demos', 'risk')
         risk_demos_dirs = glob.glob(os.path.join(risk_demos_path, "*", ""))
         # NOTE: assuming to find ScenarioDamage folder
         demo_dir_list = [demo_dir
