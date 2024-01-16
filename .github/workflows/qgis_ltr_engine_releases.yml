@@ -7,9 +7,10 @@ on:
         description: Git Ref
         default: master
         required: true
-  # push:
-  #   branches:
-  #     - '**'
+  # FIXME: disable on push
+  push:
+    branches:
+      - '**'
   schedule:
     - cron: "0 2 * * *"
 
@@ -33,6 +34,7 @@ jobs:
         # QGIS_DOCKER_VERSION: ['qgis/qgis:final-3_8_3', 'qgis/qgis:release-3_28', 'qgis/qgis:latest']
         # NOTE: keep it updated with QGIS ltr
         QGIS_DOCKER_VERSION: ['qgis/qgis:release-3_28']
+        DEMOS: ['oqdata', 'risk-oqdata']
     steps:
       - uses: actions/checkout@v2
       - name: 🐍 Set up Python
@@ -53,10 +55,10 @@ jobs:
           fi
           python3 install.py user --version=${ENGINE_RELEASE}
           export PIP_DEFAULT_TIMEOUT=100
-          echo "Restore OQ-Engine demos for $ENGINE_BR branch "
+          echo "Restore ${{matrix.DEMOS}} demos for $ENGINE_BR branch "
           source $HOME/openquake/bin/activate
           oq reset -y
-          oq restore https://artifacts.openquake.org/travis/oqdata-${ENGINE_BR}.zip ~/oqdata
+          oq restore https://artifacts.openquake.org/travis/${{matrix.DEMOS}}-${ENGINE_BR}.zip ~/oqdata
           oq webui start 172.17.0.1:8800 --skip-browser &> webui.log &
           echo "Waiting WEBUI up on port 8800...."
           while ! nc -z 172.17.0.1 8800; do
