@@ -939,9 +939,9 @@ class AllLoadableOutputsFoundInDemosTestCase(LoadOqEngineOutputsTestCase):
         self.list_calculations_and_outputs()
         if (self.only_calc_id or self.only_output_type
                 or not OQ_CHECK_MISSING_OUTPUTS):
-            print('Skipping test checking if all loadable outputs are found'
-                  ' in demos')
-            return
+            self.skipTest(
+                'Skipping test checking if all loadable outputs are found'
+                ' in demos')
         loadable_output_types_found = set()
         loadable_output_types_not_found = set()
         for loadable_output_type in OQ_ALL_TYPES:
@@ -1019,8 +1019,7 @@ class RunCalculationTestCase(LoadOqEngineOutputsTestCase):
     def test_run_calculation(self):
         if (self.only_calc_id or self.only_output_type
                 or not OQ_TEST_RUN_CALC):
-            print('Skipping test running a new calculation')
-            return
+            self.skipTest('Skipping test running a new calculation')
         # NOTE: running tests from within the qgis docker, we need
         #       the engine clone within the docker machine in order
         #       to access demos folders
