@@ -59,6 +59,7 @@ QGIS_APP = start_app()
 
 LONG_LOADING_TIME = 10  # seconds
 ONLY_OUTPUT_TYPE = os.environ.get('ONLY_OUTPUT_TYPE')
+OQ_CHECK_MISSING_OUTPUTS = os.environ.get('OQ_CHECK_MISSING_OUTPUTS', 1)
 
 
 def run_all():
@@ -933,7 +934,8 @@ class AllLoadableOutputsFoundInDemosTestCase(LoadOqEngineOutputsTestCase):
                      'only testing output type %s' % ONLY_OUTPUT_TYPE)
     def test_all_loadable_output_types_found_in_demos(self):
         self.list_calculations_and_outputs()
-        if self.only_calc_id or self.only_output_type:
+        if (self.only_calc_id or self.only_output_type
+                or not OQ_CHECK_MISSING_OUTPUTS):
             print('Skipping test checking if all loadable outputs are found'
                   ' in demos')
             return
