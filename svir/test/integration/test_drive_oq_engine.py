@@ -59,7 +59,10 @@ QGIS_APP = start_app()
 
 LONG_LOADING_TIME = 10  # seconds
 ONLY_OUTPUT_TYPE = os.environ.get('ONLY_OUTPUT_TYPE')
+
+# NOTE: we can skip some tests when checking risk workshop examples
 OQ_CHECK_MISSING_OUTPUTS = os.environ.get('OQ_CHECK_MISSING_OUTPUTS', 1)
+OQ_TEST_RUN_CALC = os.environ.get('OQ_TEST_RUN_CALC', 1)
 
 
 def run_all():
@@ -1014,7 +1017,8 @@ class RunCalculationTestCase(LoadOqEngineOutputsTestCase):
     @unittest.skipIf(ONLY_OUTPUT_TYPE,
                      'only testing output type %s' % ONLY_OUTPUT_TYPE)
     def test_run_calculation(self):
-        if self.only_calc_id or self.only_output_type:
+        if (self.only_calc_id or self.only_output_type
+                or not OQ_TEST_RUN_CALC):
             print('Skipping test running a new calculation')
             return
         # NOTE: running tests from within the qgis docker, we need
