@@ -86,7 +86,7 @@ jobs:
             OQ_CHECK_MISSING_OUTPUTS=0
             OQ_TEST_RUN_CALC=0
           fi
-          echo "OQ_TEST_MISSING_OUTPUTS: ${OQ_TEST_MISSING_OUTPUTS}"
+          echo "OQ_CHECK_MISSING_OUTPUTS: ${OQ_CHECK_MISSING_OUTPUTS}"
           echo "OQ_TEST_RUN_CALC: ${OQ_TEST_RUN_CALC}"
           # NOTE: the check on the existence of the engine branch is already done in the previous step
           # NOTE: we needto clone the engine inside the qgis docker in order to have demos folders available
