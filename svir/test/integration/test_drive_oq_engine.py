@@ -66,6 +66,8 @@ OQ_TEST_RUN_CALC = os.environ.get('OQ_TEST_RUN_CALC', 1)
 
 
 def run_all():
+    print(f"run_all: {os.environ.get('OQ_CHECK_MISSING_OUTPUTS')}")
+    print(f"run_all: {os.environ.get('OQ_TEST_RUN_CALC')}")
     print(f'run_all: OQ_CHECK_MISSING_OUTPUTS: {OQ_CHECK_MISSING_OUTPUTS}')
     print(f'run_all: OQ_TEST_RUN_CALC: {OQ_TEST_RUN_CALC}')
     suite = unittest.TestSuite()
