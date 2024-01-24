@@ -96,10 +96,9 @@ jobs:
           echo "OQ_TEST_RUN_CALC: ${OQ_TEST_RUN_CALC}"
           # NOTE: the check on the existence of the engine branch is already done in the previous step
           docker exec qgis sh -c "echo 'Running against oq-engine on branch $GITHUB_BR'"
-          # docker exec -e OQ_CHECK_MISSING_OUTPUTS="${OQ_CHECK_MISSING_OUTPUTS}" qgis sh -c "env"
-          docker exec qgis sh -c "export OQ_CHECK_MISSING_OUTPUTS=${OQ_CHECK_MISSING_OUTPUTS} && export OQ_TEST_RUN_CALC=${OQ_TEST_RUN_CALC}"
           docker exec qgis sh -c "qgis_setup.sh svir"
-          docker exec -t qgis sh -c "env && cd /tests_directory && qgis_testrunner.sh svir.test.integration.test_drive_oq_engine"
+          docker exec -e OQ_CHECK_MISSING_OUTPUTS=${OQ_CHECK_MISSING_OUTPUTS} -e OQ_TEST_RUN_CALC=${OQ_TEST_RUN_CALC} \
+          -t qgis sh -c "env && cd /tests_directory && qgis_testrunner.sh svir.test.integration.test_drive_oq_engine"
       - name: ㏒ Display web logs
         run: |
           set -x
