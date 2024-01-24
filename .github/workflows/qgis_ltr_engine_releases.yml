@@ -45,7 +45,7 @@ jobs:
         run: |
           set -x
           ENGINE_RELEASE=${{ matrix.RELEASE_VERSION }}
-          if ["${{ matrix.RELEASE_VERSION }}" != "master"]; then
+          if [ "${{ matrix.RELEASE_VERSION }}" != "master" ]; then
             IRMT_BR=engine-${ENGINE_RELEASE}
           else
             IRMT_BR=${ENGINE_RELEASE}
@@ -83,7 +83,7 @@ jobs:
           set -x
           IRMT_BR=engine-${{ matrix.RELEASE_VERSION }}
           ENGINE_BR=$IRMT_BR
-          if ["${{ matrix.DEMOS }}" != "risk-oqdata"]; then
+          if [ "${{ matrix.DEMOS }}" != "risk-oqdata" ]; then
             OQ_CHECK_MISSING_OUTPUTS=1
             OQ_TEST_RUN_CALC=1
           else
