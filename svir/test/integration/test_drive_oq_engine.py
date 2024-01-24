@@ -61,8 +61,16 @@ LONG_LOADING_TIME = 10  # seconds
 ONLY_OUTPUT_TYPE = os.environ.get('ONLY_OUTPUT_TYPE')
 
 # NOTE: we can skip some tests when checking risk workshop examples
-OQ_CHECK_MISSING_OUTPUTS = os.environ.get('OQ_CHECK_MISSING_OUTPUTS', 1)
-OQ_TEST_RUN_CALC = os.environ.get('OQ_TEST_RUN_CALC', 1)
+OQ_CHECK_MISSING_OUTPUTS = os.environ.get('OQ_CHECK_MISSING_OUTPUTS')
+OQ_TEST_RUN_CALC = os.environ.get('OQ_TEST_RUN_CALC')
+if OQ_CHECK_MISSING_OUTPUTS in [None, 0, '0']:
+    OQ_CHECK_MISSING_OUTPUTS = False
+else:
+    OQ_CHECK_MISSING_OUTPUTS = True
+if OQ_TEST_RUN_CALC in [None, 0, '0']:
+    OQ_TEST_RUN_CALC = False
+else:
+    OQ_TEST_RUN_CALC = True
 
 
 def run_all():
