@@ -45,7 +45,11 @@ jobs:
         run: |
           set -x
           ENGINE_RELEASE=${{ matrix.RELEASE_VERSION }}
-          IRMT_BR=engine-${ENGINE_RELEASE}
+          if ["${{ matrix.RELEASE_VERSION }}" != "master"]; then
+            IRMT_BR=engine-${ENGINE_RELEASE}
+          else
+            IRMT_BR=${ENGINE_RELEASE}
+          fi
           ENGINE_BR=$IRMT_BR
           curl -O https://raw.githubusercontent.com/gem/oq-engine/master/install.py
           ls -lrt install.py
@@ -89,8 +93,7 @@ jobs:
           echo "OQ_CHECK_MISSING_OUTPUTS: ${OQ_CHECK_MISSING_OUTPUTS}"
           echo "OQ_TEST_RUN_CALC: ${OQ_TEST_RUN_CALC}"
           # NOTE: the check on the existence of the engine branch is already done in the previous step
-          # NOTE: we needto clone the engine inside the qgis docker in order to have demos folders available
-          docker exec qgis sh -c "git clone -q -b $ENGINE_BR --depth=1 https://github.com/gem/oq-engine.git && echo 'Running against oq-engine/$GITHUB_BR'"
+          docker exec qgis sh -c "echo 'Running against oq-engine on branch $GITHUB_BR'"
           docker exec qgis sh -c "qgis_setup.sh svir"
           docker exec -t qgis sh -c "cd /tests_directory && OQ_CHECK_MISSING_OUTPUTS=${OQ_CHECK_MISSING_OUTPUTS} OQ_TEST_RUN_CALC=${OQ_TEST_RUN_CALC} qgis_testrunner.sh svir.test.integration.test_drive_oq_engine"
       - name: ㏒ Display web logs
