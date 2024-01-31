@@ -63,6 +63,7 @@ ONLY_OUTPUT_TYPE = os.environ.get('ONLY_OUTPUT_TYPE')
 # NOTE: we can skip some tests when checking risk workshop examples
 OQ_CHECK_MISSING_OUTPUTS = os.environ.get('OQ_CHECK_MISSING_OUTPUTS')
 OQ_TEST_RUN_CALC = os.environ.get('OQ_TEST_RUN_CALC')
+OQ_TEST_AGG_CURVES = os.environ.get('OQ_TEST_AGG_CURVES')
 if OQ_CHECK_MISSING_OUTPUTS in [None, 0, '0']:
     OQ_CHECK_MISSING_OUTPUTS = False
 else:
@@ -71,6 +72,10 @@ if OQ_TEST_RUN_CALC in [None, 0, '0']:
     OQ_TEST_RUN_CALC = False
 else:
     OQ_TEST_RUN_CALC = True
+if OQ_TEST_AGG_CURVES in [None, 0, '0']:
+    OQ_TEST_AGG_CURVES = False
+else:
+    OQ_TEST_AGG_CURVES = True
 
 
 def run_all():
@@ -78,6 +83,7 @@ def run_all():
     print(f"run_all: {os.environ.get('OQ_TEST_RUN_CALC')}")
     print(f'run_all: OQ_CHECK_MISSING_OUTPUTS: {OQ_CHECK_MISSING_OUTPUTS}')
     print(f'run_all: OQ_TEST_RUN_CALC: {OQ_TEST_RUN_CALC}')
+    print(f'run_all: OQ_TEST_AGG_CURVES: {OQ_TEST_AGG_CURVES}')
     suite = unittest.TestSuite()
     # OQ_CSV_TO_LAYER_TYPES
     suite.addTest(unittest.makeSuite(LoadAggRiskTestCase, 'test'))
@@ -915,6 +921,9 @@ class LoadAggCurvesTestCase(LoadOqEngineOutputsTestCase):
         ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'aggcurves',
         'only testing output type %s' % ONLY_OUTPUT_TYPE)
     def test_load_agg_curves(self):
+        if not OQ_TEST_AGG_CURVES:
+            self.skipTest(
+                'Skipping test for aggcurves loader')
         self.load_output_type('aggcurves')
 
 

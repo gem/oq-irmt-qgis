@@ -82,19 +82,23 @@ jobs:
           set -x
           IRMT_BR=engine-${{ matrix.RELEASE_VERSION }}
           ENGINE_BR=$IRMT_BR
-          if [ "${{ matrix.DEMOS }}" != "risk-oqdata" ]; then
+          if [ "${{ matrix.DEMOS }}" != "risk-oqdata" -a "%{{ matrix.RELEASE_VERSION }}" != "3.16" ]; then
             OQ_CHECK_MISSING_OUTPUTS=1
             OQ_TEST_RUN_CALC=1
+            OQ_TEST_AGG_CURVES=1
           else
             OQ_CHECK_MISSING_OUTPUTS=0
             OQ_TEST_RUN_CALC=0
+            # NOTE: skipping test_load_agg_curves for engine-3.16
+            OQ_TEST_AGG_CURVES=0
           fi
           echo "OQ_CHECK_MISSING_OUTPUTS: ${OQ_CHECK_MISSING_OUTPUTS}"
           echo "OQ_TEST_RUN_CALC: ${OQ_TEST_RUN_CALC}"
+          echo "OQ_TEST_AGG_CURVES: ${OQ_TEST_AGG_CURVES}"
           # NOTE: the check on the existence of the engine branch is already done in the previous step
           docker exec qgis sh -c "echo 'Running against oq-engine on branch $GITHUB_BR'"
           docker exec qgis sh -c "qgis_setup.sh svir"
-          docker exec -e OQ_CHECK_MISSING_OUTPUTS=${OQ_CHECK_MISSING_OUTPUTS} -e OQ_TEST_RUN_CALC=${OQ_TEST_RUN_CALC} \
+          docker exec -e OQ_CHECK_MISSING_OUTPUTS=${OQ_CHECK_MISSING_OUTPUTS} -e OQ_TEST_RUN_CALC=${OQ_TEST_RUN_CALC} -e OQ_TEST_AGG_CURVES=${OQ_TEST_AGG_CURVES} \
           -t qgis sh -c "env && cd /tests_directory && qgis_testrunner.sh svir.test.integration.test_drive_oq_engine"
       - name: ㏒ Display web logs
         run: |
