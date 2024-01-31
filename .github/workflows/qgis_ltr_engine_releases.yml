@@ -83,7 +83,7 @@ jobs:
           set -x
           IRMT_BR=engine-${{ matrix.RELEASE_VERSION }}
           ENGINE_BR=$IRMT_BR
-          if [ "${{ matrix.DEMOS }}" != "risk-oqdata" -a "%{{ matrix.RELEASE_VERSION }}" != "3.16" ]; then
+          if [ "${{ matrix.DEMOS }}" != "risk-oqdata" -a "${{ matrix.RELEASE_VERSION }}" != "3.16" ]; then
             OQ_CHECK_MISSING_OUTPUTS=1
             OQ_TEST_RUN_CALC=1
             OQ_TEST_AGG_CURVES=1
