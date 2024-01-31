@@ -83,13 +83,13 @@ jobs:
           set -x
           IRMT_BR=engine-${{ matrix.RELEASE_VERSION }}
           ENGINE_BR=$IRMT_BR
+          # NOTE: if we want to enable it, we need to use the proper folder after engine user installation
+          OQ_TEST_RUN_CALC=0
           if [ "${{ matrix.DEMOS }}" != "risk-oqdata" -a "${{ matrix.RELEASE_VERSION }}" != "3.16" ]; then
             OQ_CHECK_MISSING_OUTPUTS=1
-            OQ_TEST_RUN_CALC=1
             OQ_TEST_AGG_CURVES=1
           else
             OQ_CHECK_MISSING_OUTPUTS=0
-            OQ_TEST_RUN_CALC=0
             # NOTE: skipping test_load_agg_curves for engine-3.16
             OQ_TEST_AGG_CURVES=0
           fi
