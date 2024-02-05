@@ -78,7 +78,6 @@ jobs:
           -e BRANCH="$IRMT_BR" -e ONLY_CALC_ID="$ONLY_CALC_ID" -e ONLY_OUTPUT_TYPE="$ONLY_OUTPUT_TYPE"  -e GEM_QGIS_TEST=y ${{ matrix.QGIS_DOCKER_VERSION }}
           docker exec qgis bash -c "apt update --allow-releaseinfo-change; DEBIAN_FRONTEND=noninteractive apt install -y python3-scipy python3-matplotlib python3-pyqt5.qtwebkit"
           docker exec qgis bash -c "python3 -m pip install pytest"
-          docker exec qgis bash -c "cd /tests_directory && git checkout ${IRMT_BR}"
           # OGR_SQLITE_JOURNAL=delete prevents QGIS from using WAL, which modifies geopackages even if they are just read
       - name: ℧ Run unit test
         run: |
