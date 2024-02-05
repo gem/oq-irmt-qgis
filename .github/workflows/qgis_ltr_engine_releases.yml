@@ -45,15 +45,9 @@ jobs:
         run: |
           set -x
           ENGINE_RELEASE=${{ matrix.RELEASE_VERSION }}
-          if [ "${{ matrix.RELEASE_VERSION }}" != "master" ]; then
-            IRMT_BR=engine-${ENGINE_RELEASE}
-          else
-            IRMT_BR=${ENGINE_RELEASE}
-          fi
-          ENGINE_BR=$IRMT_BR
           curl -O https://raw.githubusercontent.com/gem/oq-engine/master/install.py
           ls -lrt install.py
-          echo ${ENGINE_BR}
+          echo "Using branch ${ENGINE_BR}"
           if [ "$(git ls-remote --heads https://github.com/gem/oq-engine.git ${ENGINE_BR})" = "" ]; then
               exit 1
           fi
@@ -62,6 +56,13 @@ jobs:
           echo "Restore ${{matrix.DEMOS}} demos for $ENGINE_BR branch "
           source $HOME/openquake/bin/activate
           oq reset -y
+          # get branch name from version number (e.g. '3.16' -> 'engine-3.16')
+          if [[ $ENGINE_RELEASE == [0-9]* ]]; then
+              IRMT_BR="engine-${ENGINE_RELEASE}"
+          else
+              IRMT_BR=$ENGINE_RELEASE
+          fi
+          ENGINE_BR=$IRMT_BR
           oq restore https://artifacts.openquake.org/travis/${{matrix.DEMOS}}-${ENGINE_BR}.zip ~/oqdata
           oq webui start 172.17.0.1:8800 --skip-browser &> webui.log &
           echo "Waiting WEBUI up on port 8800...."
@@ -77,6 +78,7 @@ jobs:
           -e BRANCH="$IRMT_BR" -e ONLY_CALC_ID="$ONLY_CALC_ID" -e ONLY_OUTPUT_TYPE="$ONLY_OUTPUT_TYPE"  -e GEM_QGIS_TEST=y ${{ matrix.QGIS_DOCKER_VERSION }}
           docker exec qgis bash -c "apt update --allow-releaseinfo-change; DEBIAN_FRONTEND=noninteractive apt install -y python3-scipy python3-matplotlib python3-pyqt5.qtwebkit"
           docker exec qgis bash -c "python3 -m pip install pytest"
+          docker exec qgis bash -c "cd /tests_directory && git checkout ${IRMT_BR}"
           # OGR_SQLITE_JOURNAL=delete prevents QGIS from using WAL, which modifies geopackages even if they are just read
       - name: ℧ Run unit test
         run: |
@@ -85,7 +87,13 @@ jobs:
       - name: ⨕ Run Integration test
         run: |
           set -x
-          IRMT_BR=engine-${{ matrix.RELEASE_VERSION }}
+          ENGINE_RELEASE=${{ matrix.RELEASE_VERSION }}
+          # get branch name from version number (e.g. '3.16' -> 'engine-3.16')
+          if [[ $ENGINE_RELEASE == [0-9]* ]]; then
+              IRMT_BR="engine-${ENGINE_RELEASE}"
+          else
+              IRMT_BR=$ENGINE_RELEASE
+          fi
           ENGINE_BR=$IRMT_BR
           # NOTE: if we want to enable it, we need to use the proper folder after engine user installation
           OQ_TEST_RUN_CALC=0
@@ -104,6 +112,7 @@ jobs:
           docker exec qgis sh -c "echo 'Running against oq-engine on branch $GITHUB_BR'"
           docker exec qgis sh -c "qgis_setup.sh svir"
           docker exec -e OQ_CHECK_MISSING_OUTPUTS=${OQ_CHECK_MISSING_OUTPUTS} -e OQ_TEST_RUN_CALC=${OQ_TEST_RUN_CALC} -e OQ_TEST_AGG_CURVES=${OQ_TEST_AGG_CURVES} \
+          -e BRANCH="$IRMT_BR" -e ONLY_CALC_ID="$ONLY_CALC_ID" -e ONLY_OUTPUT_TYPE="$ONLY_OUTPUT_TYPE"  -e GEM_QGIS_TEST=y \
           -t qgis sh -c "env && cd /tests_directory && qgis_testrunner.sh svir.test.integration.test_drive_oq_engine"
       - name: ㏒ Display web logs
         run: |
