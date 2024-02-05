@@ -90,6 +90,7 @@ jobs:
         run: |
           set -x
           ENGINE_BR=${{ matrix.ENGINE_BR }}
+          IRMT_BR=$ENGINE_BR
           # get release version from branch name (e.g. 'engine-3.16' -> '3.16')
           prefix="engine-"
           if [[ $ENGINE_BR == ${prefix}* ]]; then
@@ -97,7 +98,6 @@ jobs:
           else
               RELEASE_VERSION=$ENGINE_BR
           fi
-          IRMT_BR=$ENGINE_BR
           # NOTE: if we want to enable it, we need to use the proper folder after engine user installation
           OQ_TEST_RUN_CALC=0
           if [ "${{ matrix.DEMOS }}" != "risk-oqdata" -a "${RELEASE_VERSION}" != "3.16" ]; then
@@ -112,7 +112,7 @@ jobs:
           echo "OQ_TEST_RUN_CALC: ${OQ_TEST_RUN_CALC}"
           echo "OQ_TEST_AGG_CURVES: ${OQ_TEST_AGG_CURVES}"
           # NOTE: the check on the existence of the engine branch is already done in the previous step
-          docker exec qgis sh -c "echo 'Running against oq-engine on branch $ENGINE_BR"
+          docker exec qgis sh -c "echo 'Running against oq-engine on branch ${ENGINE_BR}'"
           docker exec qgis sh -c "qgis_setup.sh svir"
           docker exec -e OQ_CHECK_MISSING_OUTPUTS=${OQ_CHECK_MISSING_OUTPUTS} -e OQ_TEST_RUN_CALC=${OQ_TEST_RUN_CALC} -e OQ_TEST_AGG_CURVES=${OQ_TEST_AGG_CURVES} \
           -t qgis sh -c "env && cd /tests_directory && qgis_testrunner.sh svir.test.integration.test_drive_oq_engine"
