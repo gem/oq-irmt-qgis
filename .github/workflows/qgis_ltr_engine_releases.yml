@@ -48,6 +48,7 @@ jobs:
         with:
           python-version: '3.10'
       - name: ⏳ Clone engine and restore oqdata and docker container
+        shell: bash
         run: |
           set -x
           echo "Running on ${{ matrix.os }}"
@@ -86,10 +87,12 @@ jobs:
           docker exec qgis bash -c "python3 -m pip install pytest"
           # OGR_SQLITE_JOURNAL=delete prevents QGIS from using WAL, which modifies geopackages even if they are just read
       - name: ℧ Run unit test
+        shell: bash
         run: |
           set -x
           docker exec -t qgis bash -c "export PYTHONPATH=/usr/share/qgis/python/plugins/:$PYTHONPATH; OGR_SQLITE_JOURNAL=delete pytest -v /tests_directory/svir/test/unit/"
       - name: ⨕ Run Integration test
+        shell: bash
         run: |
           set -x
           IRMT_BR=engine-${{ matrix.RELEASE_VERSION }}
@@ -113,6 +116,7 @@ jobs:
           docker exec -e OQ_CHECK_MISSING_OUTPUTS=${OQ_CHECK_MISSING_OUTPUTS} -e OQ_TEST_RUN_CALC=${OQ_TEST_RUN_CALC} -e OQ_TEST_AGG_CURVES=${OQ_TEST_AGG_CURVES} \
           -t qgis sh -c "env && cd /tests_directory && qgis_testrunner.sh svir.test.integration.test_drive_oq_engine"
       - name: ㏒ Display web logs
+        shell: bash
         run: |
           set -x
           cat webui.log
