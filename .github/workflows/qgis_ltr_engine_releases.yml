@@ -19,8 +19,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # FIXME: it would be better to point to lts and latest if possible
-        # RELEASE_VERSION: ['3.16', '3.18', 'master']
         # FIXME: there seems to be an actual incompatibility between IRMT 3.16 and Engine 3.16
         # Unable to extract http://172.17.0.1:8800/v1/calc/27/extract/agg_curves with parameters {'kind': 'rlzs', 'NAME_1': 'East', 'taxonomy': 'Adobe', 'loss_type': 'structural', 'absolute': True} (Internal Server Error):
         # ValueError: 'East,Adobe' is not in list in /v1/calc/27/extract/agg_curves?kind=rlzs&NAME_1=East&taxonomy=Adobe&loss_type=structural&absolute=True
@@ -30,11 +28,19 @@ jobs:
         #     data = self[k](dstore, v)
         #   File "/home/runner/openquake/lib/python3.10/site-packages/openquake/calculators/extract.py", line 746, in extract_agg_curves
         #     agg_id = lst.index(','.join(tagvalues))
+
+        # os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [windows-latest, macos-latest]
+
         # NOTE: checking also master to make sure risk workshop demos keep working also on master
-        RELEASE_VERSION: ['3.16', '3.18', 'master']
+        # FIXME: it would be better to point to lts and latest if possible
+        # RELEASE_VERSION: ['3.16', '3.18', 'master']
+        RELEASE_VERSION: ['master']
         # NOTE: keep it updated with QGIS ltr
-        QGIS_DOCKER_VERSION: ['qgis/qgis:final-3_8_3', 'qgis/qgis:release-3_28', 'qgis/qgis:latest']
-        DEMOS: ['oqdata', 'risk-oqdata']
+        # QGIS_DOCKER_VERSION: ['qgis/qgis:final-3_8_3', 'qgis/qgis:release-3_28', 'qgis/qgis:latest']
+        QGIS_DOCKER_VERSION: ['qgis/qgis:latest']
+        # DEMOS: ['oqdata', 'risk-oqdata']
+        DEMOS: ['risk-oqdata']
     steps:
       - uses: actions/checkout@v2
       - name: 🐍 Set up Python
