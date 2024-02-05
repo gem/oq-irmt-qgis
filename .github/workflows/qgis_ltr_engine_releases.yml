@@ -31,7 +31,7 @@ jobs:
         #   File "/home/runner/openquake/lib/python3.10/site-packages/openquake/calculators/extract.py", line 746, in extract_agg_curves
         #     agg_id = lst.index(','.join(tagvalues))
         # NOTE: checking also master to make sure risk workshop demos keep working also on master
-        RELEASE_VERSION: ['3.16', '3.18', 'master']
+        ENGINE_BR: ['engine-3.16', 'engine-3.18', 'master']
         # NOTE: keep it updated with QGIS ltr
         QGIS_DOCKER_VERSION: ['qgis/qgis:final-3_8_3', 'qgis/qgis:release-3_28', 'qgis/qgis:latest']
         DEMOS: ['oqdata', 'risk-oqdata']
@@ -41,28 +41,31 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: '3.10'
+          ref: ${{ matrix.ENGINE_BR }}
       - name: ⏳ Clone engine and restore oqdata and docker container
         run: |
           set -x
-          ENGINE_RELEASE=${{ matrix.RELEASE_VERSION }}
+          ENGINE_BR=${{ matrix.ENGINE_BR }}
           curl -O https://raw.githubusercontent.com/gem/oq-engine/master/install.py
           ls -lrt install.py
           echo "Using branch ${ENGINE_BR}"
           if [ "$(git ls-remote --heads https://github.com/gem/oq-engine.git ${ENGINE_BR})" = "" ]; then
+              echo "Branch ${ENGINE_BR} not found in gem/oq-engine repository"
               exit 1
           fi
-          python3 install.py user --version=${ENGINE_RELEASE}
+          # get release version from branch name (e.g. 'engine-3.16' -> '3.16')
+          prefix="engine-"
+          if [[ $ENGINE_BR == ${prefix}* ]]; then
+              RELEASE_VERSION="${ENGINE_BR#${prefix}}"
+          else
+              RELEASE_VERSION=$ENGINE_BR
+          fi
+          IRMT_BR=$RELEASE_VERSION
+          python3 install.py user --version=${RELEASE_VERSION}
           export PIP_DEFAULT_TIMEOUT=100
           echo "Restore ${{matrix.DEMOS}} demos for $ENGINE_BR branch "
           source $HOME/openquake/bin/activate
           oq reset -y
-          # get branch name from version number (e.g. '3.16' -> 'engine-3.16')
-          if [[ $ENGINE_RELEASE == [0-9]* ]]; then
-              IRMT_BR="engine-${ENGINE_RELEASE}"
-          else
-              IRMT_BR=$ENGINE_RELEASE
-          fi
-          ENGINE_BR=$IRMT_BR
           oq restore https://artifacts.openquake.org/travis/${{matrix.DEMOS}}-${ENGINE_BR}.zip ~/oqdata
           oq webui start 172.17.0.1:8800 --skip-browser &> webui.log &
           echo "Waiting WEBUI up on port 8800...."
@@ -86,17 +89,18 @@ jobs:
       - name: ⨕ Run Integration test
         run: |
           set -x
-          ENGINE_RELEASE=${{ matrix.RELEASE_VERSION }}
-          # get branch name from version number (e.g. '3.16' -> 'engine-3.16')
-          if [[ $ENGINE_RELEASE == [0-9]* ]]; then
-              IRMT_BR="engine-${ENGINE_RELEASE}"
+          ENGINE_BR=${{ matrix.ENGINE_BR }}
+          # get release version from branch name (e.g. 'engine-3.16' -> '3.16')
+          prefix="engine-"
+          if [[ $ENGINE_BR == ${prefix}* ]]; then
+              RELEASE_VERSION="${ENGINE_BR#${prefix}}"
           else
-              IRMT_BR=$ENGINE_RELEASE
+              RELEASE_VERSION=$ENGINE_BR
           fi
-          ENGINE_BR=$IRMT_BR
+          IRMT_BR=$ENGINE_BR
           # NOTE: if we want to enable it, we need to use the proper folder after engine user installation
           OQ_TEST_RUN_CALC=0
-          if [ "${{ matrix.DEMOS }}" != "risk-oqdata" -a "${{ matrix.RELEASE_VERSION }}" != "3.16" ]; then
+          if [ "${{ matrix.DEMOS }}" != "risk-oqdata" -a "${RELEASE_VERSION}" != "3.16" ]; then
             OQ_CHECK_MISSING_OUTPUTS=1
             OQ_TEST_AGG_CURVES=1
           else
@@ -108,10 +112,9 @@ jobs:
           echo "OQ_TEST_RUN_CALC: ${OQ_TEST_RUN_CALC}"
           echo "OQ_TEST_AGG_CURVES: ${OQ_TEST_AGG_CURVES}"
           # NOTE: the check on the existence of the engine branch is already done in the previous step
-          docker exec qgis sh -c "echo 'Running against oq-engine on branch $GITHUB_BR'"
+          docker exec qgis sh -c "echo 'Running against oq-engine on branch $ENGINE_BR"
           docker exec qgis sh -c "qgis_setup.sh svir"
           docker exec -e OQ_CHECK_MISSING_OUTPUTS=${OQ_CHECK_MISSING_OUTPUTS} -e OQ_TEST_RUN_CALC=${OQ_TEST_RUN_CALC} -e OQ_TEST_AGG_CURVES=${OQ_TEST_AGG_CURVES} \
-          -e BRANCH="$IRMT_BR" -e ONLY_CALC_ID="$ONLY_CALC_ID" -e ONLY_OUTPUT_TYPE="$ONLY_OUTPUT_TYPE"  -e GEM_QGIS_TEST=y \
           -t qgis sh -c "env && cd /tests_directory && qgis_testrunner.sh svir.test.integration.test_drive_oq_engine"
       - name: ㏒ Display web logs
         run: |
