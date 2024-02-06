@@ -60,7 +60,7 @@ jobs:
           else
               RELEASE_VERSION=$ENGINE_BR
           fi
-          IRMT_BR=$RELEASE_VERSION
+          IRMT_BR=$ENGINE_BR
           python3 install.py user --version=${RELEASE_VERSION}
           export PIP_DEFAULT_TIMEOUT=100
           echo "Restore ${{matrix.DEMOS}} demos for $ENGINE_BR branch "
