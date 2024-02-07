@@ -11,32 +11,20 @@ on:
   #   branches:
   #     - '**'
   schedule:
-    - cron: "0 2 * * *"
+    - cron: "0 3 * * *"
 
 jobs:
   Tests_and_docs:
     strategy:
       fail-fast: false
       matrix:
-        # FIXME: there seems to be an actual incompatibility between IRMT 3.16 and Engine 3.16
-        # Unable to extract http://172.17.0.1:8800/v1/calc/27/extract/agg_curves with parameters {'kind': 'rlzs', 'NAME_1': 'East', 'taxonomy': 'Adobe', 'loss_type': 'structural', 'absolute': True} (Internal Server Error):
-        # ValueError: 'East,Adobe' is not in list in /v1/calc/27/extract/agg_curves?kind=rlzs&NAME_1=East&taxonomy=Adobe&loss_type=structural&absolute=True
-        #   File "/home/runner/openquake/lib/python3.10/site-packages/openquake/server/views.py", line 820, in extract
-        #     obj = _extract(ds, what + query_string)
-        #   File "/home/runner/openquake/lib/python3.10/site-packages/openquake/calculators/extract.py", line 201, in __call__
-        #     data = self[k](dstore, v)
-        #   File "/home/runner/openquake/lib/python3.10/site-packages/openquake/calculators/extract.py", line 746, in extract_agg_curves
-        #     agg_id = lst.index(','.join(tagvalues))
-
         # os: [ubuntu-latest, windows-latest, macos-latest]
         os: [windows-latest, macos-latest]
-
         # NOTE: checking also master to make sure risk workshop demos keep working also on master
-        # FIXME: it would be better to point to lts and latest if possible
-        # RELEASE_VERSION: ['3.16', '3.18', 'master']
-        RELEASE_VERSION: ['master']
+        # TODO: it would be better to point to lts and latest if possible
+        ENGINE_BR: ['engine-3.16', 'engine-3.18', 'master']
         # NOTE: keep it updated with QGIS ltr
-        # QGIS_DOCKER_VERSION: ['qgis/qgis:final-3_8_3', 'qgis/qgis:release-3_28', 'qgis/qgis:latest']
+        # QGIS_DOCKER_VERSION: ['qgis/qgis:release-3_28', 'qgis/qgis:latest']
         QGIS_DOCKER_VERSION: ['qgis/qgis:latest']
         # DEMOS: ['oqdata', 'risk-oqdata']
         DEMOS: ['risk-oqdata']
@@ -47,24 +35,30 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: '3.10'
+          ref: ${{ matrix.ENGINE_BR }}
       - name: ⏳ Clone engine and restore oqdata and docker container
         run: |
           set -x
           echo "Running on ${{ matrix.os }}"
-          ENGINE_RELEASE=${{ matrix.RELEASE_VERSION }}
-          if [ "${{ matrix.RELEASE_VERSION }}" != "master" ]; then
-            IRMT_BR=engine-${ENGINE_RELEASE}
-          else
-            IRMT_BR=${ENGINE_RELEASE}
-          fi
-          ENGINE_BR=$IRMT_BR
+          ENGINE_BR=${{ matrix.ENGINE_BR }}
+          IRMT_BR=$ENGINE_BR
+          git fetch
+          git checkout $IRMT_BR
           curl -O https://raw.githubusercontent.com/gem/oq-engine/master/install.py
           ls -lrt install.py
-          echo ${ENGINE_BR}
+          echo "Using branch ${ENGINE_BR}"
           if [ "$(git ls-remote --heads https://github.com/gem/oq-engine.git ${ENGINE_BR})" = "" ]; then
+              echo "Branch ${ENGINE_BR} not found in gem/oq-engine repository"
               exit 1
           fi
-          python3 install.py user --version=${ENGINE_RELEASE}
+          # get release version from branch name (e.g. 'engine-3.16' -> '3.16')
+          prefix="engine-"
+          if [[ $ENGINE_BR == ${prefix}* ]]; then
+              RELEASE_VERSION="${ENGINE_BR#${prefix}}"
+          else
+              RELEASE_VERSION=$ENGINE_BR
+          fi
+          python3 install.py user --version=${RELEASE_VERSION}
           export PIP_DEFAULT_TIMEOUT=100
           echo "Restore ${{matrix.DEMOS}} demos for $ENGINE_BR branch "
           source $HOME/openquake/bin/activate
@@ -88,29 +82,38 @@ jobs:
       - name: ℧ Run unit test
         run: |
           set -x
+          ENGINE_BR=${{ matrix.ENGINE_BR }}
+          IRMT_BR=$ENGINE_BR
+          git fetch
+          git checkout $IRMT_BR
           docker exec -t qgis bash -c "export PYTHONPATH=/usr/share/qgis/python/plugins/:$PYTHONPATH; OGR_SQLITE_JOURNAL=delete pytest -v /tests_directory/svir/test/unit/"
       - name: ⨕ Run Integration test
         run: |
           set -x
-          IRMT_BR=engine-${{ matrix.RELEASE_VERSION }}
-          ENGINE_BR=$IRMT_BR
+          ENGINE_BR=${{ matrix.ENGINE_BR }}
+          IRMT_BR=$ENGINE_BR
+          git fetch
+          git checkout $IRMT_BR
+          # get release version from branch name (e.g. 'engine-3.16' -> '3.16')
+          prefix="engine-"
+          if [[ $ENGINE_BR == ${prefix}* ]]; then
+              RELEASE_VERSION="${ENGINE_BR#${prefix}}"
+          else
+              RELEASE_VERSION=$ENGINE_BR
+          fi
           # NOTE: if we want to enable it, we need to use the proper folder after engine user installation
           OQ_TEST_RUN_CALC=0
-          if [ "${{ matrix.DEMOS }}" != "risk-oqdata" -a "${{ matrix.RELEASE_VERSION }}" != "3.16" ]; then
+          if [ "${{ matrix.DEMOS }}" != "risk-oqdata" -a "${RELEASE_VERSION}" != "3.16" ]; then
             OQ_CHECK_MISSING_OUTPUTS=1
-            OQ_TEST_AGG_CURVES=1
           else
             OQ_CHECK_MISSING_OUTPUTS=0
-            # NOTE: skipping test_load_agg_curves for engine-3.16
-            OQ_TEST_AGG_CURVES=0
           fi
           echo "OQ_CHECK_MISSING_OUTPUTS: ${OQ_CHECK_MISSING_OUTPUTS}"
           echo "OQ_TEST_RUN_CALC: ${OQ_TEST_RUN_CALC}"
-          echo "OQ_TEST_AGG_CURVES: ${OQ_TEST_AGG_CURVES}"
           # NOTE: the check on the existence of the engine branch is already done in the previous step
-          docker exec qgis sh -c "echo 'Running against oq-engine on branch $GITHUB_BR'"
+          docker exec qgis sh -c "echo 'Running against oq-engine on branch ${ENGINE_BR}'"
           docker exec qgis sh -c "qgis_setup.sh svir"
-          docker exec -e OQ_CHECK_MISSING_OUTPUTS=${OQ_CHECK_MISSING_OUTPUTS} -e OQ_TEST_RUN_CALC=${OQ_TEST_RUN_CALC} -e OQ_TEST_AGG_CURVES=${OQ_TEST_AGG_CURVES} \
+          docker exec -e OQ_CHECK_MISSING_OUTPUTS=${OQ_CHECK_MISSING_OUTPUTS} -e OQ_TEST_RUN_CALC=${OQ_TEST_RUN_CALC} \
           -t qgis sh -c "env && cd /tests_directory && qgis_testrunner.sh svir.test.integration.test_drive_oq_engine"
       - name: ㏒ Display web logs
         run: |
