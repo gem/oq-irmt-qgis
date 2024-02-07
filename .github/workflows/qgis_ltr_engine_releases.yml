@@ -64,7 +64,7 @@ jobs:
           source $HOME/openquake/bin/activate
           oq reset -y
           oq restore https://artifacts.openquake.org/travis/${{matrix.DEMOS}}-${ENGINE_BR}.zip ~/oqdata
-          oq webui start 172.17.0.1:8800 --skip-browser >> webui.log 2>&1 &
+          oq webui start --skip-browser >> webui.log 2>&1 &
           echo "Waiting WEBUI up on port 8800...."
           while ! nc -z 172.17.0.1 8800; do
             sleep 5
