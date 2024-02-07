@@ -58,8 +58,7 @@ from svir.dialogs.load_inputs_dialog import LoadInputsDialog
 QGIS_APP = start_app()
 
 LONG_LOADING_TIME = 10  # seconds
-ONLY_OUTPUT_TYPE = (
-    False if os.environ.get('ONLY_OUTPUT_TYPE') != '1' else True)
+ONLY_OUTPUT_TYPE = os.environ.get('ONLY_OUTPUT_TYPE')
 OQ_CHECK_MISSING_OUTPUTS = (
     False if os.environ.get('OQ_CHECK_MISSING_OUTPUTS') != '1' else True)
 OQ_TEST_RUN_CALC = (
