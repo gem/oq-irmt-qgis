@@ -19,7 +19,7 @@ jobs:
       fail-fast: false
       matrix:
         # os: [ubuntu-latest, windows-latest, macos-latest]
-        os: [windows-latest, macos-latest]
+        os: [macos-latest]
         # NOTE: checking also master to make sure risk workshop demos keep working also on master
         # TODO: it would be better to point to lts and latest if possible
         ENGINE_BR: ['engine-3.16', 'engine-3.18', 'master']
