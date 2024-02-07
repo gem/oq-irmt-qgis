@@ -58,10 +58,18 @@ from svir.dialogs.load_inputs_dialog import LoadInputsDialog
 QGIS_APP = start_app()
 
 LONG_LOADING_TIME = 10  # seconds
-ONLY_OUTPUT_TYPE = os.environ.get('ONLY_OUTPUT_TYPE')
+ONLY_OUTPUT_TYPE = (
+    False if os.environ.get('ONLY_OUTPUT_TYPE') != '1' else True)
+OQ_CHECK_MISSING_OUTPUTS = (
+    False if os.environ.get('OQ_CHECK_MISSING_OUTPUTS') != '1' else True)
+OQ_TEST_RUN_CALC = (
+    False if os.environ.get('OQ_TEST_RUN_CALC') != '1' else True)
 
 
 def run_all():
+    print(f'{ONLY_OUTPUT_TYPE=}')
+    print(f'{OQ_CHECK_MISSING_OUTPUTS=}')
+    print(f'{OQ_TEST_RUN_CALC=}')
     suite = unittest.TestSuite()
     # OQ_CSV_TO_LAYER_TYPES
     suite.addTest(unittest.makeSuite(LoadAggRiskTestCase, 'test'))
@@ -143,7 +151,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         if cls.only_calc_id is not None:
             cls.calc_list = [calc for calc in cls.calc_list
                              if calc['id'] == cls.only_calc_id]
-        cls.only_output_type = os.environ.get('ONLY_OUTPUT_TYPE')
+        cls.only_output_type = ONLY_OUTPUT_TYPE
         if not cls.only_output_type:
             print('ONLY_OUTPUT_TYPE was not set. Running tests for all'
                   ' the available output types')
@@ -936,10 +944,11 @@ class AllLoadableOutputsFoundInDemosTestCase(LoadOqEngineOutputsTestCase):
                      'only testing output type %s' % ONLY_OUTPUT_TYPE)
     def test_all_loadable_output_types_found_in_demos(self):
         self.list_calculations_and_outputs()
-        if self.only_calc_id or self.only_output_type:
-            print('Skipping test checking if all loadable outputs are found'
-                  ' in demos')
-            return
+        if (self.only_calc_id or self.only_output_type
+                or not OQ_CHECK_MISSING_OUTPUTS):
+            self.skipTest(
+                'Skipping test checking if all loadable outputs are found'
+                ' in demos')
         loadable_output_types_found = set()
         loadable_output_types_not_found = set()
         for loadable_output_type in OQ_ALL_TYPES:
@@ -995,8 +1004,8 @@ class AllLoadersAreImplementedTestCase(LoadOqEngineOutputsTestCase):
     def test_all_loaders_are_implemented(self):
         self.list_calculations_and_outputs()
         if self.only_calc_id or self.only_output_type:
-            print('Skipping test checking if any loaders are not implemented')
-            return
+            self.skipTest(
+                'Skipping test checking if any loaders are not implemented')
         not_implemented_loaders = set()
         for calc in self.calc_list:
             for output in self.output_list[calc['id']]:
@@ -1015,9 +1024,9 @@ class RunCalculationTestCase(LoadOqEngineOutputsTestCase):
     @unittest.skipIf(ONLY_OUTPUT_TYPE,
                      'only testing output type %s' % ONLY_OUTPUT_TYPE)
     def test_run_calculation(self):
-        if self.only_calc_id or self.only_output_type:
-            print('Skipping test running a new calculation')
-            return
+        if (self.only_calc_id or self.only_output_type
+                or not OQ_TEST_RUN_CALC):
+            self.skipTest('Skipping test running a new calculation')
         risk_demos_path = os.path.join(
             os.pardir, 'oq-engine', 'demos', 'risk')
         risk_demos_dirs = glob.glob(os.path.join(risk_demos_path, "*", ""))
