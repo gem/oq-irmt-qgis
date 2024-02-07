@@ -64,7 +64,7 @@ jobs:
           source $HOME/openquake/bin/activate
           oq reset -y
           oq restore https://artifacts.openquake.org/travis/${{matrix.DEMOS}}-${ENGINE_BR}.zip ~/oqdata
-          oq webui start 172.17.0.1:8800 --skip-browser &> webui.log &
+          oq webui start 172.17.0.1:8800 --skip-browser >> webui.log 2>&1 &
           echo "Waiting WEBUI up on port 8800...."
           while ! nc -z 172.17.0.1 8800; do
             sleep 5
@@ -115,7 +115,9 @@ jobs:
           docker exec qgis sh -c "qgis_setup.sh svir"
           docker exec -e OQ_CHECK_MISSING_OUTPUTS=${OQ_CHECK_MISSING_OUTPUTS} -e OQ_TEST_RUN_CALC=${OQ_TEST_RUN_CALC} \
           -t qgis sh -c "env && cd /tests_directory && qgis_testrunner.sh svir.test.integration.test_drive_oq_engine"
-      - name: ㏒ Display web logs
-        run: |
-          set -x
-          cat webui.log
+      - name: ㏒ Save webui log as artifact
+        uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: WebUI-log
+          path: webui.log
