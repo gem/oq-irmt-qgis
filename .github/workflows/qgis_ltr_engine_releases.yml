@@ -47,6 +47,8 @@ jobs:
           set -x
           ENGINE_BR=${{ matrix.ENGINE_BR }}
           IRMT_BR=$ENGINE_BR
+          git fetch
+          git checkout $IRMT_BR
           curl -O https://raw.githubusercontent.com/gem/oq-engine/master/install.py
           ls -lrt install.py
           echo "Using branch ${ENGINE_BR}"
@@ -87,6 +89,7 @@ jobs:
           set -x
           ENGINE_BR=${{ matrix.ENGINE_BR }}
           IRMT_BR=$ENGINE_BR
+          git fetch
           git checkout $IRMT_BR
           docker exec -t qgis bash -c "export PYTHONPATH=/usr/share/qgis/python/plugins/:$PYTHONPATH; OGR_SQLITE_JOURNAL=delete pytest -v /tests_directory/svir/test/unit/"
       - name: ⨕ Run Integration test
@@ -94,6 +97,7 @@ jobs:
           set -x
           ENGINE_BR=${{ matrix.ENGINE_BR }}
           IRMT_BR=$ENGINE_BR
+          git fetch
           git checkout $IRMT_BR
           # get release version from branch name (e.g. 'engine-3.16' -> '3.16')
           prefix="engine-"
