@@ -66,9 +66,9 @@ OQ_TEST_RUN_CALC = (
 
 
 def run_all():
-    print(f'{ONLY_OUTPUT_TYPE=}')
-    print(f'{OQ_CHECK_MISSING_OUTPUTS=}')
-    print(f'{OQ_TEST_RUN_CALC=}')
+    print(f'ONLY_OUTPUT_TYPE: {ONLY_OUTPUT_TYPE}')
+    print(f'OQ_CHECK_MISSING_OUTPUTS: {OQ_CHECK_MISSING_OUTPUTS}')
+    print(f'OQ_TEST_RUN_CALC: {OQ_TEST_RUN_CALC}')
     suite = unittest.TestSuite()
     # OQ_CSV_TO_LAYER_TYPES
     suite.addTest(unittest.makeSuite(LoadAggRiskTestCase, 'test'))
