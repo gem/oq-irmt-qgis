@@ -59,9 +59,10 @@ QGIS_APP = start_app()
 
 LONG_LOADING_TIME = 10  # seconds
 
+ONLY_OUTPUT_TYPE = os.environ.get('ONLY_OUTPUT_TYPE')
+ONLY_CALC_ID = int(os.environ.get('ONLY_CALC_ID'))
+
 # NOTE: we can skip some tests when checking risk workshop examples
-ONLY_OUTPUT_TYPE = (
-    False if os.environ.get('ONLY_OUTPUT_TYPE') != '1' else True)
 OQ_CHECK_MISSING_OUTPUTS = (
     False if os.environ.get('OQ_CHECK_MISSING_OUTPUTS') != '1' else True)
 OQ_TEST_RUN_CALC = (
@@ -70,6 +71,7 @@ OQ_TEST_RUN_CALC = (
 
 def run_all():
     print(f'{ONLY_OUTPUT_TYPE=}')
+    print(f'{ONLY_CALC_ID=}')
     print(f'{OQ_CHECK_MISSING_OUTPUTS=}')
     print(f'{OQ_TEST_RUN_CALC=}')
     suite = unittest.TestSuite()
