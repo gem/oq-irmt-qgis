@@ -20,7 +20,6 @@ jobs:
       fail-fast: false
       matrix:
         # FIXME: it would be better to point to lts and latest if possible
-        # RELEASE_VERSION: ['3.16', '3.18', 'master']
         # NOTE: checking also master to make sure risk workshop demos keep working also on master
         ENGINE_BR: ['engine-3.16', 'engine-3.18', 'master']
         # NOTE: keep it updated with QGIS ltr
