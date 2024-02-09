@@ -59,10 +59,12 @@ QGIS_APP = start_app()
 
 LONG_LOADING_TIME = 10  # seconds
 ONLY_OUTPUT_TYPE = os.environ.get('ONLY_OUTPUT_TYPE')
+
+# Run all tests unless explicitly specified setting those env variables to '0'
 OQ_CHECK_MISSING_OUTPUTS = (
-    False if os.environ.get('OQ_CHECK_MISSING_OUTPUTS') != '1' else True)
+    False if os.environ.get('OQ_CHECK_MISSING_OUTPUTS') == '0' else True)
 OQ_TEST_RUN_CALC = (
-    False if os.environ.get('OQ_TEST_RUN_CALC') != '1' else True)
+    False if os.environ.get('OQ_TEST_RUN_CALC') == '0' else True)
 
 
 def run_all():
