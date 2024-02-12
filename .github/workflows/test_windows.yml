@@ -1,4 +1,4 @@
-name: QGIS LTR integration tests IRMT vs Engine (LTR and latest)
+name: Test on Windows
 on:
   # NOTE: enables only scheduled or triggered manually, NOT on pull requests
   workflow_dispatch:
