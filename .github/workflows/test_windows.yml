@@ -38,7 +38,7 @@ jobs:
           ref: ${{ matrix.ENGINE_BR }}
       - name: Install QGIS
         run: |
-          curl https://qgis.org/downloads/${{ matrix.QGIS_INSTALLER }} && Start-Process -FilePath ".\{{ matrix.QGIS_INSTALLER }}" -ArgumentList "/quiet /passive" -Wait;
+          curl https://qgis.org/downloads/${{matrix.QGIS_INSTALLER}} && Start-Process -FilePath ".\${{matrix.QGIS_INSTALLER}}" -ArgumentList "/quiet /passive" -Wait;
       - name: ⏳ Clone engine and restore oqdata
         run: |
           set -x
