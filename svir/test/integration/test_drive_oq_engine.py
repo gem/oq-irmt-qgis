@@ -58,9 +58,11 @@ from svir.dialogs.load_inputs_dialog import LoadInputsDialog
 QGIS_APP = start_app()
 
 LONG_LOADING_TIME = 10  # seconds
+
 ONLY_OUTPUT_TYPE = os.environ.get('ONLY_OUTPUT_TYPE')
 
 # Run all tests unless explicitly specified setting those env variables to '0'
+# NOTE: we can skip some tests when checking risk workshop examples
 OQ_CHECK_MISSING_OUTPUTS = (
     False if os.environ.get('OQ_CHECK_MISSING_OUTPUTS') == '0' else True)
 OQ_TEST_RUN_CALC = (
