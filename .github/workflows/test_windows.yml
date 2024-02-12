@@ -7,11 +7,11 @@ on:
         description: Git Ref
         default: master
         required: true
-  # push:
-  #   branches:
-  #     - '**'
-  schedule:
-    - cron: "0 3 * * *"
+  push:
+    branches:
+      - '**'
+  # schedule:
+  #   - cron: "0 3 * * *"
 
 jobs:
   Tests_and_docs:
