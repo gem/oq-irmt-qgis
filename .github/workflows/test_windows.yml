@@ -40,11 +40,12 @@ jobs:
         run: |
           $WebClient = New-Object System.Net.WebClient
           $WebClient.DownloadFile("https://qgis.org/downloads/${{matrix.QGIS_INSTALLER}}", ".\${{matrix.QGIS_INSTALLER}}")
-          Start-Process -FilePath ".\${{matrix.QGIS_INSTALLER}}" -ArgumentList "/quiet /passive" -Wait;
+          Start-Process -FilePath ".\${{matrix.QGIS_INSTALLER}}" -ArgumentList "/quiet /passive" -Wait
+          # FIXME: make it parametric
+          'C:\Program Files\QGIS 3.28.14\bin\qgis-ltr-bin.exe' --version | echo
       - name: ⏳ Clone engine and restore oqdata
         run: |
           set -x
-          echo "Running on ${{ matrix.os }}"
           ENGINE_BR=${{ matrix.ENGINE_BR }}
           IRMT_BR=$ENGINE_BR
           git fetch
@@ -52,17 +53,18 @@ jobs:
           curl -O https://raw.githubusercontent.com/gem/oq-engine/master/install.py
           ls -lrt install.py
           echo "Using branch ${ENGINE_BR}"
-          if [ "$(git ls-remote --heads https://github.com/gem/oq-engine.git ${ENGINE_BR})" = "" ]; then
-              echo "Branch ${ENGINE_BR} not found in gem/oq-engine repository"
-              exit 1
-          fi
+          # if [ "$(git ls-remote --heads https://github.com/gem/oq-engine.git ${ENGINE_BR})" = "" ]; then
+          #     echo "Branch ${ENGINE_BR} not found in gem/oq-engine repository"
+          #     exit 1
+          # fi
           # get release version from branch name (e.g. 'engine-3.16' -> '3.16')
-          prefix="engine-"
-          if [[ $ENGINE_BR == ${prefix}* ]]; then
-              RELEASE_VERSION="${ENGINE_BR#${prefix}}"
-          else
-              RELEASE_VERSION=$ENGINE_BR
-          fi
+          # prefix="engine-"
+          # if [[ $ENGINE_BR == ${prefix}* ]]; then
+          #     RELEASE_VERSION="${ENGINE_BR#${prefix}}"
+          # else
+          #     RELEASE_VERSION=$ENGINE_BR
+          # fi
+          RELEASE_VERSION=master
           python3 install.py user --version=${RELEASE_VERSION}
           export PIP_DEFAULT_TIMEOUT=100
           echo "Restore ${{matrix.DEMOS}} demos for $ENGINE_BR branch "
@@ -70,10 +72,10 @@ jobs:
           oq reset -y
           oq restore https://artifacts.openquake.org/travis/${{matrix.DEMOS}}-${ENGINE_BR}.zip ~/oqdata
           oq webui start --skip-browser >> webui.log 2>&1 &
-          echo "Waiting WEBUI up on port 8800...."
-          while ! nc -z 172.17.0.1 8800; do
-            sleep 5
-          done
+          # echo "Waiting WEBUI up on port 8800...."
+          # while ! nc -z 172.17.0.1 8800; do
+          #   sleep 5
+          # done
           curl http://172.17.0.1:8800/v1/engine_version
           #
           # DOCKER_HOST=`ip -4 addr show docker0 | grep -Po 'inet \K[\d.]+'`
