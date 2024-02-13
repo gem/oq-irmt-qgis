@@ -42,7 +42,7 @@ jobs:
           $WebClient.DownloadFile("https://qgis.org/downloads/${{matrix.QGIS_INSTALLER}}", ".\${{matrix.QGIS_INSTALLER}}")
           Start-Process -FilePath ".\${{matrix.QGIS_INSTALLER}}" -ArgumentList "/quiet /passive" -Wait
           # FIXME: make it parametric
-          'C:\Program Files\QGIS 3.28.14\bin\qgis-ltr-bin.exe' --version | echo
+          & 'C:\Program Files\QGIS 3.28.14\bin\qgis-ltr-bin.exe' --version | echo
       - name: ⏳ Clone engine and restore oqdata
         run: |
           set -x
