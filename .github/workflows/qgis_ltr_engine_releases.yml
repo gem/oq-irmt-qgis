@@ -21,9 +21,9 @@ jobs:
       matrix:
         # NOTE: it would be better to point to lts and latest if possible
         # NOTE: checking also master to make sure risk workshop demos keep working also on master
-        ENGINE_BR: ['engine-3.16', 'engine-3.18', 'master']
+        ENGINE_BR: ['engine-3.16', 'engine-3.19', 'master']
         # NOTE: keep it updated with QGIS ltr
-        QGIS_DOCKER_VERSION: ['qgis/qgis:release-3_28', 'qgis/qgis:latest']
+        QGIS_DOCKER_VERSION: ['qgis/qgis:release-3_34', 'qgis/qgis:latest']
         DEMOS: ['oqdata', 'risk-oqdata']
     steps:
       - uses: actions/checkout@v2
