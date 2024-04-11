@@ -7,8 +7,14 @@
     <x>0</x>
     <y>0</y>
     <width>499</width>
-    <height>748</height>
+    <height>629</height>
    </rect>
+  </property>
+  <property name="maximumSize">
+   <size>
+    <width>499</width>
+    <height>629</height>
+   </size>
   </property>
   <property name="windowTitle">
    <string>OpenQuake IRMT Settings</string>
@@ -29,7 +35,7 @@
         <x>0</x>
         <y>0</y>
         <width>479</width>
-        <height>728</height>
+        <height>609</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_4">
