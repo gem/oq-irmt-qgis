@@ -156,22 +156,6 @@ svir.dialogs.transformation_dialog module
     :undoc-members:
     :show-inheritance:
 
-svir.dialogs.upload_dialog module
----------------------------------
-
-.. automodule:: svir.dialogs.upload_dialog
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-svir.dialogs.upload_settings_dialog module
-------------------------------------------
-
-.. automodule:: svir.dialogs.upload_settings_dialog
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 svir.dialogs.viewer_dock module
 -------------------------------
 

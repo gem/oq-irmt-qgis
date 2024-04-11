@@ -14,18 +14,7 @@ OpenQuake IRMT settings
 
 Some of the functionalities provided by the plugin, such as the ability to work
 with GEM data, require the interaction between the plugin itself and the
-OpenQuake Platform (OQ-Platform) or the OpenQuake Engine (OQ-Engine).
-
-The OQ-Platform is a web-based portal to visualize, explore and share GEM's
-datasets, tools and models. In the :guilabel:`OpenQuake IRMT Settings` dialog displayed
-in :numref:`fig-plugin-settings`, credentials must be inserted to
-authenticate the user and to allow the user to log into the OQ-Platform. In the
-:guilabel:`Host` field insert the URL of GEM production installation of the
-`OQ-Platform <https://platform.openquake.org>`_ or a different installation if
-you have URL access. If you still haven't registered to use the OQ-Platform,
-you can do so by clicking :guilabel:`Register to the OQ-Platform`.  This will
-open a new web browser and a `sign up page
-<https://platform.openquake.org/account/signup/>`_.
+OpenQuake Engine (OQ-Engine).
 
 .. _fig-connection-profile:
 
