@@ -47,7 +47,6 @@ metadata_file_path = os.path.join(
 with open(metadata_file_path, 'r', newline='') as f:
     cp.read_file(f)
 IRMT_PLUGIN_VERSION = cp.get('general', 'version')
-PLATFORM_REGISTRATION_URL = 'https://platform.openquake.org/account/signup/'
 SUPPLEMENTAL_INFORMATION_VERSION = '1.0'
 PROJECT_DEFINITION_VERSION = '1.0'
 
@@ -292,10 +291,6 @@ DEFAULT_SETTINGS = dict(
     log_level='C',
 )
 
-DEFAULT_PLATFORM_PROFILES = (
-    '{"OpenQuake Platform": {'
-    '"username": "", "password": "",'
-    '"hostname": "https://platform.openquake.org"}}')
 DEFAULT_ENGINE_PROFILES = (
     '{"Local OpenQuake Engine Server": {'
     '"username": "", "password": "",'

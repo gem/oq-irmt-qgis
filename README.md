@@ -7,10 +7,7 @@ through interactive data visualization tools that are provided by the plugin.
 
 The toolkit also enables users to develop composite indicators to
 measure and quantify social characteristics, and to combine them with estimates of
-human or infrastructure loss. The users can directly interact with the
-[OpenQuake Platform](https://platform.openquake.org/), in order to
-browse and download socioeconomic data or existing projects, to edit
-projects locally in QGIS, then to upload and share them through the Platform.
+human or infrastructure loss.
 
 A post-earthquake recovery modeling framework is incorporated into the toolkit,
 to produce building level and/or community level recovery functions, that

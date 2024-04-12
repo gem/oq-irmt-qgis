@@ -22,7 +22,8 @@ jobs:
         # NOTE: it would be better to point to lts and latest if possible
         # NOTE: checking also master to make sure risk workshop demos keep working also on master
         ENGINE_BR: ['engine-3.16', 'engine-3.19', 'master']
-        QGIS_DOCKER_VERSION: ['qgis/qgis:ltr', 'qgis/qgis:latest']
+        # NOTE: testing also for 3.22 because it is the version of qgis-server that we are currently using in the Geoviewer
+        QGIS_DOCKER_VERSION: ['qgis/qgis:release-3_22', 'qgis/qgis:ltr', 'qgis/qgis:latest']
         DEMOS: ['oqdata', 'risk-oqdata']
     steps:
       - uses: actions/checkout@v2
