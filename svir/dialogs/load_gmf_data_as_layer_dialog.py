@@ -80,15 +80,11 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
             self.eid = self.get_closest_element(self.eid, events['id'])
             ok = True
         elif 'scenario' in self.calculation_mode:
-            range_width = self.oqparam['number_of_ground_motion_fields']
-            ranges = {}
+            ids_str = ''
             for gsim_idx, gsim in enumerate(self.gsims):
-                ranges[gsim] = (gsim_idx * range_width,
-                                gsim_idx * range_width + range_width - 1)
-            ranges_str = ''
-            for gsim in ranges:
-                ranges_str += '\n%s: %s' % (gsim, ranges[gsim])
-            input_msg = "Ranges:%s" % ranges_str
+                ids = events[events['rlz_id'] == gsim_idx]['id']
+                ids_str += '\n%s: %s' % (gsim, ids)
+            input_msg = "Events:%s" % ids_str
         else:
             input_msg = "Range (%s - %s)" % (events[0]['id'], events[-1]['id'])
         if 'GEM_QGIS_TEST' not in os.environ:
