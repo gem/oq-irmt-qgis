@@ -1272,7 +1272,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.table.setRowCount(nrows)
         self.table.setColumnCount(ncols)
         if self.output_type == 'avg_losses-rlzs_aggr':
-            self.table.setHorizontalHeaderLabels(self.rlzs)
+            labels = ['Mean'] if len(self.rlzs) == 1 else self.rlzs
+            self.table.setHorizontalHeaderLabels(labels)
         else:  # self.output_type == 'avg_losses-stats_aggr'
             self.table.setHorizontalHeaderLabels(self.stats)
         if tags is not None:  # NOTE: case with '*'
