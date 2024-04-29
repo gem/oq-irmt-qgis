@@ -24,6 +24,8 @@ email=staff.it@globalquakemodel.org
 # Uncomment the following line and add your changelog entries:
 changelog=
     3.19.0
+    * Different way to select the event and the GMPE in oq-engine scenario calculations
+    * Fixed the header of aggregated average losses realizations in case of oq-engine parameter collect_rlzs=True
     * Improved integration tests, checking compatibility with python 3.9, 3.10 and 3.11 and with test cases used in risk workshops
     3.18.0
     * Added visualization of aggcurves and aggcurves-stats for event_based_damage oq-engine calculations
