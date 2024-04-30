@@ -105,7 +105,8 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
         return field_types
 
     def load_from_npz(self):
-        boundaries = gzip.decompress(self.npz_file['boundaries']).split(b'\n')
+        boundaries = gzip.decompress(
+            bytes(self.npz_file['boundaries'])).split(b'\n')
         row_wkt_geom_types = {
             row_idx: QgsGeometry.fromWkt(boundary.decode('utf8')).wkbType()
             for row_idx, boundary in enumerate(boundaries)}
