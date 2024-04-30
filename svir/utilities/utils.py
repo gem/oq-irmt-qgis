@@ -1296,7 +1296,10 @@ def write_metadata_to_layer(
 
 def zoom_to_group(group):
     extent = QgsRectangle()
-    extent.setMinimal()
+    if Qgis.QGIS_VERSION_INT < 33400:
+        extent.setMinimal()
+    else:
+        extent.setNull()
     # Iterate through layers from group and combine their extent
     for child in group.children():
         if isinstance(child, QgsLayerTreeLayer):
