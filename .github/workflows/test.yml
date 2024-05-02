@@ -72,7 +72,7 @@ jobs:
           python3 -m pip install pytest
           export DISPLAY=:1.0 
           Xvfb :1 -screen 0 1024x768x16
-EOF 
+          EOF 
           chmod +x startX.sh
           docker run -d --name qgis -v /tmp/.X11-unix:/tmp/.X11-unix -v `pwd`:/tests_directory -e OQ_ENGINE_HOST='http://172.17.0.1:8800' \
               -e BRANCH="$IRMT_BR" -e ONLY_CALC_ID="$ONLY_CALC_ID" -e ONLY_OUTPUT_TYPE="$ONLY_OUTPUT_TYPE" -e GEM_QGIS_TEST=y ${{ matrix.QGIS_DOCKER_VERSION }} \
