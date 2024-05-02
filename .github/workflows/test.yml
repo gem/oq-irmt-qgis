@@ -15,7 +15,8 @@ jobs:
         os: [ubuntu-latest]
         # FIXME: ltr and latest tags in April 11 2024 seem to be bugged, so we are using release-3_34 and release-3_36 instead
         # NOTE: testing also for 3.22 because it is the version of qgis-server that we are currently using in the Geoviewer
-        QGIS_DOCKER_VERSION: ['qgis/qgis:release-3_22', 'qgis/qgis:release-3_34', 'qgis/qgis:release-3_36']
+        # QGIS_DOCKER_VERSION: ['qgis/qgis:release-3_22', 'qgis/qgis:ltr', 'qgis/qgis:latest']
+        QGIS_DOCKER_VERSION: ['qgis/qgis:ltr', 'qgis/qgis:latest']
         # NOTE: qgis uses its own python, but we want to check if there are problems interfacing with the engine while it uses different python versions
         PYTHON_VERSION: ['3.9', '3.10', '3.11']
     runs-on: ${{ matrix.os }}
@@ -65,10 +66,10 @@ jobs:
           #
           DOCKER_HOST=`ip -4 addr show docker0 | grep -Po 'inet \K[\d.]+'`
           ENGINE_HOST=`echo http://$DOCKER_HOST:8800`
-          docker run -d --name qgis -v /tmp/.X11-unix:/tmp/.X11-unix -v `pwd`:/tests_directory -e DISPLAY=:99  -e OQ_ENGINE_HOST='http://172.17.0.1:8800' \
-          -e BRANCH="$IRMT_BR" -e ONLY_CALC_ID="$ONLY_CALC_ID" -e ONLY_OUTPUT_TYPE="$ONLY_OUTPUT_TYPE"  -e GEM_QGIS_TEST=y ${{ matrix.QGIS_DOCKER_VERSION }}
-          docker exec qgis bash -c "apt update --allow-releaseinfo-change; DEBIAN_FRONTEND=noninteractive apt install -y python3-scipy python3-matplotlib python3-pyqt5.qtwebkit"
-          docker exec qgis bash -c "python3 -m pip install pytest"
+          docker run -d --name qgis -v /tmp/.X11-unix:/tmp/.X11-unix -v `pwd`:/tests_directory -e OQ_ENGINE_HOST='http://172.17.0.1:8800' \
+              -e BRANCH="$IRMT_BR" -e ONLY_CALC_ID="$ONLY_CALC_ID" -e ONLY_OUTPUT_TYPE="$ONLY_OUTPUT_TYPE"  -e GEM_QGIS_TEST=y ${{ matrix.QGIS_DOCKER_VERSION }} \
+              bash -c "apt update --allow-releaseinfo-change; DEBIAN_FRONTEND=noninteractive apt install -y python3-scipy python3-matplotlib python3-pyqt5.qtwebkit xvfb tini; \
+              DISPLAY=:1.0; export DISPLAY; tini -v -- Xvfb :1 -screen 0 1024x768x16 &> xvfb.log &"
           # OGR_SQLITE_JOURNAL=delete prevents QGIS from using WAL, which modifies geopackages even if they are just read
       - name: ℧ Run unit test
         run: |
