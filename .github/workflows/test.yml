@@ -28,6 +28,17 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.PYTHON_VERSION }}
+      - name: Prepare Start file for docker
+        run: |
+          cat << EOF > ./startX.sh
+          set -x
+          apt update --allow-releaseinfo-change
+          DEBIAN_FRONTEND=noninteractive apt install -y python3-scipy python3-matplotlib python3-pyqt5.qtwebkit xvfb 
+          python3 -m pip install pytest
+          export DISPLAY=:1.0 
+          Xvfb :1 -screen 0 1024x768x16 &
+          ps -aux | grep X
+          EOF 
       - name: ⏳ Install engine and restore oqdata and docker container
         run: |
           PY_VER=${{ matrix.PYTHON_VERSION }}
@@ -67,15 +78,6 @@ jobs:
           #
           DOCKER_HOST=`ip -4 addr show docker0 | grep -Po 'inet \K[\d.]+'`
           ENGINE_HOST=`echo http://$DOCKER_HOST:8800`
-          cat <<EOF > ./startX.sh
-           set -x
-           apt update --allow-releaseinfo-change
-           DEBIAN_FRONTEND=noninteractive apt install -y python3-scipy python3-matplotlib python3-pyqt5.qtwebkit xvfb 
-           python3 -m pip install pytest
-           export DISPLAY=:1.0 
-           Xvfb :1 -screen 0 1024x768x16 &
-           ps -aux | grep X
-          EOF 
           chmod +x startX.sh
           cat startX.sh
           docker run -t --name qgis -v /tmp/.X11-unix:/tmp/.X11-unix -v ${PWD}:/tests_directory -e OQ_ENGINE_HOST='http://172.17.0.1:8800' \
