@@ -48,7 +48,7 @@ jobs:
           if [ "$(git ls-remote --heads https://github.com/gem/oq-engine.git ${ENGINE_BR})" == "" ]; then
               ENGINE_BR='master';
           fi
-          sudo apt-get purge --auto-remove git
+          apt-get purge --auto-remove git
           curl -O https://raw.githubusercontent.com/gem/oq-engine/master/install.py
           ls -lrt install.py
           echo "Engine branch: ${ENGINE_BR}"
