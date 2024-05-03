@@ -33,7 +33,7 @@ jobs:
           set -x
           $(cat << EOF  > ./startX.sh
           apt update --allow-releaseinfo-change
-          DEBIAN_FRONTEND=noninteractive apt install -y python3-scipy python3-matplotlib python3-pyqt5.qtwebkit xvfb 
+          DEBIAN_FRONTEND=noninteractive apt install -y python3-scipy python3-matplotlib python3-pyqt5.qtwebkit xvfb git
           python3 -m pip install pytest
           export DISPLAY=:1.0 
           Xvfb :1 -screen 0 1024x768x16
