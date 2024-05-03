@@ -35,6 +35,7 @@ jobs:
           apt update --allow-releaseinfo-change
           DEBIAN_FRONTEND=noninteractive apt install -y python3-scipy python3-matplotlib python3-pyqt5.qtwebkit xvfb git
           python3 -m pip install pytest
+          chmod +x /tests_directory/qgis_startup.py
           cp /tests_directory/qgis_startup.py /usr/bin/
           export DISPLAY=:1.0 
           Xvfb :1 -screen 0 1024x768x16
@@ -45,7 +46,6 @@ jobs:
           curl -O https://raw.githubusercontent.com/qgis/QGIS/master/.docker/qgis_resources/test_runner/qgis_startup.py
           chmod +x ./qgis_setup.sh
           chmod +x ./qgis_testrunner.sh
-          chmod +x ./qgis_startup.sh
           chmod +x ./startX.sh
       - name: ⏳ Install engine and restore oqdata and docker container
         run: |
