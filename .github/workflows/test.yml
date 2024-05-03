@@ -32,14 +32,20 @@ jobs:
         run: |
           set -x
           #cat > ./startX.sh << EOF
-          {
-            apt update --allow-releaseinfo-change
-            DEBIAN_FRONTEND=noninteractive apt install -y python3-scipy python3-matplotlib python3-pyqt5.qtwebkit xvfb 
-            python3 -m pip install pytest
-            export DISPLAY=:1.0 
-            Xvfb :1 -screen 0 1024x768x16 &
-            ps -aux | grep X
-          } >> startX.sh
+          $(cat << EOF  > ./startX.sh
+          first line
+          second line
+          third line
+          EOF
+          ) 
+          #{
+          #  apt update --allow-releaseinfo-change
+          #  DEBIAN_FRONTEND=noninteractive apt install -y python3-scipy python3-matplotlib python3-pyqt5.qtwebkit xvfb 
+          #  python3 -m pip install pytest
+          #  export DISPLAY=:1.0 
+          #  Xvfb :1 -screen 0 1024x768x16 &
+          #  ps -aux | grep X
+          #} >> startX.sh
           ls -lrt startX.sh
           cat startX.sh
       - name: ⏳ Install engine and restore oqdata and docker container
