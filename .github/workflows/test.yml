@@ -69,11 +69,13 @@ jobs:
           DOCKER_HOST=`ip -4 addr show docker0 | grep -Po 'inet \K[\d.]+'`
           ENGINE_HOST=`echo http://$DOCKER_HOST:8800`
           tee startX.sh <<EOF
+          set -x
           apt update --allow-releaseinfo-change
           DEBIAN_FRONTEND=noninteractive apt install -y python3-scipy python3-matplotlib python3-pyqt5.qtwebkit xvfb 
           python3 -m pip install pytest
           export DISPLAY=:1.0 
-          Xvfb :1 -screen 0 1024x768x16
+          Xvfb :1 -screen 0 1024x768x16 &
+          ps -aux | grep X
           EOF 
           chmod +x startX.sh
           docker run -d --name qgis -v /tmp/.X11-unix:/tmp/.X11-unix -v `pwd`:/tests_directory -e OQ_ENGINE_HOST='http://172.17.0.1:8800' \
