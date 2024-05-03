@@ -30,8 +30,8 @@ jobs:
           python-version: ${{ matrix.PYTHON_VERSION }}
       - name: Prepare Start file for docker
         run: |
-          cat << EOF > ./startX.sh
           set -x
+          cat > ./startX.sh << EOF
           apt update --allow-releaseinfo-change
           DEBIAN_FRONTEND=noninteractive apt install -y python3-scipy python3-matplotlib python3-pyqt5.qtwebkit xvfb 
           python3 -m pip install pytest
@@ -41,6 +41,7 @@ jobs:
           EOF 
       - name: ⏳ Install engine and restore oqdata and docker container
         run: |
+          cat startX.sh
           PY_VER=${{ matrix.PYTHON_VERSION }}
           echo "Python version to use: $PY_VER"
           python3 --version
