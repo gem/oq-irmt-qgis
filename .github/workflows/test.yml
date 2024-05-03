@@ -58,6 +58,7 @@ jobs:
           oq reset -y
           oq restore https://artifacts.openquake.org/travis/oqdata-${ENGINE_BR}.zip ~/oqdata
           oq --version
+          oq engine --run /home/runner/openquake/demos/hazard/AreaSourceClassicalPSHA/job.ini
           oq webui start 172.17.0.1:8800 --skip-browser &> webui.log &
           echo "Waiting WEBUI up on port 8800...."
           while ! nc -z 172.17.0.1 8800; do
