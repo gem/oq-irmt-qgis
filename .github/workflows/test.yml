@@ -40,7 +40,9 @@ jobs:
           EOF
           ) 
           curl -O https://raw.githubusercontent.com/qgis/QGIS/master/.docker/qgis_resources/test_runner/qgis_setup.sh
+          curl -O https://raw.githubusercontent.com/qgis/QGIS/master/.docker/qgis_resources/test_runner/qgis_testrunner.sh
           chmod +x ./qgis_setup.sh
+          chmod +x ./qgis_testrunner.sh
           chmod +x ./startX.sh
       - name: ⏳ Install engine and restore oqdata and docker container
         run: |
