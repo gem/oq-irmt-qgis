@@ -24,7 +24,7 @@ jobs:
         ENGINE_BR: ['engine-3.16', 'engine-3.19', 'master']
         # FIXME: ltr and latest tags in April 11 2024 seem to be bugged, so we are using release-3_34 and release-3_36 instead
         # NOTE: testing also for 3.22 because it is the version of qgis-server that we are currently using in the Geoviewer
-        QGIS_DOCKER_VERSION: ['qgis/qgis:release-3_22', 'qgis/qgis:release-3_34', 'qgis/qgis:release-3_36']
+        QGIS_DOCKER_VERSION: ['qgis/qgis:3.22', 'qgis/qgis:ltr', 'qgis/qgis:latest']
         DEMOS: ['oqdata', 'risk-oqdata']
     steps:
       - uses: actions/checkout@v2
@@ -33,6 +33,27 @@ jobs:
         with:
           python-version: '3.10'
           ref: ${{ matrix.ENGINE_BR }}
+      - name: Prepare Start file for docker
+        run: |
+          set -x
+          $(cat << EOF  > ./startX.sh
+          apt update --allow-releaseinfo-change
+          DEBIAN_FRONTEND=noninteractive apt install -y python3-scipy python3-matplotlib python3-pyqt5.qtwebkit python3-pytest python3-pexpect xvfb git expect
+          chmod +x /tests_directory/qgis_startup.py
+          cp /tests_directory/qgis_startup.py /usr/bin/
+          cp /tests_directory/qgis_testrunner.py /usr/bin/
+          export DISPLAY=:1.0
+          Xvfb :1 -screen 0 1024x768x16
+          EOF
+          )
+          curl -O https://raw.githubusercontent.com/qgis/QGIS/master/.docker/qgis_resources/test_runner/qgis_setup.sh
+          curl -O https://raw.githubusercontent.com/qgis/QGIS/master/.docker/qgis_resources/test_runner/qgis_testrunner.sh
+          curl -O https://raw.githubusercontent.com/qgis/QGIS/master/.docker/qgis_resources/test_runner/qgis_testrunner.py
+          curl -O https://raw.githubusercontent.com/qgis/QGIS/master/.docker/qgis_resources/test_runner/qgis_startup.py
+          chmod +x ./qgis_setup.sh
+          chmod +x ./qgis_testrunner.sh
+          chmod +x ./qgis_testrunner.py
+          chmod +x ./startX.sh
       - name: ⏳ Clone engine and restore oqdata and docker container
         run: |
           set -x
@@ -71,10 +92,9 @@ jobs:
           ENGINE_HOST=`echo http://$DOCKER_HOST:8800`
           # NOTE: release-3_28 needs to be kept updated to the current LTS
           docker run -d --name qgis -v /tmp/.X11-unix:/tmp/.X11-unix -v `pwd`:/tests_directory -e DISPLAY=:99  -e OQ_ENGINE_HOST='http://172.17.0.1:8800' \
-          -e BRANCH="$IRMT_BR" -e ONLY_CALC_ID="$ONLY_CALC_ID" -e ONLY_OUTPUT_TYPE="$ONLY_OUTPUT_TYPE"  -e GEM_QGIS_TEST=y ${{ matrix.QGIS_DOCKER_VERSION }}
-          docker exec qgis bash -c "apt update --allow-releaseinfo-change; DEBIAN_FRONTEND=noninteractive apt install -y python3-scipy python3-matplotlib python3-pyqt5.qtwebkit"
-          docker exec qgis bash -c "python3 -m pip install pytest"
-          # OGR_SQLITE_JOURNAL=delete prevents QGIS from using WAL, which modifies geopackages even if they are just read
+            -e BRANCH="$IRMT_BR" -e ONLY_CALC_ID="$ONLY_CALC_ID" -e ONLY_OUTPUT_TYPE="$ONLY_OUTPUT_TYPE"  -e GEM_QGIS_TEST=y ${{ matrix.QGIS_DOCKER_VERSION }} \
+            bash -c "/tests_directory/startX.sh"
+          sleep 10
       - name: ℧ Run unit test
         run: |
           set -x
@@ -82,7 +102,8 @@ jobs:
           IRMT_BR=$ENGINE_BR
           git fetch
           git checkout $IRMT_BR
-          docker exec -t qgis bash -c "export PYTHONPATH=/usr/share/qgis/python/plugins/:$PYTHONPATH; OGR_SQLITE_JOURNAL=delete pytest -v /tests_directory/svir/test/unit/"
+          # OGR_SQLITE_JOURNAL=delete prevents QGIS from using WAL, which modifies geopackages even if they are just read
+          docker exec -t qgis bash -c "export DISPLAY=:1.0; export PYTHONPATH=/usr/share/qgis/python/plugins/:$PYTHONPATH; OGR_SQLITE_JOURNAL=delete pytest -v /tests_directory/svir/test/unit/"
       - name: ⨕ Run Integration test
         run: |
           set -x
@@ -107,10 +128,10 @@ jobs:
           echo "OQ_CHECK_MISSING_OUTPUTS: ${OQ_CHECK_MISSING_OUTPUTS}"
           echo "OQ_TEST_RUN_CALC: ${OQ_TEST_RUN_CALC}"
           # NOTE: the check on the existence of the engine branch is already done in the previous step
-          docker exec qgis sh -c "echo 'Running against oq-engine on branch ${ENGINE_BR}'"
-          docker exec qgis sh -c "qgis_setup.sh svir"
+          docker exec qgis sh -c "export DISPLAY=:1.0; echo 'Running against oq-engine on branch ${ENGINE_BR}'"
+          docker exec qgis sh -c "export DISPLAY=:1.0; qgis_setup.sh svir"
           docker exec -e OQ_CHECK_MISSING_OUTPUTS=${OQ_CHECK_MISSING_OUTPUTS} -e OQ_TEST_RUN_CALC=${OQ_TEST_RUN_CALC} \
-          -t qgis sh -c "env && cd /tests_directory && qgis_testrunner.sh svir.test.integration.test_drive_oq_engine"
+          -t qgis sh -c "export DISPLAY=:1.0; env && cd /tests_directory && qgis_testrunner.sh svir.test.integration.test_drive_oq_engine"
       - name: ㏒ Display web logs
         run: |
           set -x
