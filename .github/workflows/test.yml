@@ -33,19 +33,21 @@ jobs:
           set -x
           $(cat << EOF  > ./startX.sh
           apt update --allow-releaseinfo-change
-          DEBIAN_FRONTEND=noninteractive apt install -y python3-scipy python3-matplotlib python3-pyqt5.qtwebkit xvfb git
-          python3 -m pip install pytest
+          DEBIAN_FRONTEND=noninteractive apt install -y python3-scipy python3-matplotlib python3-pyqt5.qtwebkit python3-pytest python3-pexpect xvfb git expect
           chmod +x /tests_directory/qgis_startup.py
           cp /tests_directory/qgis_startup.py /usr/bin/
+          cp /tests_directory/qgis_testrunner.py /usr/bin/
           export DISPLAY=:1.0 
           Xvfb :1 -screen 0 1024x768x16
           EOF
           ) 
           curl -O https://raw.githubusercontent.com/qgis/QGIS/master/.docker/qgis_resources/test_runner/qgis_setup.sh
           curl -O https://raw.githubusercontent.com/qgis/QGIS/master/.docker/qgis_resources/test_runner/qgis_testrunner.sh
+          curl -O https://raw.githubusercontent.com/qgis/QGIS/master/.docker/qgis_resources/test_runner/qgis_testrunner.py
           curl -O https://raw.githubusercontent.com/qgis/QGIS/master/.docker/qgis_resources/test_runner/qgis_startup.py
           chmod +x ./qgis_setup.sh
           chmod +x ./qgis_testrunner.sh
+          chmod +x ./qgis_testrunner.py
           chmod +x ./startX.sh
       - name: ⏳ Install engine and restore oqdata and docker container
         run: |
@@ -89,7 +91,7 @@ jobs:
           docker run -d -t --name qgis -v /tmp/.X11-unix:/tmp/.X11-unix -v ${PWD}:/tests_directory -e OQ_ENGINE_HOST='http://172.17.0.1:8800' \
               -e BRANCH="$IRMT_BR" -e ONLY_CALC_ID="$ONLY_CALC_ID" -e ONLY_OUTPUT_TYPE="$ONLY_OUTPUT_TYPE" -e GEM_QGIS_TEST=y ${{ matrix.QGIS_DOCKER_VERSION }} \
               bash -c "/tests_directory/startX.sh"
-          sleep 20
+          sleep 10
           docker ps -a
           # OGR_SQLITE_JOURNAL=delete prevents QGIS from using WAL, which modifies geopackages even if they are just read
       - name: ℧ Run unit test
