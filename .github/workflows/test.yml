@@ -113,8 +113,8 @@ jobs:
           if [ "$(git ls-remote --heads https://github.com/gem/oq-engine.git ${ENGINE_BR})" == "" ]; then
               ENGINE_BR='master';
           fi
-          # NOTE: the check on the existence of the engine branch is already done in the previous step
-          docker exec qgis sh -c "export DISPLAY=:1.0; echo 'Running against oq-engine/$GITHUB_BR'"
+          # NOTE: cloning the engine is needed to find the demos directory, therefore being able to test running a calculation
+          docker exec qgis sh -c "export DISPLAY=:1.0; git clone -q -b $ENGINE_BR --depth=1 https://github.com/gem/oq-engine.git && echo 'Running against oq-engine/$GITHUB_BR'"
           docker exec qgis sh -c "export DISPLAY=:1.0; /tests_directory/qgis_setup.sh svir"
           docker exec -t qgis sh -c "export DISPLAY=:1.0; cd /tests_directory && ./qgis_testrunner.sh svir.test.integration.test_drive_oq_engine"
       - name: 📖 Make documentation
