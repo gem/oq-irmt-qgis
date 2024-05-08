@@ -15,7 +15,7 @@ jobs:
         os: [ubuntu-latest]
         # FIXME: ltr and latest tags in April 11 2024 seem to be bugged, so we are using release-3_34 and release-3_36 instead
         # NOTE: testing also for 3.22 because it is the version of qgis-server that we are currently using in the Geoviewer
-        QGIS_DOCKER_VERSION: ['qgis/qgis:3.22', 'qgis/qgis:ltr', 'qgis/qgis:latest']
+        QGIS_DOCKER_VERSION: ['qgis/qgis:3.22', 'qgis/qgis:ltr', 'qgis/qgis:stable']
         # NOTE: qgis uses its own python, but we want to check if there are problems interfacing with the engine while it uses different python versions
         PYTHON_VERSION: ['3.9', '3.10', '3.11']
     runs-on: ${{ matrix.os }}
