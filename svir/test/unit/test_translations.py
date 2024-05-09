@@ -58,6 +58,9 @@ class SafeTranslationsTest(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    suite = unittest.TestLoader.loadTestsFromTestCase(SafeTranslationsTest)
+    suite = unittest.TestSuite()
+    loader = unittest.TestLoader()
+    tests = loader.loadTestsFromTestCase(SafeTranslationsTest)
+    suite.addTests(tests)
     runner = unittest.TextTestRunner(verbosity=2)
     runner.run(suite)

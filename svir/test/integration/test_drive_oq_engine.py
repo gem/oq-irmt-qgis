@@ -73,65 +73,52 @@ def run_all():
     print(f'ONLY_OUTPUT_TYPE: {ONLY_OUTPUT_TYPE}')
     print(f'OQ_CHECK_MISSING_OUTPUTS: {OQ_CHECK_MISSING_OUTPUTS}')
     print(f'OQ_TEST_RUN_CALC: {OQ_TEST_RUN_CALC}')
-    suite = unittest.TestSuite()
-    # OQ_CSV_TO_LAYER_TYPES
-    suite.addTest(unittest.TestLoader.loadTestsFromTestCase(
-        LoadAggRiskTestCase, 'test'))
-    suite.addTest(unittest.TestLoader.loadTestsFromTestCase(
-        LoadAggLossesStatsTestCase, 'test'))
-    suite.addTest(unittest.TestLoader.loadTestsFromTestCase(
-        LoadDmgByEventTestCase, 'test'))
-    suite.addTest(unittest.TestLoader.loadTestsFromTestCase(
-        LoadEventsTestCase, 'test'))
-    suite.addTest(unittest.TestLoader.loadTestsFromTestCase(
-        LoadAggLossTableTestCase, 'test'))
-    suite.addTest(unittest.TestLoader.loadTestsFromTestCase(
-        LoadRealizationsTestCase, 'test'))
-    # OQ_EXTRACT_TO_LAYER_TYPES
-    suite.addTest(unittest.TestLoader.loadTestsFromTestCase(
-        LoadAssetRiskTestCase, 'test'))
-    # NOTE: testing recovery curves starting from damages-rlzs
-    suite.addTest(unittest.TestLoader.loadTestsFromTestCase(
-        LoadDamagesRlzsTestCase, 'test'))
-    suite.addTest(unittest.TestLoader.loadTestsFromTestCase(
-        LoadAvgLossesRlzsTestCase, 'test'))
-    suite.addTest(unittest.TestLoader.loadTestsFromTestCase(
-        LoadAvgLossesStatsTestCase, 'test'))
-    suite.addTest(unittest.TestLoader.loadTestsFromTestCase(
-        LoadGmfDataTestCase, 'test'))
-    suite.addTest(unittest.TestLoader.loadTestsFromTestCase(
-        LoadHcurvesTestCase, 'test'))
-    suite.addTest(unittest.TestLoader.loadTestsFromTestCase(
-        LoadHmapsTestCase, 'test'))
-    suite.addTest(unittest.TestLoader.loadTestsFromTestCase(
-        LoadRupturesTestCase, 'test'))
-    suite.addTest(unittest.TestLoader.loadTestsFromTestCase(
-        LoadUhsTestCase, 'test'))
-    suite.addTest(unittest.TestLoader.loadTestsFromTestCase(
-        LoadDisaggRlzsTestCase, 'test'))
-    # OQ_ZIPPED_TYPES
-    suite.addTest(unittest.TestLoader.loadTestsFromTestCase(
-        LoadInputTestCase, 'test'))
-    # OQ_RST_TYPES
-    suite.addTest(unittest.TestLoader.loadTestsFromTestCase(
-        LoadFullReportTestCase, 'test'))
-    # OQ_EXTRACT_TO_VIEW_TYPES
-    suite.addTest(unittest.TestLoader.loadTestsFromTestCase(
-        LoadAggCurvesTestCase, 'test'))
-    suite.addTest(unittest.TestLoader.loadTestsFromTestCase(
-        LoadDamagesRlzsAggrTestCase, 'test'))
-    suite.addTest(unittest.TestLoader.loadTestsFromTestCase(
-        LoadAvgLossesRlzsAggrTestCase, 'test'))
-    suite.addTest(unittest.TestLoader.loadTestsFromTestCase(
-        LoadAvgLossesStatsAggrTestCase, 'test'))
-
+    csv_to_layer_test_cases = [
+        LoadAggRiskTestCase,
+        LoadAggLossesStatsTestCase,
+        LoadDmgByEventTestCase,
+        LoadEventsTestCase,
+        LoadAggLossTableTestCase,
+        LoadRealizationsTestCase,
+    ]
+    extract_to_layer_test_cases = [
+        LoadAssetRiskTestCase,
+        # NOTE: testing recovery curves starting from damages-rlzs
+        LoadDamagesRlzsTestCase,
+        LoadAvgLossesRlzsTestCase,
+        LoadAvgLossesStatsTestCase,
+        LoadGmfDataTestCase,
+        LoadHcurvesTestCase,
+        LoadHmapsTestCase,
+        LoadRupturesTestCase,
+        LoadUhsTestCase,
+        LoadDisaggRlzsTestCase,
+    ]
+    zipped_test_cases = [LoadInputTestCase]
+    rst_test_cases = [LoadFullReportTestCase]
+    extract_to_view_test_cases = [
+        LoadAggCurvesTestCase,
+        LoadDamagesRlzsAggrTestCase,
+        LoadAvgLossesRlzsAggrTestCase,
+        LoadAvgLossesStatsAggrTestCase,
+    ]
+    test_cases = []
+    test_cases.extend(csv_to_layer_test_cases)
+    test_cases.extend(extract_to_layer_test_cases)
+    test_cases.extend(zipped_test_cases)
+    test_cases.extend(rst_test_cases)
+    test_cases.extend(extract_to_view_test_cases)
     # Other tests and checks
-    suite.addTest(unittest.TestLoader.loadTestsFromTestCase(
-        RunCalculationTestCase, 'test'))
-    suite.addTest(unittest.TestLoader.loadTestsFromTestCase(
-        AllLoadableOutputsFoundInDemosTestCase, 'test'))
-    suite.addTest(unittest.TestLoader.loadTestsFromTestCase(
-        AllLoadersAreImplementedTestCase, 'test'))
+    test_cases.extend([
+        RunCalculationTestCase,
+        AllLoadableOutputsFoundInDemosTestCase,
+        AllLoadersAreImplementedTestCase,
+    ])
+    suite = unittest.TestSuite()
+    loader = unittest.TestLoader()
+    for test_class in test_cases:
+        tests = loader.loadTestsFromTestCase(test_class)
+        suite.addTests(tests)
     unittest.TextTestRunner(verbosity=3, stream=sys.stdout).run(suite)
 
 
