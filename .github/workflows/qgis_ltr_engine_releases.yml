@@ -90,7 +90,6 @@ jobs:
           #
           DOCKER_HOST=`ip -4 addr show docker0 | grep -Po 'inet \K[\d.]+'`
           ENGINE_HOST=`echo http://$DOCKER_HOST:8800`
-          # NOTE: release-3_28 needs to be kept updated to the current LTS
           docker run -d --name qgis -v /tmp/.X11-unix:/tmp/.X11-unix -v `pwd`:/tests_directory -e DISPLAY=:99  -e OQ_ENGINE_HOST='http://172.17.0.1:8800' \
             -e BRANCH="$IRMT_BR" -e ONLY_CALC_ID="$ONLY_CALC_ID" -e ONLY_OUTPUT_TYPE="$ONLY_OUTPUT_TYPE"  -e GEM_QGIS_TEST=y ${{ matrix.QGIS_DOCKER_VERSION }} \
             bash -c "/tests_directory/startX.sh"
@@ -129,9 +128,9 @@ jobs:
           echo "OQ_TEST_RUN_CALC: ${OQ_TEST_RUN_CALC}"
           # NOTE: the check on the existence of the engine branch is already done in the previous step
           docker exec qgis sh -c "export DISPLAY=:1.0; echo 'Running against oq-engine on branch ${ENGINE_BR}'"
-          docker exec qgis sh -c "export DISPLAY=:1.0; qgis_setup.sh svir"
+          docker exec qgis sh -c "export DISPLAY=:1.0; /tests_directory/qgis_setup.sh svir"
           docker exec -e OQ_CHECK_MISSING_OUTPUTS=${OQ_CHECK_MISSING_OUTPUTS} -e OQ_TEST_RUN_CALC=${OQ_TEST_RUN_CALC} \
-          -t qgis sh -c "export DISPLAY=:1.0; env && cd /tests_directory && qgis_testrunner.sh svir.test.integration.test_drive_oq_engine"
+          -t qgis sh -c "export DISPLAY=:1.0; cd /tests_directory && qgis_testrunner.sh svir.test.integration.test_drive_oq_engine"
       - name: ㏒ Display web logs
         run: |
           set -x
