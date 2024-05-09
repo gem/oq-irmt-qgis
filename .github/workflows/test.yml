@@ -13,9 +13,9 @@ jobs:
         # NOTE: macos complains about wheels; windows complains about script syntax
         # os: [ubuntu-latest, windows-latest, macos-latest]
         os: [ubuntu-latest]
-        # FIXME: ltr and latest tags in April 11 2024 seem to be bugged, so we are using release-3_34 and release-3_36 instead
         # NOTE: testing also for 3.22 because it is the version of qgis-server that we are currently using in the Geoviewer
-        QGIS_DOCKER_VERSION: ['qgis/qgis:release-3_22', 'qgis/qgis:release-3_34', 'qgis/qgis:release-3_36']
+        # NOTE: qgis:stable points to the latest release, wheread qgis:latest points to qgis master
+        QGIS_DOCKER_VERSION: ['qgis/qgis:3.22', 'qgis/qgis:ltr', 'qgis/qgis:stable']
         # NOTE: qgis uses its own python, but we want to check if there are problems interfacing with the engine while it uses different python versions
         PYTHON_VERSION: ['3.9', '3.10', '3.11']
     runs-on: ${{ matrix.os }}
@@ -27,9 +27,29 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.PYTHON_VERSION }}
-      - name: ⏳ Install engine and restore oqdata and docker container
+      - name: Prepare Start file for docker
         run: |
           set -x
+          $(cat << EOF  > ./startX.sh
+          apt update --allow-releaseinfo-change
+          DEBIAN_FRONTEND=noninteractive apt install -y python3-scipy python3-matplotlib python3-pyqt5.qtwebkit python3-pytest python3-pexpect xvfb git expect
+          chmod +x /tests_directory/qgis_startup.py
+          cp /tests_directory/qgis_startup.py /usr/bin/
+          cp /tests_directory/qgis_testrunner.py /usr/bin/
+          export DISPLAY=:1.0
+          Xvfb :1 -screen 0 1024x768x16
+          EOF
+          )
+          curl -O https://raw.githubusercontent.com/qgis/QGIS/master/.docker/qgis_resources/test_runner/qgis_setup.sh
+          curl -O https://raw.githubusercontent.com/qgis/QGIS/master/.docker/qgis_resources/test_runner/qgis_testrunner.sh
+          curl -O https://raw.githubusercontent.com/qgis/QGIS/master/.docker/qgis_resources/test_runner/qgis_testrunner.py
+          curl -O https://raw.githubusercontent.com/qgis/QGIS/master/.docker/qgis_resources/test_runner/qgis_startup.py
+          chmod +x ./qgis_setup.sh
+          chmod +x ./qgis_testrunner.sh
+          chmod +x ./qgis_testrunner.py
+          chmod +x ./startX.sh
+      - name: ⏳ Install engine and restore oqdata and docker container
+        run: |
           PY_VER=${{ matrix.PYTHON_VERSION }}
           echo "Python version to use: $PY_VER"
           python3 --version
@@ -56,24 +76,26 @@ jobs:
           source $HOME/openquake/bin/activate
           oq reset -y
           oq restore https://artifacts.openquake.org/travis/oqdata-${ENGINE_BR}.zip ~/oqdata
+          oq --version
           oq webui start 172.17.0.1:8800 --skip-browser &> webui.log &
           echo "Waiting WEBUI up on port 8800...."
           while ! nc -z 172.17.0.1 8800; do
+            cat webui.log
             sleep 5
           done
           curl http://172.17.0.1:8800/v1/engine_version
           #
           DOCKER_HOST=`ip -4 addr show docker0 | grep -Po 'inet \K[\d.]+'`
           ENGINE_HOST=`echo http://$DOCKER_HOST:8800`
-          docker run -d --name qgis -v /tmp/.X11-unix:/tmp/.X11-unix -v `pwd`:/tests_directory -e DISPLAY=:99  -e OQ_ENGINE_HOST='http://172.17.0.1:8800' \
-          -e BRANCH="$IRMT_BR" -e ONLY_CALC_ID="$ONLY_CALC_ID" -e ONLY_OUTPUT_TYPE="$ONLY_OUTPUT_TYPE"  -e GEM_QGIS_TEST=y ${{ matrix.QGIS_DOCKER_VERSION }}
-          docker exec qgis bash -c "apt update --allow-releaseinfo-change; DEBIAN_FRONTEND=noninteractive apt install -y python3-scipy python3-matplotlib python3-pyqt5.qtwebkit"
-          docker exec qgis bash -c "python3 -m pip install pytest"
-          # OGR_SQLITE_JOURNAL=delete prevents QGIS from using WAL, which modifies geopackages even if they are just read
+          docker run -d -t --name qgis -v /tmp/.X11-unix:/tmp/.X11-unix -v ${PWD}:/tests_directory -e OQ_ENGINE_HOST='http://172.17.0.1:8800' \
+            -e BRANCH="$IRMT_BR" -e ONLY_CALC_ID="$ONLY_CALC_ID" -e ONLY_OUTPUT_TYPE="$ONLY_OUTPUT_TYPE" -e GEM_QGIS_TEST=y ${{ matrix.QGIS_DOCKER_VERSION }} \
+            bash -c "/tests_directory/startX.sh"
+          sleep 10
       - name: ℧ Run unit test
         run: |
           set -x
-          docker exec -t qgis bash -c "export PYTHONPATH=/usr/share/qgis/python/plugins/:$PYTHONPATH; OGR_SQLITE_JOURNAL=delete pytest -v /tests_directory/svir/test/unit/"
+          # OGR_SQLITE_JOURNAL=delete prevents QGIS from using WAL, which modifies geopackages even if they are just read
+          docker exec -t qgis bash -c "export DISPLAY=:1.0; export PYTHONPATH=/usr/share/qgis/python/plugins/:$PYTHONPATH; OGR_SQLITE_JOURNAL=delete python3 -m pytest -v /tests_directory/svir/test/unit/"
       - name: ⨕ Run Integration test
         run: |
           set -x
@@ -91,14 +113,15 @@ jobs:
           if [ "$(git ls-remote --heads https://github.com/gem/oq-engine.git ${ENGINE_BR})" == "" ]; then
               ENGINE_BR='master';
           fi
-          docker exec qgis sh -c "git clone -q -b $ENGINE_BR --depth=1 https://github.com/gem/oq-engine.git && echo 'Running against oq-engine/$GITHUB_BR'"
-          docker exec qgis sh -c "qgis_setup.sh svir"
-          docker exec -t qgis sh -c "cd /tests_directory && qgis_testrunner.sh svir.test.integration.test_drive_oq_engine"
+          # NOTE: cloning the engine is needed to find the demos directory, therefore being able to test running a calculation
+          docker exec qgis sh -c "export DISPLAY=:1.0; git clone -q -b $ENGINE_BR --depth=1 https://github.com/gem/oq-engine.git && echo 'Running against oq-engine/$GITHUB_BR'"
+          docker exec qgis sh -c "export DISPLAY=:1.0; /tests_directory/qgis_setup.sh svir"
+          docker exec -t qgis sh -c "export DISPLAY=:1.0; cd /tests_directory && ./qgis_testrunner.sh svir.test.integration.test_drive_oq_engine"
       - name: 📖 Make documentation
         run: |
           set -x
-          docker exec qgis sh -c "apt update --allow-releaseinfo-change; DEBIAN_FRONTEND=noninteractive apt install -y latexmk texlive-latex-extra python3-matplotlib python3-sphinx python3-sphinx-rtd-theme dvipng"
-          docker exec -t qgis sh -c "export PYTHONPATH=$PYTHONPATH:/tests_directory; cd /tests_directory/svir/help; make latexpdf; make html"
+          docker exec qgis sh -c "export DISPLAY=:1.0; apt update --allow-releaseinfo-change; DEBIAN_FRONTEND=noninteractive apt install -y latexmk texlive-latex-extra python3-matplotlib python3-sphinx python3-sphinx-rtd-theme dvipng"
+          docker exec -t qgis sh -c "export DISPLAY=:1.0; export PYTHONPATH=$PYTHONPATH:/tests_directory; cd /tests_directory/svir/help; make latexpdf; make html"
       - name: ㏒ Display web logs
         run: |
           set -x
