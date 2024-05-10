@@ -27,14 +27,11 @@ import qgis  # NOQA: it loads the environment!
 import os
 import tempfile
 import uuid
-import fileinput
-import re
 import processing
 
 from copy import deepcopy
 from math import floor, ceil
 from qgis.core import (
-                       QgsVectorLayer,
                        QgsMapLayer,
                        QgsGraduatedSymbolRenderer,
                        QgsSymbol, QgsGradientColorRamp,
@@ -57,17 +54,13 @@ from qgis.PyQt.QtCore import (
                               Qt,
                               )
 from qgis.PyQt.QtWidgets import (
-    QAction, QFileDialog, QApplication, QMenu, QInputDialog)
+    QAction, QApplication, QMenu, QInputDialog)
 from qgis.PyQt.QtGui import QIcon, QDesktopServices, QColor
 
 from svir.dialogs.viewer_dock import ViewerDock
-from svir.utilities.import_sv_data import get_loggedin_downloader
-from svir.dialogs.download_layer_dialog import DownloadLayerDialog
 from svir.dialogs.projects_manager_dialog import ProjectsManagerDialog
-from svir.dialogs.select_sv_variables_dialog import SelectSvVariablesDialog
 from svir.dialogs.settings_dialog import SettingsDialog
 from svir.dialogs.transformation_dialog import TransformationDialog
-from svir.dialogs.upload_settings_dialog import UploadSettingsDialog
 from svir.dialogs.weight_data_dialog import WeightDataDialog
 from svir.dialogs.recovery_modeling_dialog import RecoveryModelingDialog
 from svir.dialogs.recovery_settings_dialog import RecoverySettingsDialog
@@ -78,26 +71,19 @@ from svir.dialogs.drive_oq_engine_server_dialog import (
     DriveOqEngineServerDialog)
 from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
 
-from svir.thread_worker.abstract_worker import start_worker
-from svir.thread_worker.download_platform_data_worker import (
-    DownloadPlatformDataWorker)
 from svir.calculations.calculate_utils import calculate_composite_variable
 from svir.calculations.process_layer import ProcessLayer
 from svir.utilities.utils import (tr,
                                   WaitCursorManager,
-                                  assign_default_weights,
                                   clear_progress_message_bar,
-                                  SvNetworkError,
                                   replace_fields,
                                   toggle_select_features_widget,
                                   read_layer_suppl_info_from_qgs,
                                   write_layer_suppl_info_to_qgs,
                                   log_msg,
-                                  save_layer_as,
                                   get_style,
                                   get_checksum,
                                   warn_missing_packages,
-                                  import_layer_from_csv,
                                   )
 from svir.utilities.shared import (DEBUG,
                                    PROJECT_TEMPLATE,
@@ -215,33 +201,6 @@ class Irmt(object):
         self.menu_action = menu_bar.insertMenu(
             self.iface.firstRightStandardMenu().menuAction(), self.menu)
 
-        # Action to activate the modal dialog to import socioeconomic
-        # data from the platform
-        self.add_menu_item("import_sv_variables",
-                           ":/plugins/irmt/load.svg",
-                           u"&Load socioeconomic indicators"
-                           " from the OpenQuake Platform",
-                           self.import_sv_variables,
-                           enable=True,
-                           add_to_layer_actions=False,
-                           submenu='OQ Platform')
-        # Action to activate the modal dialog to import socioeconomic
-        # data from the platform
-        self.add_menu_item("import_layer",
-                           ":/plugins/irmt/load_layer.svg",
-                           u"&Import project from the OpenQuake Platform",
-                           self.download_layer,
-                           enable=True,
-                           add_to_layer_actions=False,
-                           submenu='OQ Platform')
-        # Action to upload
-        self.add_menu_item("upload",
-                           ":/plugins/irmt/upload.svg",
-                           u"&Upload project to the OpenQuake Platform",
-                           self.upload,
-                           enable=True,
-                           add_to_layer_actions=True,
-                           submenu='OQ Platform')
         # # Action to drive ipt
         # self.add_menu_item("ipt",
         #                    ":/plugins/irmt/ipt.svg",
@@ -275,7 +234,7 @@ class Irmt(object):
                            add_to_layer_actions=True,
                            submenu='Integrated risk')
         # Action to activate the modal dialog to choose weighting of the
-        # data from the platform
+        # layers data
         self.add_menu_item("weight_data",
                            ":/plugins/irmt/weights.svg",
                            u"&Weight data and calculate indices",
@@ -324,7 +283,7 @@ class Irmt(object):
         self.menu.addSeparator()
 
         # Action to activate the modal dialog to set up show_settings for the
-        # connection with the platform
+        # connection with the engine
         self.add_menu_item("show_settings",
                            ":/plugins/irmt/settings.svg",
                            u"&OpenQuake IRMT settings",
@@ -602,11 +561,9 @@ class Irmt(object):
             self.registered_actions["transform_attributes"].setEnabled(True)
             read_layer_suppl_info_from_qgs(
                 self.iface.activeLayer().id(), self.supplemental_information)
-            self.registered_actions["upload"].setEnabled(True)
         except KeyError:
             # self.supplemental_information[self.iface.activeLayer().id()]
             # is not defined
-            self.registered_actions["upload"].setEnabled(False)
             self.registered_actions[
                 "project_definitions_manager"].setEnabled(True)
             self.registered_actions["weight_data"].setEnabled(True)
@@ -615,7 +572,6 @@ class Irmt(object):
             # or self.iface.activeLayer() is not vector
             self.registered_actions["transform_attributes"].setEnabled(False)
             self.registered_actions["weight_data"].setEnabled(False)
-            self.registered_actions["upload"].setEnabled(False)
             self.registered_actions[
                 "project_definitions_manager"].setEnabled(False)
 
@@ -668,182 +624,6 @@ class Irmt(object):
             QgsProject.instance().layersRemoved.disconnect(self.layers_removed)
         except TypeError:
             pass
-
-    def import_sv_variables(self):
-        """
-        Open a modal dialog to select socioeconomic variables to
-        download from the openquake platform
-        """
-        # login to platform, to be able to retrieve sv indices
-        sv_downloader = get_loggedin_downloader(self.iface.messageBar())
-        if sv_downloader is None:
-            self.show_settings()
-            return
-        try:
-            dlg = SelectSvVariablesDialog(sv_downloader)
-            if dlg.exec_():
-                dest_filename, _ = QFileDialog.getSaveFileName(
-                    dlg,
-                    'Download destination',
-                    os.path.expanduser("~"),
-                    'Geopackages (*.gpkg)')
-                if dest_filename:
-                    if os.path.splitext(dest_filename)[1] != ".gpkg":
-                        dest_filename += ".gpkg"
-                else:
-                    return
-                # TODO: We should fix the workflow in case no geometries are
-                # downloaded. Currently we must download them, so the checkbox
-                # to let the user choose has been temporarily removed.
-                # load_geometries = dlg.load_geometries_chk.isChecked()
-                load_geometries = True
-                msg = ("Loading socioeconomic data from the OpenQuake "
-                       "Platform...")
-                # Retrieve the indices selected by the user
-                indices_list = []
-                iso_codes_list = []
-                project_definition = deepcopy(PROJECT_TEMPLATE)
-                svi_themes = project_definition[
-                    'children'][1]['children']
-                known_themes = []
-                with WaitCursorManager(msg, self.iface.messageBar()):
-                    for item in dlg.indicator_multiselect.get_selected_items():
-                        ind_code = item.split(':')[0]
-                        ind_info = dlg.indicators_info_dict[ind_code]
-                        sv_theme = ind_info['theme']
-                        sv_field = ind_code
-                        sv_name = ind_info['name']
-
-                        self._add_new_theme(svi_themes,
-                                            known_themes,
-                                            sv_theme,
-                                            sv_name,
-                                            sv_field)
-
-                        indices_list.append(sv_field)
-                    for item in dlg.country_multiselect.get_selected_items():
-                        # get the iso from something like:
-                        # country_name (iso_code)
-                        iso_code = item.split('(')[1].split(')')[0]
-                        iso_codes_list.append(iso_code)
-
-                    # create string for DB query
-                    indices_string = ",".join(indices_list)
-                    iso_codes_string = ",".join(iso_codes_list)
-
-                    assign_default_weights(svi_themes)
-
-                    worker = DownloadPlatformDataWorker(
-                        sv_downloader,
-                        indices_string,
-                        load_geometries,
-                        iso_codes_string)
-                    worker.successfully_finished.connect(
-                        lambda result: self._data_download_successful(
-                            result,
-                            load_geometries,
-                            dest_filename,
-                            project_definition,
-                            dlg.indicators_info_dict))
-                    start_worker(worker, self.iface.messageBar(),
-                                 'Downloading data from platform')
-        except SvNetworkError as e:
-            log_msg('An error occurred. See the traceback for details.',
-                    level='C', message_bar=self.iface.messageBar(),
-                    exception=e)
-
-    def _data_download_successful(
-            self, result, load_geometries, dest_filename, project_definition,
-            indicators_info_dict):
-        """
-        Called once the DonloadPlatformDataWorker has successfully downloaded
-        socioeconomic data as a csv file.
-
-        :param result: a tuple (fname, msg) where fname is the name of the csv
-            file exported by the OQ-Platform and msg is the message
-            returned
-        :param load_geometries: if True, also geometries were downloaded
-        :type load_geometries: bool
-        :param dest_filename: name of the file that will store the vector layer
-            containing the downloaded data
-        :param project_definition: the project definition that was
-            automatically built based on the DB structure
-        :param indicators_info_dict:
-            dict ind_code -> dict with additional info about it
-        """
-        fname, msg = result
-        display_msg = tr("Socioeconomic data loaded in a new layer")
-        log_msg(display_msg, level='S', message_bar=self.iface.messageBar())
-        # don't remove the file, otherwise there will be concurrency
-        # problems
-
-        # fix an issue of QGIS 10, that is unable to read
-        # multipolygons if they contain spaces between two polygons.
-        # We remove those spaces from the csv file before importing it.
-        # TODO: Remove this as soon as QGIS solves that issue
-        for line in fileinput.input(fname, inplace=True):
-            line = re.sub('\)\),\s\(\(', ')),((', line.rstrip())  # NOQA
-            line = re.sub('\),\s\(', '),(', line.rstrip())  # NOQA
-            # thanks to inplace=True, 'print line' writes the line into the
-            # input file, overwriting the original line
-            print(line)
-
-        layer = import_layer_from_csv(
-            self, fname, 'socioeconomic_data_export', self.iface,
-            has_geom=load_geometries, wkt_field='geometry',
-            add_to_legend=False)
-
-        if not load_geometries:
-            if layer.isValid():
-                QgsProject.instance().addMapLayer(layer)
-            else:
-                raise RuntimeError('Layer invalid')
-        else:
-            save_layer_as(layer, dest_filename, 'GPKG')
-            layer = QgsVectorLayer(
-                dest_filename, 'Socioeconomic data', 'ogr')
-            if layer.isValid():
-                QgsProject.instance().addMapLayer(layer)
-            else:
-                raise RuntimeError('Layer invalid')
-        self.iface.setActiveLayer(layer)
-        suppl_info = {
-            'selected_project_definition_idx': 0,
-            'project_definitions': [project_definition]}
-        write_layer_suppl_info_to_qgs(layer.id(), suppl_info)
-        self.update_actions_status()
-
-        # assign ind_name as alias for each ind_code
-        for field_idx, field in enumerate(layer.fields()):
-            if field.name() in indicators_info_dict:
-                layer.setFieldAlias(
-                    field_idx, indicators_info_dict[field.name()]['name'])
-            elif field.name() == 'ISO':
-                layer.setFieldAlias(
-                    field_idx, 'Country ISO code')
-            elif field.name() == 'COUNTRY_NA':
-                layer.setFieldAlias(
-                    field_idx, 'Country name')
-
-    def download_layer(self):
-        """
-        Open dialog to select one of the integrated risk projects available on
-        the OQ-Platform and download it as a qgis project
-        """
-        sv_downloader = get_loggedin_downloader(self.iface.messageBar())
-        if sv_downloader is None:
-            self.show_settings()
-            return
-
-        dlg = DownloadLayerDialog(self.iface, sv_downloader)
-        if dlg.exec_():
-            read_layer_suppl_info_from_qgs(
-                dlg.downloaded_layer_id, self.supplemental_information)
-            suppl_info = self.supplemental_information[dlg.downloaded_layer_id]
-            # in case of multiple project definitions, let the user select one
-            if len(suppl_info['project_definitions']) > 1:
-                self.project_definitions_manager()
-            self.update_actions_status()
 
     @staticmethod
     def _add_new_theme(svi_themes,
@@ -1318,7 +1098,7 @@ class Irmt(object):
     def show_settings(self):
         """
         Open a dialog to specify the connection settings used to interact
-        with the OpenQuake Platform
+        with the OpenQuake Engine
         """
         SettingsDialog(self.iface, self).exec_()
 
@@ -1428,28 +1208,6 @@ class Irmt(object):
                 msg = 'Calculation performed on layer %s' % layer.name()
                 log_msg(msg, level='S', message_bar=self.iface.messageBar())
         self.update_actions_status()
-
-    def upload(self):
-        """
-        Open a dialog to upload the current project to the OpenQuake Platform
-        """
-        temp_dir = tempfile.gettempdir()
-        file_stem = '%s%sqgis_irmt_%s' % (temp_dir, os.path.sep, uuid.uuid4())
-
-        active_layer_id = self.iface.activeLayer().id()
-        read_layer_suppl_info_from_qgs(
-            active_layer_id, self.supplemental_information)
-        suppl_info = self.supplemental_information[active_layer_id]
-        # add layer's bounding box
-        extent = self.iface.activeLayer().extent()
-        bbox = {'minx': extent.xMinimum(),
-                'miny': extent.yMinimum(),
-                'maxx': extent.xMaximum(),
-                'maxy': extent.yMaximum()}
-        suppl_info['bounding_box'] = bbox
-
-        dlg = UploadSettingsDialog(self.iface, suppl_info, file_stem)
-        dlg.exec_()
 
     def toggle_dock_visibility(self):
         """Show or hide the dock widget."""

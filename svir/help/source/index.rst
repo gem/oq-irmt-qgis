@@ -21,13 +21,10 @@ Contents:
     02_definitions.rst
     03_menu
     04_irmt_settings.rst
-    05_load_indicators_from_platform.rst
-    06_download_project_from_platform.rst
     07_transform_attribute.rst
     08_project_definitions_manager.rst
     09_weighting_and_calculating.rst
     10_aggregate_loss_by_zone.rst
-    11_upload_project_to_platform.rst
     12_using_r_scripts.rst
     13_recovery_modeling.rst
     14_driving_the_oqengine.rst

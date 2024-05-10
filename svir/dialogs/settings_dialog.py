@@ -38,16 +38,13 @@ from svir.utilities.utils import (
                                   get_irmt_version,
                                   get_ui_class,
                                   get_style,
-                                  platform_login,
                                   engine_login,
                                   log_msg,
                                   WaitCursorManager,
                                   check_is_lockdown,
                                   )
 from svir.utilities.shared import (
-                                   PLATFORM_REGISTRATION_URL,
                                    DEFAULT_SETTINGS,
-                                   DEFAULT_PLATFORM_PROFILES,
                                    DEFAULT_ENGINE_PROFILES,
                                    LOG_LEVELS,
                                    )
@@ -71,9 +68,6 @@ class SettingsDialog(QDialog, FORM_CLASS):
         irmt_version = get_irmt_version()
         self.setWindowTitle('OpenQuake IRMT v%s Settings' % irmt_version)
         self.layout().insertWidget(0, self.message_bar)
-        link_text = ('<a href="%s">Register to the OpenQuake Platform</a>'
-                     % PLATFORM_REGISTRATION_URL)
-        self.registration_link_lbl.setText(link_text)
 
         self.style_color_from.setFocusPolicy(Qt.NoFocus)
         self.style_color_to.setFocusPolicy(Qt.NoFocus)
@@ -114,8 +108,7 @@ class SettingsDialog(QDialog, FORM_CLASS):
         """
         mySettings = QSettings()
 
-        self.refresh_profile_cbxs('platform', restore_defaults)
-        self.refresh_profile_cbxs('engine', restore_defaults)
+        self.refresh_profile_cbxs(restore_defaults=restore_defaults)
 
         developer_mode = (DEFAULT_SETTINGS['developer_mode']
                           if restore_defaults
@@ -152,57 +145,32 @@ class SettingsDialog(QDialog, FORM_CLASS):
         self.developer_mode_ckb.setChecked(developer_mode)
         self.enable_experimental_ckb.setChecked(experimental_enabled)
 
-    def refresh_profile_cbxs(self, platform_or_engine, restore_defaults=False):
-        assert platform_or_engine in ('platform', 'engine'), platform_or_engine
-        if platform_or_engine == 'platform':
-            self.platform_profile_cbx.blockSignals(True)
-            self.platform_profile_cbx.clear()
-            self.platform_profile_cbx.blockSignals(False)
-        else:  # 'engine'
-            self.engine_profile_cbx.blockSignals(True)
-            self.engine_profile_cbx.clear()
-            self.engine_profile_cbx.blockSignals(False)
+    def refresh_profile_cbxs(self, restore_defaults=False):
+        self.engine_profile_cbx.blockSignals(True)
+        self.engine_profile_cbx.clear()
+        self.engine_profile_cbx.blockSignals(False)
         mySettings = QSettings()
         if restore_defaults:
-            profiles = json.loads(
-                DEFAULT_PLATFORM_PROFILES if platform_or_engine == 'platform'
-                else DEFAULT_ENGINE_PROFILES)
+            profiles = json.loads(DEFAULT_ENGINE_PROFILES)
             cur_profile = list(profiles.keys())[0]
         else:
             profiles = json.loads(
                 mySettings.value(
-                    'irmt/%s_profiles' % platform_or_engine,
-                    (DEFAULT_PLATFORM_PROFILES
-                     if platform_or_engine == 'platform'
-                     else DEFAULT_ENGINE_PROFILES)))
+                    'irmt/engine_profiles', DEFAULT_ENGINE_PROFILES))
             cur_profile = mySettings.value(
-                'irmt/current_%s_profile' % platform_or_engine)
+                'irmt/current_engine_profile')
         for profile in sorted(profiles, key=str.lower):
-            if platform_or_engine == 'platform':
-                self.platform_profile_cbx.blockSignals(True)
-                self.platform_profile_cbx.addItem(profile)
-                self.platform_profile_cbx.blockSignals(False)
-            else:  # engine
-                self.engine_profile_cbx.blockSignals(True)
-                self.engine_profile_cbx.addItem(profile)
-                self.engine_profile_cbx.blockSignals(False)
+            self.engine_profile_cbx.blockSignals(True)
+            self.engine_profile_cbx.addItem(profile)
+            self.engine_profile_cbx.blockSignals(False)
         if cur_profile is None:
             cur_profile = list(profiles.keys())[0]
             mySettings.setValue(
-                'irmt/current_%s_profile' % platform_or_engine,
-                cur_profile)
-        if platform_or_engine == 'platform':
-            self.platform_profile_cbx.setCurrentIndex(
-                self.platform_profile_cbx.findText(cur_profile))
-        else:  # engine
-            self.engine_profile_cbx.setCurrentIndex(
-                self.engine_profile_cbx.findText(cur_profile))
-        if platform_or_engine == 'platform':
-            self.pla_remove_btn.setEnabled(
-                self.platform_profile_cbx.count() > 1)
-        else:  # engine
-            self.eng_remove_btn.setEnabled(
-                self.engine_profile_cbx.count() > 1)
+                'irmt/current_engine_profile', cur_profile)
+        self.engine_profile_cbx.setCurrentIndex(
+            self.engine_profile_cbx.findText(cur_profile))
+        self.eng_remove_btn.setEnabled(
+            self.engine_profile_cbx.count() > 1)
 
     def set_button_color(self, button, color):
         button.setStyleSheet("background-color: %s" % color.name())
@@ -221,22 +189,12 @@ class SettingsDialog(QDialog, FORM_CLASS):
             'irmt/log_level',
             self.log_level_cbx.itemData(self.log_level_cbx.currentIndex()))
 
-        cur_pla_profile = self.platform_profile_cbx.currentText()
         cur_eng_profile = self.engine_profile_cbx.currentText()
 
-        platform_profiles = json.loads(mySettings.value(
-            'irmt/platform_profiles', DEFAULT_PLATFORM_PROFILES))
-        platform_profile = platform_profiles[cur_pla_profile]
         engine_profiles = json.loads(mySettings.value(
             'irmt/engine_profiles', DEFAULT_ENGINE_PROFILES))
         engine_profile = engine_profiles[cur_eng_profile]
 
-        mySettings.setValue('irmt/platform_hostname',
-                            platform_profile['hostname'])
-        mySettings.setValue('irmt/platform_username',
-                            platform_profile['username'])
-        mySettings.setValue('irmt/platform_password',
-                            platform_profile['password'])
         mySettings.setValue('irmt/engine_hostname',
                             engine_profile['hostname'])
         mySettings.setValue('irmt/engine_username',
@@ -292,83 +250,47 @@ class SettingsDialog(QDialog, FORM_CLASS):
             self.restore_state(restore_defaults=True)
 
     @pyqtSlot(int)
-    def on_platform_profile_cbx_currentIndexChanged(self, idx):
-        profile = self.platform_profile_cbx.itemText(idx)
-        QSettings().setValue('irmt/current_platform_profile', profile)
-
-    @pyqtSlot(int)
     def on_engine_profile_cbx_currentIndexChanged(self, idx):
         profile = self.engine_profile_cbx.itemText(idx)
         QSettings().setValue('irmt/current_engine_profile', profile)
 
     @pyqtSlot()
-    def on_pla_edit_btn_clicked(self):
-        profile_name = self.platform_profile_cbx.currentText()
-        self.profile_dlg = ConnectionProfileDialog(
-            'platform', profile_name, parent=self)
-        if self.profile_dlg.exec_():
-            self.refresh_profile_cbxs('platform')
-
-    @pyqtSlot()
     def on_eng_edit_btn_clicked(self):
         profile_name = self.engine_profile_cbx.currentText()
-        self.profile_dlg = ConnectionProfileDialog(
-            'engine', profile_name, parent=self)
+        self.profile_dlg = ConnectionProfileDialog(profile_name, parent=self)
         if self.profile_dlg.exec_():
-            self.refresh_profile_cbxs('engine')
-
-    @pyqtSlot()
-    def on_pla_new_btn_clicked(self):
-        self.profile_dlg = ConnectionProfileDialog(
-            'platform', parent=self)
-        if self.profile_dlg.exec_():
-            self.refresh_profile_cbxs('platform')
-
-    @pyqtSlot()
-    def on_pla_test_btn_clicked(self):
-        server = 'platform'
-        profile_name = self.platform_profile_cbx.currentText()
-        with WaitCursorManager('Logging in...', self.message_bar):
-            self._attempt_login(server, profile_name)
+            self.refresh_profile_cbxs()
 
     @pyqtSlot()
     def on_eng_test_btn_clicked(self):
-        server = 'engine'
         profile_name = self.engine_profile_cbx.currentText()
         with WaitCursorManager('Logging in...', self.message_bar):
-            self._attempt_login(server, profile_name)
+            self._attempt_login(profile_name)
 
-    def _attempt_login(self, server, profile_name):
-        if server == 'platform':
-            default_profiles = DEFAULT_PLATFORM_PROFILES
-            login_func = platform_login
-        elif server == 'engine':
-            default_profiles = DEFAULT_ENGINE_PROFILES
-            login_func = engine_login
-        else:
-            raise NotImplementedError(server)
+    def _attempt_login(self, profile_name):
+        default_profiles = DEFAULT_ENGINE_PROFILES
+        login_func = engine_login
         mySettings = QSettings()
         profiles = json.loads(mySettings.value(
-            'irmt/%s_profiles' % server, default_profiles))
+            'irmt/engine_profiles', default_profiles))
         profile = profiles[profile_name]
         session = Session()
         hostname, username, password = (profile['hostname'],
                                         profile['username'],
                                         profile['password'])
-        if server == 'engine':
-            try:
-                is_lockdown = check_is_lockdown(hostname, session)
-            except Exception as exc:
-                err_msg = ("Unable to connect")
-                log_msg(err_msg, level='C', message_bar=self.message_bar,
-                        exception=exc)
+        try:
+            is_lockdown = check_is_lockdown(hostname, session)
+        except Exception as exc:
+            err_msg = ("Unable to connect")
+            log_msg(err_msg, level='C', message_bar=self.message_bar,
+                    exception=exc)
+            return
+        else:
+            if not is_lockdown:
+                msg = 'Able to connect'
+                log_msg(msg, level='S', message_bar=self.message_bar,
+                        duration=3)
                 return
-            else:
-                if not is_lockdown:
-                    msg = 'Able to connect'
-                    log_msg(msg, level='S', message_bar=self.message_bar,
-                            duration=3)
-                    return
         try:
             login_func(hostname, username, password, session)
         except Exception as exc:
@@ -381,21 +303,15 @@ class SettingsDialog(QDialog, FORM_CLASS):
 
     @pyqtSlot()
     def on_eng_new_btn_clicked(self):
-        self.profile_dlg = ConnectionProfileDialog(
-            'engine', parent=self)
+        self.profile_dlg = ConnectionProfileDialog(parent=self)
         if self.profile_dlg.exec_():
-            self.refresh_profile_cbxs('engine')
-
-    @pyqtSlot()
-    def on_pla_remove_btn_clicked(self):
-        self.remove_selected_profile('platform')
+            self.refresh_profile_cbxs()
 
     @pyqtSlot()
     def on_eng_remove_btn_clicked(self):
-        self.remove_selected_profile('engine')
+        self.remove_selected_profile()
 
-    def remove_selected_profile(self, platform_or_engine):
-        assert platform_or_engine in ('platform', 'engine'), platform_or_engine
+    def remove_selected_profile(self):
         if QMessageBox.question(
                 self,
                 'Remove connection profile',
@@ -404,20 +320,15 @@ class SettingsDialog(QDialog, FORM_CLASS):
                 QMessageBox.Yes | QMessageBox.No) != QMessageBox.Yes:
             return
         profiles = json.loads(
-            QSettings().value('irmt/%s_profiles' % platform_or_engine))
-        if platform_or_engine == 'platform':
-            cur_profile = self.platform_profile_cbx.currentText()
-        else:  # engine
-            cur_profile = self.engine_profile_cbx.currentText()
+            QSettings().value('irmt/engine_profiles'))
+        cur_profile = self.engine_profile_cbx.currentText()
         del profiles[cur_profile]
-        QSettings().remove('irmt/current_%s_profile' % platform_or_engine)
-        self.save_profiles(platform_or_engine, profiles)
-        self.refresh_profile_cbxs(platform_or_engine)
+        QSettings().remove('irmt/current_engine_profile')
+        self.save_profiles(profiles)
+        self.refresh_profile_cbxs()
 
-    def save_profiles(self, platform_or_engine, profiles):
-        assert platform_or_engine in ('platform', 'engine'), platform_or_engine
-        QSettings().setValue('irmt/%s_profiles' % platform_or_engine,
-                             json.dumps(profiles))
+    def save_profiles(self, profiles):
+        QSettings().setValue('irmt/engine_profiles', json.dumps(profiles))
 
     def select_color(self, button):
         initial = button.palette().color(QPalette.Button)

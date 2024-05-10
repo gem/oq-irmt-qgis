@@ -68,7 +68,6 @@ from qgis.PyQt.QtGui import QColor
 from svir.utilities.shared import (
                                    DEBUG,
                                    DEFAULT_SETTINGS,
-                                   DEFAULT_PLATFORM_PROFILES,
                                    DEFAULT_ENGINE_PROFILES,
                                    )
 
@@ -510,23 +509,6 @@ def toggle_select_features_widget(title, text, button_text, layer,
     return widget
 
 
-def platform_login(host, username, password, session):
-    """
-    Logs in a session to a platform
-
-    :param host: The host url
-    :type host: str
-    :param username: The username
-    :type username: str
-    :param password: The password
-    :type password: str
-    :param session: The session to be autenticated
-    :type session: Session
-    """
-    login_url = host + '/account/ajax_login'
-    _login(login_url, username, password, session)
-
-
 def engine_login(host, username, password, session):
     """
     Logs in a session to a engine server
@@ -560,31 +542,6 @@ def _login(login_url, username, password, session):
         error_message = ('Unable to login: %s' %
                          session_resp.text)
         raise SvNetworkError(error_message)
-
-
-def update_platform_project(host,
-                            session,
-                            project_definition,
-                            platform_layer_id):
-    """
-    Add a project definition to one of the available projects on the
-    OpenQuake Platform
-
-    :param host: url of the OpenQuake Platform server
-    :param session: authenticated session to be used
-    :param project_definition: the project definition to be added
-    :param platform_layer_id: the id of the platform layer to be updated
-
-    :returns: the server's response
-    """
-    proj_def_str = json.dumps(project_definition,
-                              sort_keys=False,
-                              indent=2,
-                              separators=(',', ': '))
-    payload = {'layer_name': platform_layer_id,
-               'project_definition': proj_def_str}
-    resp = session.post(host + '/svir/add_project_definition', data=payload)
-    return resp
 
 
 def ask_for_destination_full_path_name(
@@ -791,22 +748,6 @@ def read_layer_suppl_info_from_qgs(layer_id, supplemental_information):
         suppl_info_str = pformat(supplemental_information[layer_id], indent=4)
         log_msg(("self.supplemental_information[%s] synchronized"
                  " with project, as: \n%s") % (layer_id, suppl_info_str))
-
-
-def insert_platform_layer_id(
-        layer_url, active_layer_id, supplemental_information):
-    """
-    Insert the platform layer id into the supplemental information
-
-    :param layer_url: url of the OpenQuake Platform layer
-    :param active_layer_id: id of the QGIS layer that is currently selected
-    :param supplemental_information: the supplemental information
-    """
-    platform_layer_id = layer_url.split('/')[-1]
-    suppl_info = supplemental_information[active_layer_id]
-    if 'platform_layer_id' not in suppl_info:
-        suppl_info['platform_layer_id'] = platform_layer_id
-    write_layer_suppl_info_to_qgs(active_layer_id, suppl_info)
 
 
 def get_ui_class(ui_file):
@@ -1142,13 +1083,10 @@ def warn_missing_packages(package_names, message_bar=None):
     log_msg(msg, level='C', message_bar=message_bar)
 
 
-def get_credentials(server):
+def get_credentials():
     """
     Get from the QSettings the credentials to access the OpenQuake Engine
-    or the OpenQuake Platform.
     If those settings are not found, use defaults instead.
-
-    :param server: it can be either 'platform' or 'engine'
 
     :returns: tuple (hostname, username, password)
 
@@ -1156,16 +1094,11 @@ def get_credentials(server):
     qs = QSettings()
     default_profiles = json.loads(
         qs.value(
-            'irmt/%s_profiles',
-            (DEFAULT_PLATFORM_PROFILES if server == 'platform'
-                else DEFAULT_ENGINE_PROFILES)))
+            'irmt/engine_profiles', DEFAULT_ENGINE_PROFILES))
     default_profile = default_profiles[list(default_profiles.keys())[0]]
-    hostname = qs.value('irmt/%s_hostname' % server,
-                        default_profile['hostname'])
-    username = qs.value('irmt/%s_username' % server,
-                        default_profile['username'])
-    password = qs.value('irmt/%s_password' % server,
-                        default_profile['password'])
+    hostname = qs.value('irmt/engine_hostname', default_profile['hostname'])
+    username = qs.value('irmt/engine_username', default_profile['username'])
+    password = qs.value('irmt/engine_password', default_profile['password'])
     return hostname, username, password
 
 

@@ -170,7 +170,7 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
         rlz_id = self.events_npz['array'][
             np.where(self.events_npz['array']['id'] == self.eid)]['rlz_id']
         self.rlz_or_stat_cbx.setCurrentIndex(
-            self.rlz_or_stat_cbx.itemData(int(rlz_id)))
+            self.rlz_or_stat_cbx.itemData(rlz_id.item()))
 
     def on_rlz_or_stat_changed(self):
         gmpe = self.rlz_or_stat_cbx.currentText()

@@ -129,11 +129,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="svir.py" line="1337"/>
-        <source>Uploading to platform</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <location filename="calculate_utils.py" line="165"/>
         <source>Invalid indicators were found in some features while calculating SVI</source>
         <translation type="unfinished"></translation>
@@ -341,16 +336,6 @@
 </context>
 <context>
     <name>SettingsDialog</name>
-    <message>
-        <location filename="ui_settings.ui" line="14"/>
-        <source>OpenQuake Platform settings</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="ui_settings.ui" line="20"/>
-        <source>Openquake platform connection settings</source>
-        <translation type="unfinished"></translation>
-    </message>
     <message>
         <location filename="ui_settings.ui" line="26"/>
         <source>Host</source>

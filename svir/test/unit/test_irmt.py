@@ -61,6 +61,9 @@ class IrmtTest(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    suite = unittest.makeSuite(IrmtTest)
+    suite = unittest.TestSuite()
+    loader = unittest.TestLoader()
+    tests = loader.loadTestsFromTestCase(IrmtTest)
+    suite.addTests(tests)
     runner = unittest.TextTestRunner(verbosity=2)
     runner.run(suite)

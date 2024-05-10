@@ -27,10 +27,7 @@ import json
 from qgis.PyQt.QtCore import pyqtSlot, QSettings
 from qgis.PyQt.QtWidgets import QDialog, QDialogButtonBox
 from svir.utilities.utils import get_ui_class
-from svir.utilities.shared import (
-                                   DEFAULT_PLATFORM_PROFILES,
-                                   DEFAULT_ENGINE_PROFILES,
-                                   )
+from svir.utilities.shared import DEFAULT_ENGINE_PROFILES
 
 FORM_CLASS = get_ui_class('ui_connection_profile.ui')
 
@@ -38,24 +35,20 @@ FORM_CLASS = get_ui_class('ui_connection_profile.ui')
 class ConnectionProfileDialog(QDialog, FORM_CLASS):
     """
     Dialog used to create/edit a connection profile to let the plugin interact
-    with the OpenQuake Platform or the OpenQuake Engine
+    with the OpenQuake Engine
     """
-    def __init__(self, platform_or_engine, profile_name='', parent=None):
+    def __init__(self, profile_name='', parent=None):
         QDialog.__init__(self, parent)
-        assert platform_or_engine in ('platform', 'engine'), platform_or_engine
 
         # Set up the user interface from Designer.
         self.setupUi(self)
 
-        self.platform_or_engine = platform_or_engine
         self.initial_profile_name = profile_name
         if self.initial_profile_name:
             profiles = json.loads(
                 QSettings().value(
-                    'irmt/%s_profiles' % self.platform_or_engine,
-                    (DEFAULT_PLATFORM_PROFILES
-                     if self.platform_or_engine == 'platform'
-                     else DEFAULT_ENGINE_PROFILES)))
+                    'irmt/engine_profiles',
+                    DEFAULT_ENGINE_PROFILES))
             profile = profiles[self.initial_profile_name]
             self.profile_name_edt.setText(self.initial_profile_name)
             self.username_edt.setText(profile['username'])
@@ -72,20 +65,13 @@ class ConnectionProfileDialog(QDialog, FORM_CLASS):
         # if the (stripped) hostname ends with '/', remove it
         hostname = self.hostname_edt.text().strip().rstrip('/')
         # if the (stripped) engine hostname ends with '/engine/', remove it
-        if self.platform_or_engine == 'engine':
-            hostname = (
-                hostname[:-7] if hostname.endswith('/engine') else hostname)
+        hostname = (
+            hostname[:-7] if hostname.endswith('/engine') else hostname)
         edited_profile_name = self.profile_name_edt.text()
         mySettings = QSettings()
-        mySettings.setValue(
-            'irmt/current_%s_profile' % self.platform_or_engine,
-            edited_profile_name)
+        mySettings.setValue('irmt/current_engine_profile', edited_profile_name)
         profiles = json.loads(
-            mySettings.value(
-                'irmt/%s_profiles' % self.platform_or_engine,
-                (DEFAULT_PLATFORM_PROFILES
-                 if self.platform_or_engine == 'platform'
-                 else DEFAULT_ENGINE_PROFILES)))
+            mySettings.value('irmt/engine_profiles', DEFAULT_ENGINE_PROFILES))
         profiles[edited_profile_name] = {
             'username': self.username_edt.text(),
             'password': self.password_edt.text(),
@@ -93,7 +79,5 @@ class ConnectionProfileDialog(QDialog, FORM_CLASS):
         if edited_profile_name != self.initial_profile_name:
             if self.initial_profile_name in profiles:
                 del profiles[self.initial_profile_name]
-        mySettings.setValue(
-            'irmt/%s_profiles' % self.platform_or_engine,
-            json.dumps(profiles))
+        mySettings.setValue('irmt/engine_profiles', json.dumps(profiles))
         super(ConnectionProfileDialog, self).accept()
