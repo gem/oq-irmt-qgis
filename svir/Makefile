@@ -155,13 +155,10 @@ tag:
 tag_push:
 	@git push origin --tags
 
-# FIXME: the automatic upload to the QGIS repo does not work
-# release: upload_plugin upload_doc tag_push
-release: package tag tag_push upload_doc
+release: upload_plugin upload_doc tag_push
 	@echo
 	@echo "-----------------------------------------------------------"
 	@echo "Released version $(VERSION).                               "
-	@echo "FIXME: svir.zip must be uploaded to the QGIS repo manually "
 	@echo "-----------------------------------------------------------"
 
 transup:
