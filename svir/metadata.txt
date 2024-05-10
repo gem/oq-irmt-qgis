@@ -301,3 +301,12 @@ experimental=True
 deprecated=False
 
 hasProcessingProvider=yes
+
+# if empty, it will be automatically set to major version + .99
+# qgisMaximumVersion=3.99
+
+# Since QGIS 3.8, a comma separated list of plugins to be installed (or upgraded) can be specified.
+# The example below will try to install (or upgrade) "MyOtherPlugin" version 1.12
+# and any version of "YetAnotherPlugin".
+# Both "MyOtherPlugin" and "YetAnotherPlugin" names come from their own metadata's name field
+# plugin_dependencies==MyOtherPlugin==1.12,YetAnotherPlugin
