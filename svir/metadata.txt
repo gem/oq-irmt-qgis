@@ -24,6 +24,9 @@ email=staff.it@globalquakemodel.org
 # Uncomment the following line and add your changelog entries:
 changelog=
     3.20.0
+    3.19.2
+    * Removed all references to the OQ Platform
+    * Fixed testing infrastructure using recent QGIS docker images and addressing some deprecation warnings
     3.19.1
     * Fixed the loader for ruptures
     * Different way to select the event and the GMPE in oq-engine scenario calculations
