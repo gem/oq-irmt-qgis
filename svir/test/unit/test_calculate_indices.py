@@ -149,6 +149,8 @@ class CalculateCompositeVariableTestCase(unittest.TestCase):
         self.layer = ProcessLayer(orig_layer).duplicate_in_memory()
 
     def test_custom_operator(self):
+        # FIXME
+        1/0
         proj_def = deepcopy(self.project_definition)
         operator = OPERATORS_DICT['CUSTOM']
         # set economy's operator to custom and use a custom formula
