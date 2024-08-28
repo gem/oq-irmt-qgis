@@ -186,6 +186,9 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
             imts = list(self.oqparam['hazard_imtls'])
         except KeyError:
             imts = list(self.oqparam['risk_imtls'])
+        if 'sec_imts' in self.oqparam:
+            # add secondary perils (if present) to the list of imts
+            imts.extend(self.oqparam['sec_imts'])
         self.imt_cbx.clear()
         self.imt_cbx.setEnabled(True)
         self.imt_cbx.addItems(imts)
