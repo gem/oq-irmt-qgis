@@ -22,11 +22,8 @@ Contents:
     03_menu
     04_irmt_settings.rst
     07_transform_attribute.rst
-    08_project_definitions_manager.rst
-    09_weighting_and_calculating.rst
     10_aggregate_loss_by_zone.rst
     12_using_r_scripts.rst
-    13_recovery_modeling.rst
     14_driving_the_oqengine.rst
     15_viewer_dock.rst
     16_crave.rst

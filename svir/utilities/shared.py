@@ -48,7 +48,6 @@ with open(metadata_file_path, 'r', newline='') as f:
     cp.read_file(f)
 IRMT_PLUGIN_VERSION = cp.get('general', 'version')
 SUPPLEMENTAL_INFORMATION_VERSION = '1.0'
-PROJECT_DEFINITION_VERSION = '1.0'
 
 
 class DiscardedFeature(object):
@@ -142,89 +141,6 @@ NODE_TYPES = {'IRI': 'Integrated Risk Index',
               'SV_THEME': 'Social Vulnerability Theme',
               'SV_INDICATOR': 'Social Vulnerability Indicator',
               }
-
-
-PROJECT_TEMPLATE = {
-    'project_definition_version': PROJECT_DEFINITION_VERSION,
-    'name': 'IRI',
-    'type': NODE_TYPES['IRI'],
-    'weight': 1.0,
-    'level': '1.0',
-    'operator': DEFAULT_OPERATOR,
-    'children': [
-        {'name': 'RI',
-         'type': NODE_TYPES['RI'],
-         'weight': 0.5,
-         'level': '2.0',
-         'children': []},
-        {'name': 'SVI',
-         'type': NODE_TYPES['SVI'],
-         'weight': 0.5,
-         'level': '2.0',
-         'children': []}
-    ]
-}
-
-THEME_TEMPLATE = {
-    'name': '',
-    'weight': 1.0,
-    'level': '3.0',
-    'type': NODE_TYPES['SV_THEME'],
-    'operator': DEFAULT_OPERATOR,
-    'children': []
-}
-
-# Actually not used, because it's built in the d3 javascript
-INDICATOR_TEMPLATE = {
-    'name': '',
-    'weight': 1.0,
-    'level': '4.0',
-    'type': NODE_TYPES['SV_INDICATOR'],
-    'field': '',
-    'children': []
-}
-
-RECOVERY_DEFAULTS = {
-    'transfer_probabilities': [
-        [1, 0, 0, 0, 0, 0],
-        [0.6, 0.4, 0, 0, 0, 0],
-        [0.2, 0.4, 0.3, 0.1, 0, 0],
-        [0, 0, 0.2, 0.4, 0.3, 0.1],
-        [0, 0, 0, 0, 0.2, 0.8]],
-    'inspection_times': [0, 30, 30, 30, 30, 0],
-    'assessment_times': [0, 0, 0, 60, 60, 0],
-    'mobilization_times': [0, 0, 0, 120, 365, 365],
-    'recovery_times': [0, 50, 108, 156, 252, 612],
-    'repair_times': [0, 13, 27, 39, 63, 153],
-    'lead_time_dispersion': 0.75,
-    'repair_time_dispersion': 0.4,
-}
-RECOVERY_DEFAULTS['n_loss_based_dmg_states'] = len(
-    RECOVERY_DEFAULTS['transfer_probabilities'])
-RECOVERY_DEFAULTS['n_recovery_based_dmg_states'] = len(
-    RECOVERY_DEFAULTS['transfer_probabilities'][0])
-
-# Notes on recovery modeling:
-#
-# assessment_times:
-#    The entry in row n is the assessment time for the (n - 1)th damage state
-# inspection_times:
-#    The entry in row n is the inspection time for the (n - 1)th damage state
-# mobilization_times:
-#    The entry in row n is the mobilization time for the (n - 1)th damage state
-# recovery_times:
-#    The entry in row n is the recovery time for the (n - 1)th damage state
-# repair_times:
-#    The entry in row n is the repair time for the (n - 1)th damage state
-# NB: The following is referred to the Napa case specifically!
-# Note on transfer probabilities: There is a 5*6 matrix where rows
-# describe loss-based damage states (No
-# damage/Slight/Moderate/Extensive/Complete) and columns present
-# recovery-based damage states(No damage/Trigger inspection/Loss
-# Function /Not Occupiable/Irreparable/Collapse). The element(i,j)
-# in the matrix is the probability of recovery-based damage state j
-# occurs given loss-based damage state i
-
 
 OQ_CSV_TO_LAYER_TYPES = set([
     'damages-stats',
