@@ -13,8 +13,6 @@
     <file alias="weights.svg">resources/weights.svg</file>
     <file alias="manual.svg">resources/manual.svg</file>
     <file alias="drive_oqengine.svg">resources/drive_oqengine.svg</file>
-    <file alias="recovery.svg">resources/recovery.svg</file>
-    <file alias="recovery_settings.svg">resources/recovery_settings.svg</file>
     <file alias="plot.svg">resources/plot.svg</file>
     <file alias="ipt.svg">resources/ipt.svg</file>
     <file alias="taxtweb.svg">resources/taxtweb.svg</file>
@@ -23,8 +21,6 @@
     <file alias="oq_logo.svg">resources/oq_logo.svg</file>
     <file alias="oq_logo.svg.png">resources/oq_logo.svg.png</file>
     <file alias="weight_data.html">resources/weight_data.html</file>
-    <file alias="js/d3.js">resources/js/d3.min.js</file>
-    <file alias="js/irmt_viewer_d3_tree.js">resources/js/irmt_viewer_d3_tree.js</file>
     <file alias="js/jquery.js">resources/js/jquery-1.9.1.min.js</file>
     <file alias="js/jquery-ui.js">resources/js/jquery-ui.min.js</file>
     <file alias="css/jquery-ui.css">resources/css/jquery-ui.min.css</file>
