@@ -38,7 +38,6 @@ from qgis.PyQt.QtWidgets import (
                                  QComboBox,
                                  QSizePolicy,
                                  QSpinBox,
-                                 QPushButton,
                                  QCheckBox,
                                  QDockWidget,
                                  QFileDialog,
@@ -56,7 +55,6 @@ from svir.utilities.shared import (
 from svir.utilities.utils import (get_ui_class,
                                   log_msg,
                                   clear_widgets_from_layout,
-                                  warn_missing_packages,
                                   extract_npz,
                                   get_loss_types,
                                   get_irmt_version,
@@ -64,7 +62,7 @@ from svir.utilities.utils import (get_ui_class,
                                   )
 from svir.ui.multi_select_combo_box import MultiSelectComboBox
 
-from svir import IS_SCIPY_INSTALLED, IS_MATPLOTLIB_INSTALLED
+from svir import IS_MATPLOTLIB_INSTALLED
 
 if IS_MATPLOTLIB_INSTALLED:
     import matplotlib

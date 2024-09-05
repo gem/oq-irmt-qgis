@@ -9,9 +9,9 @@ and above.
 
 On Microsoft Windows, QGIS includes all the software dependencies needed by the plugin.
 
-On macOS and Linux, please make sure that `Scipy <https://www.scipy.org/install.html>`_
-and `Matplotlib <https://matplotlib.org/users/installing.html>`_ with Qt5 backend
-are installed. On macOS, please also make sure
+On macOS and Linux, please make sure that
+`Matplotlib <https://matplotlib.org/users/installing.html>`_ with Qt5 backend
+is installed. On macOS, please also make sure
 that `Pillow <https://pillow.readthedocs.io/en/stable/installation.html>`_
 is installed.
 
@@ -20,19 +20,19 @@ On macOS:
 .. code-block:: bash
 
     $ python3 -m pip install --upgrade pip
-    $ python3 -m pip install --upgrade matplotlib scipy Pillow
+    $ python3 -m pip install --upgrade matplotlib Pillow
 
 On Ubuntu (Debian and similar):
 
 .. code-block:: bash
 
-    $ sudo apt install python3-scipy python3-matplotlib python3-pyqt5.qtwebkit
+    $ sudo apt install python3-matplotlib python3-pyqt5.qtwebkit
 
 On Fedora and similar:
 
 .. code-block:: bash
 
-    $ sudo dnf install python3-scipy python3-matplotlib python3-matplotlib-qt5
+    $ sudo dnf install python3-matplotlib python3-matplotlib-qt5
 
 On macOS make sure to run the script located under
 `/Applications/Python 3.6/Install Certificates.command`,
