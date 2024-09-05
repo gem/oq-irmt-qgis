@@ -110,38 +110,6 @@ TEXTUAL_FIELD_TYPES = (STRING_FIELD_TYPE_NAME,
                        TEXT_FIELD_TYPE_NAME,
                        TEXT_FIELD_TYPE_NAME.capitalize())
 
-OPERATORS_DICT = OrderedDict()
-OPERATORS_DICT['SUM_S'] = 'Simple sum (ignore weights)'
-OPERATORS_DICT['SUM_W'] = 'Weighted sum'
-OPERATORS_DICT['AVG'] = 'Average (ignore weights)'
-OPERATORS_DICT['MUL_S'] = 'Simple multiplication (ignore weights)'
-OPERATORS_DICT['MUL_W'] = 'Weighted multiplication'
-OPERATORS_DICT['GEOM_MEAN'] = 'Geometric mean (ignore weights)'
-OPERATORS_DICT['CUSTOM'] = 'Use a custom field'
-
-DEFAULT_OPERATOR = OPERATORS_DICT['SUM_W']
-IGNORING_WEIGHT_OPERATORS = (OPERATORS_DICT['SUM_S'],
-                             OPERATORS_DICT['AVG'],
-                             OPERATORS_DICT['MUL_S'],
-                             OPERATORS_DICT['GEOM_MEAN'],
-                             )
-SUM_BASED_OPERATORS = (OPERATORS_DICT['SUM_S'],
-                       OPERATORS_DICT['SUM_W'],
-                       OPERATORS_DICT['AVG'],
-                       )
-MUL_BASED_OPERATORS = (OPERATORS_DICT['MUL_S'],
-                       OPERATORS_DICT['MUL_W'],
-                       OPERATORS_DICT['GEOM_MEAN'],
-                       )
-
-NODE_TYPES = {'IRI': 'Integrated Risk Index',
-              'RI': 'Risk Index',
-              'RISK_INDICATOR': 'Risk Indicator',
-              'SVI': 'Social Vulnerability Index',
-              'SV_THEME': 'Social Vulnerability Theme',
-              'SV_INDICATOR': 'Social Vulnerability Indicator',
-              }
-
 OQ_CSV_TO_LAYER_TYPES = set([
     'damages-stats',
     'agg_risk',
@@ -189,7 +157,7 @@ OQ_EXTRACT_TO_VIEW_TYPES = set([
      'avg_losses-rlzs_aggr',
      'avg_losses-stats_aggr',
 ])
-OQ_XMARKER_TYPES = set(['hcurves', 'uhs', 'recovery_curves'])
+OQ_XMARKER_TYPES = set(['hcurves', 'uhs'])
 OQ_ALL_TYPES = (OQ_TO_LAYER_TYPES | OQ_RST_TYPES | OQ_EXTRACT_TO_VIEW_TYPES)
 
 LOG_LEVELS = {'I': 'Info (high verbosity)',

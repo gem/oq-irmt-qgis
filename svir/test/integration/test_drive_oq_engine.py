@@ -83,7 +83,6 @@ def run_all():
     ]
     extract_to_layer_test_cases = [
         LoadAssetRiskTestCase,
-        # NOTE: testing recovery curves starting from damages-rlzs
         LoadDamagesRlzsTestCase,
         LoadAvgLossesRlzsTestCase,
         LoadAvgLossesStatsTestCase,
@@ -131,7 +130,6 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        # NOTE: recovery modeling is an exprimental feature
         cls.initial_experimental_enabled = QSettings().value(
             '/irmt/experimental_enabled',
             DEFAULT_SETTINGS['experimental_enabled'],
@@ -377,12 +375,6 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         if aggregate_by_site is not None:
             print("\t\taggregate_by_site: %s" % aggregate_by_site)
             dlg.aggregate_by_site_ckb.setChecked(aggregate_by_site)
-        # NOTE: approach and n_simulations have to be set in the viewer_dock
-        if approach is not None:
-            print("\t\tRecovery modeling with parameters:")
-            print("\t\t\tApproach: %s" % approach)
-        if n_simulations is not None:
-            print("\t\t\tn_simulations: %s" % n_simulations)
         # set dialog options and accept
         if dlg.output_type == 'uhs':
             dlg.load_selected_only_ckb.setChecked(True)
@@ -469,9 +461,6 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             self.load_hcurves()
         elif dlg.output_type == 'uhs':
             self.load_uhs()
-        elif dlg.output_type == 'damages-rlzs' and not aggregate_by_site:
-            self.load_recovery_curves(dlg, approach, n_simulations)
-            return
         dlg.loading_completed.emit(dlg)
 
     def _store_skipped_attempt(self, id, calculation_mode, description, type):
@@ -681,15 +670,6 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                                  key=operator.itemgetter('loading_time'),
                                  reverse=True):
                 print('\t%s' % output)
-
-    def load_recovery_curves(self, dlg, approach, n_simulations):
-        self._set_output_type('Recovery Curves')
-        self.irmt.viewer_dock.approach_cbx.setCurrentIndex(
-            self.irmt.viewer_dock.approach_cbx.findText(approach))
-        self.irmt.viewer_dock.n_simulations_sbx.setValue(n_simulations)
-        self._change_selection()
-        self._test_export(empty_is_ok=True)
-        dlg.loading_completed.emit(dlg)
 
     def load_uhs(self):
         self._set_output_type('Uniform Hazard Spectra')

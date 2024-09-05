@@ -127,7 +127,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
 
         self.engine_version = None
 
-        # self.current_selection[None] is for recovery curves
+        # self.current_selection[None] was for recovery curves
         self.current_selection = {}  # rlz_or_stat -> feature_id -> curve
         self.was_imt_switched = False
         self.was_loss_type_switched = False
