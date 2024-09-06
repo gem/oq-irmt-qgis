@@ -16,17 +16,17 @@ Contents:
     :maxdepth: 2
     :numbered:
 
-    00_installation.rst
-    01_introduction.rst
-    02_definitions.rst
-    03_menu
-    04_irmt_settings.rst
-    07_transform_attribute.rst
-    10_aggregate_loss_by_zone.rst
-    12_using_r_scripts.rst
-    14_driving_the_oqengine.rst
-    15_viewer_dock.rst
-    16_crave.rst
+    installation.rst
+    introduction.rst
+    definitions.rst
+    menu
+    irmt_settings.rst
+    driving_the_oqengine.rst
+    viewer_dock.rst
+    crave.rst
+    aggregate_loss_by_zone.rst
+    transform_attribute.rst
+    using_r_scripts.rst
 
 
 Links:
