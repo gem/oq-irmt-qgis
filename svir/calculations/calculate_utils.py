@@ -25,21 +25,24 @@
 from qgis.core import QgsField
 from qgis.PyQt.QtCore import QVariant
 from svir.calculations.process_layer import ProcessLayer
+from svir.utilities.shared import (
+    DOUBLE_FIELD_TYPE, STRING_FIELD_TYPE, ULONGLONG_FIELD_TYPE,
+    LONGLONG_FIELD_TYPE)
 
 
 def add_attribute(proposed_attr_name, dtype, layer):
     # TODO: map numpy types to qt types more precisely to optimize storage
     if dtype == 'S':
-        qtype = QVariant.String
+        qtype = STRING_FIELD_TYPE
         qname = 'String'
     elif dtype == 'U':
-        qtype = QVariant.ULongLong
+        qtype = ULONGLONG_FIELD_TYPE
         qname = 'ULongLong'
     elif dtype == 'I':
-        qtype = QVariant.LongLong
+        qtype = LONGLONG_FIELD_TYPE
         qname = 'LongLong'
     else:  # NOTE: treating everything else (including 'F') as double
-        qtype = QVariant.Double
+        qtype = DOUBLE_FIELD_TYPE
         qname = 'Double'
     field = QgsField(proposed_attr_name, qtype)
     field.setTypeName(qname)

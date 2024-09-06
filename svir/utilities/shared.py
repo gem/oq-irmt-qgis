@@ -23,8 +23,7 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
-from collections import OrderedDict
-from qgis.PyQt.QtCore import QSettings
+from qgis.PyQt.QtCore import QSettings, QMetaType, QVariant
 from qgis.PyQt.QtGui import QColor
 from configparser import ConfigParser
 from qgis.core import Qgis
@@ -87,6 +86,20 @@ class DiscardedFeature(object):
 
     def __repr__(self):
         return 'Feature id: %s, reason: %s' % (self.feature_id, self.reason)
+
+
+if Qgis.QGIS_VERSION_INT < 33800:
+    STRING_FIELD_TYPE = QVariant.String
+    INT_FIELD_TYPE = QVariant.Int
+    DOUBLE_FIELD_TYPE = QVariant.Double
+    LONGLONG_FIELD_TYPE = QVariant.LongLong
+    ULONGLONG_FIELD_TYPE = QVariant.ULongLong
+else:
+    STRING_FIELD_TYPE = QMetaType.QString
+    INT_FIELD_TYPE = QMetaType.Int
+    DOUBLE_FIELD_TYPE = QMetaType.Double
+    LONGLONG_FIELD_TYPE = QMetaType.LongLong
+    ULONGLONG_FIELD_TYPE = QMetaType.ULongLong
 
 
 INT_FIELD_TYPE_NAME = 'integer'
