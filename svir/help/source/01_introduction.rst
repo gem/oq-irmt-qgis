@@ -25,7 +25,8 @@ Reduction Technology (CEDIM) <https://www.cedim.de/english/index.php>`_.
 
 The OpenQuake IRMT plugin has evolved significantly with respect to its original
 purposes, in order to make it operate seamlessly with the
-`OpenQuake Engine <https://github.com/gem/oq-engine>`_. This enables
+`OpenQuake Engine <https://github.com/gem/oq-engine>`_ (OQ-engine)
+([PMW+14]_ and [SCP+14]_). This enables
 a whole end-to-end workflow, where calculations of physical hazard and risk can
 be run directly from within the QGIS environment (see
 :ref:`chap-drive-oq-engine`) and the outputs of such calculations can be loaded
