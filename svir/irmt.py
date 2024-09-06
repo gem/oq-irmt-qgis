@@ -62,8 +62,6 @@ from svir.calculations.process_layer import ProcessLayer
 from svir.utilities.utils import (
                                   WaitCursorManager,
                                   clear_progress_message_bar,
-                                  replace_fields,
-                                  write_layer_suppl_info_to_qgs,
                                   log_msg,
                                   get_checksum,
                                   warn_missing_packages,
