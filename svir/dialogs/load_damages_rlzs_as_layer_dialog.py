@@ -148,7 +148,7 @@ class LoadDamagesRlzsAsLayerDialog(LoadOutputAsLayerDialog):
                 self.zonal_layer_gbx.isChecked()):
             layer_name = "damages-rlzs_%s_%s_%s_%s" % (
                 rlz_or_stat, taxonomy, loss_type, dmg_state)
-        else:  # recovery modeling
+        else:  # also needed for recovery modeling
             layer_name = "damages-rlzs_%s_%s" % (rlz_or_stat, loss_type)
         return layer_name
 
@@ -308,3 +308,14 @@ class LoadDamagesRlzsAsLayerDialog(LoadOutputAsLayerDialog):
                     self.layer = self.build_layer(
                         rlz_or_stat, taxonomy=taxonomy, loss_type=loss_type,
                         dmg_state=dmg_state)
+            else:  # also needed for recovery modeling
+                for loss_type in self.loss_types:
+                    if (self.load_selected_only_ckb.isChecked()
+                            and loss_type != self.loss_type_cbx.currentText()):
+                        continue
+                    with WaitCursorManager(
+                        'Creating layer for "%s" and loss_type "%s"' % (
+                            rlz_or_stat, loss_type), self.iface.messageBar()):
+                        self.layer = self.build_layer(
+                            rlz_or_stat, loss_type=loss_type)
+                        self.style_curves()
