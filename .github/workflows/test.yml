@@ -1,8 +1,9 @@
 name: Unit and integration tests
 on:
-  push:
-    branches:
-      - '**'
+  # FIXME: restore tests on push
+  # push:
+  #   branches:
+  #     - '**'
   schedule:
     - cron: "0 1 * * *"
 
