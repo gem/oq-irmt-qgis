@@ -765,23 +765,21 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         else:
             return result
 
-    @pyqtSlot(int, int, int, int)
-    def on_calc_list_tbl_currentCellChanged(
-            self, curr_row, curr_column, prev_row, prev_col):
-        self.calc_list_tbl.selectRow(curr_row)
-        # find QTableItem corresponding to that calc_id
+    @pyqtSlot(int, int)
+    def on_calc_list_tbl_cellClicked(self, row, column):
         calc_id_col_idx = 1
-        item_calc_id = self.calc_list_tbl.item(curr_row, calc_id_col_idx)
+        item_calc_id = self.calc_list_tbl.item(row, calc_id_col_idx)
         calc_id = int(item_calc_id.text())
-        if self.pointed_calc_id == calc_id:
-            # if you click again on the row that was selected, it unselects it
+        if (self.pointed_calc_id is not None
+                and self.pointed_calc_id == calc_id):
             self.pointed_calc_id = None
             self.calc_list_tbl.clearSelection()
         else:
+            self.calc_list_tbl.selectRow(row)
             self.pointed_calc_id = calc_id
             self._set_show_calc_params_btn()
-        self.update_output_list(calc_id)
-        self._set_show_calc_params_btn()
+            self.update_output_list(calc_id)
+            self._set_show_calc_params_btn()
 
     def _set_show_calc_params_btn(self):
         self.show_calc_params_btn.setEnabled(
