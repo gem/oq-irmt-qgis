@@ -820,7 +820,10 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 self.rlz_cbx.addItem(rlz, rlz)
         self.rlz_cbx.blockSignals(False)
 
-        loss_types = composite_risk_model_attrs['loss_types']
+        self.single_loss_types = composite_risk_model_attrs['loss_types']
+        loss_types = self.single_loss_types[:]
+        if 'total_losses' in oqparam:
+            loss_types.append(oqparam['total_losses'])
         self.loss_type_cbx.blockSignals(True)
         self.loss_type_cbx.clear()
         self.loss_type_cbx.addItems(loss_types)
@@ -913,8 +916,11 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self._get_tags(session, hostname, calc_id, self.iface.messageBar(),
                        with_star=True)
 
-        loss_types = get_loss_types(
+        self.single_loss_types = get_loss_types(
             session, hostname, calc_id, self.iface.messageBar())
+        loss_types = self.single_loss_types[:]
+        if 'total_losses' in oqparam:
+            loss_types.append(oqparam['total_losses'])
         self.loss_type_cbx.blockSignals(True)
         self.loss_type_cbx.clear()
         self.loss_type_cbx.addItems(loss_types)
@@ -939,6 +945,26 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.clear_tag_values_multiselects(tag_names)
 
         self.filter_avg_losses_rlzs_aggr()
+
+    def get_total_loss_unit(self, loss_type):
+        unit = None
+        separate_types = loss_type.split('+')
+        for separate_type in separate_types:
+            if separate_type in self.single_loss_types:
+                loss_type_idx = self.loss_type_cbx.findText(separate_type)
+                this_unit = self.agg_curves['units'][loss_type_idx]
+                if unit is not None and unit != this_unit:
+                    raise ValueError(
+                        f'Attempting to sum loss types with different'
+                        f' measurement units: {unit} and {this_unit}')
+                else:
+                    unit = this_unit
+            else:
+                raise ValueError(
+                    f'There is an inconsistency between the total loss'
+                    f' type and the single loss types: {loss_type} vs'
+                    f' {separate_types}')
+        return unit
 
     def load_agg_curves(
             self, calc_id, session, hostname, output_type, oqparam):
@@ -976,7 +1002,10 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 tag_value = [val for val in self.tags[tag_name]['values']
                              if self.tags[tag_name]['values'][val]][0]
                 params[tag_name] = tag_value
-        loss_types = composite_risk_model_attrs['loss_types']
+        self.single_loss_types = composite_risk_model_attrs['loss_types']
+        loss_types = self.single_loss_types[:]
+        if 'total_losses' in oqparam:
+            loss_types.append(oqparam['total_losses'])
         self.loss_type_cbx.blockSignals(True)
         self.loss_type_cbx.clear()
         self.loss_type_cbx.addItems(loss_types)
@@ -1085,7 +1114,10 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         loss_type = self.loss_type_cbx.currentText()
         loss_type_idx = self.loss_type_cbx.currentIndex()
         ep_idx = self.ep_cbx.currentIndex()
-        unit = self.agg_curves['units'][loss_type_idx]
+        try:
+            unit = self.agg_curves['units'][loss_type_idx]
+        except IndexError:
+            unit = self.get_total_loss_unit(loss_type)
         self.plot.clear()
         # if not ordinates.any():  # too much filtering
         #     self.plot_canvas.draw()
@@ -2032,7 +2064,10 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 ep_idx = self.ep_cbx.currentIndex()
                 abs_rel = self.abs_rel_cbx.currentText()
                 loss_type_idx = self.loss_type_cbx.currentIndex()
-                unit = self.agg_curves['units'][loss_type_idx]
+                try:
+                    unit = self.agg_curves['units'][loss_type_idx]
+                except IndexError:
+                    unit = self.get_total_loss_unit(loss_type)
                 csv_file.write("# Loss type: %s\r\n" % loss_type)
                 csv_file.write("# Exceedance Probability: %s\r\n" % ep)
                 csv_file.write("# Absolute or relative: %s\r\n" % abs_rel)
