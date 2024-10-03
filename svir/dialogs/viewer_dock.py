@@ -822,8 +822,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
 
         self.single_loss_types = composite_risk_model_attrs['loss_types']
         loss_types = self.single_loss_types[:]
-        if 'total_losses' in oqparam:
-            loss_types.append(oqparam['total_losses'])
+        # NOTE: we may want to add total_losses also in this case
+        # if 'total_losses' in oqparam:
+        #     loss_types.append(oqparam['total_losses'])
         self.loss_type_cbx.blockSignals(True)
         self.loss_type_cbx.clear()
         self.loss_type_cbx.addItems(loss_types)
@@ -919,8 +920,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.single_loss_types = get_loss_types(
             session, hostname, calc_id, self.iface.messageBar())
         loss_types = self.single_loss_types[:]
-        if 'total_losses' in oqparam:
-            loss_types.append(oqparam['total_losses'])
+        # NOTE: we may want to add total_losses also in this case
+        # if 'total_losses' in oqparam:
+        #     loss_types.append(oqparam['total_losses'])
         self.loss_type_cbx.blockSignals(True)
         self.loss_type_cbx.clear()
         self.loss_type_cbx.addItems(loss_types)
