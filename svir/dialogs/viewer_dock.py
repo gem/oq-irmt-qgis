@@ -955,15 +955,17 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 this_unit = self.agg_curves['units'][loss_type_idx]
                 if unit is not None and unit != this_unit:
                     raise ValueError(
-                        f'Attempting to sum loss types with different'
-                        f' measurement units: {unit} and {this_unit}')
+                        f'The unit of the total loss type ({loss_type}) can'
+                        f' not be determined by the separate loss types'
+                        f' ({separate_types}) because they have different'
+                        f' units ({unit} vs {this_unit})')
                 else:
                     unit = this_unit
             else:
                 raise ValueError(
                     f'There is an inconsistency between the total loss'
-                    f' type and the single loss types: {loss_type} vs'
-                    f' {separate_types}')
+                    f' type ({loss_type}) and the single loss types'
+                    f' ({separate_types})')
         return unit
 
     def load_agg_curves(
