@@ -948,9 +948,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
 
         self.filter_avg_losses_rlzs_aggr()
 
-    def get_total_loss_unit(self, loss_type):
+    def get_total_loss_unit(self, total_losses):
         unit = None
-        separate_types = loss_type.split('+')
+        separate_types = total_losses.split('+')
         # NOTE: assuming that the separate types have consistent units
         loss_type_idx = self.loss_type_cbx.findText(separate_types[0])
         unit = self.agg_curves['units'][loss_type_idx]
