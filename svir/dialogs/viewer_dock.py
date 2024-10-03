@@ -967,7 +967,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 raise ValueError(
                     f'There is an inconsistency between the total loss'
                     f' type ({loss_type}) and the single loss types'
-                    f' ({separate_types})')
+                    f' ({self.single_loss_types})')
         return unit
 
     def load_agg_curves(
