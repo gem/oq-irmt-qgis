@@ -951,23 +951,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
     def get_total_loss_unit(self, loss_type):
         unit = None
         separate_types = loss_type.split('+')
-        for separate_type in separate_types:
-            if separate_type in self.single_loss_types:
-                loss_type_idx = self.loss_type_cbx.findText(separate_type)
-                this_unit = self.agg_curves['units'][loss_type_idx]
-                if unit is not None and unit != this_unit:
-                    raise ValueError(
-                        f'The unit of the total loss type ({loss_type}) can'
-                        f' not be determined by the separate loss types'
-                        f' ({separate_types}) because they have different'
-                        f' units ({unit} vs {this_unit})')
-                else:
-                    unit = this_unit
-            else:
-                raise ValueError(
-                    f'There is an inconsistency between the total loss'
-                    f' type ({loss_type}) and the single loss types'
-                    f' ({self.single_loss_types})')
+        # NOTE: assuming that the separate types have consistent units
+        loss_type_idx = self.loss_type_cbx.findText(separate_types[0])
+        unit = self.agg_curves['units'][loss_type_idx]
         return unit
 
     def load_agg_curves(
