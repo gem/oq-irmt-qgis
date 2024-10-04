@@ -24,6 +24,7 @@ email=staff.it@globalquakemodel.org
 # Uncomment the following line and add your changelog entries:
 changelog=
     3.22.0
+    * Added the possibility to display total aggregated loss curves
     3.21.1
     * In the dialog driving the oq-engine, when the user resizes the columns of the calculations list table, the new widths are kept when the table is refreshed
     * In the dialog driving the oq-engine, it is possible to trigger the selection/unselection of a calculation by clicking on the corresponding row
