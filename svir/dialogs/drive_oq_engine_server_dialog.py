@@ -777,7 +777,6 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         else:
             self.calc_list_tbl.selectRow(row)
             self.pointed_calc_id = calc_id
-            self._set_show_calc_params_btn()
             self.update_output_list(calc_id)
             self._set_show_calc_params_btn()
 
