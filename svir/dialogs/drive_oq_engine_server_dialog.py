@@ -153,6 +153,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
     def __init__(self, iface, viewer_dock, hostname=None):
         self.iface = iface
         self.viewer_dock = viewer_dock  # needed to change the output_type
+        self.col_widths = [340, 60, 135, 70, 80]
         QDialog.__init__(self)
         # Set up the user interface from Designer.
         self.setupUi(self)
@@ -190,6 +191,9 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.message_bar = QgsMessageBar(self)
         self.layout().insertWidget(0, self.message_bar)
 
+        self.calc_list_tbl.horizontalHeader().sectionResized.connect(
+            self.on_column_resized)
+
         self.engine_version = None
         self.num_login_attempts = 0
 
@@ -198,6 +202,11 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
 
         self.is_gui_enabled = False
         self.attempt_login()
+
+    def on_column_resized(self, index, old_size, new_size):
+        if index < len(self.col_widths):
+            # ignoring columns with buttons
+            self.col_widths[index] = new_size
 
     def on_job_id_chosen(self):
         try:
@@ -347,7 +356,6 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             'description', 'id', 'calculation_mode', 'owner', 'status']
         col_names = [
             'Description', 'Job ID', 'Calculation Mode', 'Owner', 'Status']
-        col_widths = [340, 60, 135, 70, 80]
         if not self.calc_list:
             self.calc_list_tbl.blockSignals(True)
             if self.calc_list_tbl.rowCount() > 0:
@@ -359,7 +367,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 self.calc_list_tbl.setHorizontalHeaderLabels(col_names)
                 self.calc_list_tbl.horizontalHeader().setStyleSheet(
                     "font-weight: bold;")
-                self.set_calc_list_widths(col_widths)
+                self.set_calc_list_widths(self.col_widths)
             self.calc_list_tbl.blockSignals(False)
             return False
         actions = [
@@ -432,7 +440,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.calc_list_tbl.setHorizontalHeaderLabels(headers)
         self.calc_list_tbl.horizontalHeader().setStyleSheet(
             "font-weight: bold;")
-        self.set_calc_list_widths(col_widths)
+        self.set_calc_list_widths(self.col_widths)
         if self.pointed_calc_id:
             self.highlight_and_scroll_to_calc_id(self.pointed_calc_id)
         # if a running calculation is selected, the corresponding outputs will
@@ -759,23 +767,20 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         else:
             return result
 
-    @pyqtSlot(int, int, int, int)
-    def on_calc_list_tbl_currentCellChanged(
-            self, curr_row, curr_column, prev_row, prev_col):
-        self.calc_list_tbl.selectRow(curr_row)
-        # find QTableItem corresponding to that calc_id
+    @pyqtSlot(int, int)
+    def on_calc_list_tbl_cellClicked(self, row, column):
         calc_id_col_idx = 1
-        item_calc_id = self.calc_list_tbl.item(curr_row, calc_id_col_idx)
+        item_calc_id = self.calc_list_tbl.item(row, calc_id_col_idx)
         calc_id = int(item_calc_id.text())
-        if self.pointed_calc_id == calc_id:
-            # if you click again on the row that was selected, it unselects it
+        if (self.pointed_calc_id is not None
+                and self.pointed_calc_id == calc_id):
             self.pointed_calc_id = None
             self.calc_list_tbl.clearSelection()
         else:
+            self.calc_list_tbl.selectRow(row)
             self.pointed_calc_id = calc_id
+            self.update_output_list(calc_id)
             self._set_show_calc_params_btn()
-        self.update_output_list(calc_id)
-        self._set_show_calc_params_btn()
 
     def _set_show_calc_params_btn(self):
         self.show_calc_params_btn.setEnabled(
