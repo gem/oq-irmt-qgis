@@ -30,8 +30,6 @@ changelog=
     * In the dialog driving the oq-engine, when the user resizes the columns of the calculations list table, the new widths are kept when the table is refreshed
     * In the dialog driving the oq-engine, it is possible to trigger the selection/unselection of a calculation by clicking on the corresponding row
     3.21.0
-    * Removed all references to social vulnerability and recovery modeling
-    3.21.0
     * When loading ground motion fields from an OpenQuake calculation, secondary perils (if available) are added to the selectable IMTs
     3.20.0
     * Aligned with oq-engine 3.20
