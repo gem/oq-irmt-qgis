@@ -17,16 +17,12 @@ On Microsoft Windows, QGIS includes all the software dependencies needed by the 
 
 On macOS and Linux, please make sure that
 [Matplotlib](https://matplotlib.org/users/installing.html) with Qt5 backend is installed.
-On macOS, please also make sure
-that [Pillow](https://pillow.readthedocs.io/en/stable/installation.html)
-is installed.
-
 
 On macOS:
 
 ```bash
 $ python3 -m pip install --upgrade pip
-$ python3 -m pip install --upgrade matplotlib Pillow
+$ python3 -m pip install --upgrade matplotlib
 ```
 
 On Ubuntu (Debian and similar):
@@ -42,7 +38,7 @@ $ sudo dnf install python3-matplotlib python3-matplotlib-qt5
 ```
 
 On macOS make sure to run the script located under
-`/Applications/Python 3.6/Install Certificates.command`,
+`/Applications/Python X.Y/Install Certificates.command`,
 after Python has been installed, to update the SSL certificates bundle.
 
 On Fedora, please follow these [instructions](https://copr.fedorainfracloud.org/coprs/dani/qgis/).

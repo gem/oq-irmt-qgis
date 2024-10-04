@@ -74,7 +74,7 @@ from svir.processing_provider.provider import Provider
 # noinspection PyUnresolvedReferences
 import svir.resources_rc  # pylint: disable=unused-import  # NOQA
 
-from svir import IS_MATPLOTLIB_INSTALLED, IS_PILLOW_INSTALLED
+from svir import IS_MATPLOTLIB_INSTALLED
 
 
 class Irmt(object):
@@ -82,8 +82,6 @@ class Irmt(object):
         missing_packages = []
         if not IS_MATPLOTLIB_INSTALLED:
             missing_packages.append('matplotlib')
-        if not IS_PILLOW_INSTALLED:
-            missing_packages.append('Pillow')
         if missing_packages:
             warn_missing_packages(missing_packages)
             return
@@ -159,7 +157,7 @@ class Irmt(object):
         QgsApplication.processingRegistry().addProvider(self.provider)
 
     def initGui(self):
-        if not IS_MATPLOTLIB_INSTALLED or not IS_PILLOW_INSTALLED:
+        if not IS_MATPLOTLIB_INSTALLED:
             # the warning should have already been displayed by the __init__
             return
         self.initProcessing()
@@ -499,7 +497,7 @@ class Irmt(object):
         """
         Remove all plugin's actions and corresponding buttons and connects
         """
-        if not IS_MATPLOTLIB_INSTALLED or not IS_PILLOW_INSTALLED:
+        if not IS_MATPLOTLIB_INSTALLED:
             return
         # stop any running timers
         if self.drive_oq_engine_server_dlg is not None:
