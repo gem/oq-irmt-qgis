@@ -23,8 +23,7 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
-from collections import OrderedDict
-from qgis.PyQt.QtCore import QSettings
+from qgis.PyQt.QtCore import QSettings, QMetaType, QVariant
 from qgis.PyQt.QtGui import QColor
 from configparser import ConfigParser
 from qgis.core import Qgis
@@ -48,7 +47,6 @@ with open(metadata_file_path, 'r', newline='') as f:
     cp.read_file(f)
 IRMT_PLUGIN_VERSION = cp.get('general', 'version')
 SUPPLEMENTAL_INFORMATION_VERSION = '1.0'
-PROJECT_DEFINITION_VERSION = '1.0'
 
 
 class DiscardedFeature(object):
@@ -90,6 +88,20 @@ class DiscardedFeature(object):
         return 'Feature id: %s, reason: %s' % (self.feature_id, self.reason)
 
 
+if Qgis.QGIS_VERSION_INT < 33800:
+    STRING_FIELD_TYPE = QVariant.String
+    INT_FIELD_TYPE = QVariant.Int
+    DOUBLE_FIELD_TYPE = QVariant.Double
+    LONGLONG_FIELD_TYPE = QVariant.LongLong
+    ULONGLONG_FIELD_TYPE = QVariant.ULongLong
+else:
+    STRING_FIELD_TYPE = QMetaType.QString
+    INT_FIELD_TYPE = QMetaType.Int
+    DOUBLE_FIELD_TYPE = QMetaType.Double
+    LONGLONG_FIELD_TYPE = QMetaType.LongLong
+    ULONGLONG_FIELD_TYPE = QMetaType.ULongLong
+
+
 INT_FIELD_TYPE_NAME = 'integer'
 REAL_FIELD_TYPE_NAME = 'Real'
 DOUBLE_FIELD_TYPE_NAME = 'double'
@@ -110,121 +122,6 @@ TEXTUAL_FIELD_TYPES = (STRING_FIELD_TYPE_NAME,
                        STRING_FIELD_TYPE_NAME.lower(),
                        TEXT_FIELD_TYPE_NAME,
                        TEXT_FIELD_TYPE_NAME.capitalize())
-
-OPERATORS_DICT = OrderedDict()
-OPERATORS_DICT['SUM_S'] = 'Simple sum (ignore weights)'
-OPERATORS_DICT['SUM_W'] = 'Weighted sum'
-OPERATORS_DICT['AVG'] = 'Average (ignore weights)'
-OPERATORS_DICT['MUL_S'] = 'Simple multiplication (ignore weights)'
-OPERATORS_DICT['MUL_W'] = 'Weighted multiplication'
-OPERATORS_DICT['GEOM_MEAN'] = 'Geometric mean (ignore weights)'
-OPERATORS_DICT['CUSTOM'] = 'Use a custom field'
-
-DEFAULT_OPERATOR = OPERATORS_DICT['SUM_W']
-IGNORING_WEIGHT_OPERATORS = (OPERATORS_DICT['SUM_S'],
-                             OPERATORS_DICT['AVG'],
-                             OPERATORS_DICT['MUL_S'],
-                             OPERATORS_DICT['GEOM_MEAN'],
-                             )
-SUM_BASED_OPERATORS = (OPERATORS_DICT['SUM_S'],
-                       OPERATORS_DICT['SUM_W'],
-                       OPERATORS_DICT['AVG'],
-                       )
-MUL_BASED_OPERATORS = (OPERATORS_DICT['MUL_S'],
-                       OPERATORS_DICT['MUL_W'],
-                       OPERATORS_DICT['GEOM_MEAN'],
-                       )
-
-NODE_TYPES = {'IRI': 'Integrated Risk Index',
-              'RI': 'Risk Index',
-              'RISK_INDICATOR': 'Risk Indicator',
-              'SVI': 'Social Vulnerability Index',
-              'SV_THEME': 'Social Vulnerability Theme',
-              'SV_INDICATOR': 'Social Vulnerability Indicator',
-              }
-
-
-PROJECT_TEMPLATE = {
-    'project_definition_version': PROJECT_DEFINITION_VERSION,
-    'name': 'IRI',
-    'type': NODE_TYPES['IRI'],
-    'weight': 1.0,
-    'level': '1.0',
-    'operator': DEFAULT_OPERATOR,
-    'children': [
-        {'name': 'RI',
-         'type': NODE_TYPES['RI'],
-         'weight': 0.5,
-         'level': '2.0',
-         'children': []},
-        {'name': 'SVI',
-         'type': NODE_TYPES['SVI'],
-         'weight': 0.5,
-         'level': '2.0',
-         'children': []}
-    ]
-}
-
-THEME_TEMPLATE = {
-    'name': '',
-    'weight': 1.0,
-    'level': '3.0',
-    'type': NODE_TYPES['SV_THEME'],
-    'operator': DEFAULT_OPERATOR,
-    'children': []
-}
-
-# Actually not used, because it's built in the d3 javascript
-INDICATOR_TEMPLATE = {
-    'name': '',
-    'weight': 1.0,
-    'level': '4.0',
-    'type': NODE_TYPES['SV_INDICATOR'],
-    'field': '',
-    'children': []
-}
-
-RECOVERY_DEFAULTS = {
-    'transfer_probabilities': [
-        [1, 0, 0, 0, 0, 0],
-        [0.6, 0.4, 0, 0, 0, 0],
-        [0.2, 0.4, 0.3, 0.1, 0, 0],
-        [0, 0, 0.2, 0.4, 0.3, 0.1],
-        [0, 0, 0, 0, 0.2, 0.8]],
-    'inspection_times': [0, 30, 30, 30, 30, 0],
-    'assessment_times': [0, 0, 0, 60, 60, 0],
-    'mobilization_times': [0, 0, 0, 120, 365, 365],
-    'recovery_times': [0, 50, 108, 156, 252, 612],
-    'repair_times': [0, 13, 27, 39, 63, 153],
-    'lead_time_dispersion': 0.75,
-    'repair_time_dispersion': 0.4,
-}
-RECOVERY_DEFAULTS['n_loss_based_dmg_states'] = len(
-    RECOVERY_DEFAULTS['transfer_probabilities'])
-RECOVERY_DEFAULTS['n_recovery_based_dmg_states'] = len(
-    RECOVERY_DEFAULTS['transfer_probabilities'][0])
-
-# Notes on recovery modeling:
-#
-# assessment_times:
-#    The entry in row n is the assessment time for the (n - 1)th damage state
-# inspection_times:
-#    The entry in row n is the inspection time for the (n - 1)th damage state
-# mobilization_times:
-#    The entry in row n is the mobilization time for the (n - 1)th damage state
-# recovery_times:
-#    The entry in row n is the recovery time for the (n - 1)th damage state
-# repair_times:
-#    The entry in row n is the repair time for the (n - 1)th damage state
-# NB: The following is referred to the Napa case specifically!
-# Note on transfer probabilities: There is a 5*6 matrix where rows
-# describe loss-based damage states (No
-# damage/Slight/Moderate/Extensive/Complete) and columns present
-# recovery-based damage states(No damage/Trigger inspection/Loss
-# Function /Not Occupiable/Irreparable/Collapse). The element(i,j)
-# in the matrix is the probability of recovery-based damage state j
-# occurs given loss-based damage state i
-
 
 OQ_CSV_TO_LAYER_TYPES = set([
     'damages-stats',
@@ -273,7 +170,7 @@ OQ_EXTRACT_TO_VIEW_TYPES = set([
      'avg_losses-rlzs_aggr',
      'avg_losses-stats_aggr',
 ])
-OQ_XMARKER_TYPES = set(['hcurves', 'uhs', 'recovery_curves'])
+OQ_XMARKER_TYPES = set(['hcurves', 'uhs'])
 OQ_ALL_TYPES = (OQ_TO_LAYER_TYPES | OQ_RST_TYPES | OQ_EXTRACT_TO_VIEW_TYPES)
 
 LOG_LEVELS = {'I': 'Info (high verbosity)',

@@ -38,7 +38,6 @@ from qgis.PyQt.QtWidgets import (
                                  QComboBox,
                                  QSizePolicy,
                                  QSpinBox,
-                                 QPushButton,
                                  QCheckBox,
                                  QDockWidget,
                                  QFileDialog,
@@ -56,17 +55,14 @@ from svir.utilities.shared import (
 from svir.utilities.utils import (get_ui_class,
                                   log_msg,
                                   clear_widgets_from_layout,
-                                  warn_missing_packages,
                                   extract_npz,
                                   get_loss_types,
                                   get_irmt_version,
                                   WaitCursorManager,
                                   )
-from svir.recovery_modeling.recovery_modeling import (
-    RecoveryModeling, fill_fields_multiselect)
 from svir.ui.multi_select_combo_box import MultiSelectComboBox
 
-from svir import IS_SCIPY_INSTALLED, IS_MATPLOTLIB_INSTALLED
+from svir import IS_MATPLOTLIB_INSTALLED
 
 if IS_MATPLOTLIB_INSTALLED:
     import matplotlib
@@ -129,7 +125,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
 
         self.engine_version = None
 
-        # self.current_selection[None] is for recovery curves
+        # self.current_selection[None] was for recovery curves
         self.current_selection = {}  # rlz_or_stat -> feature_id -> curve
         self.was_imt_switched = False
         self.was_loss_type_switched = False
@@ -166,8 +162,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         ])
 
         if QSettings().value('/irmt/experimental_enabled', False, type=bool):
-            self.output_types_names.update(
-                {'recovery_curves': 'Recovery Curves'})
+            pass  # it was used for recovery_curves and it might be useful
         self.output_type_cbx.addItems(list(self.output_types_names.values()))
 
         self.plot_figure = Figure()
@@ -329,25 +324,6 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         # respect to the other type dependent widgets
         self.type_dep_widget_names.append('exclude_no_dmg_ckb')
 
-    def create_approach_selector(self):
-        self.approach_lbl = QLabel('Recovery time approach')
-        self.approach_lbl.setSizePolicy(
-            QSizePolicy.Minimum, QSizePolicy.Minimum)
-        approach_explanation = (
-            'Aggregate: building-level recovery model as a single process\n'
-            'Disaggregate: Building-level recovery modelled using four'
-            ' processes: inspection, assessment, mobilization and repair.')
-        self.approach_lbl.setToolTip(approach_explanation)
-        self.approach_cbx = QComboBox()
-        self.approach_cbx.setToolTip(approach_explanation)
-        self.approach_cbx.addItems(['Disaggregate', 'Aggregate'])
-        self.approach_cbx.currentIndexChanged['QString'].connect(
-            self.on_approach_changed)
-        self.add_widget_to_type_dep_layout(
-            self.approach_lbl, 'approach_lbl', self.typeDepHLayout1)
-        self.add_widget_to_type_dep_layout(
-            self.approach_cbx, 'approach_cbx', self.typeDepHLayout1)
-
     def add_widget_to_type_dep_layout(self, widget, widget_name, layout):
         layout.addWidget(widget)
         self.type_dep_widget_names.append(widget_name)
@@ -395,25 +371,6 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.typeDepVLayout)
         self.recalculate_on_the_fly_chk.toggled.connect(
             self.on_recalculate_on_the_fly_chk_toggled)
-
-    def create_recalculate_curve_btn(self):
-        self.recalculate_curve_btn = QPushButton('Calculate recovery curve')
-        self.add_widget_to_type_dep_layout(
-            self.recalculate_curve_btn, 'recalculate_curve_btn',
-            self.typeDepVLayout)
-        self.recalculate_curve_btn.clicked.connect(
-            self.on_recalculate_curve_btn_clicked)
-
-    def create_fields_multiselect(self):
-        self.fields_lbl = QLabel(
-            'Fields containing loss-based damage state probabilities')
-        self.fields_multiselect = MultiSelectComboBox(self)
-        self.add_widget_to_type_dep_layout(
-            self.fields_lbl, 'fields_lbl', self.typeDepVLayout)
-        self.add_widget_to_type_dep_layout(
-            self.fields_multiselect, 'fields_multiselect', self.typeDepVLayout)
-        fill_fields_multiselect(
-            self.fields_multiselect, self.iface.activeLayer())
 
     def create_rlzs_multiselect(self):
         self.rlzs_lbl = QLabel('Realizations')
@@ -748,17 +705,6 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             self.create_stats_multiselect()
             self.stats_multiselect.selection_changed.connect(
                 self.refresh_feature_selection)
-        elif new_output_type == 'recovery_curves':
-            if not IS_SCIPY_INSTALLED:
-                warn_missing_packages(['scipy'], self.iface.messageBar())
-                self.output_type = None
-                return
-            self.create_approach_selector()
-            self.create_n_simulations_spinbox()
-            self.create_fields_multiselect()
-            self.create_select_assets_at_same_site_chk()
-            self.create_recalculate_on_the_fly_chk()
-            self.create_recalculate_curve_btn()
         # NOTE: the window's size is automatically adjusted even without
         # calling self.adjustSize(). If that method is called, it might cause
         # the window to shrink unexpectedly until the focus is moved somewhere
@@ -1362,10 +1308,6 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                             ' found. It will not be displayed in the plot.',
                             level='W', message_bar=self.iface.messageBar())
                         continue
-                # NOTE: we associated the same cumulative curve to all the
-                # selected points (ugly), and here we need to get only one
-                if self.output_type == 'recovery_curves' and i > 0:
-                    break
                 feature = next(self.iface.activeLayer().getFeatures(
                     QgsFeatureRequest().setFilterFid(site)))
 
@@ -1383,8 +1325,6 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                     gid=str(site),
                     picker=5  # 5 points tolerance
                 )
-                if self.output_type == 'recovery_curves':
-                    self.create_annot()
                 num_plottable_curves += 1
         if num_plottable_curves == 0:
             self.clear_plot()
@@ -1416,18 +1356,6 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 title = 'Uniform hazard spectrum'
             else:
                 title = 'Uniform hazard spectra'
-        elif self.output_type == 'recovery_curves':
-            self.plot.set_xscale('linear')
-            self.plot.set_yscale('linear')
-            self.plot.set_xlabel('Time [days]')
-            self.plot.set_ylabel('Normalized recovery level [%]')
-            self.plot.set_ylim((0.0, 105.0))
-            if count_lines == 0:
-                title = ''
-            elif count_lines == 1:
-                title = 'Building level recovery curve'
-            else:
-                title = 'Community level recovery curve'
         if self.output_type == 'hcurves':
             ylim_bottom, ylim_top = self.plot.get_ylim()
             self.plot.set_ylim(ylim_bottom, ylim_top * 1.5)
@@ -1453,7 +1381,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 title += ' (%s years)' % investigation_time
         self.plot.set_title(title)
         self.plot.grid(which='both')
-        if self.output_type != 'recovery_curves' and 1 <= count_lines <= 20:
+        if 1 <= count_lines <= 20:
             if self.output_type == 'uhs':
                 location = 'upper right'
             else:
@@ -1508,21 +1436,10 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                         del self.current_selection[rlz_or_stat][fid]
                     except KeyError:
                         pass
-            else:  # recovery curves
-                try:
-                    del self.current_selection[None][fid]
-                except KeyError:
-                    pass
         for fid in selected:
             if hasattr(self, 'rlzs_or_stats'):
                 for rlz_or_stat in self.rlzs_or_stats:
                     self.current_selection[rlz_or_stat] = {}
-            else:  # recovery curves
-                self.current_selection[None] = {}
-        if self.output_type == 'recovery_curves':
-            if len(selected) > 0:
-                self.redraw_recovery_curve(selected)
-            return
         if not selected_rlzs_or_stats or not self.current_selection:
             return
         self.current_abscissa = []
@@ -1642,40 +1559,6 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.was_loss_type_switched = False
         self.draw()
 
-    def redraw_recovery_curve(self, selected):
-        request = QgsFeatureRequest().setFlags(
-            QgsFeatureRequest.NoGeometry).setFilterFids(selected)
-        features = list(self.iface.activeLayer().getFeatures(request))
-        approach = self.approach_cbx.currentText()
-        recovery = RecoveryModeling(features, approach, self.iface)
-        integrate_svi = False
-        probs_field_names = self.fields_multiselect.get_selected_items()
-        zonal_damages_rlzs_probs, zonal_asset_refs = \
-            recovery.collect_zonal_data(probs_field_names, integrate_svi)
-        n_simulations = self.n_simulations_sbx.value()
-        recovery_function = \
-            recovery.generate_community_level_recovery_curve(
-                'ALL', zonal_damages_rlzs_probs, zonal_asset_refs,
-                n_simulations=n_simulations)
-        if not recovery_function:
-            return
-        self.current_abscissa = list(range(len(recovery_function)))
-        color = QColor('black')
-        color_hex = color.name()
-        # NOTE: differently with respect to the other approaches, we are
-        # associating only a single feature with the cumulative recovery curve.
-        # It might be a little ugly, but otherwise it would be inefficient.
-        if len(features) > 0:
-            self.current_selection[None] = {}
-            self.current_selection[None][features[0].id()] = {
-                'abscissa': self.current_abscissa,
-                'ordinates': [value * 100 for value in recovery_function],
-                'color': color_hex,
-                'line_style': "-",  # solid
-                'marker': "None",
-            }
-        self.draw()
-
     def layer_changed(self):
         self.calc_id = None
         self.clear_plot()
@@ -1713,9 +1596,6 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 # Select all stats by default
                 self.stats_multiselect.add_selected_items(self.rlzs_or_stats)
                 self.stats_multiselect.setEnabled(len(self.rlzs_or_stats) > 1)
-            elif self.output_type == 'recovery_curves':
-                fill_fields_multiselect(
-                    self.fields_multiselect, self.iface.activeLayer())
             else:  # no plots for this layer
                 self.current_selection = {}
             self.redraw_current_selection()
@@ -1795,30 +1675,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         if not self.on_container_hover(event, self.plot):
             if hasattr(self.legend, 'get_lines'):
                 self.on_container_hover(event, self.legend)
-        if self.output_type == 'recovery_curves':
-            if not hasattr(self, 'annot'):
-                return
-            vis = self.annot.get_visible()
-            if event.inaxes == self.plot:
-                if not hasattr(self, 'line'):
-                    return
-                cont, ind = self.line.contains(event)
-                if cont:
-                    self.update_annot(ind)
-                    self.annot.set_visible(True)
-                    self.plot_figure.canvas.draw_idle()
-                else:
-                    if vis:
-                        self.annot.set_visible(False)
-                        self.plot_figure.canvas.draw_idle()
 
     def on_container_hover(self, event, container):
-        if self.output_type in (
-                OQ_EXTRACT_TO_VIEW_TYPES | set(['recovery_curves'])):
-            # NOTE: recovery curves correspond to many points in the map, but
-            # only one id can be retrieved from the line. Highlighting only one
-            # of the points might be misleading, so it's probably better to
-            # avoid highlighting anything at all in such case.
+        if self.output_type in OQ_EXTRACT_TO_VIEW_TYPES:
             return False
         for line in container.get_lines():
             if line.contains(event)[0]:
@@ -1931,14 +1790,6 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 os.path.expanduser(
                     '~/%s_%s.csv' % (self.output_type, self.calc_id)),
                 '*.csv')
-        elif self.output_type == 'recovery_curves':
-            filename, _ = QFileDialog.getSaveFileName(
-                self,
-                self.tr('Export data'),
-                os.path.expanduser(
-                    '~/recovery_curves_%s.csv' %
-                    self.approach_cbx.currentText()),
-                '*.csv')
         if filename:
             self.write_export_file(filename)
 
@@ -1960,42 +1811,10 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         csv_headline += (
             "OpenQuake Integrated Risk Modelling Toolkit v%s\r\n"
             % irmt_version)
-        if self.output_type == 'recovery_curves':
-            approach = self.approach_cbx.currentText()
-            n_simulations = self.n_simulations_sbx.value()
-            asset_ids = [
-                feat['id']
-                for feat in self.iface.activeLayer().selectedFeatures()]
-            csv_headline += "# Recovery time approach: %s\r\n" % approach
-            csv_headline += "# Number of simulations: %s\r\n" % n_simulations
-            csv_headline += "# Asset ids: %s\r\n" % ", ".join(asset_ids)
         with open(filename, 'w', newline='') as csv_file:
             csv_file.write(csv_headline)
             writer = csv.writer(csv_file)
-            if self.output_type == 'recovery_curves':
-                headers = ['lon', 'lat']
-                headers.extend(self.current_abscissa)
-                writer.writerow(headers)
-                # NOTE: taking the first element, because they are all the
-                # same
-                feature = self.iface.activeLayer().selectedFeatures()[0]
-                lon = feature.geometry().asPoint().x()
-                lat = feature.geometry().asPoint().y()
-                try:
-                    values = list(self.current_selection[None].values())[0]
-                except IndexError:
-                    if empty_is_ok:
-                        msg = 'Empty data exported to %s' % filename
-                        log_msg(msg, level='W',
-                                message_bar=self.iface.messageBar())
-                        return
-                    else:
-                        raise
-                row = [lon, lat]
-                if values:
-                    row.extend(values['ordinates'])
-                writer.writerow(row)
-            elif self.output_type in ['hcurves', 'uhs']:
+            if self.output_type in ['hcurves', 'uhs']:
                 field_names = []
                 for field in self.iface.activeLayer().fields():
                     if field.name() == 'fid':
@@ -2161,7 +1980,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
 
     @pyqtSlot()
     def on_bw_chk_clicked(self):
-        if self.output_type in OQ_TO_LAYER_TYPES | set('recovery_curves'):
+        if self.output_type in OQ_TO_LAYER_TYPES:
             self.layer_changed()
         if self.output_type in ('aggcurves', 'aggcurves-stats'):
             # self.draw_agg_curves(self.output_type)

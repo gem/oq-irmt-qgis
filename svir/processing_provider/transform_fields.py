@@ -23,8 +23,9 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 from qgis.PyQt.QtGui import QIcon
-from qgis.PyQt.QtCore import QCoreApplication, QVariant
-from qgis.core import (QgsProcessing,
+from qgis.PyQt.QtCore import QCoreApplication
+from qgis.core import (
+                       QgsProcessing,
                        QgsProcessingUtils,
                        QgsProcessingAlgorithm,
                        QgsProcessingParameterFeatureSource,
@@ -36,6 +37,7 @@ from qgis.core import (QgsProcessing,
                        QgsProcessingException,
                        QgsProcessingParameterFeatureSink)
 from processing.tools import vector
+from svir.utilities.shared import DOUBLE_FIELD_TYPE
 
 
 class TransformFieldsAlgorithm(QgsProcessingAlgorithm):
@@ -200,7 +202,7 @@ class TransformFieldsAlgorithm(QgsProcessingAlgorithm):
                     transformed_field.setName(
                         "%s_%s" % (field_to_transform.name(),
                                    transformation_name))
-                    transformed_field.setType(QVariant.Double)
+                    transformed_field.setType(DOUBLE_FIELD_TYPE)
                     transformed_field.setLength(20)
                     transformed_field.setPrecision(6)
                     self.transformed_fields.append(transformed_field)

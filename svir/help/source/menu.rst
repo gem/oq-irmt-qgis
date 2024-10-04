@@ -24,16 +24,6 @@ corresponding documentation.
   ..   Online graphical tool for editing GEM Taxonomy strings.
   * |icon-drive-oq-engine| :ref:`chap-drive-oq-engine`
 
-* Integrated risk
-
-  * |icon-project-definitions-manager| :ref:`chap-project-definitions-manager`
-  * |icon-weight-and-calculate| :ref:`chap-weighting-and-calculating`
-
-* Recovery modeling
-
-  * |icon-recovery| :ref:`chap-recovery-modeling`
-  * |icon-recovery-settings| :ref:`sec-recovery-modeling-settings`
-
 * Utilities
 
   * |icon-aggregate-points-by-zone| :ref:`chap-aggregating-points-by-zone`
@@ -49,13 +39,9 @@ corresponding documentation.
 
 .. |icon-plugin-settings| image:: images/iconPluginSettings.png
 .. |icon-transform-attributes| image:: images/iconTransformAttribute.png
-.. |icon-project-definitions-manager| image:: images/iconProjectDefinitionManager.png
-.. |icon-weight-and-calculate| image:: images/iconWeightAndCalculate.png
 .. |icon-aggregate-points-by-zone| image:: images/iconAggregateLossByZone.png
 .. |icon-manual| image:: images/iconManual.png
 .. |icon-plot| image:: images/iconPlot.png
-.. |icon-recovery| image:: images/iconRecovery.png
-.. |icon-recovery-settings| image:: images/iconRecoverySettings.png
 .. |icon-drive-oq-engine| image:: images/iconDriveOqEngine.png
 .. |icon-ipt| image:: images/iconIpt.png
 .. |icon-taxtweb| image:: images/iconTaxtweb.png

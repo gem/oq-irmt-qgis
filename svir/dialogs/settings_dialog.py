@@ -69,29 +69,6 @@ class SettingsDialog(QDialog, FORM_CLASS):
         self.setWindowTitle('OpenQuake IRMT v%s Settings' % irmt_version)
         self.layout().insertWidget(0, self.message_bar)
 
-        self.style_color_from.setFocusPolicy(Qt.NoFocus)
-        self.style_color_to.setFocusPolicy(Qt.NoFocus)
-
-        if Qgis.QGIS_VERSION_INT < 31000:
-            modes = {
-                QgsGraduatedSymbolRenderer.EqualInterval: self.tr(
-                    'Equal Interval'),
-                QgsGraduatedSymbolRenderer.Quantile: self.tr(
-                    'Quantile (Equal Count)'),
-                QgsGraduatedSymbolRenderer.Jenks: self.tr(
-                    'Natural Breaks (Jenks)'),
-                QgsGraduatedSymbolRenderer.StdDev: self.tr(
-                    'Standard Deviation'),
-                QgsGraduatedSymbolRenderer.Pretty: self.tr(
-                    'Pretty Breaks'),
-            }
-            for key in modes:
-                self.style_mode.addItem(modes[key], key)
-        else:
-            modes = QgsApplication.classificationMethodRegistry().methodNames()
-            for mode_name, mode_id in modes.items():
-                self.style_mode.addItem(mode_name, mode_id)
-
         for log_level in sorted(LOG_LEVELS):
             self.log_level_cbx.addItem(LOG_LEVELS[log_level], log_level)
 
@@ -132,15 +109,6 @@ class SettingsDialog(QDialog, FORM_CLASS):
             self.iface.activeLayer(),
             self.iface.messageBar(),
             restore_defaults)
-
-        self.set_button_color(self.style_color_from, style['color_from'])
-        self.set_button_color(self.style_color_to, style['color_to'])
-
-        mode_idx = self.style_mode.findData(style['style_mode'])
-        self.style_mode.setCurrentIndex(mode_idx)
-
-        self.style_classes.setValue(style['classes'])
-        self.force_restyling_ckb.setChecked(style['force_restyling'])
 
         self.developer_mode_ckb.setChecked(developer_mode)
         self.enable_experimental_ckb.setChecked(experimental_enabled)
@@ -201,44 +169,6 @@ class SettingsDialog(QDialog, FORM_CLASS):
                             engine_profile['username'])
         mySettings.setValue('irmt/engine_password',
                             engine_profile['password'])
-
-        color_from = self.style_color_from.palette().color(QPalette.Button)
-        mySettings.setValue(
-            'irmt/style_color_from',
-            color_from.rgba())
-        color_to = self.style_color_to.palette().color(QPalette.Button)
-        mySettings.setValue(
-            'irmt/style_color_to',
-            color_to.rgba())
-
-        mySettings.setValue('irmt/style_mode', self.style_mode.itemData(
-            self.style_mode.currentIndex()))
-
-        mySettings.setValue('irmt/style_classes', self.style_classes.value())
-        active_layer = self.iface.activeLayer()
-        # at project level, save the setting associated to the layer if
-        # available
-        if active_layer is not None:
-            # NOTE: We can't use %s/%s instead of %s_%s, because / is a special
-            #       character
-            QgsProject.instance().writeEntry(
-                'irmt', '%s_%s' % (active_layer.id(), 'force_restyling'),
-                self.force_restyling_ckb.isChecked())
-        else:  # no layer is selected
-            QgsProject.instance().writeEntry(
-                'irmt', 'force_restyling',
-                self.force_restyling_ckb.isChecked())
-        # keep the latest setting saved also into the general settings
-        mySettings.setValue('irmt/force_restyling',
-                            self.force_restyling_ckb.isChecked())
-
-    @pyqtSlot()
-    def on_style_color_from_clicked(self):
-        self.select_color(self.style_color_from)
-
-    @pyqtSlot()
-    def on_style_color_to_clicked(self):
-        self.select_color(self.style_color_to)
 
     @pyqtSlot()
     def on_restore_default_settings_btn_clicked(self):

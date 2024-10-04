@@ -26,11 +26,11 @@
 import os.path
 from qgis.core import QgsVectorLayer, QgsField
 
-from qgis.PyQt.QtCore import QVariant
 
 from svir.calculations.process_layer import ProcessLayer
-from svir.utilities.shared import (INT_FIELD_TYPE_NAME,
-                                   STRING_FIELD_TYPE_NAME)
+from svir.utilities.shared import (
+    INT_FIELD_TYPE, INT_FIELD_TYPE_NAME,
+    STRING_FIELD_TYPE, STRING_FIELD_TYPE_NAME)
 
 from qgis.testing import unittest, start_app
 from qgis.testing.mocked import get_iface
@@ -119,9 +119,9 @@ class AddAttributesTestCase(unittest.TestCase):
 
     def test_find_attribute_id(self):
         field_names = ['first', 'second']
-        field_one = QgsField(field_names[0], QVariant.String)
+        field_one = QgsField(field_names[0], STRING_FIELD_TYPE)
         field_one.setTypeName(STRING_FIELD_TYPE_NAME)
-        field_two = QgsField(field_names[1], QVariant.Int)
+        field_two = QgsField(field_names[1], INT_FIELD_TYPE)
         field_two.setTypeName(INT_FIELD_TYPE_NAME)
         attributes = [field_one, field_two]
         ProcessLayer(self.layer).add_attributes(attributes)
@@ -136,9 +136,9 @@ class AddAttributesTestCase(unittest.TestCase):
             ProcessLayer(self.layer).find_attribute_id('dummy')
 
     def test_add_attributes(self):
-        field_one = QgsField('first', QVariant.String)
+        field_one = QgsField('first', STRING_FIELD_TYPE)
         field_one.setTypeName(STRING_FIELD_TYPE_NAME)
-        field_two = QgsField('second', QVariant.Int)
+        field_two = QgsField('second', INT_FIELD_TYPE)
         field_two.setTypeName(INT_FIELD_TYPE_NAME)
         attributes = [field_one, field_two]
         added_attributes = ProcessLayer(self.layer).add_attributes(attributes)
@@ -148,9 +148,9 @@ class AddAttributesTestCase(unittest.TestCase):
         # Let's add 2 other fields with the same names of the previous ones
         # ==> Since the names are already taken, we expect to add fields with
         # the same names plus '_1'
-        field_three = QgsField('first', QVariant.String)
+        field_three = QgsField('first', STRING_FIELD_TYPE)
         field_three.setTypeName(STRING_FIELD_TYPE_NAME)
-        field_four = QgsField('second', QVariant.Int)
+        field_four = QgsField('second', INT_FIELD_TYPE)
         field_four.setTypeName(INT_FIELD_TYPE_NAME)
         attributes = [field_three, field_four]
         added_attributes = ProcessLayer(self.layer).add_attributes(attributes)
@@ -160,9 +160,9 @@ class AddAttributesTestCase(unittest.TestCase):
         # Let's add 2 other fields with the same names of the previous ones
         # ==> Since the names are already taken, as well as the corresponding
         # '_1' versions, we expect to add fields with the same names plus '_2'
-        field_five = QgsField('first', QVariant.String)
+        field_five = QgsField('first', STRING_FIELD_TYPE)
         field_five.setTypeName(STRING_FIELD_TYPE_NAME)
-        field_six = QgsField('second', QVariant.Int)
+        field_six = QgsField('second', INT_FIELD_TYPE)
         field_six.setTypeName(INT_FIELD_TYPE_NAME)
         attributes = [field_five, field_six]
         added_attributes = ProcessLayer(self.layer).add_attributes(attributes)

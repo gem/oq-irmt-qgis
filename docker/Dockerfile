@@ -13,7 +13,7 @@ RUN apt -q install -y locales build-essential git sudo xvfb zip \
                    qt5-default pyqt5-dev pyqt5-dev-tools \
                    python3-pyqt5.qtwebkit python3-pip \
                    python3-mock python3-nose \
-                   python3-nose-exclude python3-scipy \
+                   python3-nose-exclude \
                    ghostscript \
                    texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended && \
     pip3 install sphinx==1.4.9 sphinx_rtd_theme && \

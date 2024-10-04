@@ -149,20 +149,6 @@ be truncated to 10 characters.
     as containers for the alias; therefore the selected name would be incomplete
     (being taken excluding the parentheses) and it would not be found in the layer.
 
-If the checkbox :guilabel:`Let all project definitions utilize transformed
-values` is checked, all the project definitions associated with the active
-layer will reference the transformed fields instead of the original ones.
-Otherwise, they will keep the links to the original selected attributes. In
-most cases it is recommended to keep this checkbox checked. This automatic
-update of field references simplifies the workflow because it avoids the need
-to manually remove the original nodes from the weighting and aggregation tree
-(discussed in detail in :ref:`chap-weighting-and-calculating`) in
-order to add the transformed nodes and to set again the nodes' weights. In
-other words, if a project was developed by weighting and aggregating
-untransformed indicators, this functionality allows for variables used in the
-project definition to be replaced on-the-fly (and automatically) by transformed
-variables.  This saves the user from having to augment the model manually.  
-
 By clicking the :guilabel:`Advanced Calculator` button, the native QGIS field calculator
 is opened. Please refer to the `code documentation
 <../../../apidoc/_build/html/svir.calculations.html#module-svir.calculations.transformation_algs>`_

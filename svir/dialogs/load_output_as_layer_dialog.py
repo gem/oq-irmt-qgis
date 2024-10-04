@@ -518,9 +518,6 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             grown_extent = QgsRectangle(
                 xmin - delta, ymin - delta, xmax + delta, ymax + delta)
             self.layer.setExtent(grown_extent)
-        if (self.output_type == 'damages-rlzs' and
-                not self.aggregate_by_site_ckb.isChecked()):
-            self.layer.setCustomProperty('output_type', 'recovery_curves')
         else:
             self.layer.setCustomProperty('output_type', self.output_type)
         investigation_time = self.get_investigation_time()

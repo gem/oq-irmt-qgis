@@ -82,19 +82,6 @@
           </item>
          </layout>
         </item>
-        <item>
-         <widget class="QCheckBox" name="track_new_field_ckb">
-          <property name="enabled">
-           <bool>true</bool>
-          </property>
-          <property name="text">
-           <string>Let all project definitions utilize transformed values</string>
-          </property>
-          <property name="checked">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
        </layout>
       </widget>
      </item>
