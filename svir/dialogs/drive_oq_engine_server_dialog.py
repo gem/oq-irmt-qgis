@@ -204,7 +204,9 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.attempt_login()
 
     def on_column_resized(self, index, old_size, new_size):
-        self.col_widths[index] = new_size
+        if index < len(self.col_widths):
+            # ignoring columns with buttons
+            self.col_widths[index] = new_size
 
     def on_job_id_chosen(self):
         try:
