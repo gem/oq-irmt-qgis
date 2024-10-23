@@ -529,7 +529,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                             params[tag_name].append(value)
                         else:
                             params[tag_name] = [value]
-        output_type = 'agg_damages/%s' % self.loss_type_cbx.currentText()
+        output_type = 'agg_damages'
         with WaitCursorManager(
                 'Extracting...', message_bar=self.iface.messageBar()):
             self.damages_rlzs_aggr = extract_npz(
