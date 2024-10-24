@@ -21,7 +21,7 @@ jobs:
       matrix:
         # NOTE: it would be better to point to lts and latest if possible
         # NOTE: checking also master to make sure risk workshop demos keep working also on master
-        ENGINE_BR: ['engine-3.16', 'engine-3.20', 'master']
+        ENGINE_BR: ['engine-3.16', 'engine-3.21', 'master']
         # NOTE: we might test also for qgis/qgis:3.22 that is the version of qgis-server that we are currently using in the Geoviewer, but it currently causes a segfault
         # NOTE: qgis:stable points to the latest release, wheread qgis:latest points to qgis master
         QGIS_DOCKER_VERSION: ['qgis/qgis:ltr', 'qgis/qgis:stable']
