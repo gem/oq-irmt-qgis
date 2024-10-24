@@ -1,17 +1,9 @@
-# QGIS plugin to drive the OpenQuake Engine, to develop Social Vulnerability and Integrated Risk composite indices, and to predict building recovery times following an earthquake
+# QGIS plugin to drive the OpenQuake Engine
 
 This QGIS plugin allows users to drive [OpenQuake Engine](https://github.com/gem/oq-engine/)
 calculations of physical hazard and risk, and to load the corresponding outputs
 as QGIS layers. Those outputs are automatically styled and can be further explored
 through interactive data visualization tools that are provided by the plugin.
-
-The toolkit also enables users to develop composite indicators to
-measure and quantify social characteristics, and to combine them with estimates of
-human or infrastructure loss.
-
-A post-earthquake recovery modeling framework is incorporated into the toolkit,
-to produce building level and/or community level recovery functions, that
-predict recovery times following an earthquake.
 
 This plugin has been created by the [GEM Foundation](http://www.globalquakemodel.org/gem/).
 
@@ -23,34 +15,30 @@ and above.
 
 On Microsoft Windows, QGIS includes all the software dependencies needed by the plugin.
 
-On macOS and Linux, please make sure that [Scipy](https://www.scipy.org/install.html) and
-[Matplotlib](https://matplotlib.org/users/installing.html) with Qt5 backend are installed.
-On macOS, please also make sure
-that [Pillow](https://pillow.readthedocs.io/en/stable/installation.html)
-is installed.
-
+On macOS and Linux, please make sure that
+[Matplotlib](https://matplotlib.org/users/installing.html) with Qt5 backend is installed.
 
 On macOS:
 
 ```bash
 $ python3 -m pip install --upgrade pip
-$ python3 -m pip install --upgrade matplotlib scipy Pillow
+$ python3 -m pip install --upgrade matplotlib
 ```
 
 On Ubuntu (Debian and similar):
 
 ```bash
-$ sudo apt install python3-scipy python3-matplotlib python3-pyqt5.qtwebkit
+$ sudo apt install python3-matplotlib python3-pyqt5.qtwebkit
 ```
 
 On Fedora and similar:
 
 ```bash
-$ sudo dnf install python3-scipy python3-matplotlib python3-matplotlib-qt5
+$ sudo dnf install python3-matplotlib python3-matplotlib-qt5
 ```
 
 On macOS make sure to run the script located under
-`/Applications/Python 3.6/Install Certificates.command`,
+`/Applications/Python X.Y/Install Certificates.command`,
 after Python has been installed, to update the SSL certificates bundle.
 
 On Fedora, please follow these [instructions](https://copr.fedorainfracloud.org/coprs/dani/qgis/).

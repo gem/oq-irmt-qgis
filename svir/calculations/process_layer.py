@@ -38,10 +38,10 @@ from qgis.core import (
                        edit,
                        )
 
-from qgis.PyQt.QtCore import QVariant
 from svir.calculations.transformation_algs import TRANSFORMATION_ALGS, \
     transform
-from svir.utilities.shared import DEBUG, DOUBLE_FIELD_TYPE_NAME
+from svir.utilities.shared import (
+    DEBUG, DOUBLE_FIELD_TYPE, DOUBLE_FIELD_TYPE_NAME)
 
 from svir.utilities.utils import tr, log_msg
 
@@ -323,7 +323,7 @@ class ProcessLayer(object):
                     new_attr_name = algorithm_name[:5] + '_' + variant[:4]
                 else:
                     new_attr_name = algorithm_name
-            field = QgsField(new_attr_name, QVariant.Double)
+            field = QgsField(new_attr_name, DOUBLE_FIELD_TYPE)
             field.setTypeName(DOUBLE_FIELD_TYPE_NAME)
             if simulate:
                 attr_names_dict = self.add_attributes([field],
