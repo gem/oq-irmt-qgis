@@ -4,21 +4,9 @@
 Aggregating points by zone
 **************************
 
-The development of an integrated risk model (IRI) arises from the convolution
-of two main components: 1) estimations of physical risk (RI), and 2) a social
-vulnerability index (SVI). The convolution of earthquake physical risk and
-social vulnerability parameters can be accomplished by selecting layers that
-contain estimations of physical risk, (*points layer*) or some other type of risk
-model, and a layer containing zonal geometries of the study area (e.g., country
-borders, district borders) and socioeconomic indicators.
-
-As a subsequent step, earthquake risk data imported into the tool should be
-standardized to render the data commensurate to the socioeconomic indicators
-created within the tool.
-
 In previous versions of this plugin, there was a specific tool to perform the
 geospatial aggregation. Recently, it was dismissed because its functionalities
-overlap with those of a powerful algorithm available in the Processing
+overlap with those of a powerful algorithm available in the QGIS Processing
 Toolbox. Therefore, the button that pointed to our customized implementation
 now points to the corresponding Processing tool, called "Join attributes
 by location (summary)". Such button, :guilabel:`Aggregate points by zone`, is

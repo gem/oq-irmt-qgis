@@ -11,8 +11,8 @@
 [general]
 name=OpenQuake Integrated Risk Modelling Toolkit
 qgisMinimumVersion=3.0
-description=Tools to drive the OpenQuake Engine, to develop composite indicators and integrate them with physical risk estimations, and to predict building recovery times following an earthquake
-about=This plugin allows users to drive OpenQuake Engine calculations (https://github.com/gem/oq-engine) of physical hazard and risk, and to load the corresponding outputs as QGIS layers. For those outputs, data visualization tools are provided. The toolkit also enables users to develop composite indicators to measure and quantify social characteristics, and combine them with estimates of human or infrastructure loss. A post-earthquake recovery modeling framework is incorporated into the toolkit, to produce building level and/or community level recovery functions.
+description=Tools to drive the OpenQuake Engine, running calculations and visualizing their parameters and outputs
+about=This plugin allows users to drive OpenQuake Engine calculations (https://github.com/gem/oq-engine) of physical hazard and risk, and to load the corresponding outputs as QGIS layers. For those outputs, data visualization tools are provided.
 version=3.22.0
 author=GEM Foundation
 email=staff.it@globalquakemodel.org
@@ -24,6 +24,7 @@ email=staff.it@globalquakemodel.org
 # Uncomment the following line and add your changelog entries:
 changelog=
     3.22.0
+    * Support for social vulnerability and recovery modeling was removed
     * Added the possibility to display total aggregated loss curves
     3.21.1
     * In the dialog driving the oq-engine, when the user resizes the columns of the calculations list table, the new widths are kept when the table is refreshed
@@ -299,7 +300,7 @@ changelog=
     * The visualization of OQ-Engine risk outputs is now described in the user manual
 
 # tags are comma separated with spaces allowed
-tags=GEM, IRMT, SVIR, OpenQuake, Social Vulnerability, Integrated Risk, Recovery, Resilience, Risk, Hazard, Earthquake
+tags=GEM, OQ, OpenQuake, Resilience, Risk, Hazard, Earthquake, Multi-peril
 
 homepage=https://plugins.qgis.org/plugins/svir/
 tracker=https://github.com/gem/oq-irmt-qgis/issues

@@ -46,15 +46,6 @@ menu. The buttons :guilabel:`Test connection` can be used to check if the
 plugin is able to connect to the corresponding server using the specified
 host name and credentials.
 
-When the plugin loads an OQ-Engine hazard/risk map as a layer or when integrated risk
-indices are calculated, the corresponding map is automatically styled applying a rule-based
-classification with the parameters specified in the
-:guilabel:`Rule-based classification settings`.
-By default, whenever composite indices are calculated, the rule-based classification
-is applied and the layer is styled accordingly. On a project level, it is
-possible to avoid restyling the layer at each recalculation of the
-composite indices, by unchecking the corresponding option.
-
 
 Advanced settings
 -----------------
