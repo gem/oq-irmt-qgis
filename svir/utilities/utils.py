@@ -1169,14 +1169,12 @@ def check_is_lockdown(hostname, session):
 
 
 def get_loss_types(session, hostname, calc_id, message_bar):
-    composite_risk_model_attrs = extract_npz(
-        session, hostname, calc_id, 'composite_risk_model.attrs',
-        message_bar=message_bar)
-    # casting loss_types to string, otherwise numpy complains when creating
-    # array of zeros with data type as follows:
-    # [('lon', F32), ('lat', F32), (loss_type, F32)])
-    loss_types = composite_risk_model_attrs['loss_types']
-    return loss_types
+    return get_attrs(session, hostname, calc_id, message_bar)['loss_types']
+
+
+def get_attrs(session, hostname, calc_id, message_bar):
+    return extract_npz(session, hostname, calc_id, 'composite_risk_model.attrs',
+                       message_bar=message_bar)
 
 
 def write_metadata_to_layer(
