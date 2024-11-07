@@ -30,7 +30,6 @@ from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
 from svir.utilities.utils import (WaitCursorManager,
                                   log_msg,
                                   get_loss_types,
-                                  get_attrs,
                                   )
 from svir.tasks.extract_npz_task import ExtractNpzTask
 
@@ -78,12 +77,11 @@ class LoadDamagesRlzsAsLayerDialog(LoadOutputAsLayerDialog):
         self.npz_file = extracted_npz
 
         # NOTE: still running this synchronously, because it's small stuff
-        with WaitCursorManager('Loading loss types and damage_states...',
+        with WaitCursorManager('Loading loss types...',
                                self.iface.messageBar()):
-            attrs = get_attrs(self.session, self.hostname, self.calc_id,
-                              self.iface.messageBar())
-            self.loss_types = attrs['loss_types']
-            self.dmg_states = ['no_damage'] + attrs['limit_states']
+            self.loss_types = get_loss_types(
+                self.session, self.hostname, self.calc_id,
+                self.iface.messageBar())
 
         self.populate_out_dep_widgets()
 
@@ -133,7 +131,8 @@ class LoadDamagesRlzsAsLayerDialog(LoadOutputAsLayerDialog):
         self.taxonomy_cbx.setEnabled(True)
 
     def on_loss_type_changed(self):
-        # self.dmg_states = self.dataset.dtype.names
+        loss_type = self.loss_type_cbx.currentText()
+        self.dmg_states = self.dataset[loss_type].dtype.names
         self.populate_dmg_state_cbx()
 
     def populate_dmg_state_cbx(self):
@@ -253,12 +252,13 @@ class LoadDamagesRlzsAsLayerDialog(LoadOutputAsLayerDialog):
                 log_msg(msg, level='C', message_bar=self.iface.messageBar())
         return self.layer
 
-    def group_by_site(self, npz, rlz_or_stat, loss_type, dmg_state, taxonomy='All'):
+    def group_by_site(self, npz, rlz_or_stat, loss_type, dmg_state,
+                      taxonomy='All'):
         F32 = numpy.float32
         dmg_by_site = collections.defaultdict(float)  # lon, lat -> dmg
         for rec in npz[rlz_or_stat]:
             if taxonomy == 'All' or taxonomy.encode('utf8') == rec['taxonomy']:
-                value = rec[dmg_state]
+                value = rec[loss_type][dmg_state]
                 dmg_by_site[rec['lon'], rec['lat']] += value
         data = numpy.zeros(
             len(dmg_by_site),
