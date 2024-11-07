@@ -133,8 +133,7 @@ class LoadDamagesRlzsAsLayerDialog(LoadOutputAsLayerDialog):
         self.taxonomy_cbx.setEnabled(True)
 
     def on_loss_type_changed(self):
-        # NOTE: in the past, dmg_states were taken from
-        #       self.dataset[loss_type].dtype.names
+        # self.dmg_states = self.dataset.dtype.names
         self.populate_dmg_state_cbx()
 
     def populate_dmg_state_cbx(self):

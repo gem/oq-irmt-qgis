@@ -24,7 +24,6 @@ email=staff.it@globalquakemodel.org
 # Uncomment the following line and add your changelog entries:
 changelog=
     3.22.0
-    * Loaders for damages were updated after changes in the oq-engine extractors
     * Support for social vulnerability and recovery modeling was removed
     * Added the possibility to display total aggregated loss curves
     3.21.1
