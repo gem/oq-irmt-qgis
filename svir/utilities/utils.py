@@ -1179,6 +1179,11 @@ def get_loss_types(session, hostname, calc_id, message_bar):
     return loss_types
 
 
+def get_attrs(session, hostname, calc_id, message_bar):
+    return extract_npz(session, hostname, calc_id, 'composite_risk_model.attrs',
+                       message_bar=message_bar)
+
+
 def write_metadata_to_layer(
         drive_engine_dlg, output_type, layer, user_params=None,
         disagg_params=None):
