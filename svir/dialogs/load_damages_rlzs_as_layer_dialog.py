@@ -29,7 +29,7 @@ from qgis.core import (
 from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
 from svir.utilities.utils import (WaitCursorManager,
                                   log_msg,
-                                  get_loss_types,
+                                  get_attrs,
                                   )
 from svir.tasks.extract_npz_task import ExtractNpzTask
 
@@ -77,11 +77,12 @@ class LoadDamagesRlzsAsLayerDialog(LoadOutputAsLayerDialog):
         self.npz_file = extracted_npz
 
         # NOTE: still running this synchronously, because it's small stuff
-        with WaitCursorManager('Loading loss types...',
+        with WaitCursorManager('Loading loss types and damage states...',
                                self.iface.messageBar()):
-            self.loss_types = get_loss_types(
-                self.session, self.hostname, self.calc_id,
-                self.iface.messageBar())
+            attrs = get_attrs(self.session, self.hostname, self.calc_id,
+                              self.iface.messageBar())
+            self.loss_types = attrs['loss_types']
+            self.dmg_states = ['no_damage'] + attrs['limit_states']
 
         self.populate_out_dep_widgets()
 
@@ -122,6 +123,7 @@ class LoadDamagesRlzsAsLayerDialog(LoadOutputAsLayerDialog):
     def populate_out_dep_widgets(self):
         self.populate_rlz_or_stat_cbx()
         self.populate_loss_type_cbx(self.loss_types)
+        self.populate_dmg_state_cbx()
         self.show_num_sites()
 
     def populate_taxonomy_cbx(self, taxonomies):
@@ -129,11 +131,6 @@ class LoadDamagesRlzsAsLayerDialog(LoadOutputAsLayerDialog):
         self.taxonomy_cbx.clear()
         self.taxonomy_cbx.addItems(taxonomies)
         self.taxonomy_cbx.setEnabled(True)
-
-    def on_loss_type_changed(self):
-        loss_type = self.loss_type_cbx.currentText()
-        self.dmg_states = self.dataset[loss_type].dtype.names
-        self.populate_dmg_state_cbx()
 
     def populate_dmg_state_cbx(self):
         self.dmg_state_cbx.clear()
@@ -161,11 +158,6 @@ class LoadDamagesRlzsAsLayerDialog(LoadOutputAsLayerDialog):
             self.default_field_name = ltds
         else:
             field_names = list(self.dataset.dtype.names)
-            for lt in self.loss_types:
-                field_names.remove(lt)
-            field_names.extend([
-                '%s_%s' % (loss_type, name)
-                for name in self.dataset[loss_type].dtype.names])
         if self.zonal_layer_gbx.isChecked():
             self.default_field_name = "%s_%s" % (
                 self.loss_type_cbx.currentText(),
@@ -258,7 +250,7 @@ class LoadDamagesRlzsAsLayerDialog(LoadOutputAsLayerDialog):
         dmg_by_site = collections.defaultdict(float)  # lon, lat -> dmg
         for rec in npz[rlz_or_stat]:
             if taxonomy == 'All' or taxonomy.encode('utf8') == rec['taxonomy']:
-                value = rec[loss_type][dmg_state]
+                value = rec[f'{loss_type}-{dmg_state}']
                 dmg_by_site[rec['lon'], rec['lat']] += value
         data = numpy.zeros(
             len(dmg_by_site),
