@@ -158,11 +158,6 @@ class LoadDamagesRlzsAsLayerDialog(LoadOutputAsLayerDialog):
             self.default_field_name = ltds
         else:
             field_names = list(self.dataset.dtype.names)
-            for lt in self.loss_types:
-                field_names.remove(lt)
-            field_names.extend([
-                '%s_%s' % (loss_type, name)
-                for name in self.dataset[loss_type].dtype.names])
         if self.zonal_layer_gbx.isChecked():
             self.default_field_name = "%s_%s" % (
                 self.loss_type_cbx.currentText(),
