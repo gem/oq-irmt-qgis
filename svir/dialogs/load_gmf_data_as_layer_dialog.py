@@ -61,8 +61,17 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
 
         self.extract_realizations()
 
+        with WaitCursorManager(
+                'Extracting events...', message_bar=self.iface.messageBar()):
+            events_npz = extract_npz(
+                self.session, self.hostname, self.calc_id, 'events',
+                message_bar=self.iface.messageBar(), params=None)
+
+        rlz_ids = np.unique(events_npz['array']['rlz_id'])
+
         branch_paths = [f"{i}:{bp.decode('utf8')}"
-                        for i, bp in enumerate(self.rlzs_npz['array']['branch_path'])]
+                        for i, bp in enumerate(self.rlzs_npz['array']['branch_path'])
+                        if i in rlz_ids]
 
         if 'GEM_QGIS_TEST' in os.environ:
             branch_path = branch_paths[0]
@@ -78,14 +87,7 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
                 return
 
         self.rlz_id = int(branch_path.split(':')[0])
-
-        log_msg('Extracting events. Watch progress in QGIS task bar',
-                level='I', message_bar=self.iface.messageBar())
-        self.extract_npz_task = ExtractNpzTask(
-            'Extract events', QgsTask.CanCancel, self.session,
-            self.hostname, self.calc_id, 'events', self.set_eid,
-            self.on_extract_error)
-        QgsApplication.taskManager().addTask(self.extract_npz_task)
+        self.set_eid(events_npz)
 
     def get_closest_element(self, element, elements):
         return elements[np.abs(elements - element).argmin()]
