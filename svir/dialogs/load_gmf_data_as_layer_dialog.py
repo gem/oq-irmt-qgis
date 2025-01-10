@@ -64,15 +64,19 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
         branch_paths = [bp.decode('utf8')
                         for bp in self.rlzs_npz['array']['branch_path']]
 
-        branch_path, ok = QInputDialog.getItem(
-            self.drive_engine_dlg,
-            'Select a realization',
-            'Realization',
-            branch_paths,
-            0)
-        if not ok:
-            self.reject()
-            return
+        if 'GEM_QGIS_TEST' in os.environ:
+            branch_path = branch_paths[0]
+        else:
+            branch_path, ok = QInputDialog.getItem(
+                self.drive_engine_dlg,
+                'Select a realization',
+                'Realization',
+                branch_paths,
+                0)
+            if not ok:
+                self.reject()
+                return
+
         self.rlz_id = branch_paths.index(branch_path)
 
         log_msg('Extracting events. Watch progress in QGIS task bar',
@@ -99,8 +103,8 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
         else:
             input_msg = "Range (%s - %s)" % (events[0]['id'], events[-1]['id'])
 
-        self.eid = -1  # assuming events start from 0
         if 'GEM_QGIS_TEST' not in os.environ:
+            self.eid = -1  # assuming events start from 0
             while self.eid not in events['id']:
                 if self.eid == -1:
                     is_first_iteration = True
