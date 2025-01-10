@@ -61,33 +61,52 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
 
         self.extract_realizations()
 
-        log_msg('Extracting events. Watch progress in QGIS task bar',
-                level='I', message_bar=self.iface.messageBar())
-        self.extract_npz_task = ExtractNpzTask(
-            'Extract events', QgsTask.CanCancel, self.session,
-            self.hostname, self.calc_id, 'events', self.get_eid,
-            self.on_extract_error)
-        QgsApplication.taskManager().addTask(self.extract_npz_task)
+        with WaitCursorManager(
+                'Extracting events...', message_bar=self.iface.messageBar()):
+            events_npz = extract_npz(
+                self.session, self.hostname, self.calc_id, 'events',
+                message_bar=self.iface.messageBar(), params=None)
+
+        rlz_ids = np.unique(events_npz['array']['rlz_id'])
+
+        branch_paths = [f"{i}:{bp.decode('utf8')}"
+                        for i, bp in enumerate(self.rlzs_npz['array']['branch_path'])
+                        if i in rlz_ids]
+
+        if 'GEM_QGIS_TEST' in os.environ:
+            branch_path = branch_paths[0]
+        else:
+            branch_path, ok = QInputDialog.getItem(
+                self.drive_engine_dlg,
+                'Select a realization',
+                'Realization',
+                branch_paths,
+                0)
+            if not ok:
+                self.reject()
+                return
+
+        self.rlz_id = int(branch_path.split(':')[0])
+        self.set_eid(events_npz)
 
     def get_closest_element(self, element, elements):
         return elements[np.abs(elements - element).argmin()]
 
-    def get_eid(self, events_npz):
+    def set_eid(self, events_npz):
         self.events_npz = events_npz
         events = events_npz['array']
-        self.eid = -1  # assuming events start from 0
+        events = events[events['rlz_id'] == self.rlz_id]
+
         if 'GEM_QGIS_TEST' in os.environ:
-            self.eid = self.get_closest_element(self.eid, events['id'])
+            self.eid = events['id'][0]
             ok = True
         elif 'scenario' in self.calculation_mode:
-            ids_str = ''
-            for gsim_idx, gsim in enumerate(self.gsims):
-                ids = events[events['rlz_id'] == gsim_idx]['id']
-                ids_str += '\n%s: %s' % (gsim, ids)
-            input_msg = "Events:%s" % ids_str
+            input_msg = f"Events: {events['id']}"
         else:
             input_msg = "Range (%s - %s)" % (events[0]['id'], events[-1]['id'])
+
         if 'GEM_QGIS_TEST' not in os.environ:
+            self.eid = -1  # assuming events start from 0
             while self.eid not in events['id']:
                 if self.eid == -1:
                     is_first_iteration = True
@@ -110,6 +129,7 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
         if not ok:
             self.reject()
             return
+
         log_msg('Extracting ground motion fields.'
                 ' Watch progress in QGIS task bar',
                 level='I', message_bar=self.iface.messageBar())
