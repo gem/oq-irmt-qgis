@@ -61,18 +61,50 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
 
         self.extract_realizations()
 
+        branch_paths = [bp.decode('utf8')
+                        for bp in self.rlzs_npz['array']['branch_path']]
+
+        branch_path, ok = QInputDialog.getItem(
+            # QWidget *parent, const QString &title, const QString &label, const QStringList &items, int current = 0, bool editable = true, bool *ok = nullptr, Qt::WindowFlags flags = Qt::WindowFlags(), Qt::InputMethodHints inputMethodHints = Qt::ImhNone
+            self.drive_engine_dlg,
+            'Select a realization',
+            'Realization',
+            branch_paths,
+            0)
+        if not ok:
+            self.reject()
+            return
+        self.rlz_id = branch_paths.index(branch_path)
+
         log_msg('Extracting events. Watch progress in QGIS task bar',
                 level='I', message_bar=self.iface.messageBar())
         self.extract_npz_task = ExtractNpzTask(
             'Extract events', QgsTask.CanCancel, self.session,
-            self.hostname, self.calc_id, 'events', self.get_eid,
+            self.hostname, self.calc_id, 'events', self.set_eid,
             self.on_extract_error)
         QgsApplication.taskManager().addTask(self.extract_npz_task)
 
     def get_closest_element(self, element, elements):
         return elements[np.abs(elements - element).argmin()]
 
-    def get_eid(self, events_npz):
+    def set_eid(self, events_npz):
+        self.events_npz = events_npz
+        events = events_npz['array']
+        events = events[events['rlz_id'] == self.rlz_id]
+
+        # FIXME: add selector for the event id
+        self.eid = events['id'][0]
+
+        log_msg('Extracting ground motion fields.'
+                ' Watch progress in QGIS task bar',
+                level='I', message_bar=self.iface.messageBar())
+        self.extract_npz_task = ExtractNpzTask(
+            'Extract ground motion fields', QgsTask.CanCancel, self.session,
+            self.hostname, self.calc_id, self.output_type, self.finalize_init,
+            self.on_extract_error, params={'event_id': self.eid})
+        QgsApplication.taskManager().addTask(self.extract_npz_task)
+
+    def get_eid_FIXME(self, events_npz):
         self.events_npz = events_npz
         events = events_npz['array']
         self.eid = -1  # assuming events start from 0
