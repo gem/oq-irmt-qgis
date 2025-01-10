@@ -65,7 +65,6 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
                         for bp in self.rlzs_npz['array']['branch_path']]
 
         branch_path, ok = QInputDialog.getItem(
-            # QWidget *parent, const QString &title, const QString &label, const QStringList &items, int current = 0, bool editable = true, bool *ok = nullptr, Qt::WindowFlags flags = Qt::WindowFlags(), Qt::InputMethodHints inputMethodHints = Qt::ImhNone
             self.drive_engine_dlg,
             'Select a realization',
             'Realization',
