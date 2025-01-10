@@ -92,33 +92,15 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
         events = events_npz['array']
         events = events[events['rlz_id'] == self.rlz_id]
 
-        # FIXME: add selector for the event id
-        self.eid = events['id'][0]
-
-        log_msg('Extracting ground motion fields.'
-                ' Watch progress in QGIS task bar',
-                level='I', message_bar=self.iface.messageBar())
-        self.extract_npz_task = ExtractNpzTask(
-            'Extract ground motion fields', QgsTask.CanCancel, self.session,
-            self.hostname, self.calc_id, self.output_type, self.finalize_init,
-            self.on_extract_error, params={'event_id': self.eid})
-        QgsApplication.taskManager().addTask(self.extract_npz_task)
-
-    def get_eid_FIXME(self, events_npz):
-        self.events_npz = events_npz
-        events = events_npz['array']
-        self.eid = -1  # assuming events start from 0
         if 'GEM_QGIS_TEST' in os.environ:
-            self.eid = self.get_closest_element(self.eid, events['id'])
+            self.eid = events['id'][0]
             ok = True
         elif 'scenario' in self.calculation_mode:
-            ids_str = ''
-            for gsim_idx, gsim in enumerate(self.gsims):
-                ids = events[events['rlz_id'] == gsim_idx]['id']
-                ids_str += '\n%s: %s' % (gsim, ids)
-            input_msg = "Events:%s" % ids_str
+            input_msg = f"Events: {events['id']}"
         else:
             input_msg = "Range (%s - %s)" % (events[0]['id'], events[-1]['id'])
+
+        self.eid = -1  # assuming events start from 0
         if 'GEM_QGIS_TEST' not in os.environ:
             while self.eid not in events['id']:
                 if self.eid == -1:
@@ -142,6 +124,7 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
         if not ok:
             self.reject()
             return
+
         log_msg('Extracting ground motion fields.'
                 ' Watch progress in QGIS task bar',
                 level='I', message_bar=self.iface.messageBar())
