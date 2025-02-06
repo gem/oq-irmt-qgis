@@ -403,7 +403,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 row_txt_color = Qt.black
                 if calc_status == 'failed':
                     row_bg_color = QColor('#f2dede')
-                elif calc_status == 'complete':
+                elif calc_status in ['complete', 'shared']:
                     row_bg_color = QColor('#dff0d8')
                 item.setBackground(row_bg_color)
                 item.setForeground(QBrush(row_txt_color))
@@ -415,15 +415,16 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 if btn_lbl == 'Abort' and not calc['is_running']:
                     continue
 
-                # Display the Remove button only if calc is failed or complete
+                # Display the Remove button only if calc is failed, complete or shared
                 if btn_lbl == 'Remove' and calc_status not in ('failed',
-                                                               'complete'):
+                                                               'complete',
+                                                               'shared'):
                     continue
 
                 # Display the Outputs and Continue buttons
-                # only if the calc is complete
+                # only if the calc is complete or shared
                 if (btn_lbl in ('Outputs', 'Continue') and
-                        calc_status != 'complete'):
+                        calc_status not in ['complete', 'shared']):
                     continue
 
                 button = QPushButton()
@@ -501,7 +502,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             # NOTE: the exception is managed by self._handle_exception
             return
         self.clear_output_list()
-        if calc_status['status'] != 'complete':
+        if calc_status['status'] not in ['complete', 'shared']:
             return
         output_list = self.get_output_list(calc_id)
         if isinstance(output_list, Exception):

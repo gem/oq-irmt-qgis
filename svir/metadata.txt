@@ -13,7 +13,7 @@ name=OpenQuake Integrated Risk Modelling Toolkit
 qgisMinimumVersion=3.0
 description=Tools to drive the OpenQuake Engine, running calculations and visualizing their parameters and outputs
 about=This plugin allows users to drive OpenQuake Engine calculations (https://github.com/gem/oq-engine) of physical hazard and risk, and to load the corresponding outputs as QGIS layers. For those outputs, data visualization tools are provided.
-version=3.22.0
+version=3.22.1
 author=GEM Foundation
 email=staff.it@globalquakemodel.org
 
@@ -23,6 +23,8 @@ email=staff.it@globalquakemodel.org
 
 # Uncomment the following line and add your changelog entries:
 changelog=
+    3.22.1
+    * It is possible to visualize OQ Engine 'shared' calculations and the corresponding outputs and logs
     3.22.0
     * The loader for ground motion fields was modified, so the user selects the realization first, then the event id, then the IMT used for styling the layer
     * Support for social vulnerability and recovery modeling was removed

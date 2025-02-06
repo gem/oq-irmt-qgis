@@ -54,7 +54,7 @@ class ShowConsoleDialog(QDialog, FORM_CLASS):
         if calc_status is None:
             self.reject()
             return
-        if calc_status['status'] in ('complete', 'failed'):
+        if calc_status['status'] in ('complete', 'shared', 'failed'):
             self.timer.stop()
         calc_log = self.driver_dialog.get_calc_log(self.calc_id)
         if calc_log and not isinstance(calc_log, Exception):
