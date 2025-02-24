@@ -1,4 +1,4 @@
-name: Unit and integration tests
+name: Unit and integration tests on master
 on:
   push:
     branches:
