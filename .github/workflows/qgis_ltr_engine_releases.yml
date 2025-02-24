@@ -2,11 +2,6 @@ name: Tests vs Engine releases (also for risk demos)
 on:
   # NOTE: enables only scheduled or triggered manually, NOT on pull requests
   workflow_dispatch:
-    inputs:
-      git-ref:
-        description: Git Ref
-        default: master
-        required: true
   # push:
   #   branches:
   #     - '**'
@@ -27,12 +22,11 @@ jobs:
         QGIS_DOCKER_VERSION: ['qgis/qgis:ltr', 'qgis/qgis:stable']
         DEMOS: ['oqdata', 'risk-oqdata']
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: 🐍 Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
-          git-ref: ${{ matrix.ENGINE_BR }}
+          python-version: '3.12'
       - name: Prepare Start file for docker
         run: |
           set -x
