@@ -9,6 +9,7 @@ on:
 jobs:
   Tests_and_docs:
     strategy:
+      fail-fast: false
       matrix:
         # NOTE: macos complains about wheels; windows complains about script syntax
         # os: [ubuntu-latest, windows-latest, macos-latest]
