@@ -2,11 +2,6 @@ name: Tests vs Engine releases (also for risk demos)
 on:
   # NOTE: enables only scheduled or triggered manually, NOT on pull requests
   workflow_dispatch:
-    inputs:
-      git-ref:
-        description: Git Ref
-        default: master
-        required: true
   # push:
   #   branches:
   #     - '**'
@@ -23,16 +18,15 @@ jobs:
         # NOTE: checking also master to make sure risk workshop demos keep working also on master
         ENGINE_BR: ['engine-3.23', 'master']  # TODO: add latest when different from lts
         # NOTE: we might test also for qgis/qgis:3.22 that is the version of qgis-server that we are currently using in the Geoviewer, but it currently causes a segfault
-        # NOTE: qgis:stable points to the latest release, wheread qgis:latest points to qgis master
+        # NOTE: qgis:stable points to the latest release, whereas qgis:latest points to qgis master
         QGIS_DOCKER_VERSION: ['qgis/qgis:ltr', 'qgis/qgis:stable']
         DEMOS: ['oqdata', 'risk-oqdata']
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: 🐍 Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
-          git-ref: ${{ matrix.ENGINE_BR }}
+          python-version: '3.12'
       - name: Prepare Start file for docker
         run: |
           set -x
