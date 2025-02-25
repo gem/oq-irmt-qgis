@@ -2,6 +2,12 @@ name: Tests vs Engine releases (also for risk demos)
 on:
   # NOTE: enables only scheduled or triggered manually, NOT on pull requests
   workflow_dispatch:
+    inputs:
+      debug_enabled:
+        type: boolean
+        description: "Run the build with tmate debugging enabled"
+        required: false
+        default: false
   # push:
   #   branches:
   #     - '**'
@@ -88,6 +94,10 @@ jobs:
             -e BRANCH="$IRMT_BR" -e ONLY_CALC_ID="$ONLY_CALC_ID" -e ONLY_OUTPUT_TYPE="$ONLY_OUTPUT_TYPE" -e GEM_QGIS_TEST=y ${{ matrix.QGIS_DOCKER_VERSION }} \
             bash -c "/tests_directory/startX.sh"
           sleep 10
+      - name: Setup SSH session to debug docker container
+        uses: mxschmitt/action-tmate@v3
+        timeout-minutes: 60
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
       - name: ℧ Run unit test
         run: |
           set -x
