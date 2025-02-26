@@ -35,7 +35,7 @@ import operator
 import requests
 from qgis.core import QgsApplication
 from qgis.utils import iface
-from qgis.testing import unittest, start_app  # , stop_app
+from qgis.testing import unittest  # , start_app, stop_app
 from qgis.PyQt.QtCore import QTimer, QSettings, Qt
 from qgis.PyQt.QtTest import QTest
 from svir.irmt import Irmt
