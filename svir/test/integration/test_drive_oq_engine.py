@@ -35,7 +35,7 @@ import operator
 import requests
 from qgis.core import QgsApplication
 from qgis.utils import iface
-from qgis.testing import unittest  # , start_app, stop_app
+from qgis.testing import unittest, start_app  # , stop_app
 from qgis.PyQt.QtCore import QTimer, QSettings, Qt
 from qgis.PyQt.QtTest import QTest
 from svir.irmt import Irmt
@@ -55,10 +55,7 @@ from svir.dialogs.load_inputs_dialog import LoadInputsDialog
 
 QGIS_APP = QgsApplication.instance()
 if QGIS_APP is None:
-    # Optionally initialize a new instance if none exists
-    QGIS_APP = QgsApplication([], False)
-    # QgsApplication.setPrefixPath("/path/to/qgis", True)
-    QGIS_APP.initQgis()
+    QGIS_APP = start_app()
 
 LONG_LOADING_TIME = 10  # seconds
 
