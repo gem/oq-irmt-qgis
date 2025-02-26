@@ -8,6 +8,10 @@ on:
         description: "Run the build with tmate debugging enabled"
         required: false
         default: false
+    git-ref:
+        description: Git Ref Branch
+        default: master
+        required: true
   # push:
   #   branches:
   #     - '**'
@@ -28,7 +32,14 @@ jobs:
         QGIS_DOCKER_VERSION: ['qgis/qgis:ltr', 'qgis/qgis:stable']
         DEMOS: ['oqdata', 'risk-oqdata']
     steps:
-      - uses: actions/checkout@v4
+      - name: Clone Repository (Master)
+        uses: actions/checkout@v4
+        if: github.event.inputs.git-ref == ''
+      - name: Clone Repository (Custom Ref)
+        uses: actions/checkout@v4
+        if: github.event.inputs.git-ref != ''
+        with:
+          ref: ${{ github.event.inputs.git-ref }}
       - name: 🐍 Set up Python
         uses: actions/setup-python@v5
         with:
