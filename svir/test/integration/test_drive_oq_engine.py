@@ -33,7 +33,7 @@ import csv
 import time
 import operator
 import requests
-# from qgis.core import QgsApplication
+from qgis.core import QgsApplication
 from qgis.utils import iface
 from qgis.testing import unittest, start_app  # , stop_app
 from qgis.PyQt.QtCore import QTimer, QSettings, Qt
@@ -53,9 +53,12 @@ from svir.dialogs.drive_oq_engine_server_dialog import OUTPUT_TYPE_LOADERS
 from svir.dialogs.show_full_report_dialog import ShowFullReportDialog
 from svir.dialogs.load_inputs_dialog import LoadInputsDialog
 
-
-# QgsApplication([], True)
-QGIS_APP = start_app()
+QGIS_APP = QgsApplication.instance()
+if QGIS_APP is None:
+    # Optionally initialize a new instance if none exists
+    QGIS_APP = QgsApplication([], False)
+    # QgsApplication.setPrefixPath("/path/to/qgis", True)
+    QGIS_APP.initQgis()
 
 LONG_LOADING_TIME = 10  # seconds
 
