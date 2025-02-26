@@ -8,10 +8,6 @@ on:
         description: "Run the build with tmate debugging enabled"
         required: false
         default: false
-      git-ref:
-        description: Git Ref Branch
-        default: master
-        required: true
   # push:
   #   branches:
   #     - '**'
