@@ -481,9 +481,9 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         output_type = output['type']
         calculation_mode = calc['calculation_mode']
 
-        # FIXME
-        if 'Example files multiple subperils' in calc['description']:
-            return 'skipped'
+        # NOTE: if we need to skip a whole demo by its description
+        # if 'DEMO DESCRIPTION' in calc['description']:
+        #     return 'skipped'
 
         # NOTE: loading zipped input files only for multi_risk
         if output_type == 'input' and calculation_mode != 'multi_risk':
