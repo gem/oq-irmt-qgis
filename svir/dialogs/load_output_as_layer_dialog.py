@@ -474,7 +474,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                     loss_type=None, dmg_state=None, gsim=None, imt=None,
                     boundaries=None, geometry_type='point', wkt_geom_type=None,
                     row_wkt_geom_types=None, add_to_group=None,
-                    add_to_map=True):
+                    add_to_map=True, create_spatial_index=True):
         layer_name = self.build_layer_name(
             rlz_or_stat=rlz_or_stat, taxonomy=taxonomy, poe=poe,
             loss_type=loss_type, dmg_state=dmg_state, gsim=gsim, imt=imt,
@@ -567,6 +567,8 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 self.iface.zoomToActiveLayer()
             log_msg('Layer %s was created successfully' % layer_name,
                     level='S', message_bar=self.iface.messageBar())
+        if create_spatial_index:
+            self.layer.dataProvider().createSpatialIndex()
         return self.layer
 
     @staticmethod
