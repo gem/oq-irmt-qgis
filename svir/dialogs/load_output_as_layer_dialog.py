@@ -1021,11 +1021,16 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         if not have_same_projection:
             log_msg(check_projection_msg, level='W',
                     message_bar=self.iface.messageBar())
-        try:
-            [self.loss_attr_name] = [
-                field.name() for field in loss_layer.fields()]
-        except ValueError:
+        loss_layer_fieldnames = [field.name() for field in loss_layer.fields()]
+        if len(loss_layer_fieldnames) == 1:
+            self.loss_attr_name = loss_layer_fieldnames[0]
+        elif self.default_field_name in loss_layer_fieldnames:
             self.loss_attr_name = self.default_field_name
+        else:
+            msg = (f'Field {self.default_field_name} to be used for the'
+                   f' aggregation was not found')
+            log_msg(msg, level='C', message_bar=self.iface.messageBar())
+            return
         zonal_layer_plus_sum_name = "%s: %s_sum" % (
             zonal_layer.name(), self.loss_attr_name)
         discard_nonmatching = self.discard_nonmatching_chk.isChecked()
