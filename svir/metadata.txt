@@ -24,6 +24,9 @@ email=staff.it@globalquakemodel.org
 # Uncomment the following line and add your changelog entries:
 changelog=
     3.24.0
+    3.23.1
+    * Fixed zonal aggregation for the damages_rlzs oq-engine output
+    * When any layer is created from a oq-engine output, a spatial index is also created for that layer
     3.23.0
     * Aligned with oq-engine 3.23
     3.22.1
