@@ -159,7 +159,7 @@ class LoadDamagesRlzsAsLayerDialog(LoadOutputAsLayerDialog):
         else:
             field_names = list(self.dataset.dtype.names)
         if self.zonal_layer_gbx.isChecked():
-            self.default_field_name = "%s_%s" % (
+            self.default_field_name = "%s-%s" % (
                 self.loss_type_cbx.currentText(),
                 self.dmg_state_cbx.currentText())
         if self.aggregate_by_site_ckb.isChecked():
