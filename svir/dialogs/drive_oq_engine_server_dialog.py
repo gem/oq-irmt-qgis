@@ -422,7 +422,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                     continue
                 # Display the Remove button only if the current user owns the job
                 # (getting the calc owner from something like 'username@machine')
-                username = getattr(self, 'username')
+                username = getattr(self, 'username', None)
                 if username:
                     calc_owner = calc['owner'].rsplit('@', 1)[0]
                     if (btn_lbl == 'Remove' and username != calc_owner):
