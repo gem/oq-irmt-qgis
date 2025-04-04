@@ -271,7 +271,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
     def login(self):
         self.session = Session()
         if not self.forced_hostname:
-            self.hostname, username, password = get_credentials()
+            self.hostname, self.username, password = get_credentials()
         # try without authentication (if authentication is disabled server
         # side)
         # NOTE: check_is_lockdown() can raise exceptions,
@@ -282,7 +282,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             return
         with WaitCursorManager('Logging in...', self.message_bar):
             # it can raise exceptions, caught by self.attempt_login
-            engine_login(self.hostname, username, password, self.session)
+            engine_login(self.hostname, self.username, password, self.session)
             # if no exception occurred
             self.is_logged_in = True
             return
@@ -419,6 +419,11 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 if btn_lbl == 'Remove' and calc_status not in ('failed',
                                                                'complete',
                                                                'shared'):
+                    continue
+                # Display the Remove button only if the current user owns the job
+                # (getting the calc owner from something like 'username@machine')
+                calc_owner = calc['owner'].rsplit('@', 1)[0]
+                if btn_lbl == 'Remove' and self.username != calc_owner:
                     continue
 
                 # Display the Outputs and Continue buttons
