@@ -24,6 +24,7 @@ email=staff.it@globalquakemodel.org
 # Uncomment the following line and add your changelog entries:
 changelog=
     3.24.0
+    * Reading multi-peril data is consistent with the recent engine-side renaming of 'multi_peril_csv' to 'multi_peril_file'
     3.23.2
     * The 'Remove' calculation button is not shown if the current user is not the owner of the calculation
     3.23.1
