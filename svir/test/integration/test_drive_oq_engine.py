@@ -84,6 +84,7 @@ def run_all():
     extract_to_layer_test_cases = [
         LoadAssetRiskTestCase,
         LoadDamagesRlzsTestCase,
+        LoadDamagesStatsTestCase,
         LoadAvgLossesRlzsTestCase,
         LoadAvgLossesStatsTestCase,
         LoadGmfDataTestCase,
@@ -98,6 +99,7 @@ def run_all():
     extract_to_view_test_cases = [
         LoadAggCurvesTestCase,
         LoadDamagesRlzsAggrTestCase,
+        LoadDamagesStatsAggrTestCase,
         LoadAvgLossesRlzsAggrTestCase,
         LoadAvgLossesStatsAggrTestCase,
     ]
@@ -405,7 +407,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             dlg.loss_type_cbx.setCurrentIndex(0)
             # FIXME: we need to do dlg.accept() also for the case
             #        performing the aggregation by zone
-        elif dlg.output_type == 'damages-rlzs' and aggregate_by_site:
+        elif dlg.output_type in ('damages-rlzs', 'damages-stats') and aggregate_by_site:
             # FIXME: testing only for selected taxonomy
             dlg.load_selected_only_ckb.setChecked(True)
             assert_and_emit(
@@ -807,6 +809,14 @@ class LoadDamagesRlzsTestCase(LoadOqEngineOutputsTestCase):
         self.load_output_type('damages-rlzs')
 
 
+class LoadDamagesStatsTestCase(LoadOqEngineOutputsTestCase):
+    @unittest.skipIf(
+        ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'damages-stats',
+        'only testing output type %s' % ONLY_OUTPUT_TYPE)
+    def test_load_damages_stats(self):
+        self.load_output_type('damages-stats')
+
+
 class LoadAvgLossesRlzsTestCase(LoadOqEngineOutputsTestCase):
     @unittest.skipIf(
         ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'avg_losses-rlzs',
@@ -907,6 +917,14 @@ class LoadDamagesRlzsAggrTestCase(LoadOqEngineOutputsTestCase):
         'only testing output type %s' % ONLY_OUTPUT_TYPE)
     def test_load_damages_rlzs_aggr(self):
         self.load_output_type('damages-rlzs_aggr')
+
+
+class LoadDamagesStatsAggrTestCase(LoadOqEngineOutputsTestCase):
+    @unittest.skipIf(
+        ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'damages-stats_aggr',
+        'only testing output type %s' % ONLY_OUTPUT_TYPE)
+    def test_load_damages_stats_aggr(self):
+        self.load_output_type('damages-stats_aggr')
 
 
 class LoadAvgLossesRlzsAggrTestCase(LoadOqEngineOutputsTestCase):
