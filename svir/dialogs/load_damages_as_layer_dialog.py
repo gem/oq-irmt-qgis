@@ -113,14 +113,7 @@ class LoadDamagesAsLayerDialog(LoadOutputAsLayerDialog):
             self.load_selected_only_ckb.setEnabled(True)
 
     def on_rlz_or_stat_changed(self):
-        if self.output_type == 'damages-rlzs':
-            self.dataset = self.npz_file[self.rlz_or_stat_cbx.currentData()]
-        else:  # damages-stats
-            self.dataset = self.npz_file['array']
-        import pdb
-        from qgis.PyQt.QtCore import pyqtRemoveInputHook
-        pyqtRemoveInputHook()
-        pdb.set_trace()
+        self.dataset = self.npz_file[self.rlz_or_stat_cbx.currentData()]
         self.taxonomies = numpy.unique(self.dataset['taxonomy']).tolist()
         self.taxonomies = [taxonomy.decode('utf8')
                            for taxonomy in self.taxonomies]

@@ -869,10 +869,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             damages_stats_npz = extract_npz(
                 session, hostname, calc_id, 'damages-stats',
                 message_bar=self.iface.messageBar())
-            if damages_stats_npz is None or 'stat' not in damages_stats_npz:
+            if damages_stats_npz is None:
                 return None
-            else:
-                return damages_stats_npz['stat']
+            return [stat for stat in damages_stats_npz if stat != 'extra']
 
     def load_avg_losses_aggr(
             self, calc_id, session, hostname, output_type, oqparam):
