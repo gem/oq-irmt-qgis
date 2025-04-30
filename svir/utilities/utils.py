@@ -65,11 +65,7 @@ from qgis.PyQt.QtWidgets import (
                                  )
 from qgis.PyQt.QtGui import QColor
 
-from svir.utilities.shared import (
-                                   DEBUG,
-                                   DEFAULT_SETTINGS,
-                                   DEFAULT_ENGINE_PROFILES,
-                                   )
+from .shared import DEBUG, DEFAULT_SETTINGS, DEFAULT_ENGINE_PROFILES
 
 F32 = numpy.float32
 
