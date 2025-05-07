@@ -96,7 +96,7 @@ class LoadDamagesAsLayerDialog(LoadOutputAsLayerDialog):
         self.init_done.emit(self)
 
     def set_ok_button(self):
-        if self.kind == 'Damage':
+        if self.damage_or_consequences == 'Damage':
             self.ok_button.setEnabled(self.dmg_state_cbx.currentIndex() != -1
                                       and self.loss_type_cbx.currentIndex() != -1)
         else:  # 'Consequences'
