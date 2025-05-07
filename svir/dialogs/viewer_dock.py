@@ -154,12 +154,12 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             ('', ''),
             ('hcurves', 'Hazard Curves'),
             ('uhs', 'Uniform Hazard Spectra'),
-            ('aggcurves', 'Aggregate loss curves (realizations)'),
-            ('aggcurves-stats', 'Aggregate loss curves (statistics)'),
-            ('damages-rlzs_aggr', 'Damage distribution (realizations)'),
-            ('damages-stats_aggr', 'Damage distribution (statistics)'),
-            ('avg_losses-rlzs_aggr', 'Loss distribution'),
-            ('avg_losses-stats_aggr', 'Average assets losses (statistics)'),
+            ('aggcurves', 'Aggregate Risk Curves'),
+            ('aggcurves-stats', 'Aggregate Risk Curves Statistics'),
+            ('damages-rlzs_aggr', 'Asset Risk Distributions'),
+            ('damages-stats_aggr', 'Asset Risk Statistics'),
+            ('avg_losses-rlzs_aggr', 'Average Asset Losses'),
+            ('avg_losses-stats_aggr', 'Average Asset Losses Statistics'),
         ])
 
         if QSettings().value('/irmt/experimental_enabled', False, type=bool):
@@ -202,7 +202,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.annot.get_bbox_patch().set_alpha(0.4)
 
     def create_loss_type_selector(self):
-        self.loss_type_lbl = QLabel('Loss Type')
+        self.loss_type_lbl = QLabel('Loss Category')
         self.loss_type_lbl.setSizePolicy(
             QSizePolicy.Minimum, QSizePolicy.Minimum)
         self.loss_type_cbx = QComboBox()
@@ -1150,7 +1150,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             else:
                 ylabel = 'Economic loss ratio'
         self.plot.set_ylabel(ylabel)
-        title = 'Loss type: %s' % self.loss_type_cbx.currentText()
+        title = 'Loss category: %s' % self.loss_type_cbx.currentText()
         self.plot.set_title(title)
         self.plot.grid(which='both')
         if 1 <= len(rlzs_or_stats) <= 20:
@@ -1897,7 +1897,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                     unit = self.agg_curves['units'][loss_type_idx]
                 except IndexError:
                     unit = self.get_total_loss_unit(loss_type)
-                csv_file.write("# Loss type: %s\r\n" % loss_type)
+                csv_file.write("# Loss category: %s\r\n" % loss_type)
                 csv_file.write("# Exceedance Probability: %s\r\n" % ep)
                 csv_file.write("# Absolute or relative: %s\r\n" % abs_rel)
                 csv_file.write("# Measurement unit: %s\r\n" % unit)
@@ -1947,7 +1947,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
                 csv_file.write(
                     "# Realization or statistic: %s\r\n" % self.rlz_or_stat_cbx.currentData())
                 csv_file.write(
-                    "# Loss type: %s\r\n" % self.loss_type_cbx.currentText())
+                    "# Loss category: %s\r\n" % self.loss_type_cbx.currentText())
                 csv_file.write(
                     "# Tags: %s\r\n" % (
                         self.get_list_selected_tags_str() or 'None'))
@@ -1960,7 +1960,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             elif self.output_type in ('avg_losses-rlzs_aggr',
                                       'avg_losses-stats_aggr'):
                 csv_file.write(
-                    "# Loss type: %s\r\n" % self.loss_type_cbx.currentText())
+                    "# Loss category: %s\r\n" % self.loss_type_cbx.currentText())
                 csv_file.write(
                     "# Tags: %s\r\n" % (
                         self.get_list_selected_tags_str() or 'None'))
