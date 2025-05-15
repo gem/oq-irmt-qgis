@@ -39,6 +39,9 @@ from copy import deepcopy
 from time import time
 from pprint import pformat
 from qgis.core import (
+                       QgsFields,
+                       QgsFeature,
+                       QgsField,
                        QgsProject,
                        QgsMessageLog,
                        QgsVectorLayer,
@@ -52,7 +55,7 @@ from qgis.gui import QgsMessageBar, QgsMessageBarItem
 from qgis.utils import iface
 
 from qgis.PyQt import uic
-from qgis.PyQt.QtCore import Qt, QSettings, QUrl, QUrlQuery
+from qgis.PyQt.QtCore import Qt, QSettings, QUrl, QUrlQuery, QVariant
 from qgis.PyQt.QtWidgets import (
                                  QApplication,
                                  QProgressBar,
@@ -383,13 +386,13 @@ def reload_layers_in_cbx(combo, layer_types=None, skip_layer_ids=None):
     :type skip_layer_ids: [QgsMapLayer ...]
     """
     combo.clear()
-    for l in list(QgsProject.instance().mapLayers().values()):
+    for layer in list(QgsProject.instance().mapLayers().values()):
         layer_type_allowed = bool(layer_types is None
-                                  or l.type() in layer_types)
+                                  or layer.type() in layer_types)
         layer_id_allowed = bool(skip_layer_ids is None
-                                or l.id() not in skip_layer_ids)
+                                or layer.id() not in skip_layer_ids)
         if layer_type_allowed and layer_id_allowed:
-            combo.addItem(l.name(), l)
+            combo.addItem(layer.name(), layer)
 
 
 def reload_attrib_cbx(
@@ -895,6 +898,44 @@ def clear_widgets_from_layout(layout):
             widget.setParent(None)
 
 
+def convert_to_mem_layer_and_replace_bool_to_int(original_layer):
+    original_fields = original_layer.fields()
+    field_names = [f.name() for f in original_fields]
+
+    new_fields = QgsFields()
+    boolean_field_names = []
+
+    for field in original_fields:
+        if field.type() == QVariant.Bool:
+            # Replace with integer version
+            new_fields.append(QgsField(field.name(), QVariant.Int))
+            boolean_field_names.append(field.name())
+        else:
+            new_fields.append(field)
+
+    # Create editable memory layer with same field names/order
+    # NOTE: adding fields to csv-based layer data providers fails silently
+    mem_layer = QgsVectorLayer("None", original_layer.name(), "memory")
+    mem_layer_data = mem_layer.dataProvider()
+    mem_layer_data.addAttributes(new_fields)
+    mem_layer.updateFields()
+
+    mem_layer.startEditing()
+    for feature in original_layer.getFeatures():
+        new_feat = QgsFeature()
+        new_feat.setFields(new_fields)
+        attrs = []
+        for name in field_names:
+            value = feature[name]
+            if name in boolean_field_names:
+                value = int(value) if value is not None else None
+            attrs.append(value)
+        new_feat.setAttributes(attrs)
+        mem_layer.addFeature(new_feat)
+    mem_layer.commitChanges()
+    return mem_layer
+
+
 def import_layer_from_csv(parent,
                           csv_path,
                           layer_name,
@@ -937,6 +978,8 @@ def import_layer_from_csv(parent,
     url.setQuery(url_query)
     layer_uri = url.toString()
     layer = QgsVectorLayer(layer_uri, layer_name, "delimitedtext")
+    layer = convert_to_mem_layer_and_replace_bool_to_int(layer)
+
     if save_format:
         if save_format == 'ESRI Shapefile':
             fmt = '.shp'
@@ -1176,7 +1219,8 @@ def get_loss_types(session, hostname, calc_id, message_bar):
 
 
 def get_attrs(session, hostname, calc_id, message_bar):
-    return extract_npz(session, hostname, calc_id, 'composite_risk_model.attrs',
+    return extract_npz(session, hostname, calc_id,
+                       'composite_risk_model.attrs',
                        message_bar=message_bar)
 
 
