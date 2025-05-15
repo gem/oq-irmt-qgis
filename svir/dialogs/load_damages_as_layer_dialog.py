@@ -96,6 +96,9 @@ class LoadDamagesAsLayerDialog(LoadOutputAsLayerDialog):
         self.init_done.emit(self)
 
     def set_ok_button(self):
+        if not hasattr(self, 'damage_or_consequences'):
+            self.ok_button.setEnabled(False)
+            return
         if self.damage_or_consequences == 'Damage':
             self.ok_button.setEnabled(self.dmg_state_cbx.currentIndex() != -1
                                       and self.loss_type_cbx.currentIndex() != -1)
