@@ -382,6 +382,8 @@ class LoadDamagesAsLayerDialog(LoadOutputAsLayerDialog):
                         self.layer = self.build_layer(
                             rlz_or_stat, taxonomy=taxonomy, loss_type=loss_type,
                             consequence=consequence)
+                self.style_maps(self.layer, self.default_field_name,
+                                self.iface, self.output_type)
 
             else:  # also needed for recovery modeling
                 for loss_type in self.loss_types:
