@@ -898,7 +898,7 @@ def clear_widgets_from_layout(layout):
             widget.setParent(None)
 
 
-def convert_to_mem_layer_and_replace_bool_to_int(original_layer):
+def convert_to_mem_layer_and_cast_bool_fields_to_int(original_layer):
     original_fields = original_layer.fields()
     field_names = [f.name() for f in original_fields]
 
@@ -978,7 +978,7 @@ def import_layer_from_csv(parent,
     url.setQuery(url_query)
     layer_uri = url.toString()
     layer = QgsVectorLayer(layer_uri, layer_name, "delimitedtext")
-    layer = convert_to_mem_layer_and_replace_bool_to_int(layer)
+    layer = convert_to_mem_layer_and_cast_bool_fields_to_int(layer)
 
     if save_format:
         if save_format == 'ESRI Shapefile':
