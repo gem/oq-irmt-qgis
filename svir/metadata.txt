@@ -25,6 +25,9 @@ email=staff.it@globalquakemodel.org
 changelog=
     3.24.1
     * When loading oq-engine outputs from CSV, fields containing only zero or one values are treated as integers instead of booleans
+    * When aggregating damage, consequences or losses by zone, the layer containing points to be aggregated is created and styled, but it is not made visible in the map, in order to avoid overlapping with the styled zonal layer
+    * Loaders for damages-rlzs and damages-stats were improved, giving the possibility to choose between damage and consequences
+    * A loader for the oq-engine output damages-stats (Asset Risk Statistics) similar to the existing one for damages-rlzs (Asset Risk Distributions) was added
     3.24.0
     * Reading multi-peril data is consistent with the recent engine-side renaming of 'multi_peril_csv' to 'multi_peril_file'
     3.23.2

@@ -84,8 +84,8 @@ from svir.dialogs.load_ruptures_as_layer_dialog import (
     LoadRupturesAsLayerDialog)
 from svir.dialogs.load_csv_as_layer_dialog import (
     LoadCsvAsLayerDialog)
-from svir.dialogs.load_damages_rlzs_as_layer_dialog import (
-    LoadDamagesRlzsAsLayerDialog)
+from svir.dialogs.load_damages_as_layer_dialog import (
+    LoadDamagesAsLayerDialog)
 from svir.dialogs.load_gmf_data_as_layer_dialog import (
     LoadGmfDataAsLayerDialog)
 from svir.dialogs.load_asset_risk_as_layer_dialog import (
@@ -98,8 +98,8 @@ from svir.dialogs.load_uhs_as_layer_dialog import (
     LoadUhsAsLayerDialog)
 from svir.dialogs.load_disagg_rlzs_as_layer_dialog import (
     LoadDisaggRlzsAsLayerDialog)
-from svir.dialogs.load_avg_losses_rlzs_as_layer_dialog import (
-    LoadAvgLossesRlzsAsLayerDialog)
+from svir.dialogs.load_avg_losses_as_layer_dialog import (
+    LoadAvgLossesAsLayerDialog)
 from svir.dialogs.load_inputs_dialog import LoadInputsDialog
 from svir.dialogs.show_full_report_dialog import ShowFullReportDialog
 from svir.dialogs.show_console_dialog import ShowConsoleDialog
@@ -118,18 +118,19 @@ BUTTON_WIDTH = 75
 
 OUTPUT_TYPE_LOADERS = {
     'ruptures': LoadRupturesAsLayerDialog,
-    # NOTE: damages-rlzs and damages-stats are handled completely differently
-    'damages-rlzs': LoadDamagesRlzsAsLayerDialog,
+    'damages-rlzs': LoadDamagesAsLayerDialog,
+    'damages-stats': LoadDamagesAsLayerDialog,
     'gmf_data': LoadGmfDataAsLayerDialog,
     'hmaps': LoadHazardMapsAsLayerDialog,
     'hcurves': LoadHazardCurvesAsLayerDialog,
     'uhs': LoadUhsAsLayerDialog,
-    'avg_losses-rlzs': LoadAvgLossesRlzsAsLayerDialog,
-    'avg_losses-stats': LoadAvgLossesRlzsAsLayerDialog,
+    'avg_losses-rlzs': LoadAvgLossesAsLayerDialog,
+    'avg_losses-stats': LoadAvgLossesAsLayerDialog,
     'asset_risk': LoadAssetRiskAsLayerDialog,
     'disagg-rlzs': LoadDisaggRlzsAsLayerDialog,
     'input': LoadInputsDialog,
 }
+
 for output_type in OQ_CSV_TO_LAYER_TYPES:
     OUTPUT_TYPE_LOADERS[output_type] = LoadCsvAsLayerDialog
 
