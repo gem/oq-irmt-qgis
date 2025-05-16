@@ -34,16 +34,16 @@ from svir.utilities.utils import (WaitCursorManager,
 from svir.tasks.extract_npz_task import ExtractNpzTask
 
 
-class LoadDamagesRlzsAsLayerDialog(LoadOutputAsLayerDialog):
+class LoadDamagesAsLayerDialog(LoadOutputAsLayerDialog):
     """
-    Dialog to load damages-rlzs from an oq-engine output, as layer
+    Dialog to load damages-rlzs or damages-stats from an oq-engine output, as layer
     """
 
     def __init__(self, drive_engine_dlg, iface, viewer_dock, session, hostname,
                  calc_id, output_type='damages-rlzs',
                  path=None, mode=None, zonal_layer_path=None,
                  engine_version=None, calculation_mode=None):
-        assert output_type == 'damages-rlzs'
+        assert output_type in ('damages-rlzs', 'damages-stats')
         super().__init__(
             drive_engine_dlg, iface, viewer_dock, session, hostname,
             calc_id, output_type=output_type, path=path, mode=mode,
@@ -141,12 +141,13 @@ class LoadDamagesRlzsAsLayerDialog(LoadOutputAsLayerDialog):
         taxonomy = kwargs['taxonomy']
         loss_type = kwargs['loss_type']
         dmg_state = kwargs['dmg_state']
+        rlzs_or_stats = 'rlzs' if self.output_type == 'damages-rlzs' else 'stats'
         if (self.aggregate_by_site_ckb.isChecked() or
                 self.zonal_layer_gbx.isChecked()):
-            layer_name = "damages-rlzs_%s_%s_%s_%s" % (
-                rlz_or_stat, taxonomy, loss_type, dmg_state)
+            layer_name = (f'damages-{rlzs_or_stats}_{rlz_or_stat}_{taxonomy}'
+                          f'_{loss_type}_{dmg_state}')
         else:  # also needed for recovery modeling
-            layer_name = "damages-rlzs_%s_%s" % (rlz_or_stat, loss_type)
+            layer_name = f'damages-{rlzs_or_stats}_{rlz_or_stat}_{loss_type}'
         return layer_name
 
     def get_field_types(self, **kwargs):

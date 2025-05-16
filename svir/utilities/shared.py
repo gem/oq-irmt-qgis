@@ -124,7 +124,6 @@ TEXTUAL_FIELD_TYPES = (STRING_FIELD_TYPE_NAME,
                        TEXT_FIELD_TYPE_NAME.capitalize())
 
 OQ_CSV_TO_LAYER_TYPES = set([
-    'damages-stats',
     'agg_risk',
     'aggrisk',
     'aggrisk-stats',
@@ -145,6 +144,7 @@ OQ_CSV_TO_LAYER_TYPES = set([
 OQ_EXTRACT_TO_LAYER_TYPES = set([
     'asset_risk',
     'damages-rlzs',
+    'damages-stats',
     'avg_losses-rlzs',
     'avg_losses-stats',
     'gmf_data',
@@ -167,6 +167,7 @@ OQ_EXTRACT_TO_VIEW_TYPES = set([
      'aggcurves',
      'aggcurves-stats',
      'damages-rlzs_aggr',
+     'damages-stats_aggr',
      'avg_losses-rlzs_aggr',
      'avg_losses-stats_aggr',
 ])
