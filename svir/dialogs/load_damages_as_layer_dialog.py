@@ -373,7 +373,7 @@ class LoadDamagesAsLayerDialog(LoadOutputAsLayerDialog):
                             rlz_or_stat, taxonomy, loss_type, dmg_state)):
                         self.layer = self.build_layer(
                             rlz_or_stat, taxonomy=taxonomy, loss_type=loss_type,
-                            dmg_state=dmg_state, visible=False)
+                            dmg_state=dmg_state, set_visible=False)
                 else:  # 'Consequences'
                     with WaitCursorManager(
                         'Creating layer for "%s", taxonomy "%s", loss type "%s"'
@@ -381,7 +381,7 @@ class LoadDamagesAsLayerDialog(LoadOutputAsLayerDialog):
                             rlz_or_stat, taxonomy, loss_type, consequence)):
                         self.layer = self.build_layer(
                             rlz_or_stat, taxonomy=taxonomy, loss_type=loss_type,
-                            consequence=consequence, visible=False)
+                            consequence=consequence, set_visible=False)
                 self.style_maps(self.layer, self.default_field_name,
                                 self.iface, self.output_type)
 

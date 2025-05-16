@@ -169,6 +169,8 @@ class LoadAvgLossesAsLayerDialog(LoadOutputAsLayerDialog):
         return self.layer
 
     def load_from_npz(self):
+        # when aggregating by zone, create the point layer but keep it unchecked
+        set_visible = not self.zonal_layer_gbx.isChecked()
         for rlz_or_stat in self.rlzs_or_stats:
             if (self.load_selected_only_ckb.isChecked()
                     and rlz_or_stat != self.rlz_or_stat_cbx.currentData()):
@@ -188,7 +190,7 @@ class LoadAvgLossesAsLayerDialog(LoadOutputAsLayerDialog):
                             self.iface.messageBar()):
                         self.layer = self.build_layer(
                             rlz_or_stat, taxonomy=taxonomy,
-                            loss_type=loss_type)
+                            loss_type=loss_type, set_visible=set_visible)
                         self.style_maps(self.layer,
                                         self.default_field_name,
                                         self.iface, self.output_type)

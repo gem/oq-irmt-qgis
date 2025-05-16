@@ -490,7 +490,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                     consequence=None,
                     boundaries=None, geometry_type='point', wkt_geom_type=None,
                     row_wkt_geom_types=None, add_to_group=None,
-                    add_to_map=True, create_spatial_index=True, visible=True):
+                    add_to_map=True, create_spatial_index=True, set_visible=True):
         layer_name = self.build_layer_name(
             rlz_or_stat=rlz_or_stat, taxonomy=taxonomy, poe=poe,
             loss_type=loss_type, dmg_state=dmg_state, gsim=gsim, imt=imt,
@@ -585,7 +585,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 self.iface.zoomToActiveLayer()
             log_msg('Layer %s was created successfully' % layer_name,
                     level='S', message_bar=self.iface.messageBar())
-            if not visible:
+            if not set_visible:
                 layer_node = tree_node.findLayer(self.layer.id())
                 if layer_node:
                     layer_node.setItemVisibilityChecked(False)
