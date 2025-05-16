@@ -59,6 +59,7 @@ if QGIS_APP is None:
 
 LONG_LOADING_TIME = 10  # seconds
 
+# If defined, only the specified output type will be tested, skipping all the others
 ONLY_OUTPUT_TYPE = os.environ.get('ONLY_OUTPUT_TYPE')
 
 # Run all tests unless explicitly specified setting those env variables to '0'
