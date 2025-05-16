@@ -255,13 +255,21 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.poe_cbx.setEnabled(state == Qt.Unchecked)
 
     def create_loss_type_selector(self):
-        self.loss_type_lbl = QLabel('Loss Type')
+        self.loss_type_lbl = QLabel('Loss Category')
         self.loss_type_cbx = QComboBox()
         self.loss_type_cbx.setEnabled(False)
         self.loss_type_cbx.currentIndexChanged['QString'].connect(
             self.on_loss_type_changed)
         self.vlayout.addWidget(self.loss_type_lbl)
         self.vlayout.addWidget(self.loss_type_cbx)
+
+    def create_damage_or_consequences_selector(self):
+        self.damage_or_consequences_lbl = QLabel('Type')
+        self.damage_or_consequences_cbx = QComboBox()
+        self.damage_or_consequences_cbx.currentTextChanged['QString'].connect(
+            self.on_damage_or_consequences_changed)
+        self.vlayout.addWidget(self.damage_or_consequences_lbl)
+        self.vlayout.addWidget(self.damage_or_consequences_cbx)
 
     def create_eid_selector(self):
         self.eid_lbl = QLabel('Event ID')
@@ -271,13 +279,20 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.vlayout.addWidget(self.eid_sbx)
 
     def create_dmg_state_selector(self):
-        self.dmg_state_lbl = QLabel('Damage state')
+        self.dmg_state_lbl = QLabel('Damage State')
         self.dmg_state_cbx = QComboBox()
         self.dmg_state_cbx.setEnabled(False)
         self.dmg_state_cbx.currentIndexChanged['QString'].connect(
             self.on_dmg_state_changed)
         self.vlayout.addWidget(self.dmg_state_lbl)
         self.vlayout.addWidget(self.dmg_state_cbx)
+
+    def create_consequence_selector(self):
+        self.consequence_lbl = QLabel('Consequence Type')
+        self.consequence_cbx = QComboBox()
+        self.consequence_cbx.setEnabled(False)
+        self.vlayout.addWidget(self.consequence_lbl)
+        self.vlayout.addWidget(self.consequence_cbx)
 
     def create_taxonomy_selector(self):
         self.taxonomy_lbl = QLabel('Taxonomy')
@@ -287,7 +302,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.vlayout.addWidget(self.taxonomy_cbx)
 
     def create_style_by_selector(self):
-        self.style_by_lbl = QLabel('Style by')
+        self.style_by_lbl = QLabel('Style By')
         self.style_by_cbx = QComboBox()
         self.vlayout.addWidget(self.style_by_lbl)
         self.vlayout.addWidget(self.style_by_cbx)
@@ -472,16 +487,18 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
 
     def build_layer(self, rlz_or_stat=None, taxonomy=None, poe=None,
                     loss_type=None, dmg_state=None, gsim=None, imt=None,
+                    consequence=None,
                     boundaries=None, geometry_type='point', wkt_geom_type=None,
                     row_wkt_geom_types=None, add_to_group=None,
-                    add_to_map=True, create_spatial_index=True):
+                    add_to_map=True, create_spatial_index=True, set_visible=True):
         layer_name = self.build_layer_name(
             rlz_or_stat=rlz_or_stat, taxonomy=taxonomy, poe=poe,
             loss_type=loss_type, dmg_state=dmg_state, gsim=gsim, imt=imt,
+            consequence=consequence,
             geometry_type=geometry_type)
         field_types = self.get_field_types(
             rlz_or_stat=rlz_or_stat, taxonomy=taxonomy, poe=poe,
-            loss_type=loss_type, dmg_state=dmg_state, imt=imt)
+            loss_type=loss_type, dmg_state=dmg_state, imt=imt, consequence=consequence)
 
         # create layer
         self.layer = QgsVectorLayer(
@@ -501,7 +518,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
 
         self.layer = self.read_npz_into_layer(
             field_types, rlz_or_stat=rlz_or_stat, taxonomy=taxonomy, poe=poe,
-            loss_type=loss_type, dmg_state=dmg_state, imt=imt,
+            loss_type=loss_type, dmg_state=dmg_state, consequence=consequence, imt=imt,
             boundaries=boundaries, geometry_type=geometry_type,
             wkt_geom_type=wkt_geom_type,
             row_wkt_geom_types=row_wkt_geom_types)
@@ -536,6 +553,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                        'poe': poe,
                        'loss_type': loss_type,
                        'dmg_state': dmg_state,
+                       'consequence': consequence,
                        'gsim': gsim,
                        'imt': imt}
         write_metadata_to_layer(
@@ -567,6 +585,10 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 self.iface.zoomToActiveLayer()
             log_msg('Layer %s was created successfully' % layer_name,
                     level='S', message_bar=self.iface.messageBar())
+            if not set_visible:
+                layer_node = tree_node.findLayer(self.layer.id())
+                if layer_node:
+                    layer_node.setItemVisibilityChecked(False)
         if create_spatial_index:
             self.layer.dataProvider().createSpatialIndex()
         return self.layer
