@@ -39,9 +39,9 @@ jobs:
           python-version: '3.12'
       - name: Clone engine LTR and restore oqdata
         env:
-          ENGINE_BR=${{ matrix.ENGINE_BR }}
-          IRMT_BR=${{ matrix.ENGINE_BR }}
-          DEMOS=${{ matrix.DEMOS }}
+          ENGINE_BR: ${{ matrix.ENGINE_BR }}
+          IRMT_BR: ${{ matrix.ENGINE_BR }}
+          DEMOS: ${{ matrix.DEMOS }}
         run: |
           echo "${Env:environment}"
           curl -O https://raw.githubusercontent.com/gem/oq-engine/master/install.py
