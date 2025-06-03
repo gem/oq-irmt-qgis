@@ -37,26 +37,34 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Execute the Installer
+        run: |
+          curl -O https://downloads.openquake.org/pkgs/windows/oq-engine/OpenQuake_Engine_3.23.2-1-no-toolkit.exe
+          Get-ChildItem -Path ${{ github.workspace }}
+          $Install = Get-ChildItem -Filter *.exe
+          Start-Process -FilePath $Install.Fullname -ArgumentList "/S" -Wait
+          $env:PATH += ";$env:LOCALAPPDATA\Programs\OpenQuake Engine\python3\Scripts"
       - name: Clone engine LTR and restore oqdata
         env:
           ENGINE_BR: ${{ matrix.ENGINE_BR }}
           IRMT_BR: ${{ matrix.ENGINE_BR }}
           DEMOS: ${{ matrix.DEMOS }}
         run: |
+          $env:PATH += ";$env:LOCALAPPDATA\Programs\OpenQuake Engine\python3\Scripts"
           echo "${Env:environment}"
-          curl -O https://raw.githubusercontent.com/gem/oq-engine/master/install.py
-          Write-Host "Branch environment and other REFS"
-          Write-Host $Env:GITHUB_REF
-          Write-Host $Env:ENGINE_BR
-          Write-Host $Env:IRMT_BR
-          set PIP_DEFAULT_TIMEOUT=100
-          python3 -m pip install pip --upgrade
-          #
-          Write-Host "python3 install.py user --version ${env:ENGINE_BR}"
-          python3 install.py user --version ${env:ENGINE_BR}
-          Write-Host "Restore ${env:DEMOS} demos for ${env:ENGINE_BR} branch "
-          C:\Users\runneradmin\openquake\Scripts\activate.ps1
-          oq reset -y
+          oq.exe --version
+          #curl -O https://raw.githubusercontent.com/gem/oq-engine/master/install.py
+          #Write-Host "Branch environment and other REFS"
+          #Write-Host $Env:GITHUB_REF
+          #Write-Host $Env:ENGINE_BR
+          #Write-Host $Env:IRMT_BR
+          #set PIP_DEFAULT_TIMEOUT=100
+          #python3 -m pip install pip --upgrade
+          ##
+          #Write-Host "python3 install.py user --version ${env:ENGINE_BR}"
+          #python3 install.py user --version ${env:ENGINE_BR}
+          #Write-Host "Restore ${env:DEMOS} demos for ${env:ENGINE_BR} branch "
+          #oq reset -y
           #oq restore "https://artifacts.openquake.org/travis/${env:DEMOS}-${env:ENGINE_BR}.zip" ~/oqdata
           Write-Host "oq restore 'https://artifacts.openquake.org/travis/${env:DEMOS}-${env:ENGINE_BR}.zip' ~/oqdata"
           Write-Host "Waiting WEBUI up on port 8800...."
