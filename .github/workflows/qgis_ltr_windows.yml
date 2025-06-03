@@ -38,10 +38,12 @@ jobs:
         with:
           python-version: '3.12'
       - name: Clone engine LTR and restore oqdata
+        env:
+          ENGINE_BR=${{ matrix.ENGINE_BR }}
+          IRMT_BR=${{ matrix.ENGINE_BR }}
+          DEMOS=${{ matrix.DEMOS }}
         run: |
           echo "${Env:environment}"
-          ENGINE_BR=${{ matrix.ENGINE_BR }}
-          IRMT_BR=$ENGINE_BR
           curl -O https://raw.githubusercontent.com/gem/oq-engine/master/install.py
           Write-Host "Branch environment and other REFS"
           Write-Host $Env:GITHUB_REF
@@ -52,16 +54,19 @@ jobs:
           #
           Write-Host "python3 install.py devel --version ${env:ENGINE_BR}"
           python3 install.py devel --version ${env:ENGINE_BR}
-          Write-Host "Restore ${{matrix.DEMOS}} demos for $ENGINE_BR branch "
+          Write-Host "Restore ${env:DEMOS} demos for ${env:ENGINE_BR} branch "
           C:\Users\runneradmin\openquake\Scripts\activate.ps1
           oq reset -y
-          oq restore https://artifacts.openquake.org/travis/${{matrix.DEMOS}}-${ENGINE_BR}.zip ~/oqdata
-          oq webui start 127.0.0.1:8800 --skip-browser &> webui.log &
-          echo "Waiting WEBUI up on port 8800...."
-          while ! nc -z 127.0.0.1 8800; do
-            sleep 5
-          done
-          curl http://127.0.0.1:8800/v1/engine_version
+          #oq restore "https://artifacts.openquake.org/travis/${env:DEMOS}-${env:ENGINE_BR}.zip" ~/oqdata
+          Write-Host "oq restore 'https://artifacts.openquake.org/travis/${env:DEMOS}-${env:ENGINE_BR}.zip' ~/oqdata"
+          Write-Host "Waiting WEBUI up on port 8800...."
+          Start-Job -ScriptBlock{& oq.exe webui start 127.0.0.1:8800 -s 2>&1 > "$env:LOCALAPPDATA\Temp\webui.log" }
+          do {
+             Write-Host "waiting..."
+             sleep 2
+          } until(Test-NetConnection 127.0.0.1 -Port 8800 | ? { $_.TcpTestSucceeded } )
+          Write-Host "curl.exe -X HEAD -I --fail http://127.0.0.1:8800/v1/engine_version"
+          curl.exe -X HEAD -I --fail http://127.0.0.1:8800/v1/engine_version
           #
       - name: Install QGIS LTR on Chocolatey
         uses: crazy-max/ghaction-chocolatey@v3
@@ -104,7 +109,12 @@ jobs:
       #    docker exec qgis sh -c "export DISPLAY=:1.0; /tests_directory/qgis_setup.sh svir"
       #    docker exec -e OQ_CHECK_MISSING_OUTPUTS=${OQ_CHECK_MISSING_OUTPUTS} -e OQ_TEST_RUN_CALC=${OQ_TEST_RUN_CALC} \
       #      -t qgis sh -c "export DISPLAY=:1.0; cd /tests_directory && ./qgis_testrunner.sh svir.test.integration.test_drive_oq_engine"
-      - name: ㏒ Display web logs
-        run: |
-          set -x
-          cat webui.log
+      #- name: Display web logs
+      #  run: |
+      #     webui.log
+      - name: Upload Artifact WebUI log
+        uses: actions/upload-artifact@v4
+        with:
+          name: WebUI_log
+          path: C:\\Users\\runneradmin\\AppData\\Local\\Temp\\webui.log
+          retention-days: 5
