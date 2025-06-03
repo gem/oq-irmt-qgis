@@ -73,8 +73,8 @@ jobs:
              Write-Host "waiting..."
              sleep 2
           } until(Test-NetConnection 127.0.0.1 -Port 8800 | ? { $_.TcpTestSucceeded } )
-          Write-Host "curl.exe -X HEAD -I --fail http://127.0.0.1:8800/v1/engine_version"
-          curl.exe -X HEAD -I --fail http://127.0.0.1:8800/v1/engine_version
+          Write-Host "curl.exe  --fail http://127.0.0.1:8800/v1/engine_version"
+          curl.exe --fail http://127.0.0.1:8800/v1/engine_version
           #
       - name: Install QGIS LTR on Chocolatey
         uses: crazy-max/ghaction-chocolatey@v3
