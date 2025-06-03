@@ -1,0 +1,120 @@
+name: Windows Tests vs Engine releases (also for risk demos)
+on:
+  # NOTE: enables only scheduled or triggered manually, NOT on pull requests
+  workflow_dispatch:
+    inputs:
+      debug_enabled:
+        type: boolean
+        description: "Run the build with tmate debugging enabled"
+        required: false
+        default: false
+  # push:
+  #   branches:
+  #     - '**'
+  schedule:
+    - cron: "0 1 * * *"
+
+jobs:
+  Tests_and_docs:
+    runs-on: windows-2022
+    strategy:
+      fail-fast: false
+      matrix:
+        # NOTE: it would be better to point to lts and latest if possible
+        # NOTE: checking also master to make sure risk workshop demos keep working also on master
+        ENGINE_BR: ['engine-3.23', 'master']  # TODO: add latest when different from lts
+        QGIS_VERSION: ['ltr']
+        DEMOS: ['oqdata', 'risk-oqdata']
+    steps:
+      - name: Clone Repository (Master)
+        uses: actions/checkout@v4
+        if: github.event.inputs.git-ref == ''
+      - name: Clone Repository (Custom Ref)
+        uses: actions/checkout@v4
+        if: github.event.inputs.git-ref != ''
+        with:
+          ref: ${{ github.event.inputs.git-ref }}
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install QGIS LTR on Chocolatey
+        uses: crazy-max/ghaction-chocolatey@v3
+        with:
+          args: install qgis-ltr -y
+
+      - name: ⏳ Clone engine and restore oqdata and docker container
+        run: |
+          set -x
+          ENGINE_BR=${{ matrix.ENGINE_BR }}
+          IRMT_BR=$ENGINE_BR
+          git fetch
+          git checkout $IRMT_BR
+          curl -O https://raw.githubusercontent.com/gem/oq-engine/master/install.py
+          ls -lrt install.py
+          echo "Using branch ${ENGINE_BR}"
+          if [ "$(git ls-remote --heads https://github.com/gem/oq-engine.git ${ENGINE_BR})" = "" ]; then
+              echo "Branch ${ENGINE_BR} not found in gem/oq-engine repository"
+              exit 1
+          fi
+          # get release version from branch name (e.g. 'engine-3.16' -> '3.16')
+          prefix="engine-"
+          if [[ $ENGINE_BR == ${prefix}* ]]; then
+              RELEASE_VERSION="${ENGINE_BR#${prefix}}"
+          else
+              RELEASE_VERSION=$ENGINE_BR
+          fi
+          python3 install.py user --version=${RELEASE_VERSION}
+          export PIP_DEFAULT_TIMEOUT=100
+          echo "Restore ${{matrix.DEMOS}} demos for $ENGINE_BR branch "
+          source $HOME/openquake/bin/activate
+          oq reset -y
+          oq restore https://artifacts.openquake.org/travis/${{matrix.DEMOS}}-${ENGINE_BR}.zip ~/oqdata
+          oq webui start 127.0.0.1:8800 --skip-browser &> webui.log &
+          echo "Waiting WEBUI up on port 8800...."
+          while ! nc -z 127.0.0.1 8800; do
+            sleep 5
+          done
+          curl http://127.0.0.1:8800/v1/engine_version
+          #
+      #- name: ℧ Run unit test
+      #  run: |
+      #    set -x
+      #    ENGINE_BR=${{ matrix.ENGINE_BR }}
+      #    IRMT_BR=$ENGINE_BR
+      #    git fetch
+      #    git checkout $IRMT_BR
+      #    # OGR_SQLITE_JOURNAL=delete prevents QGIS from using WAL, which modifies geopackages even if they are just read
+      #    docker exec -t qgis bash -c "export DISPLAY=:1.0; export PYTHONPATH=/usr/share/qgis/python/plugins/:$PYTHONPATH; OGR_SQLITE_JOURNAL=delete python3 -m pytest -v /tests_directory/svir/test/unit/"
+      #- name: ⨕ Run Integration test
+      #  run: |
+      #    set -x
+      #    ENGINE_BR=${{ matrix.ENGINE_BR }}
+      #    IRMT_BR=$ENGINE_BR
+      #    git fetch
+      #    git checkout $IRMT_BR
+      #    # get release version from branch name (e.g. 'engine-3.16' -> '3.16')
+      #    prefix="engine-"
+      #    if [[ $ENGINE_BR == ${prefix}* ]]; then
+      #        RELEASE_VERSION="${ENGINE_BR#${prefix}}"
+      #    else
+      #        RELEASE_VERSION=$ENGINE_BR
+      #    fi
+      #    # NOTE: if we want to enable it, we need to use the proper folder after engine user installation
+      #    OQ_TEST_RUN_CALC=0
+      #    if [ "${{ matrix.DEMOS }}" != "risk-oqdata" -a "${RELEASE_VERSION}" != "3.16" ]; then
+      #      OQ_CHECK_MISSING_OUTPUTS=1
+      #    else
+      #      OQ_CHECK_MISSING_OUTPUTS=0
+      #    fi
+      #    echo "OQ_CHECK_MISSING_OUTPUTS: ${OQ_CHECK_MISSING_OUTPUTS}"
+      #    echo "OQ_TEST_RUN_CALC: ${OQ_TEST_RUN_CALC}"
+      #    # NOTE: the check on the existence of the engine branch is already done in the previous step
+      #    docker exec qgis sh -c "export DISPLAY=:1.0; echo 'Running against oq-engine on branch ${ENGINE_BR}'"
+      #    docker exec qgis sh -c "export DISPLAY=:1.0; /tests_directory/qgis_setup.sh svir"
+      #    docker exec -e OQ_CHECK_MISSING_OUTPUTS=${OQ_CHECK_MISSING_OUTPUTS} -e OQ_TEST_RUN_CALC=${OQ_TEST_RUN_CALC} \
+      #      -t qgis sh -c "export DISPLAY=:1.0; cd /tests_directory && ./qgis_testrunner.sh svir.test.integration.test_drive_oq_engine"
+      - name: ㏒ Display web logs
+        run: |
+          set -x
+          cat webui.log
