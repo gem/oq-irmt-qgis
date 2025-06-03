@@ -52,8 +52,8 @@ jobs:
           set PIP_DEFAULT_TIMEOUT=100
           python3 -m pip install pip --upgrade
           #
-          Write-Host "python3 install.py devel --version ${env:ENGINE_BR}"
-          python3 install.py devel --version ${env:ENGINE_BR}
+          Write-Host "python3 install.py user --version ${env:ENGINE_BR}"
+          python3 install.py user --version ${env:ENGINE_BR}
           Write-Host "Restore ${env:DEMOS} demos for ${env:ENGINE_BR} branch "
           C:\Users\runneradmin\openquake\Scripts\activate.ps1
           oq reset -y
@@ -72,46 +72,6 @@ jobs:
         uses: crazy-max/ghaction-chocolatey@v3
         with:
           args: install qgis-ltr -y
-      #- name: ℧ Run unit test
-      #  run: |
-      #    set -x
-      #    ENGINE_BR=${{ matrix.ENGINE_BR }}
-      #    IRMT_BR=$ENGINE_BR
-      #    git fetch
-      #    git checkout $IRMT_BR
-      #    # OGR_SQLITE_JOURNAL=delete prevents QGIS from using WAL, which modifies geopackages even if they are just read
-      #    docker exec -t qgis bash -c "export DISPLAY=:1.0; export PYTHONPATH=/usr/share/qgis/python/plugins/:$PYTHONPATH; OGR_SQLITE_JOURNAL=delete python3 -m pytest -v /tests_directory/svir/test/unit/"
-      #- name: ⨕ Run Integration test
-      #  run: |
-      #    set -x
-      #    ENGINE_BR=${{ matrix.ENGINE_BR }}
-      #    IRMT_BR=$ENGINE_BR
-      #    git fetch
-      #    git checkout $IRMT_BR
-      #    # get release version from branch name (e.g. 'engine-3.16' -> '3.16')
-      #    prefix="engine-"
-      #    if [[ $ENGINE_BR == ${prefix}* ]]; then
-      #        RELEASE_VERSION="${ENGINE_BR#${prefix}}"
-      #    else
-      #        RELEASE_VERSION=$ENGINE_BR
-      #    fi
-      #    # NOTE: if we want to enable it, we need to use the proper folder after engine user installation
-      #    OQ_TEST_RUN_CALC=0
-      #    if [ "${{ matrix.DEMOS }}" != "risk-oqdata" -a "${RELEASE_VERSION}" != "3.16" ]; then
-      #      OQ_CHECK_MISSING_OUTPUTS=1
-      #    else
-      #      OQ_CHECK_MISSING_OUTPUTS=0
-      #    fi
-      #    echo "OQ_CHECK_MISSING_OUTPUTS: ${OQ_CHECK_MISSING_OUTPUTS}"
-      #    echo "OQ_TEST_RUN_CALC: ${OQ_TEST_RUN_CALC}"
-      #    # NOTE: the check on the existence of the engine branch is already done in the previous step
-      #    docker exec qgis sh -c "export DISPLAY=:1.0; echo 'Running against oq-engine on branch ${ENGINE_BR}'"
-      #    docker exec qgis sh -c "export DISPLAY=:1.0; /tests_directory/qgis_setup.sh svir"
-      #    docker exec -e OQ_CHECK_MISSING_OUTPUTS=${OQ_CHECK_MISSING_OUTPUTS} -e OQ_TEST_RUN_CALC=${OQ_TEST_RUN_CALC} \
-      #      -t qgis sh -c "export DISPLAY=:1.0; cd /tests_directory && ./qgis_testrunner.sh svir.test.integration.test_drive_oq_engine"
-      #- name: Display web logs
-      #  run: |
-      #     webui.log
       - name: Upload Artifact WebUI log
         uses: actions/upload-artifact@v4
         with:
