@@ -73,7 +73,15 @@ jobs:
           DEMOS: ${{ matrix.DEMOS }}
         uses: crazy-max/ghaction-chocolatey@v3
         with:
-          args: install qgis-ltr -y
+          args: install qgis-ltr -y --version 3.40.6
+      - name: Plugin install
+        shell: pwsh
+        run: |
+          $env:PATH="C:\Program Files\QGIS 3.40.6\bin;$env:PATH"
+          $env:QGIS_PLUGIN_IN_CI=1
+          pwd
+          python-qgis-ltr.bat -m pip list
+          python-qgis-ltr.bat -m pytest tests_directory/svir/test/unit/
       - name: Upload Artifact WebUI log
         uses: actions/upload-artifact@v4
         with:
