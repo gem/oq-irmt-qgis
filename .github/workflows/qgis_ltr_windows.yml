@@ -53,20 +53,10 @@ jobs:
           $env:PATH += ";$env:LOCALAPPDATA\Programs\OpenQuake Engine\python3\Scripts"
           echo "${Env:environment}"
           oq.exe --version
-          #curl -O https://raw.githubusercontent.com/gem/oq-engine/master/install.py
-          #Write-Host "Branch environment and other REFS"
-          #Write-Host $Env:GITHUB_REF
-          #Write-Host $Env:ENGINE_BR
-          #Write-Host $Env:IRMT_BR
-          #set PIP_DEFAULT_TIMEOUT=100
-          #python3 -m pip install pip --upgrade
-          ##
-          #Write-Host "python3 install.py user --version ${env:ENGINE_BR}"
-          #python3 install.py user --version ${env:ENGINE_BR}
-          #Write-Host "Restore ${env:DEMOS} demos for ${env:ENGINE_BR} branch "
-          #oq reset -y
-          #oq restore "https://artifacts.openquake.org/travis/${env:DEMOS}-${env:ENGINE_BR}.zip" ~/oqdata
-          Write-Host "oq restore 'https://artifacts.openquake.org/travis/${env:DEMOS}-${env:ENGINE_BR}.zip' ~/oqdata"
+          Write-Host "Restore ${env:DEMOS} demos for ${env:ENGINE_BR} branch "
+          Get-ChildItem -Path "$HOME\oqdata" -File | Remove-Item
+          Write-Host "oq restore 'https://artifacts.openquake.org/travis/${env:DEMOS}-${env:ENGINE_BR}.zip' $HOME\oqdata"
+          oq.exe restore "https://artifacts.openquake.org/travis/${env:DEMOS}-${env:ENGINE_BR}.zip" $HOME\oqdata
           Write-Host "Waiting WEBUI up on port 8800...."
           Start-Job -ScriptBlock{& oq.exe webui start 127.0.0.1:8800 -s 2>&1 > "$env:LOCALAPPDATA\Temp\webui.log" }
           do {
