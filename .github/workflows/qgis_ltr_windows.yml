@@ -37,14 +37,14 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Execute the Installer
+      - name: Execute the Installer LTS of OQ
         run: |
           curl -O https://downloads.openquake.org/pkgs/windows/oq-engine/OpenQuake_Engine_3.23.2-1-no-toolkit.exe
           Get-ChildItem -Path ${{ github.workspace }}
           $Install = Get-ChildItem -Filter *.exe
           Start-Process -FilePath $Install.Fullname -ArgumentList "/S" -Wait
           $env:PATH += ";$env:LOCALAPPDATA\Programs\OpenQuake Engine\python3\Scripts"
-      - name: Clone engine LTR and restore oqdata
+      - name: Restore oqdata
         env:
           ENGINE_BR: ${{ matrix.ENGINE_BR }}
           IRMT_BR: ${{ matrix.ENGINE_BR }}
@@ -54,9 +54,11 @@ jobs:
           echo "${Env:environment}"
           oq.exe --version
           Write-Host "Restore ${env:DEMOS} demos for ${env:ENGINE_BR} branch "
-          Get-ChildItem -Path "$HOME\oqdata" -File | Remove-Item
+          #Get-ChildItem -Path "$HOME\oqdata" -File | Remove-Item
           Write-Host "oq restore 'https://artifacts.openquake.org/travis/${env:DEMOS}-${env:ENGINE_BR}.zip' $HOME\oqdata"
           oq.exe restore "https://artifacts.openquake.org/travis/${env:DEMOS}-${env:ENGINE_BR}.zip" $HOME\oqdata
+          Write-Host "list of files on $HOME\oqdata"
+          Get-ChildItem -Path "$HOME\oqdata" -File
           Write-Host "Waiting WEBUI up on port 8800...."
           Start-Job -ScriptBlock{& oq.exe webui start 127.0.0.1:8800 -s 2>&1 > "$env:LOCALAPPDATA\Temp\webui.log" }
           do {
