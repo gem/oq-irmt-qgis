@@ -25,7 +25,6 @@
 import qgis  # NOQA: it loads the environment!
 
 import os
-import uuid
 import processing
 
 from qgis.core import (
@@ -51,9 +50,6 @@ from qgis.PyQt.QtGui import QIcon, QDesktopServices, QColor
 from svir.dialogs.viewer_dock import ViewerDock
 from svir.dialogs.settings_dialog import SettingsDialog
 from svir.dialogs.transformation_dialog import TransformationDialog
-from svir.dialogs.ipt_dialog import IptDialog
-from svir.dialogs.taxtweb_dialog import TaxtwebDialog
-from svir.dialogs.taxonomy_dialog import TaxonomyDialog
 from svir.dialogs.drive_oq_engine_server_dialog import (
     DriveOqEngineServerDialog)
 from svir.dialogs.load_output_as_layer_dialog import LoadOutputAsLayerDialog
@@ -63,7 +59,6 @@ from svir.utilities.utils import (
                                   WaitCursorManager,
                                   clear_progress_message_bar,
                                   log_msg,
-                                  get_checksum,
                                   warn_missing_packages,
                                   )
 from svir.utilities.shared import DEBUG, OQ_XMARKER_TYPES
@@ -115,9 +110,6 @@ class Irmt(object):
 
         # avoid dialog to be deleted right after showing it
         self.drive_oq_engine_server_dlg = None
-        self.ipt_dlg = None
-        self.taxtweb_dlg = None
-        self.taxonomy_dlg = None
 
         # keep track of the supplemental information for each layer
         # layer_id -> {}
@@ -136,9 +128,6 @@ class Irmt(object):
             self.layers_removed)
         # save the default selection color settings
         self.initial_selection_color = self.iface.mapCanvas().selectionColor()
-
-        # get or create directory to store input files for the OQ-Engine
-        self.ipt_dir = self.get_ipt_dir()
 
         self.provider = None
 
@@ -174,22 +163,6 @@ class Irmt(object):
         self.menu_action = menu_bar.insertMenu(
             self.iface.firstRightStandardMenu().menuAction(), self.menu)
 
-        # # Action to drive ipt
-        # self.add_menu_item("ipt",
-        #                    ":/plugins/irmt/ipt.svg",
-        #                    u"OpenQuake Input Preparation Toolkit",
-        #                    self.ipt,
-        #                    enable=self.experimental_enabled(),
-        #                    submenu='OQ Engine',
-        #                    add_to_toolbar=True)
-        # # Action to drive taxtweb
-        # self.add_menu_item("taxtweb",
-        #                    ":/plugins/irmt/taxtweb.svg",
-        #                    u"OpenQuake TaxtWEB",
-        #                    self.taxtweb,
-        #                    enable=self.experimental_enabled(),
-        #                    submenu='OQ Engine',
-        #                    add_to_toolbar=True)
         # Action to drive the oq-engine server
         self.add_menu_item("drive_engine_server",
                            ":/plugins/irmt/drive_oqengine.svg",
@@ -313,29 +286,6 @@ class Irmt(object):
             QgsProject.instance().addMapLayer(processed_layer)
             self.iface.setActiveLayer(processed_layer)
             self.iface.zoomToActiveLayer()
-
-    def ipt(self):
-        if self.ipt_dlg is None:
-            # we need self because ipt must be able to drive the oq-engine
-            self.ipt_dlg = IptDialog(self.ipt_dir, self)
-        self.ipt_dlg.show()
-        self.ipt_dlg.raise_()
-
-    def taxtweb(self):
-        if self.taxtweb_dlg is None:
-            self.instantiate_taxonomy_dlg()
-            self.taxtweb_dlg = TaxtwebDialog(self.taxonomy_dlg)
-        self.taxtweb_dlg.show()
-        self.taxtweb_dlg.raise_()
-
-    def instantiate_taxonomy_dlg(self):
-        if self.taxonomy_dlg is None:
-            self.taxonomy_dlg = TaxonomyDialog()
-
-    def taxonomy(self):
-        self.instantiate_taxonomy_dlg()
-        self.taxonomy_dlg.show()
-        self.taxonomy_dlg.raise_()
 
     def on_drive_oq_engine_server_btn_clicked(self):
         # we can't call drive_oq_engine_server directly, otherwise the signal
@@ -669,17 +619,3 @@ class Irmt(object):
 
     def on_viewer_dock_visibility_changed(self, visible):
         self.registered_actions['toggle_viewer_dock'].setChecked(visible)
-
-    def get_ipt_dir(self):
-        home_dir = os.path.expanduser("~")
-        ipt_dir = os.path.join(home_dir, ".gem", "irmt", "ipt")
-        if not os.path.exists(ipt_dir):
-            os.makedirs(ipt_dir)
-        return ipt_dir
-
-    def get_ipt_checksum(self):
-        unique_filename = ".%s" % uuid.uuid4().hex
-        checksum_file_path = os.path.join(self.ipt_dir, unique_filename)
-        with open(checksum_file_path, "w", newline='') as f:
-            f.write(os.urandom(32))
-        return checksum_file_path, get_checksum(checksum_file_path)
