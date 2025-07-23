@@ -273,18 +273,4 @@ class SettingsDialog(QDialog, FORM_CLASS):
         self.save_state()
         if self.irmt_main is not None:
             self.irmt_main.reset_drive_oq_engine_server_dlg()
-        current_engine_hostname = QSettings().value('irmt/engine_hostname')
-        # in case the engine hostname was modified, the embedded web apps that
-        # were using the old hostname must be refreshed using the new one
-        # (set_host is called in their __init__ when dialogs are created, and
-        # it needs to be called again here if those dialogs are already
-        # initialized and pointing to a previous engine server)
-        if (current_engine_hostname != self.initial_engine_hostname
-                and self.irmt_main is not None):
-            for dlg in (self.irmt_main.ipt_dlg,
-                        self.irmt_main.taxtweb_dlg,
-                        self.irmt_main.taxonomy_dlg):
-                if dlg is not None:
-                    dlg.set_host()
-                    dlg.load_homepage()
         super(SettingsDialog, self).accept()
