@@ -14,9 +14,6 @@
     <file alias="manual.svg">resources/manual.svg</file>
     <file alias="drive_oqengine.svg">resources/drive_oqengine.svg</file>
     <file alias="plot.svg">resources/plot.svg</file>
-    <file alias="ipt.svg">resources/ipt.svg</file>
-    <file alias="taxtweb.svg">resources/taxtweb.svg</file>
-    <file alias="taxonomy.svg">resources/taxonomy.svg</file>
     <file alias="icon.svg.png">resources/icon.svg.png</file>
     <file alias="oq_logo.svg">resources/oq_logo.svg</file>
     <file alias="oq_logo.svg.png">resources/oq_logo.svg.png</file>

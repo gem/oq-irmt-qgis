@@ -18,10 +18,6 @@ corresponding documentation.
 
 * OpenQuake Engine
 
-  .. * |icon-ipt| `OpenQuake Risk Input Preparation Toolkit <https://github.com/gem/oq-platform-ipt>`_:
-  ..   Online tools used to create exposure, fragility and vulnerability risk input models.
-  .. * |icon-taxtweb| `OpenQuake TaxtWEB <https://github.com/gem/oq-platform-taxtweb>`_:
-  ..   Online graphical tool for editing GEM Taxonomy strings.
   * |icon-drive-oq-engine| :ref:`chap-drive-oq-engine`
 
 * Utilities
@@ -43,5 +39,3 @@ corresponding documentation.
 .. |icon-manual| image:: images/iconManual.png
 .. |icon-plot| image:: images/iconPlot.png
 .. |icon-drive-oq-engine| image:: images/iconDriveOqEngine.png
-.. |icon-ipt| image:: images/iconIpt.png
-.. |icon-taxtweb| image:: images/iconTaxtweb.png
