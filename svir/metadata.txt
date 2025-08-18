@@ -24,6 +24,7 @@ email=staff.it@globalquakemodel.org
 # Uncomment the following line and add your changelog entries:
 changelog=
     3.23.2
+    * All references to the deprecated QtWebKit and to the related experimental applications were removed
     * The 'Remove' calculation button is not shown if the current user is not the owner of the calculation
     3.23.1
     * Fixed zonal aggregation for the damages_rlzs oq-engine output
