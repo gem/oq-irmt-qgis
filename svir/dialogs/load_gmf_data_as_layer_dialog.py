@@ -206,9 +206,10 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
             imts = list(self.oqparam['hazard_imtls'])
         except KeyError:
             imts = list(self.oqparam['risk_imtls'])
-        # add secondary perils (if present) to the list of imts
-        if 'sec_imts' in self.oqparam:
-            imts.extend(self.oqparam['sec_imts'])
+        # Add secondary perils (if present) to the list of imts.
+        # Engine-side set_imts is a property reading secondary imts from the
+        # SecondaryPeril subclasses; plugin-side sec_imts is missing, so we have to
+        # populate it manually
         if 'secondary_perils' in self.oqparam:
             secondary_perils = self.oqparam['secondary_perils']
             for secondary_peril in secondary_perils:
