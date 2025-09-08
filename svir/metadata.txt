@@ -13,7 +13,7 @@ name=OpenQuake Integrated Risk Modelling Toolkit
 qgisMinimumVersion=3.0
 description=Tools to drive the OpenQuake Engine, running calculations and visualizing their parameters and outputs
 about=This plugin allows users to drive OpenQuake Engine calculations (https://github.com/gem/oq-engine) of physical hazard and risk, and to load the corresponding outputs as QGIS layers. For those outputs, data visualization tools are provided.
-version=3.23.2
+version=3.23.3
 author=GEM Foundation
 email=staff.it@globalquakemodel.org
 
@@ -23,6 +23,8 @@ email=staff.it@globalquakemodel.org
 
 # Uncomment the following line and add your changelog entries:
 changelog=
+    3.23.3
+    * The loader for ground motion fields was extended to make it possible to select secondary perils specified as 'secondary_perils' in oqparam, and to style the loaded layer accordingly
     3.23.2
     * All references to the deprecated QtWebKit and to the related experimental applications were removed
     * The 'Remove' calculation button is not shown if the current user is not the owner of the calculation
