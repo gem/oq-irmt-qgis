@@ -79,7 +79,7 @@ jobs:
           oq reset -y
           oq restore https://artifacts.openquake.org/travis/oqdata-${ENGINE_BR}.zip ~/oqdata
           ls $HOME/openquake/lib/python$PY_VER/site-packages/
-          $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/manage.py createnormaluser level_1_user testuser1@test.com --level 1 --password level_1_password --no-email
+          sudo -u openquake python$PY_VER $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/manage.py createnormaluser level_1_user testuser1@test.com --level 1 --password level_1_password --no-email
           oq db "UPDATE job SET user_name = 'level_1_user'"
           oq --version
           for file in $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/templates/registration/*.default.tmpl; do
