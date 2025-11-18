@@ -78,7 +78,7 @@ jobs:
           oq engine --upgrade-db
           oq reset -y
           oq restore https://artifacts.openquake.org/travis/oqdata-${ENGINE_BR}.zip ~/oqdata
-          oq createnormaluser level_1_user testuser1@test.com --level 1 --password level_1_password --no-email
+          ./openquake/server/manage.py createnormaluser level_1_user testuser1@test.com --level 1 --password level_1_password --no-email
           oq db "UPDATE job SET user_name = 'level_1_user'"
           oq --version
           for file in openquake/server/templates/registration/*.default.tmpl; do
