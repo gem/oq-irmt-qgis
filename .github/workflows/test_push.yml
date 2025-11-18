@@ -78,9 +78,9 @@ jobs:
           oq reset -y
           echo "Restore OQ-Engine demos for $ENGINE_BR branch "
           oq restore https://artifacts.openquake.org/travis/oqdata-${ENGINE_BR}.zip ~/oqdata
-          python $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/manage.py help
+          OQ_APPLICATION_MODE=RESTRICTED python $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/manage.py migrate
           # python $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/manage.py createnormaluser level_1_user testuser1@test.com --level 1 --password level_1_password --no-email
-          DJANGO_SUPERUSER_PASSWORD="level_0_password" python $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/manage.py createsuperuser --no-input --username level_0_user --email testuser1@test.com
+          OQ_APPLICATION_MODE=RESTRICTED DJANGO_SUPERUSER_PASSWORD="level_0_password" python $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/manage.py createsuperuser --no-input --username level_0_user --email testuser1@test.com
           oq db "update auth_user set is_superuser = 0, is_staff = 0 where username = 'level_0_user'"
           oq db "UPDATE job SET user_name = 'level_0_user'"
           oq --version
