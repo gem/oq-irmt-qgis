@@ -73,13 +73,13 @@ jobs:
           echo "Engine branch: ${ENGINE_BR}"
           python$PY_VER install.py user --version=${ENGINE_BR}
           export PIP_DEFAULT_TIMEOUT=100
-          echo "Restore OQ-Engine demos for $ENGINE_BR branch "
           source $HOME/openquake/bin/activate
           oq engine --upgrade-db
           oq reset -y
+          echo "Restore OQ-Engine demos for $ENGINE_BR branch "
           oq restore https://artifacts.openquake.org/travis/oqdata-${ENGINE_BR}.zip ~/oqdata
           ls $HOME/openquake/lib/python$PY_VER/site-packages/
-          sudo -u openquake python$PY_VER $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/manage.py createnormaluser level_1_user testuser1@test.com --level 1 --password level_1_password --no-email
+          python$PY_VER $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/manage.py createnormaluser level_1_user testuser1@test.com --level 1 --password level_1_password --no-email
           oq db "UPDATE job SET user_name = 'level_1_user'"
           oq --version
           for file in $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/templates/registration/*.default.tmpl; do
