@@ -78,10 +78,11 @@ jobs:
           oq engine --upgrade-db
           oq reset -y
           oq restore https://artifacts.openquake.org/travis/oqdata-${ENGINE_BR}.zip ~/oqdata
-          ./openquake/server/manage.py createnormaluser level_1_user testuser1@test.com --level 1 --password level_1_password --no-email
+          ls $HOME/openquake/lib/python$PY_VER/site-packages/
+          $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/manage.py createnormaluser level_1_user testuser1@test.com --level 1 --password level_1_password --no-email
           oq db "UPDATE job SET user_name = 'level_1_user'"
           oq --version
-          for file in openquake/server/templates/registration/*.default.tmpl; do
+          for file in $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/templates/registration/*.default.tmpl; do
               cp -- "$file" "${file%.default.tmpl}"
           done
           OQ_APPLICATION_MODE=RESTRICTED oq webui start 172.17.0.1:8800 --skip-browser &> webui.log &
