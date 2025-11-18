@@ -86,8 +86,14 @@ jobs:
           export PIP_DEFAULT_TIMEOUT=100
           echo "Restore ${{matrix.DEMOS}} demos for $ENGINE_BR branch "
           source $HOME/openquake/bin/activate
+          oq engine --upgrade-db
           oq reset -y
           oq restore https://artifacts.openquake.org/travis/${{matrix.DEMOS}}-${ENGINE_BR}.zip ~/oqdata
+          oq createnormaluser level_1_user testuser1@test.com --level 1 --password level_1_password --no-email
+          oq db "UPDATE job SET user_name = 'level_1_user'"
+          for file in openquake/server/templates/registration/*.default.tmpl; do
+              cp -- "$file" "${file%.default.tmpl}"
+          done
           oq webui start 172.17.0.1:8800 --skip-browser &> webui.log &
           echo "Waiting WEBUI up on port 8800...."
           while ! nc -z 172.17.0.1 8800; do

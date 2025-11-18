@@ -269,8 +269,12 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                                          engine_major_minor[1]))
             log_msg(msg, level='W', message_bar=self.message_bar)
 
-    def login(self):
+    def login(self, username=None, password=None):
         self.session = Session()
+        if self.forced_hostname:  # e.g. in tests
+            assert username is not None
+            assert password is not None
+            self.username = username
         if not self.forced_hostname:
             self.hostname, self.username, password = get_credentials()
         # try without authentication (if authentication is disabled server

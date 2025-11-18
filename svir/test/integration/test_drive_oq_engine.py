@@ -148,6 +148,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         cls.loading_completed = {}
         cls.loading_exception = {}
         cls.irmt.drive_oq_engine_server(show=False, hostname=cls.hostname)
+        cls.irmt.drive_oq_engine_server_dlg.login(
+            username='level_1_user', password='level_1_password')
         # NOTE: calc_list must be retrieved BEFORE starting any test
         cls.calc_list = cls.irmt.drive_oq_engine_server_dlg.calc_list
         if isinstance(cls.calc_list, Exception):
@@ -408,7 +410,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             dlg.loss_type_cbx.setCurrentIndex(0)
             # FIXME: we need to do dlg.accept() also for the case
             #        performing the aggregation by zone
-        elif dlg.output_type in ('damages-rlzs', 'damages-stats') and aggregate_by_site:
+        elif dlg.output_type in ('damages-rlzs',
+                                 'damages-stats') and aggregate_by_site:
             # FIXME: testing only for selected taxonomy
             dlg.load_selected_only_ckb.setChecked(True)
             assert_and_emit(
