@@ -149,7 +149,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         cls.loading_exception = {}
         cls.irmt.drive_oq_engine_server(show=False, hostname=cls.hostname)
         cls.irmt.drive_oq_engine_server_dlg.login(
-            username='level_1_user', password='level_1_password')
+            username='level_0_user', password='level_0_password')
         # NOTE: calc_list must be retrieved BEFORE starting any test
         cls.calc_list = cls.irmt.drive_oq_engine_server_dlg.calc_list
         if isinstance(cls.calc_list, Exception):
