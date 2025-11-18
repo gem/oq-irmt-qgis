@@ -84,9 +84,9 @@ jobs:
           oq db "update auth_user set is_superuser = 0, is_staff = 0 where username = 'level_0_user'"
           oq db "UPDATE job SET user_name = 'level_0_user'"
           oq --version
-          # for file in $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/templates/registration/*.default.tmpl; do
-          #     cp -- "$file" "${file%.default.tmpl}"
-          # done
+          for file in $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/templates/registration/*.default.tmpl; do
+              cp -- "$file" "${file%.default.tmpl}"
+          done
           OQ_APPLICATION_MODE=RESTRICTED oq webui start 172.17.0.1:8800 --skip-browser &> webui.log &
           echo "Waiting WEBUI up on port 8800...."
           while ! nc -z 172.17.0.1 8800; do
