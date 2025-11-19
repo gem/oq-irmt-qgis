@@ -76,11 +76,14 @@ jobs:
           source $HOME/openquake/bin/activate
           oq engine --upgrade-db
           oq reset -y
-          ls $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/templates/
-          ls $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/templates/registration
-          for file in $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/templates/registration/*.default.tmpl; do
-              cp -- "$file" "${file%.default.tmpl}"
-          done
+          # NOTE: I can't find the templates to actualize, so I am creating empty files instead (they should not be used in this case)
+          # for file in $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/templates/registration/*.default.tmpl; do
+          #     cp -- "$file" "${file%.default.tmpl}"
+          # done
+          touch $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/templates/registration/normal_user_creation_email_content.txt
+          touch $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/templates/registration/password_reset_email_content.txt
+          touch $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/templates/registration/normal_user_creation_email_subject.txt
+          touch $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/templates/registration/password_reset_email_subject.txt
           echo "Restore OQ-Engine demos for $ENGINE_BR branch "
           oq restore https://artifacts.openquake.org/travis/oqdata-${ENGINE_BR}.zip ~/oqdata
           OQ_APPLICATION_MODE=RESTRICTED python $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/manage.py migrate
