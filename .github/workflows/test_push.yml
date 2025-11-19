@@ -76,6 +76,8 @@ jobs:
           source $HOME/openquake/bin/activate
           oq engine --upgrade-db
           oq reset -y
+          ls $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/templates/
+          ls $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/templates/registration
           for file in $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/templates/registration/*.default.tmpl; do
               cp -- "$file" "${file%.default.tmpl}"
           done
