@@ -293,10 +293,12 @@ class Irmt(object):
         # additional parameter)
         self.drive_oq_engine_server(show=True)
 
-    def drive_oq_engine_server(self, show=True, hostname=None):
+    def drive_oq_engine_server(
+            self, show=True, hostname=None, username=None, password=None):
         if self.drive_oq_engine_server_dlg is None:
             self.drive_oq_engine_server_dlg = DriveOqEngineServerDialog(
-                self.iface, self.viewer_dock, hostname=hostname)
+                self.iface, self.viewer_dock, hostname=hostname,
+                username=username, password=password)
         if show:
             self.drive_oq_engine_server_dlg.show()
             self.drive_oq_engine_server_dlg.raise_()
