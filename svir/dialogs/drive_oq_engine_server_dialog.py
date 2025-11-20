@@ -1158,7 +1158,6 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.timer.timeout.connect(self.refresh_calc_list)
         self.timer.start(5000)  # refresh calc list time in milliseconds
         self.is_polling = True
-        self.reconnect_btn.setEnabled(False)
 
     def stop_polling(self):
         # NOTE: perhaps we should disconnect the timeout signal here?
@@ -1166,7 +1165,6 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             self.timer.stop()
         # QObject.disconnect(self.timer, SIGNAL('timeout()'))
         self.is_polling = False
-        self.reconnect_btn.setEnabled(True)
 
     @pyqtSlot()
     def on_run_calc_btn_clicked(self):
