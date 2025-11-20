@@ -85,8 +85,8 @@ jobs:
           touch $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/templates/registration/password_reset_email_subject.txt
           echo "Restore OQ-Engine demos for $ENGINE_BR branch "
           oq restore https://artifacts.openquake.org/travis/oqdata-${ENGINE_BR}.zip ~/oqdata
-          oq engine --upgrade-db
           OQ_APPLICATION_MODE=RESTRICTED python $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/manage.py migrate
+          oq engine --upgrade-db
           # python $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/manage.py createnormaluser level_1_user testuser1@test.com --level 1 --password level_1_password --no-email
           OQ_APPLICATION_MODE=RESTRICTED DJANGO_SUPERUSER_PASSWORD="level_0_password" python $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/manage.py createsuperuser --no-input --username level_0_user --email testuser1@test.com
           oq db "update auth_user set is_superuser = 0, is_staff = 0 where username = 'level_0_user'"
