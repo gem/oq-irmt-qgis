@@ -304,8 +304,9 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         # FIXME: enable the user to set verify=True
         resp = requests.get(output_download_url, verify=False)
         if not resp.ok:
-            print(f'\t\tERROR: {resp.text}')
-            raise Exception(resp.text)
+            print(f'\t\t{dir(resp)=}')
+            print(f'\t\tERROR: {resp.content}')
+            raise Exception(resp.content)
         filename = resp.headers['content-disposition'].split('filename=')[1]
         filepath = os.path.join(dest_folder, filename)
         with open(filepath, "wb") as f:
