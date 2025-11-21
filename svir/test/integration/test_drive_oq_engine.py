@@ -294,23 +294,22 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         if calc_log:
             print(calc_log)
 
-    def download_output(self, output_id, outtype):
+    def download_output(self, output_id, filetype, output_type):
         dest_folder = tempfile.gettempdir()
         output_download_url = (
             "%s/v1/calc/result/%s?export_type=%s&dload=true" % (self.hostname,
                                                                 output_id,
-                                                                outtype))
+                                                                filetype))
         print('\t\tGET: %s' % output_download_url, file=sys.stderr)
         # FIXME: enable the user to set verify=True
         resp = requests.get(output_download_url, verify=False)
         if not resp.ok:
-            print(f'\t\t{dir(resp)=}')
+            print(f'\t\tERROR downloading {output_type}')
             print(f'\t\t{resp.status_code=}')
             print(f'\t\t{resp.content=}')
             print(f'\t\t{resp.text=}')
             print(f'\t\t{resp.reason=}')
             print(f'\t\t{resp.url=}')
-            print(f'\t\t{resp.is_redirect=}')
             raise Exception(resp)
         filename = resp.headers['content-disposition'].split('filename=')[1]
         filepath = os.path.join(dest_folder, filename)
@@ -515,7 +514,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             else:  # OQ_ZIPPED_TYPES
                 filetype = 'zip'
             # TODO: we should test the actual downloader, asynchronously
-            filepath = self.download_output(output['id'], filetype)
+            filepath = self.download_output(output['id'], filetype, output_type)
             assert filepath is not None
             self.irmt.iface.newProject()
             if output_type == 'fullreport':
