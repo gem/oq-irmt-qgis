@@ -306,7 +306,6 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         if not resp.ok:
             print(f'\t\tERROR downloading {output_type}')
             print(f'\t\t{resp.status_code=}')
-            print(f'\t\t{resp.content=}')
             print(f'\t\t{resp.text=}')
             print(f'\t\t{resp.reason=}')
             print(f'\t\t{resp.url=}')
