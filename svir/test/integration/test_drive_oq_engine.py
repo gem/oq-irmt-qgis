@@ -302,7 +302,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                                                                 filetype))
         print('\t\tGET: %s' % output_download_url, file=sys.stderr)
         # FIXME: enable the user to set verify=True
-        resp = requests.get(output_download_url, verify=False)
+        resp = self.irmt.drive_oq_engine_server_dlg.session.get(
+            output_download_url, verify=False)
         if not resp.ok:
             print(f'\t\tERROR downloading {output_type}: {resp.reason}')
             print(f'\t\t{resp.status_code=}')
