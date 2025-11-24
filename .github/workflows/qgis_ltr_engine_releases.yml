@@ -27,6 +27,7 @@ jobs:
         # NOTE: qgis:stable points to the latest release, whereas qgis:latest points to qgis master
         QGIS_DOCKER_VERSION: ['qgis/qgis:ltr', 'qgis/qgis:stable']
         DEMOS: ['oqdata', 'risk-oqdata']
+        PYTHON_VERSION: ['3.12']
     steps:
       - name: Clone Repository (Master)
         uses: actions/checkout@v4
@@ -39,7 +40,7 @@ jobs:
       - name: 🐍 Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: ${{ matrix.python-version }}
       - name: Prepare Start file for docker
         run: |
           set -x
@@ -61,9 +62,10 @@ jobs:
           chmod +x ./qgis_testrunner.sh
           chmod +x ./qgis_testrunner.py
           chmod +x ./startX.sh
-      - name: ⏳ Clone engine and restore oqdata and docker container
+      - name: ⏳ Clone/install engine and restore oqdata and docker container
         run: |
           set -x
+          PY_VER=${{ matrix.PYTHON_VERSION }}
           ENGINE_BR=${{ matrix.ENGINE_BR }}
           IRMT_BR=$ENGINE_BR
           git fetch
@@ -82,7 +84,7 @@ jobs:
           else
               RELEASE_VERSION=$ENGINE_BR
           fi
-          python3 install.py user --version=${RELEASE_VERSION}
+          python$PY_VER install.py user --version=${RELEASE_VERSION}
           export PIP_DEFAULT_TIMEOUT=100
           echo "Restore ${{matrix.DEMOS}} demos for $ENGINE_BR branch "
           source $HOME/openquake/bin/activate

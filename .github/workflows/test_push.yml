@@ -49,7 +49,7 @@ jobs:
           chmod +x ./qgis_testrunner.sh
           chmod +x ./qgis_testrunner.py
           chmod +x ./startX.sh
-      - name: ⏳ Install engine and restore oqdata and docker container
+      - name: ⏳ Clone/install engine and restore oqdata and docker container
         run: |
           PY_VER=${{ matrix.PYTHON_VERSION }}
           echo "Python version to use: $PY_VER"
