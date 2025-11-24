@@ -90,6 +90,8 @@ jobs:
           source $HOME/openquake/bin/activate
           oq reset -y
 
+          # TODO: Run tests using the engine in RESTRICTED application mode and logging in as a level 0 user
+
           # # NOTE: I can't find the templates to actualize, so I am creating empty files instead (they justt need to exist in this case)
           # touch $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/templates/registration/normal_user_creation_email_content.txt
           # touch $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/templates/registration/password_reset_email_content.txt
