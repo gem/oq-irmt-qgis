@@ -86,15 +86,26 @@ jobs:
           export PIP_DEFAULT_TIMEOUT=100
           echo "Restore ${{matrix.DEMOS}} demos for $ENGINE_BR branch "
           source $HOME/openquake/bin/activate
-          oq engine --upgrade-db
           oq reset -y
+
+          # NOTE: I can't find the templates to actualize, so I am creating empty files instead (they justt need to exist in this case)
+          touch $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/templates/registration/normal_user_creation_email_content.txt
+          touch $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/templates/registration/password_reset_email_content.txt
+          touch $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/templates/registration/normal_user_creation_email_subject.txt
+          touch $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/templates/registration/password_reset_email_subject.txt
+
           oq restore https://artifacts.openquake.org/travis/${{matrix.DEMOS}}-${ENGINE_BR}.zip ~/oqdata
-          ./openquake/server/manage.py createnormaluser level_1_user testuser1@test.com --level 1 --password level_1_password --no-email
-          oq db "UPDATE job SET user_name = 'level_1_user'"
-          for file in openquake/server/templates/registration/*.default.tmpl; do
-              cp -- "$file" "${file%.default.tmpl}"
-          done
-          oq webui start 172.17.0.1:8800 --skip-browser &> webui.log &
+
+          OQ_APPLICATION_MODE=RESTRICTED python $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/manage.py migrate
+
+          # NOTE: I would prefer to use the 'createnormaluser' command instead, but for some reason it was not working
+          # python $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/manage.py createnormaluser level_0_user testuser1@test.com --level 0 --password level_0_password --no-email
+          OQ_APPLICATION_MODE=RESTRICTED DJANGO_SUPERUSER_PASSWORD="level_0_password" python $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/manage.py createsuperuser --no-input --username level_0_user --email testuser0@test.com
+          oq db "update auth_user set is_superuser = 0, is_staff = 0 where username = 'level_0_user'"
+
+          oq db "UPDATE job SET user_name = 'level_0_user'"
+
+          OQ_APPLICATION_MODE=RESTRICTED oq webui start 172.17.0.1:8800 --skip-browser &> webui.log &
           echo "Waiting WEBUI up on port 8800...."
           while ! nc -z 172.17.0.1 8800; do
             sleep 5
