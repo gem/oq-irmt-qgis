@@ -90,6 +90,13 @@ jobs:
           source $HOME/openquake/bin/activate
           oq reset -y
 
+      - name: Setup SSH session to debug docker container
+        uses: mxschmitt/action-tmate@v3
+        timeout-minutes: 120
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
+
+      - name: Second step after ssh debug for engine and restore oqdata and docker container
+        run: |
           # TODO: Run tests using the engine in RESTRICTED application mode and logging in as a level 0 user
 
           # NOTE: I can't find the templates to actualize, so I am creating empty files instead (they justt need to exist in this case)
@@ -122,10 +129,6 @@ jobs:
             -e BRANCH="$IRMT_BR" -e ONLY_CALC_ID="$ONLY_CALC_ID" -e ONLY_OUTPUT_TYPE="$ONLY_OUTPUT_TYPE" -e GEM_QGIS_TEST=y ${{ matrix.QGIS_DOCKER_VERSION }} \
             bash -c "/tests_directory/startX.sh"
           sleep 10
-      - name: Setup SSH session to debug docker container
-        uses: mxschmitt/action-tmate@v3
-        timeout-minutes: 60
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
       - name: ℧ Run unit test
         run: |
           set -x
