@@ -22,11 +22,12 @@ jobs:
       matrix:
         # NOTE: it would be better to point to lts and latest if possible
         # NOTE: checking also master to make sure risk workshop demos keep working also on master
-        ENGINE_BR: ['engine-3.23', 'master']  # TODO: add latest when different from lts
+        ENGINE_BR: ['engine-3.23', 'engine-3.24', 'master']  # TODO: add latest when different from lts
         # NOTE: we might test also for qgis/qgis:3.22 that is the version of qgis-server that we are currently using in the Geoviewer, but it currently causes a segfault
         # NOTE: qgis:stable points to the latest release, whereas qgis:latest points to qgis master
         QGIS_DOCKER_VERSION: ['qgis/qgis:ltr', 'qgis/qgis:stable']
         DEMOS: ['oqdata', 'risk-oqdata']
+        PYTHON_VERSION: ['3.12']
     steps:
       - name: Clone Repository (Master)
         uses: actions/checkout@v4
@@ -39,7 +40,7 @@ jobs:
       - name: 🐍 Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: ${{ matrix.python-version }}
       - name: Prepare Start file for docker
         run: |
           set -x
@@ -61,9 +62,10 @@ jobs:
           chmod +x ./qgis_testrunner.sh
           chmod +x ./qgis_testrunner.py
           chmod +x ./startX.sh
-      - name: ⏳ Clone engine and restore oqdata and docker container
+      - name: ⏳ Clone/install engine and restore oqdata and docker container
         run: |
           set -x
+          PY_VER=${{ matrix.PYTHON_VERSION }}
           ENGINE_BR=${{ matrix.ENGINE_BR }}
           IRMT_BR=$ENGINE_BR
           git fetch
@@ -82,12 +84,32 @@ jobs:
           else
               RELEASE_VERSION=$ENGINE_BR
           fi
-          python3 install.py user --version=${RELEASE_VERSION}
+          python$PY_VER install.py user --version=${RELEASE_VERSION}
           export PIP_DEFAULT_TIMEOUT=100
           echo "Restore ${{matrix.DEMOS}} demos for $ENGINE_BR branch "
           source $HOME/openquake/bin/activate
           oq reset -y
+
+          # TODO: Run tests using the engine in RESTRICTED application mode and logging in as a level 0 user
+
+          # # NOTE: I can't find the templates to actualize, so I am creating empty files instead (they justt need to exist in this case)
+          # touch $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/templates/registration/normal_user_creation_email_content.txt
+          # touch $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/templates/registration/password_reset_email_content.txt
+          # touch $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/templates/registration/normal_user_creation_email_subject.txt
+          # touch $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/templates/registration/password_reset_email_subject.txt
+
           oq restore https://artifacts.openquake.org/travis/${{matrix.DEMOS}}-${ENGINE_BR}.zip ~/oqdata
+
+          # OQ_APPLICATION_MODE=RESTRICTED python $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/manage.py migrate
+
+          # # NOTE: I would prefer to use the 'createnormaluser' command instead, but for some reason it was not working
+          # # python $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/manage.py createnormaluser level_0_user testuser1@test.com --level 0 --password level_0_password --no-email
+          # OQ_APPLICATION_MODE=RESTRICTED DJANGO_SUPERUSER_PASSWORD="level_0_password" python $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/manage.py createsuperuser --no-input --username level_0_user --email testuser0@test.com
+          # oq db "update auth_user set is_superuser = 0, is_staff = 0 where username = 'level_0_user'"
+
+          # oq db "UPDATE job SET user_name = 'level_0_user'"
+
+          # OQ_APPLICATION_MODE=RESTRICTED oq webui start 172.17.0.1:8800 --skip-browser &> webui.log &
           oq webui start 172.17.0.1:8800 --skip-browser &> webui.log &
           echo "Waiting WEBUI up on port 8800...."
           while ! nc -z 172.17.0.1 8800; do

@@ -147,7 +147,9 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         cls.global_time_consuming_outputs = []
         cls.loading_completed = {}
         cls.loading_exception = {}
-        cls.irmt.drive_oq_engine_server(show=False, hostname=cls.hostname)
+        cls.irmt.drive_oq_engine_server(
+            show=False, hostname=cls.hostname,
+            username='level_0_user', password='level_0_password')
         # NOTE: calc_list must be retrieved BEFORE starting any test
         cls.calc_list = cls.irmt.drive_oq_engine_server_dlg.calc_list
         if isinstance(cls.calc_list, Exception):
@@ -292,17 +294,21 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         if calc_log:
             print(calc_log)
 
-    def download_output(self, output_id, outtype):
+    def download_output(self, output_id, filetype, output_type):
         dest_folder = tempfile.gettempdir()
         output_download_url = (
             "%s/v1/calc/result/%s?export_type=%s&dload=true" % (self.hostname,
                                                                 output_id,
-                                                                outtype))
+                                                                filetype))
         print('\t\tGET: %s' % output_download_url, file=sys.stderr)
         # FIXME: enable the user to set verify=True
-        resp = requests.get(output_download_url, verify=False)
+        resp = self.irmt.drive_oq_engine_server_dlg.session.get(
+            output_download_url, verify=False)
         if not resp.ok:
-            raise Exception(resp.text)
+            print(f'\t\tERROR downloading {output_type}: {resp.reason}')
+            print(f'\t\t{resp.status_code=}')
+            print(f'\t\t{resp.text=}')
+            raise Exception(resp)
         filename = resp.headers['content-disposition'].split('filename=')[1]
         filepath = os.path.join(dest_folder, filename)
         with open(filepath, "wb") as f:
@@ -408,7 +414,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             dlg.loss_type_cbx.setCurrentIndex(0)
             # FIXME: we need to do dlg.accept() also for the case
             #        performing the aggregation by zone
-        elif dlg.output_type in ('damages-rlzs', 'damages-stats') and aggregate_by_site:
+        elif dlg.output_type in ('damages-rlzs',
+                                 'damages-stats') and aggregate_by_site:
             # FIXME: testing only for selected taxonomy
             dlg.load_selected_only_ckb.setChecked(True)
             assert_and_emit(
@@ -505,7 +512,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             else:  # OQ_ZIPPED_TYPES
                 filetype = 'zip'
             # TODO: we should test the actual downloader, asynchronously
-            filepath = self.download_output(output['id'], filetype)
+            filepath = self.download_output(output['id'], filetype, output_type)
             assert filepath is not None
             self.irmt.iface.newProject()
             if output_type == 'fullreport':
