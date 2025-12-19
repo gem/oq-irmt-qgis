@@ -1,5 +1,12 @@
 name: PR unit and integration tests
 on:
+  workflow_dispatch:
+    inputs:
+      debug_enabled:
+        type: boolean
+        description: "Run the build with tmate debugging enabled"
+        required: false
+        default: false
   push:
     branches:
       - '**'
