@@ -63,7 +63,7 @@ jobs:
           chmod +x ./qgis_testrunner.sh
           chmod +x ./qgis_testrunner.py
           chmod +x ./startX.sh
-      - name: ⏳ Clone/install engine and restore oqdata and docker container
+      - name: ⏳ Clone/install engine and restore oqdata
         run: |
           set -x
           PY_VER=${{ matrix.PYTHON_VERSION }}
@@ -113,7 +113,23 @@ jobs:
             python $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/manage.py createuser level_0_user testuser1@test.com --level 0 --password level_0_password --no-email
             oq db "UPDATE job SET user_name = 'level_0_user'"
           fi
+      - name: Setup SSH session to debug docker container
+        uses: mxschmitt/action-tmate@v3
+        timeout-minutes: 120
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
 
+      - name: ⏳ Start WebUI and run docker
+        run: |
+          set -x
+          ENGINE_BR=${{ matrix.ENGINE_BR }}
+          IRMT_BR=$ENGINE_BR
+          if [[ "$ENGINE_BR" == "master" ]]; then
+            # TODO: in future releases we should test both RESTRICTED and PUBLIC with all engine versions
+            export OQ_APPLICATION_MODE="RESTRICTED"
+          else
+            export OQ_APPLICATION_MODE="PUBLIC"
+          fi
+          source $HOME/openquake/bin/activate
           oq webui start 172.17.0.1:8800 --skip-browser &> webui.log &
           echo "Waiting WEBUI up on port 8800...."
           while ! nc -z 172.17.0.1 8800; do
@@ -127,10 +143,6 @@ jobs:
             -e BRANCH="$IRMT_BR" -e ONLY_CALC_ID="$ONLY_CALC_ID" -e ONLY_OUTPUT_TYPE="$ONLY_OUTPUT_TYPE" -e GEM_QGIS_TEST=y ${{ matrix.QGIS_DOCKER_VERSION }} \
             bash -c "/tests_directory/startX.sh"
           sleep 10
-      - name: Setup SSH session to debug docker container
-        uses: mxschmitt/action-tmate@v3
-        timeout-minutes: 120
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
       - name: ℧ Run unit test
         run: |
           set -x
