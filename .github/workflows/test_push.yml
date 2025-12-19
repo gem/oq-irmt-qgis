@@ -19,10 +19,11 @@ jobs:
         QGIS_DOCKER_VERSION: ['qgis/qgis:ltr', 'qgis/qgis:stable']
         # NOTE: qgis uses its own python, but we want to check if there are problems interfacing with the engine while it uses different python versions
         PYTHON_VERSION: ['3.11', '3.12']
+        ENGINE_APPLICATION_MODE: ['PUBLIC', 'RESTRICTED']
     runs-on: ${{ matrix.os }}
     env:
       GITHUB_DEF_BR: master
-      OQ_APPLICATION_MODE: RESTRICTED
+      OQ_APPLICATION_MODE: ${{ matrix.ENGINE_APPLICATION_MODE }}
     steps:
       - uses: actions/checkout@v4
       - name: 🐍 Set up Python
@@ -77,19 +78,22 @@ jobs:
           source $HOME/openquake/bin/activate
           oq reset -y
 
-          # NOTE: I can't find the templates to actualize, so I am creating empty files instead (they just need to exist in this case)
-          touch $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/templates/registration/user_creation_email_content.txt
-          touch $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/templates/registration/password_reset_email_content.txt
-          touch $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/templates/registration/user_creation_email_subject.txt
-          touch $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/templates/registration/password_reset_email_subject.txt
+          if [ "${{ matrix.OQ_APPLICATION_MODE }}" = "RESTRICTED" ]; then
+            # NOTE: I can't find the templates to actualize, so I am creating empty files instead (they just need to exist in this case)
+            touch $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/templates/registration/user_creation_email_content.txt
+            touch $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/templates/registration/password_reset_email_content.txt
+            touch $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/templates/registration/user_creation_email_subject.txt
+            touch $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/templates/registration/password_reset_email_subject.txt
+          fi
 
           echo "Restore OQ-Engine demos for $ENGINE_BR branch "
           oq restore https://artifacts.openquake.org/travis/oqdata-${ENGINE_BR}.zip ~/oqdata
           python $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/manage.py migrate
 
-          python $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/manage.py createuser level_0_user testuser1@test.com --level 0 --password level_0_password --no-email
-
-          oq db "UPDATE job SET user_name = 'level_0_user'"
+          if [ "${{ matrix.OQ_APPLICATION_MODE }}" = "RESTRICTED" ]; then
+            python $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/manage.py createuser level_0_user testuser1@test.com --level 0 --password level_0_password --no-email
+            oq db "UPDATE job SET user_name = 'level_0_user'"
+          fi
 
           oq --version
           oq webui start 172.17.0.1:8800 --skip-browser &> webui.log &
