@@ -68,11 +68,11 @@ jobs:
           PY_VER=${{ matrix.PYTHON_VERSION }}
           ENGINE_BR=${{ matrix.ENGINE_BR }}
           IRMT_BR=$ENGINE_BR
-          if [[ $ENGINE_BR == 'master' ]]; then
+          if [[ "$ENGINE_BR" == "master" ]]; then
             # TODO: in future releases we should test both RESTRICTED and PUBLIC with all engine versions
-            OQ_APPLICATION_MODE="RESTRICTED"
+            export OQ_APPLICATION_MODE="RESTRICTED"
           else
-            OQ_APPLICATION_MODE="PUBLIC"
+            export OQ_APPLICATION_MODE="PUBLIC"
           fi
           git fetch
           git checkout $IRMT_BR
@@ -96,7 +96,7 @@ jobs:
           source $HOME/openquake/bin/activate
           oq reset -y
 
-          if [[ $OQ_APPLICATION_MODE == 'RESTRICTED' ]]; then
+          if [[ "$OQ_APPLICATION_MODE" == "RESTRICTED" ]]; then
             # NOTE: I can't find the templates to actualize, so I am creating empty files instead (they just need to exist in this case)
             touch $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/templates/registration/user_creation_email_content.txt
             touch $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/templates/registration/password_reset_email_content.txt
@@ -108,7 +108,7 @@ jobs:
 
           python $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/manage.py migrate
 
-          if [[ $OQ_APPLICATION_MODE == 'RESTRICTED' ]]; then
+          if [[ "$OQ_APPLICATION_MODE" == "RESTRICTED" ]]; then
             python $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/manage.py createuser level_0_user testuser1@test.com --level 0 --password level_0_password --no-email
             oq db "UPDATE job SET user_name = 'level_0_user'"
           fi
