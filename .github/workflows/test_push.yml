@@ -8,7 +8,7 @@ on:
 
 jobs:
   Tests_and_docs:
-    name: QGIS ${{ matrix.QGIS_DOCKER_VERSION }} Py${{ matrix.PYTHON_VERSION }} ${{ matrix.ENGINE_APPLICATION_MODE }}
+    name: ${{ matrix.QGIS_DOCKER_VERSION }} Py${{ matrix.PYTHON_VERSION }} ${{ matrix.ENGINE_APPLICATION_MODE }}
     strategy:
       fail-fast: false
       matrix:

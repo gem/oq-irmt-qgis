@@ -16,7 +16,7 @@ on:
 
 jobs:
   Tests_and_docs:
-    name: OQ ${{ matrix.ENGINE_BR }} QGIS ${{ matrix.QGIS_DOCKER_VERSION }} ${{ matrix.DEMOS }}
+    name: OQ ${{ matrix.ENGINE_BR }} ${{ matrix.QGIS_DOCKER_VERSION }} ${{ matrix.DEMOS }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
