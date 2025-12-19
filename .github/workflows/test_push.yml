@@ -78,7 +78,7 @@ jobs:
           source $HOME/openquake/bin/activate
           oq reset -y
 
-          if [ "${{ matrix.OQ_APPLICATION_MODE }}" = "RESTRICTED" ]; then
+          if [ "$(OQ_APPLICATION_MODE)" = "RESTRICTED" ]; then
             # NOTE: I can't find the templates to actualize, so I am creating empty files instead (they just need to exist in this case)
             touch $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/templates/registration/user_creation_email_content.txt
             touch $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/templates/registration/password_reset_email_content.txt
@@ -90,7 +90,7 @@ jobs:
           oq restore https://artifacts.openquake.org/travis/oqdata-${ENGINE_BR}.zip ~/oqdata
           python $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/manage.py migrate
 
-          if [ "${{ matrix.OQ_APPLICATION_MODE }}" = "RESTRICTED" ]; then
+          if [ "$(OQ_APPLICATION_MODE)" = "RESTRICTED" ]; then
             python $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/manage.py createuser level_0_user testuser1@test.com --level 0 --password level_0_password --no-email
             oq db "UPDATE job SET user_name = 'level_0_user'"
           fi
