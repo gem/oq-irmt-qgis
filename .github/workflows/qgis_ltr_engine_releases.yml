@@ -28,8 +28,6 @@ jobs:
         QGIS_DOCKER_VERSION: ['qgis/qgis:ltr', 'qgis/qgis:stable']
         DEMOS: ['oqdata', 'risk-oqdata']
         PYTHON_VERSION: ['3.12']
-    env:
-      OQ_APPLICATION_MODE: RESTRICTED
     steps:
       - name: Clone Repository (Master)
         uses: actions/checkout@v4
@@ -70,6 +68,12 @@ jobs:
           PY_VER=${{ matrix.PYTHON_VERSION }}
           ENGINE_BR=${{ matrix.ENGINE_BR }}
           IRMT_BR=$ENGINE_BR
+          if [[ $ENGINE_BR == 'master' ]]; then
+            # TODO: in future releases we should test both RESTRICTED and PUBLIC with all engine versions
+            OQ_APPLICATION_MODE="RESTRICTED"
+          else
+            OQ_APPLICATION_MODE="PUBLIC"
+          fi
           git fetch
           git checkout $IRMT_BR
           curl -O https://raw.githubusercontent.com/gem/oq-engine/master/install.py
@@ -92,19 +96,22 @@ jobs:
           source $HOME/openquake/bin/activate
           oq reset -y
 
-          # NOTE: I can't find the templates to actualize, so I am creating empty files instead (they just need to exist in this case)
-          touch $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/templates/registration/user_creation_email_content.txt
-          touch $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/templates/registration/password_reset_email_content.txt
-          touch $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/templates/registration/user_creation_email_subject.txt
-          touch $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/templates/registration/password_reset_email_subject.txt
+          if [[ $OQ_APPLICATION_MODE == 'RESTRICTED' ]]; then
+            # NOTE: I can't find the templates to actualize, so I am creating empty files instead (they just need to exist in this case)
+            touch $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/templates/registration/user_creation_email_content.txt
+            touch $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/templates/registration/password_reset_email_content.txt
+            touch $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/templates/registration/user_creation_email_subject.txt
+            touch $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/templates/registration/password_reset_email_subject.txt
+          fi
 
           oq restore https://artifacts.openquake.org/travis/${{matrix.DEMOS}}-${ENGINE_BR}.zip ~/oqdata
 
           python $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/manage.py migrate
 
-          python $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/manage.py createuser level_0_user testuser1@test.com --level 0 --password level_0_password --no-email
-
-          oq db "UPDATE job SET user_name = 'level_0_user'"
+          if [[ $OQ_APPLICATION_MODE == 'RESTRICTED' ]]; then
+            python $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/manage.py createuser level_0_user testuser1@test.com --level 0 --password level_0_password --no-email
+            oq db "UPDATE job SET user_name = 'level_0_user'"
+          fi
 
           oq webui start 172.17.0.1:8800 --skip-browser &> webui.log &
           echo "Waiting WEBUI up on port 8800...."
