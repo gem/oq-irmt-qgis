@@ -21,7 +21,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        ENGINE_BR: ['engine-3.23']  # Use engine LTR ad in workshop
+        ENGINE_BR: ['engine-3.24']  # Use engine LTR ad in workshop
         QGIS_VERSION: ['ltr']
         DEMOS: ['oqdata', 'risk-oqdata']
     steps:
