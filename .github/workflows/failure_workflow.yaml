@@ -6,6 +6,7 @@ on:
     workflows:
       - "Tests vs Engine releases (also for risk demos)"
       - "PR unit and integration tests"
+      - "Windows Tests vs Engine releases (also for risk demos)"
     types:
       - completed
 
