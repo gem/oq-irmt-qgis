@@ -82,7 +82,7 @@ jobs:
           pwd
           python-qgis-ltr.bat -m pip list
           python-qgis-ltr.bat -m pip install pytest
-          python-qgis-ltr.bat -m pytest tests_directory/svir/test/unit/
+          python-qgis-ltr.bat -m pytest svir/test/unit/
       - name: Upload Artifact WebUI log
         uses: actions/upload-artifact@v4
         with:
