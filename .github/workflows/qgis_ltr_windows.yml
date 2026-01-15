@@ -21,7 +21,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        ENGINE_BR: ['engine-3.24']  # Use engine LTR ad in workshop
+        ENGINE_BR: ['engine-3.23']  # Use engine LTR ad in workshop
         QGIS_VERSION: ['ltr']
         DEMOS: ['oqdata', 'risk-oqdata']
     steps:
@@ -39,7 +39,7 @@ jobs:
           python-version: '3.12'
       - name: Execute the Installer LTS of OQ
         run: |
-          curl -O https://downloads.openquake.org/pkgs/windows/oq-engine/OpenQuake_Engine_3.23.2-1-no-toolkit.exe
+          curl -O https://downloads.openquake.org/pkgs/windows/oq-engine/OpenQuake_Engine_3.23.4-1-no-toolkit.exe
           Get-ChildItem -Path ${{ github.workspace }}
           $Install = Get-ChildItem -Filter *.exe
           Start-Process -FilePath $Install.Fullname -ArgumentList "/S" -Wait
