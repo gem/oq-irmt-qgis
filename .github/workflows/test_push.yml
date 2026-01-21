@@ -121,15 +121,24 @@ jobs:
             bash -c "/tests_directory/startX.sh"
 
           COUNT=0
-          SOCKET=/tmp/.X11-unix/X1
           MAX_TRIES=20
-          while [ ! -S "$SOCKET" ] && [ "$COUNT" -lt "$MAX_TRIES" ]; do
-              echo "waiting for X ($COUNT)..."
+          while [ "$COUNT" -lt "$MAX_TRIES" ]; do
+              if ! docker ps --format '{{.Names}}' | grep -qx qgis; then
+                  echo "ERROR: qgis container exited"
+                  docker logs qgis
+                  exit 1
+              fi
+              if docker exec qgis xdpyinfo -display :1 >/dev/null 2>&1; then
+                  echo "X server is ready"
+                  break
+              fi
+              echo "Waiting for X server ($COUNT/$MAX_TRIES)..."
               sleep 3
               COUNT=$((COUNT + 1))
           done
-          if [ ! -S "$SOCKET" ]; then
-              echo "X environment still not ready, aborting"
+          if [ "$COUNT" -ge "$MAX_TRIES" ]; then
+              echo "ERROR: X server not ready after timeout"
+              docker logs qgis
               exit 1
           fi
       - name: ℧ Run unit test
