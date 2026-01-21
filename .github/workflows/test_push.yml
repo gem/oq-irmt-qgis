@@ -120,6 +120,7 @@ jobs:
             -e BRANCH="$IRMT_BR" -e ONLY_CALC_ID="$ONLY_CALC_ID" -e ONLY_OUTPUT_TYPE="$ONLY_OUTPUT_TYPE" -e GEM_QGIS_TEST=y ${{ matrix.QGIS_DOCKER_VERSION }} \
             bash -c "/tests_directory/startX.sh"
 
+          # NOTE: probably it would be better to check for the X environment availability inside the container
           COUNT=0
           SOCKET=/tmp/.X11-unix/X1
           MAX_TRIES=20
