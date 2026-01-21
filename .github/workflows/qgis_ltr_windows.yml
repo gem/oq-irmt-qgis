@@ -1,0 +1,91 @@
+name: Windows Tests vs Engine releases (also for risk demos)
+on:
+  # NOTE: enables only scheduled or triggered manually, NOT on pull requests
+  workflow_dispatch:
+    inputs:
+      debug_enabled:
+        type: boolean
+        description: "Run the build with tmate debugging enabled"
+        required: false
+        default: false
+  # push:
+  #   branches:
+  #     - '**'
+  schedule:
+    - cron: "0 1 * * *"
+  pull_request:
+
+jobs:
+  Tests_and_docs:
+    runs-on: windows-2022
+    strategy:
+      fail-fast: false
+      matrix:
+        ENGINE_BR: ['engine-3.23']  # Use engine LTR ad in workshop
+        QGIS_VERSION: ['ltr']
+        DEMOS: ['oqdata', 'risk-oqdata']
+    steps:
+      - name: Clone Repository (Master)
+        uses: actions/checkout@v4
+        if: github.event.inputs.git-ref == ''
+      - name: Clone Repository (Custom Ref)
+        uses: actions/checkout@v4
+        if: github.event.inputs.git-ref != ''
+        with:
+          ref: ${{ github.event.inputs.git-ref }}
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Execute the Installer LTS of OQ
+        run: |
+          curl -O https://downloads.openquake.org/pkgs/windows/oq-engine/OpenQuake_Engine_3.23.4-1-no-toolkit.exe
+          Get-ChildItem -Path ${{ github.workspace }}
+          $Install = Get-ChildItem -Filter *.exe
+          Start-Process -FilePath $Install.Fullname -ArgumentList "/S" -Wait
+          $env:PATH += ";$env:LOCALAPPDATA\Programs\OpenQuake Engine\python3\Scripts"
+      - name: Restore oqdata
+        env:
+          ENGINE_BR: ${{ matrix.ENGINE_BR }}
+          IRMT_BR: ${{ matrix.ENGINE_BR }}
+          DEMOS: ${{ matrix.DEMOS }}
+        run: |
+          $env:PATH += ";$env:LOCALAPPDATA\Programs\OpenQuake Engine\python3\Scripts"
+          echo "${Env:environment}"
+          oq.exe --version
+          Write-Host "Restore ${env:DEMOS} demos for ${env:ENGINE_BR} branch "
+          #Get-ChildItem -Path "$HOME\oqdata" -File | Remove-Item
+          Write-Host "oq restore 'https://artifacts.openquake.org/travis/${env:DEMOS}-${env:ENGINE_BR}.zip' $HOME\oqdata"
+          oq.exe restore "https://artifacts.openquake.org/travis/${env:DEMOS}-${env:ENGINE_BR}.zip" $HOME\oqdata
+          Write-Host "list of files on $HOME\oqdata"
+          Get-ChildItem -Path "$HOME\oqdata" -File
+          Write-Host "Waiting WEBUI up on port 8800...."
+          Start-Job -ScriptBlock{& oq.exe webui start 127.0.0.1:8800 -s 2>&1 > "$env:LOCALAPPDATA\Temp\webui.log" }
+          do {
+             Write-Host "waiting..."
+             sleep 2
+          } until(Test-NetConnection 127.0.0.1 -Port 8800 | ? { $_.TcpTestSucceeded } )
+          Write-Host "curl.exe  --fail http://127.0.0.1:8800/v1/engine_version"
+          curl.exe --fail http://127.0.0.1:8800/v1/engine_version
+          #
+      - name: Install QGIS LTR on Chocolatey
+        env:
+          DEMOS: ${{ matrix.DEMOS }}
+        uses: crazy-max/ghaction-chocolatey@v3
+        with:
+          args: install qgis-ltr -y --version 3.40.6
+      - name: Plugin install
+        shell: pwsh
+        run: |
+          $env:PATH="C:\Program Files\QGIS 3.40.6\bin;$env:PATH"
+          $env:QGIS_PLUGIN_IN_CI=1
+          pwd
+          python-qgis-ltr.bat -m pip list
+          python-qgis-ltr.bat -m pip install pytest
+          python-qgis-ltr.bat -m pytest svir/test/unit/
+      - name: Upload Artifact WebUI log
+        uses: actions/upload-artifact@v4
+        with:
+          name: "WebUI_${{ matrix.DEMOS }}.log"
+          path: C:\\Users\\runneradmin\\AppData\\Local\\Temp\\webui.log
+          retention-days: 5
