@@ -49,19 +49,6 @@ jobs:
           cp /tests_directory/qgis_testrunner.py /usr/bin/
           export DISPLAY=:1.0
           Xvfb :1 -screen 0 1024x768x16
-          sleep 5
-          COUNT=0
-          SOCKET=/tmp/.X11-unix/X1
-          MAX_TRIES=20
-          while [ ! -S "$SOCKET" ] && [ "$COUNT" -lt "$MAX_TRIES" ]; do
-              echo "waiting for X ($COUNT)..."
-              sleep 3
-              COUNT=$((COUNT + 1))
-          done
-          if [ ! -S "$SOCKET" ]; then
-              echo "X environment still not ready, aborting"
-              exit 1
-          fi
           EOF
           )
           curl -O https://raw.githubusercontent.com/qgis/QGIS/master/.docker/qgis_resources/test_runner/qgis_setup.sh
@@ -132,6 +119,19 @@ jobs:
           docker run -d -t --name qgis -v /tmp/.X11-unix:/tmp/.X11-unix -v ${PWD}:/tests_directory -e OQ_ENGINE_HOST='http://172.17.0.1:8800' \
             -e BRANCH="$IRMT_BR" -e ONLY_CALC_ID="$ONLY_CALC_ID" -e ONLY_OUTPUT_TYPE="$ONLY_OUTPUT_TYPE" -e GEM_QGIS_TEST=y ${{ matrix.QGIS_DOCKER_VERSION }} \
             bash -c "/tests_directory/startX.sh"
+
+          COUNT=0
+          SOCKET=/tmp/.X11-unix/X1
+          MAX_TRIES=20
+          while [ ! -S "$SOCKET" ] && [ "$COUNT" -lt "$MAX_TRIES" ]; do
+              echo "waiting for X ($COUNT)..."
+              sleep 3
+              COUNT=$((COUNT + 1))
+          done
+          if [ ! -S "$SOCKET" ]; then
+              echo "X environment still not ready, aborting"
+              exit 1
+          fi
       - name: ℧ Run unit test
         run: |
           set -x
