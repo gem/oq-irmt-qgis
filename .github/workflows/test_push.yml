@@ -128,7 +128,7 @@ jobs:
                   docker logs qgis
                   exit 1
               fi
-              if docker exec qgis xdpyinfo -display :1 >/dev/null 2>&1; then
+              if docker exec qgis sh -c 'DISPLAY=:1.0 xdpyinfo' >/dev/null 2>&1; then
                   echo "X server is ready"
                   break
               fi
