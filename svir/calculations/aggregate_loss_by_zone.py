@@ -5,7 +5,7 @@
 # OpenQuake Integrated Risk Modelling Toolkit
 #                              -------------------
 #        begin                : 2015-02-23
-#        copyright            : (C) 2015 by GEM Foundation
+#        copyright            : (C) 2016-2026 by GEM Foundation
 #        email                : devops@openquake.org
 # ***************************************************************************/
 #
@@ -21,14 +21,9 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
-import time
 import processing
-from functools import partial
-
-from qgis.core import (
-    QgsApplication, QgsProcessingFeedback, QgsProcessingContext,
-    QgsProcessingAlgRunnerTask,
-    )
+from qgis.PyQt.QtCore import Qt
+from qgis.core import QgsApplication
 
 
 def add_zone_id_to_points(points_layer, zonal_layer, zone_field_name):
@@ -86,9 +81,8 @@ def calculate_zonal_stats(callback, zonal_layer, points_layer, join_fields,
     """
 
     processing.Processing.initialize()
-    alg = QgsApplication.processingRegistry().algorithmById(
-        'qgis:joinbylocationsummary')
-    if alg is None:
+    alg_id = 'qgis:joinbylocationsummary'
+    if not QgsApplication.processingRegistry().algorithmById(alg_id):
         raise ImportError('Unable to retrieve processing algorithm'
                           ' qgis:joinbylocationsummary')
     # NOTE: predicates are no more retrieavable in the c++ version of the
@@ -103,37 +97,32 @@ def calculate_zonal_stats(callback, zonal_layer, points_layer, join_fields,
         'min_length', 'max_length', 'mean_length']
     SUMMARIES = dict(zip(summary_keys, range(len(summary_keys))))
 
-    context = QgsProcessingContext()
-    feedback = QgsProcessingFeedback()
-
-    params = {
-        'DISCARD_NONMATCHING': discard_nonmatching,
-        'INPUT': zonal_layer,
-        'JOIN': points_layer,
-        'PREDICATE': [PREDICATES[predicate] for predicate in predicates],
-        'JOIN_FIELDS': join_fields,
-        'SUMMARIES': [SUMMARIES[summary] for summary in summaries],
-        'OUTPUT': 'memory:%s' % output_layer_name
+    try:
+        QgsApplication.setOverrideCursor(Qt.WaitCursor)
+        # fix geometries first
+        fixed_zonal_layer = processing.run(
+            "qgis:fixgeometries",
+            {"INPUT": zonal_layer, "OUTPUT": "TEMPORARY_OUTPUT"}
+        )["OUTPUT"]
+        params = {
+            'DISCARD_NONMATCHING': discard_nonmatching,
+            'INPUT': fixed_zonal_layer,
+            'JOIN': points_layer,
+            'PREDICATE': [PREDICATES[predicate] for predicate in predicates],
+            'JOIN_FIELDS': join_fields,
+            'SUMMARIES': [SUMMARIES[summary] for summary in summaries],
+            'OUTPUT': 'memory:%s' % output_layer_name
         }
-
-    task = QgsProcessingAlgRunnerTask(alg, params, context, feedback)
-
-    # using a closure to capture context and callback safely
-    def on_task_finished(successful, results):
-        try:
-            if not successful:
-                callback(None)
-                return
-            output_layer = context.takeResultLayer(results['OUTPUT'])
-            callback(output_layer)
-        except Exception:
-            # Prevent silent task-thread crashes
-            callback(None)
-
-    task.executed.connect(on_task_finished)
-
-    # Keep Python references alive explicitly (extra safety)
-    task._context = context
-    task._callback = callback
-
-    QgsApplication.taskManager().addTask(task)
+        result = processing.run(alg_id, params)
+        output_layer = result.get('OUTPUT')
+        if output_layer is None:
+            raise RuntimeError(f"{alg_id} returned no output")
+        output_layer.setName(output_layer_name)
+        callback(output_layer)
+    except Exception:
+        import traceback
+        traceback.print_exc()
+        print("Processing parameters were:", params)
+        callback(None)
+    finally:
+        QgsApplication.restoreOverrideCursor()
