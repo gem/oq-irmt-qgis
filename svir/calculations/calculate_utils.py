@@ -5,7 +5,7 @@
 # OpenQuake Integrated Risk Modelling Toolkit
 #                              -------------------
 #        begin                : 2013-10-24
-#        copyright            : (C) 2014 by GEM Foundation
+#        copyright            : (C) 2013-2026 by GEM Foundation
 #        email                : devops@openquake.org
 # ***************************************************************************/
 #
@@ -23,7 +23,6 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 from qgis.core import QgsField
-from qgis.PyQt.QtCore import QVariant
 from svir.calculations.process_layer import ProcessLayer
 from svir.utilities.shared import (
     DOUBLE_FIELD_TYPE, STRING_FIELD_TYPE, ULONGLONG_FIELD_TYPE,
