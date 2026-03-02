@@ -80,7 +80,7 @@ def calculate_zonal_stats(callback, zonal_layer, points_layer, join_fields,
     :param summaries: statistics to be calculated for each join field
         (default: 'sum')
 
-    :returns: it waits until the task is complete or terminated, then it
+    :returns: when the task is complete or terminated, it
         calls the callback function, passing the output QgsVectorLayer as
         parameter, or None in case of failure
     """
@@ -117,20 +117,23 @@ def calculate_zonal_stats(callback, zonal_layer, points_layer, join_fields,
         }
 
     task = QgsProcessingAlgRunnerTask(alg, params, context, feedback)
-    task.executed.connect(partial(task_finished, context, callback))
+
+    # using a closure to capture context and callback safely
+    def on_task_finished(successful, results):
+        try:
+            if not successful:
+                callback(None)
+                return
+            output_layer = context.takeResultLayer(results['OUTPUT'])
+            callback(output_layer)
+        except Exception:
+            # Prevent silent task-thread crashes
+            callback(None)
+
+    task.executed.connect(on_task_finished)
+
+    # Keep Python references alive explicitly (extra safety)
+    task._context = context
+    task._callback = callback
+
     QgsApplication.taskManager().addTask(task)
-
-    while True:
-        # the user can "cancel" the task, interrupting this loop
-        QgsApplication.processEvents()
-        # status can be queued, onhold, running, complete, terminated
-        if task.status() > 2:  # Complete or terminated
-            return
-        time.sleep(0.1)
-
-
-def task_finished(context, callback, successful, results):
-    if not successful:
-        callback(None)
-    output_layer = context.takeResultLayer(results['OUTPUT'])
-    callback(output_layer)
