@@ -5,7 +5,7 @@
 # OpenQuake Integrated Risk Modelling Toolkit
 #                              -------------------
 #        begin                : 2015-02-23
-#        copyright            : (C) 2015 by GEM Foundation
+#        copyright            : (C) 2015-2026 by GEM Foundation
 #        email                : devops@openquake.org
 # ***************************************************************************/
 #
@@ -21,7 +21,6 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
-import time
 import processing
 from functools import partial
 
@@ -29,6 +28,7 @@ from qgis.core import (
     QgsApplication, QgsProcessingFeedback, QgsProcessingContext,
     QgsProcessingAlgRunnerTask,
     )
+from svir.utilities.utils import log_msg
 
 
 def add_zone_id_to_points(points_layer, zonal_layer, zone_field_name):
@@ -46,6 +46,9 @@ def add_zone_id_to_points(points_layer, zonal_layer, zone_field_name):
                         for field in points_layer.fields()}
 
     return point_attrs_dict, output_layer, zone_field_name
+
+
+ACTIVE_AGGREGATION_TASKS = []
 
 
 def calculate_zonal_stats(callback, zonal_layer, points_layer, join_fields,
@@ -86,7 +89,9 @@ def calculate_zonal_stats(callback, zonal_layer, points_layer, join_fields,
     """
 
     processing.Processing.initialize()
-    alg = QgsApplication.processingRegistry().algorithmById(
+    # Using createAlgorithmById instead of algorithmById, to get a
+    # fresh instance for this task
+    alg = QgsApplication.processingRegistry().createAlgorithmById(
         'qgis:joinbylocationsummary')
     if alg is None:
         raise ImportError('Unable to retrieve processing algorithm'
@@ -117,20 +122,30 @@ def calculate_zonal_stats(callback, zonal_layer, points_layer, join_fields,
         }
 
     task = QgsProcessingAlgRunnerTask(alg, params, context, feedback)
-    task.executed.connect(partial(task_finished, context, callback))
+
+    # Prevent Python from garbage collecting them when this function returns
+    task.context = context
+    task.feedback = feedback
+    task.zonal_layer = zonal_layer
+    task.points_layer = points_layer
+
+    # keep the task alive at module level
+    ACTIVE_AGGREGATION_TASKS.append(task)
+
+    task.executed.connect(partial(task_finished, task, callback))
     QgsApplication.taskManager().addTask(task)
 
-    while True:
-        # the user can "cancel" the task, interrupting this loop
-        QgsApplication.processEvents()
-        # status can be queued, onhold, running, complete, terminated
-        if task.status() > 2:  # Complete or terminated
-            return
-        time.sleep(0.1)
 
-
-def task_finished(context, callback, successful, results):
+def task_finished(task, callback, successful, results):
+    if task in ACTIVE_AGGREGATION_TASKS:
+        ACTIVE_AGGREGATION_TASKS.remove(task)
     if not successful:
+        log_msg('Task failed or canceled', level='W')
         callback(None)
-    output_layer = context.takeResultLayer(results['OUTPUT'])
-    callback(output_layer)
+        return
+    try:
+        output_layer = task.context.takeResultLayer(results['OUTPUT'])
+        callback(output_layer)
+    except Exception as exc:
+        log_msg(f'Error retrieving output layer: {exc}', level='C')
+        callback(None)
