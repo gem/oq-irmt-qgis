@@ -32,6 +32,7 @@ jobs:
     env:
       GITHUB_DEF_BR: master
       OQ_APPLICATION_MODE: ${{ matrix.ENGINE_APPLICATION_MODE }}
+      QT_QPA_PLATFORM: offscreen
     steps:
       - uses: actions/checkout@v4
       - name: 🐍 Set up Python
@@ -136,7 +137,7 @@ jobs:
         run: |
           set -x
           # OGR_SQLITE_JOURNAL=delete prevents QGIS from using WAL, which modifies geopackages even if they are just read
-          docker exec -t qgis bash -c "export DISPLAY=:1.0; export PYTHONPATH=/usr/share/qgis/python/plugins/:$PYTHONPATH; OGR_SQLITE_JOURNAL=delete python3 -m pytest -v /tests_directory/svir/test/unit/"
+          docker exec -t qgis bash -c "export PYTHONPATH=/usr/share/qgis/python/plugins/:/tests_directory:\$PYTHONPATH; OGR_SQLITE_JOURNAL=delete python3 -m pytest -v /tests_directory/svir/test/unit/"
       - name: ⨕ Run Integration test
         run: |
           set -x
@@ -154,15 +155,20 @@ jobs:
           if [ "$(git ls-remote --heads https://github.com/gem/oq-engine.git ${ENGINE_BR})" == "" ]; then
               ENGINE_BR='master';
           fi
-          # NOTE: cloning the engine is needed to find the demos directory, therefore being able to test running a calculation
-          docker exec qgis sh -c "export DISPLAY=:1.0; git clone -q -b $ENGINE_BR --depth=1 https://github.com/gem/oq-engine.git && echo 'Running against oq-engine/$GITHUB_BR'"
-          docker exec qgis sh -c "export DISPLAY=:1.0; /tests_directory/qgis_setup.sh svir"
-          docker exec -t qgis sh -c "export DISPLAY=:1.0; cd /tests_directory && ./qgis_testrunner.sh svir.test.integration.test_drive_oq_engine"
+          # Clone engine inside the container to provide demo folders for the integration test
+          docker exec qgis sh -c "git clone -q -b $ENGINE_BR --depth=1 https://github.com/gem/oq-engine.git && echo 'Running against oq-engine/$GITHUB_BR'"
+          # Setup the plugin environment
+          docker exec qgis sh -c "/tests_directory/qgis_setup.sh svir"
+          # Execute the integration test using the 'offscreen' platform
+          # Note: We explicitly set PYTHONPATH to include the plugin and the cloned engine
+          docker exec -t qgis sh -c " \
+            export PYTHONPATH=/tests_directory:/oq-engine:/usr/share/qgis/python/plugins/:\$PYTHONPATH; \
+            cd /tests_directory && ./qgis_testrunner.sh svir.test.integration.test_drive_oq_engine"
       - name: 📖 Make documentation
         run: |
           set -x
-          docker exec qgis sh -c "export DISPLAY=:1.0; apt update --allow-releaseinfo-change; DEBIAN_FRONTEND=noninteractive apt install -y latexmk texlive-latex-extra python3-matplotlib python3-sphinx python3-sphinx-rtd-theme dvipng"
-          docker exec -t qgis sh -c "export DISPLAY=:1.0; export PYTHONPATH=$PYTHONPATH:/tests_directory; cd /tests_directory/svir/help; make latexpdf; make html"
+          docker exec qgis sh -c "apt update --allow-releaseinfo-change; DEBIAN_FRONTEND=noninteractive apt install -y latexmk texlive-latex-extra python3-matplotlib python3-sphinx python3-sphinx-rtd-theme dvipng"
+          docker exec -t qgis sh -c "export PYTHONPATH=$PYTHONPATH:/tests_directory; cd /tests_directory/svir/help; make latexpdf; make html"
       - name: ㏒ Display web logs
         run: |
           set -x
