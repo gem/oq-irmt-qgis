@@ -133,6 +133,10 @@ jobs:
               echo "X environment still not ready, aborting"
               exit 1
           fi
+      - name: Setup debugging session
+        uses: mxschmitt/action-tmate@v3
+        timeout-minutes: 60
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
       - name: ℧ Run unit test
         run: |
           set -x
