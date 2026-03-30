@@ -42,9 +42,9 @@ jobs:
       - name: Prepare Start file for docker
         run: |
           set -x
-          $(cat << EOF  > ./startX.sh
+          $(cat << EOF  > ./install_deps.sh
           apt update --allow-releaseinfo-change
-          DEBIAN_FRONTEND=noninteractive apt install -y python3-scipy python3-matplotlib python3-pytest python3-pexpect xvfb git expect
+          DEBIAN_FRONTEND=noninteractive apt install -y python3-scipy python3-matplotlib python3-pytest python3-pexpect git expect
           chmod +x /tests_directory/qgis_startup.py
           cp /tests_directory/qgis_startup.py /usr/bin/
           cp /tests_directory/qgis_testrunner.py /usr/bin/
@@ -57,7 +57,7 @@ jobs:
           chmod +x ./qgis_setup.sh
           chmod +x ./qgis_testrunner.sh
           chmod +x ./qgis_testrunner.py
-          chmod +x ./startX.sh
+          chmod +x ./install_deps.sh
       - name: ⏳ Clone/install engine and restore oqdata and docker container
         run: |
           PY_VER=${{ matrix.PYTHON_VERSION }}
@@ -115,22 +115,9 @@ jobs:
           #
           DOCKER_HOST=`ip -4 addr show docker0 | grep -Po 'inet \K[\d.]+'`
           ENGINE_HOST=`echo http://$DOCKER_HOST:8800`
-          docker run -d -t --name qgis -v /tmp/.X11-unix:/tmp/.X11-unix -v ${PWD}:/tests_directory -e OQ_ENGINE_HOST='http://172.17.0.1:8800' \
+          docker run -d -t --name qgis -v ${PWD}:/tests_directory -e OQ_ENGINE_HOST='http://172.17.0.1:8800' \
             -e BRANCH="$IRMT_BR" -e ONLY_CALC_ID="$ONLY_CALC_ID" -e ONLY_OUTPUT_TYPE="$ONLY_OUTPUT_TYPE" -e GEM_QGIS_TEST=y ${{ matrix.QGIS_DOCKER_VERSION }} \
-            bash -c "/tests_directory/startX.sh"
-
-          COUNT=0
-          SOCKET=/tmp/.X11-unix/X1
-          MAX_TRIES=20
-          while [ ! -S "$SOCKET" ] && [ "$COUNT" -lt "$MAX_TRIES" ]; do
-              echo "waiting for X ($COUNT)..."
-              sleep 3
-              COUNT=$((COUNT + 1))
-          done
-          if [ ! -S "$SOCKET" ]; then
-              echo "X environment still not ready, aborting"
-              exit 1
-          fi
+            bash -c "/tests_directory/install_deps.sh"
       - name: Setup debugging session
         uses: mxschmitt/action-tmate@v3
         timeout-minutes: 120
