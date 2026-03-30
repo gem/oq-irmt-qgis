@@ -48,8 +48,6 @@ jobs:
           chmod +x /tests_directory/qgis_startup.py
           cp /tests_directory/qgis_startup.py /usr/bin/
           cp /tests_directory/qgis_testrunner.py /usr/bin/
-          export DISPLAY=:1.0
-          Xvfb :1 -screen 0 1024x768x16
           EOF
           )
           curl -O https://raw.githubusercontent.com/qgis/QGIS/master/.docker/qgis_resources/test_runner/qgis_setup.sh
