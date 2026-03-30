@@ -32,6 +32,7 @@ jobs:
     env:
       GITHUB_DEF_BR: master
       OQ_APPLICATION_MODE: ${{ matrix.ENGINE_APPLICATION_MODE }}
+      QT_QPA_PLATFORM: offscreen
     steps:
       - uses: actions/checkout@v4
       - name: 🐍 Set up Python
@@ -41,14 +42,12 @@ jobs:
       - name: Prepare Start file for docker
         run: |
           set -x
-          $(cat << EOF  > ./startX.sh
+          $(cat << EOF  > ./install_deps.sh
           apt update --allow-releaseinfo-change
-          DEBIAN_FRONTEND=noninteractive apt install -y python3-scipy python3-matplotlib python3-pyqt5.qtwebkit python3-pytest python3-pexpect xvfb git expect
+          DEBIAN_FRONTEND=noninteractive apt install -y python3-scipy python3-matplotlib python3-pytest python3-pexpect git expect
           chmod +x /tests_directory/qgis_startup.py
           cp /tests_directory/qgis_startup.py /usr/bin/
           cp /tests_directory/qgis_testrunner.py /usr/bin/
-          export DISPLAY=:1.0
-          Xvfb :1 -screen 0 1024x768x16
           EOF
           )
           curl -O https://raw.githubusercontent.com/qgis/QGIS/master/.docker/qgis_resources/test_runner/qgis_setup.sh
@@ -58,7 +57,7 @@ jobs:
           chmod +x ./qgis_setup.sh
           chmod +x ./qgis_testrunner.sh
           chmod +x ./qgis_testrunner.py
-          chmod +x ./startX.sh
+          chmod +x ./install_deps.sh
       - name: ⏳ Clone/install engine and restore oqdata and docker container
         run: |
           PY_VER=${{ matrix.PYTHON_VERSION }}
@@ -116,27 +115,18 @@ jobs:
           #
           DOCKER_HOST=`ip -4 addr show docker0 | grep -Po 'inet \K[\d.]+'`
           ENGINE_HOST=`echo http://$DOCKER_HOST:8800`
-          docker run -d -t --name qgis -v /tmp/.X11-unix:/tmp/.X11-unix -v ${PWD}:/tests_directory -e OQ_ENGINE_HOST='http://172.17.0.1:8800' \
+          docker run -d -t --name qgis -v ${PWD}:/tests_directory -e OQ_ENGINE_HOST='http://172.17.0.1:8800' \
             -e BRANCH="$IRMT_BR" -e ONLY_CALC_ID="$ONLY_CALC_ID" -e ONLY_OUTPUT_TYPE="$ONLY_OUTPUT_TYPE" -e GEM_QGIS_TEST=y ${{ matrix.QGIS_DOCKER_VERSION }} \
-            bash -c "/tests_directory/startX.sh"
-
-          COUNT=0
-          SOCKET=/tmp/.X11-unix/X1
-          MAX_TRIES=20
-          while [ ! -S "$SOCKET" ] && [ "$COUNT" -lt "$MAX_TRIES" ]; do
-              echo "waiting for X ($COUNT)..."
-              sleep 3
-              COUNT=$((COUNT + 1))
-          done
-          if [ ! -S "$SOCKET" ]; then
-              echo "X environment still not ready, aborting"
-              exit 1
-          fi
+            bash -c "/tests_directory/install_deps.sh"
+      - name: Setup debugging session
+        uses: mxschmitt/action-tmate@v3
+        timeout-minutes: 120
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
       - name: ℧ Run unit test
         run: |
           set -x
           # OGR_SQLITE_JOURNAL=delete prevents QGIS from using WAL, which modifies geopackages even if they are just read
-          docker exec -t qgis bash -c "export DISPLAY=:1.0; export PYTHONPATH=/usr/share/qgis/python/plugins/:$PYTHONPATH; OGR_SQLITE_JOURNAL=delete python3 -m pytest -v /tests_directory/svir/test/unit/"
+          docker exec -t qgis bash -c "export PYTHONPATH=/usr/share/qgis/python/plugins/:/tests_directory:\$PYTHONPATH; OGR_SQLITE_JOURNAL=delete python3 -m pytest -v /tests_directory/svir/test/unit/"
       - name: ⨕ Run Integration test
         run: |
           set -x
@@ -154,15 +144,20 @@ jobs:
           if [ "$(git ls-remote --heads https://github.com/gem/oq-engine.git ${ENGINE_BR})" == "" ]; then
               ENGINE_BR='master';
           fi
-          # NOTE: cloning the engine is needed to find the demos directory, therefore being able to test running a calculation
-          docker exec qgis sh -c "export DISPLAY=:1.0; git clone -q -b $ENGINE_BR --depth=1 https://github.com/gem/oq-engine.git && echo 'Running against oq-engine/$GITHUB_BR'"
-          docker exec qgis sh -c "export DISPLAY=:1.0; /tests_directory/qgis_setup.sh svir"
-          docker exec -t qgis sh -c "export DISPLAY=:1.0; cd /tests_directory && ./qgis_testrunner.sh svir.test.integration.test_drive_oq_engine"
+          # Clone engine inside the container to provide demo folders for the integration test
+          docker exec qgis sh -c "git clone -q -b $ENGINE_BR --depth=1 https://github.com/gem/oq-engine.git && echo 'Running against oq-engine/$GITHUB_BR'"
+          # Setup the plugin environment
+          docker exec qgis sh -c "/tests_directory/qgis_setup.sh svir"
+          # Execute the integration test using the 'offscreen' platform
+          # Note: We explicitly set PYTHONPATH to include the plugin and the cloned engine
+          docker exec -t qgis sh -c " \
+            export PYTHONPATH=/tests_directory:/oq-engine:/usr/share/qgis/python/plugins/:\$PYTHONPATH; \
+            cd /tests_directory && ./qgis_testrunner.sh svir.test.integration.test_drive_oq_engine"
       - name: 📖 Make documentation
         run: |
           set -x
-          docker exec qgis sh -c "export DISPLAY=:1.0; apt update --allow-releaseinfo-change; DEBIAN_FRONTEND=noninteractive apt install -y latexmk texlive-latex-extra python3-matplotlib python3-sphinx python3-sphinx-rtd-theme dvipng"
-          docker exec -t qgis sh -c "export DISPLAY=:1.0; export PYTHONPATH=$PYTHONPATH:/tests_directory; cd /tests_directory/svir/help; make latexpdf; make html"
+          docker exec qgis sh -c "apt update --allow-releaseinfo-change; DEBIAN_FRONTEND=noninteractive apt install -y latexmk texlive-latex-extra python3-matplotlib python3-sphinx python3-sphinx-rtd-theme dvipng"
+          docker exec -t qgis sh -c "export PYTHONPATH=$PYTHONPATH:/tests_directory; cd /tests_directory/svir/help; make latexpdf; make html"
       - name: ㏒ Display web logs
         run: |
           set -x
