@@ -11,7 +11,7 @@ RUN echo "deb https://qgis.org/debian bionic main " >> /etc/apt/sources.list && 
    apt update &&  apt dist-upgrade -y 
 RUN apt -q install -y locales build-essential git sudo xvfb zip \
                    qt5-default pyqt5-dev pyqt5-dev-tools \
-                   python3-pyqt5.qtwebkit python3-pip \
+                   python3-pyqt5.qtwebengine python3-pip \
                    python3-mock python3-nose \
                    python3-nose-exclude \
                    ghostscript \
