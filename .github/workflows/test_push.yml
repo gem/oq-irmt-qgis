@@ -24,7 +24,8 @@ jobs:
         os: [ubuntu-latest]
         # NOTE: we might test also for qgis/qgis:3.22 that is the version of qgis-server that we are currently using in the Geoviewer, but it currently causes a segfault
         # NOTE: qgis:stable points to the latest release, wheread qgis:latest points to qgis master
-        QGIS_DOCKER_VERSION: ['qgis/qgis:3.44.7', 'qgis/qgis:stable']
+        # QGIS_DOCKER_VERSION: ['qgis/qgis:ltr', 'qgis/qgis:stable']
+        QGIS_DOCKER_VERSION: ['qgis/qgis:3.44.7']
         # NOTE: qgis uses its own python, but we want to check if there are problems interfacing with the engine while it uses different python versions
         PYTHON_VERSION: ['3.11', '3.12']
         ENGINE_APPLICATION_MODE: ['PUBLIC', 'RESTRICTED']

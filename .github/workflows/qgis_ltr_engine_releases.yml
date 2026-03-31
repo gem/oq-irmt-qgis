@@ -26,7 +26,8 @@ jobs:
         ENGINE_BR: ['engine-3.23', 'engine-3.25', 'master']  # NOTE: add latest when different from lts
         # NOTE: we might test also for qgis/qgis:3.22 that is the version of qgis-server that we are currently using in the Geoviewer, but it currently causes a segfault
         # NOTE: qgis:stable points to the latest release, whereas qgis:latest points to qgis master
-        QGIS_DOCKER_VERSION: ['qgis/qgis:ltr', 'qgis/qgis:stable']
+        # QGIS_DOCKER_VERSION: ['qgis/qgis:ltr', 'qgis/qgis:stable']
+        QGIS_DOCKER_VERSION: ['qgis/qgis:3.44.7']
         DEMOS: ['oqdata', 'risk-oqdata']
         PYTHON_VERSION: ['3.12']
     steps:
