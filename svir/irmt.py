@@ -500,7 +500,7 @@ class Irmt(object):
         Open a dialog to specify the connection settings used to interact
         with the OpenQuake Engine
         """
-        SettingsDialog(self.iface, self).exec_()
+        SettingsDialog(self.iface, self).exec()
 
     def transform_attributes(self):
         """
@@ -515,7 +515,7 @@ class Irmt(object):
             return
 
         dlg = TransformationDialog(self.iface)
-        if dlg.exec_():
+        if dlg.exec():
             layer = self.iface.activeLayer()
             input_attr_names = [
                 field_name_plus_alias.split('(')[0].strip()
@@ -608,7 +608,7 @@ class Irmt(object):
 
         self.viewer_dock = ViewerDock(self.iface, action)
         self.viewer_dock.setObjectName('IRMT-Dock')
-        self.iface.addDockWidget(Qt.RightDockWidgetArea, self.viewer_dock)
+        self.iface.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.viewer_dock)
         legend_tab = self.iface.mainWindow().findChild(QApplication, 'Legend')
         if legend_tab:
             self.iface.mainWindow().tabifyDockWidget(

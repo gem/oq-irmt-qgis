@@ -65,8 +65,8 @@ class LoadInputsDialog(QDialog):
         self.higher_on_top_chk = QCheckBox('Render higher values on top')
         self.higher_on_top_chk.setChecked(False)
         self.button_box = QDialogButtonBox(
-            QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
-        self.ok_button = self.button_box.button(QDialogButtonBox.Ok)
+            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
+        self.ok_button = self.button_box.button(QDialogButtonBox.StandardButton.Ok)
         self.button_box.accepted.connect(self.accept)
         self.button_box.rejected.connect(self.reject)
         vlayout = QVBoxLayout()

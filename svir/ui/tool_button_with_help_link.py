@@ -30,7 +30,7 @@ class QToolButtonWithHelpLink(QToolButton):
             '<a href="%s">Click for documentation</a>' % help_url)
 
     def event(self, event):
-        if event.type() == QEvent.WhatsThis:
+        if event.type() == QEvent.Type.WhatsThis:
             self.open_doc()
             return True
         return super(QToolButtonWithHelpLink, self).event(event)

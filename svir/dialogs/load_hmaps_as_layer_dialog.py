@@ -71,7 +71,7 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
     def on_load_single_layer_ckb_stateChanged(self, state):
         self.load_one_layer_per_stat_ckb.setDisabled(state)
         self.load_all_rlzs_or_stats_chk.setDisabled(state)
-        if state == Qt.Checked:
+        if state == Qt.CheckState.Checked:
             self.load_all_rlzs_or_stats_chk.setChecked(True)
         self.cascade_selections(state)
 
@@ -80,7 +80,7 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
         self.cascade_selections(state)
 
     def cascade_selections(self, state):
-        if state == Qt.Checked:
+        if state == Qt.CheckState.Checked:
             self.show_return_period_chk.setChecked(False)
             self.show_return_period_chk.setEnabled(False)
             self.load_all_poes_chk.setChecked(True)

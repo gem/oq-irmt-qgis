@@ -95,11 +95,11 @@ if Qgis.QGIS_VERSION_INT < 33800:
     LONGLONG_FIELD_TYPE = QVariant.LongLong
     ULONGLONG_FIELD_TYPE = QVariant.ULongLong
 else:
-    STRING_FIELD_TYPE = QMetaType.QString
-    INT_FIELD_TYPE = QMetaType.Int
-    DOUBLE_FIELD_TYPE = QMetaType.Double
-    LONGLONG_FIELD_TYPE = QMetaType.LongLong
-    ULONGLONG_FIELD_TYPE = QMetaType.ULongLong
+    STRING_FIELD_TYPE = QMetaType.Type.QString
+    INT_FIELD_TYPE = QMetaType.Type.Int
+    DOUBLE_FIELD_TYPE = QMetaType.Type.Double
+    LONGLONG_FIELD_TYPE = QMetaType.Type.LongLong
+    ULONGLONG_FIELD_TYPE = QMetaType.Type.ULongLong
 
 
 INT_FIELD_TYPE_NAME = 'integer'

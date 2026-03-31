@@ -36,7 +36,7 @@ from qgis.PyQt.QtCore import (QDir,
                               Qt,
                               QTimer,
                               pyqtSlot,
-                              QRegExp,
+                              QRegularExpression,
                               QSettings)
 
 from qgis.PyQt.QtWidgets import (QDialog,
@@ -46,7 +46,7 @@ from qgis.PyQt.QtWidgets import (QDialog,
                                  QFileDialog,
                                  QInputDialog,
                                  QMessageBox)
-from qgis.PyQt.QtGui import QColor, QBrush, QRegExpValidator
+from qgis.PyQt.QtGui import QColor, QBrush, QRegularExpressionValidator
 from qgis.gui import QgsMessageBar
 from qgis.core import QgsTask, QgsApplication
 
@@ -160,8 +160,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         # Set up the user interface from Designer.
         self.setupUi(self)
 
-        int_or_empty_validator = QRegExpValidator(
-            QRegExp("(^[0-9]+$|^$)"), self)
+        int_or_empty_validator = QRegularExpressionValidator(
+            QRegularExpression("(^[0-9]+$|^$)"), self)
         self.retrieve_job_by_id_le.setValidator(int_or_empty_validator)
         self.retrieve_job_by_id_le.returnPressed.connect(self.on_job_id_chosen)
 
@@ -401,10 +401,10 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                         # if any other unexpected keys are used, it is safer to
                         # raise a KeyError
                         raise
-                item.setData(Qt.DisplayRole, value)
+                item.setData(Qt.ItemDataRole.DisplayRole, value)
                 # set default colors
-                row_bg_color = Qt.white
-                row_txt_color = Qt.black
+                row_bg_color = Qt.GlobalColor.white
+                row_txt_color = Qt.GlobalColor.black
                 if calc_status == 'failed':
                     row_bg_color = QColor('#f2dede')
                 elif calc_status in ['complete', 'shared']:
@@ -480,7 +480,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             calc_id_col_idx = 1
             item_calc_id = self.calc_list_tbl.item(row, calc_id_col_idx)
             self.calc_list_tbl.scrollToItem(
-                item_calc_id, QAbstractItemView.PositionAtCenter)
+                item_calc_id, QAbstractItemView.ScrollHint.PositionAtCenter)
         else:
             self.pointed_calc_id = None
             self.calc_list_tbl.clearSelection()
@@ -558,8 +558,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 self,
                 'Abort calculation?',
                 'The calculation will be aborted. Are you sure?',
-                QMessageBox.Yes | QMessageBox.No)
-            if confirmed == QMessageBox.Yes:
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+            if confirmed == QMessageBox.StandardButton.Yes:
                 self.remove_calc(calc_id, abort=True)
                 if self.current_calc_id == calc_id:
                     self.clear_output_list()
@@ -568,8 +568,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 self,
                 'Remove calculation?',
                 'The calculation will be removed permanently. Are you sure?',
-                QMessageBox.Yes | QMessageBox.No)
-            if confirmed == QMessageBox.Yes:
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+            if confirmed == QMessageBox.StandardButton.Yes:
                 self.remove_calc(calc_id)
                 if self.current_calc_id == calc_id:
                     self.clear_output_list()
@@ -897,14 +897,14 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             for col, key in enumerate(selected_keys):
                 item = QTableWidgetItem()
                 value = output_list[row][key]
-                item.setData(Qt.DisplayRole, value)
+                item.setData(Qt.ItemDataRole.DisplayRole, value)
                 size_mb = output_list[row]['size_mb']
                 if size_mb is None:
                     size_str = ' (size: n.a.)'
                 else:
                     size_str = ' (size: ~%.2f MB)' % size_mb
                 tooltip = "%s" % output_list[row]['type'] + size_str
-                item.setData(Qt.ToolTipRole, tooltip)
+                item.setData(Qt.ItemDataRole.ToolTipRole, tooltip)
                 self.output_list_tbl.setItem(row, col, item)
             outtypes = output_list[row]['outtypes']
             additional_cols = len(selected_keys)  # start after "Id, Name"
