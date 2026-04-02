@@ -36,7 +36,7 @@ from qgis.core import QgsApplication
 from qgis.utils import iface
 from qgis.testing import unittest, start_app  # , stop_app
 from qgis.PyQt.QtCore import QTimer, QSettings, Qt
-from qgis.PyQt.QtTest import QTest
+from qgis.PyQt.QtTest import QTest, QSignalSpy
 from svir.irmt import Irmt
 from svir.utilities.shared import (
                                    OQ_CSV_TO_LAYER_TYPES,
@@ -734,20 +734,34 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         layer = self.irmt.iface.activeLayer()
         # the behavior should be slightly different (pluralizing labels, etc)
         # depending on the amount of features selected
-        num_feats = layer.featureCount()
-        self.assertGreater(
-            num_feats, 0, 'The loaded layer does not contain any feature!')
         features = list(layer.getFeatures())
-        # select first feature only
-        layer.selectByIds([features[0].id()])
+        self.assertGreater(len(features), 0,
+                           'The loaded layer does not contain any feature!')
+        fids = [f.id() for f in features]
+
+        # clear selection (force signal)
         layer.removeSelection()
-        # select first and last features (just one if there is only one)
-        if len(features) == 1:
-            layer.selectByIds([features[0].id()])
+        QGIS_APP.processEvents()
+
+        spy = QSignalSpy(layer.selectionChanged)
+
+        # select first feature
+        layer.selectByIds([fids[0]])
+        QGIS_APP.processEvents()
+
+        self.assertGreater(len(spy), 0, "selectionChanged was not emitted")
+
+        # change selection meaningfully
+        if len(fids) > 1:
+            layer.selectByIds([fids[0], fids[-1]])
         else:
-            layer.selectByIds([features[0].id(), features[-1].id()])
+            # force a "change" by toggling selection
+            layer.removeSelection()
+            QGIS_APP.processEvents()
+            layer.selectByIds([fids[0]])
         # NOTE: in the past, we were also selecting all features, but it was
         # not necessary ant it made tests much slower in case of many features
+        QGIS_APP.processEvents()
 
 
 # OQ_CSV_TO_LAYER_TYPES
