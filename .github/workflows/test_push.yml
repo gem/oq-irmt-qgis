@@ -148,7 +148,7 @@ jobs:
             export DISPLAY=:99
             export PYTHONPATH=/usr/share/qgis/python/plugins:\$PYTHONPATH
             export OGR_SQLITE_JOURNAL=delete
-            python3 -m pytest -v /tests_directory/svir/test/unit/
+            cd /tests_directory/svir/test && python3 -m pytest -v /tests_directory/svir/test/unit/
             EXIT_CODE=\$?
             if [ \$EXIT_CODE -eq 139 ]; then
               echo 'Ignoring segfault during QGIS teardown (known issue)'
@@ -169,7 +169,7 @@ jobs:
             export DISPLAY=:99
             export PYTHONPATH=/usr/share/qgis/python/plugins:\$PYTHONPATH
             export OGR_SQLITE_JOURNAL=delete
-            python3 -m pytest -v /tests_directory/svir/test/integration/test_drive_oq_engine.py
+            cd /tests_directory/svir/test && python3 -m pytest -v /tests_directory/svir/test/integration/test_drive_oq_engine.py
             EXIT_CODE=\$?
             if [ \$EXIT_CODE -eq 139 ]; then
               echo 'Ignoring segfault during QGIS teardown (known issue)'
