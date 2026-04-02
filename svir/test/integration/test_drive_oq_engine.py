@@ -737,11 +737,15 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         num_feats = layer.featureCount()
         self.assertGreater(
             num_feats, 0, 'The loaded layer does not contain any feature!')
+        features = list(layer.getFeatures())
         # select first feature only
-        layer.select(1)
+        layer.selectByIds([features[0].id()])
         layer.removeSelection()
         # select first and last features (just one if there is only one)
-        layer.select([1, num_feats])
+        if len(features) == 1:
+            layer.selectByIds([features[0].id()])
+        else:
+            layer.selectByIds([features[0].id(), features[-1].id()])
         # NOTE: in the past, we were also selecting all features, but it was
         # not necessary ant it made tests much slower in case of many features
 
