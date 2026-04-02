@@ -545,7 +545,6 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 return 'ok'
             else:
                 raise RuntimeError('The ok button is disabled')
-                return 'ko'
         elif output_type == 'ruptures':
             dlg = OUTPUT_TYPE_LOADERS[output_type](
                 self.irmt.drive_oq_engine_server_dlg, self.irmt.iface,
@@ -568,10 +567,9 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                     return 'ok'
                 if self.loading_exception[dlg]:
                     raise self.loading_exception[dlg]
-                    return 'ko'
                 time.sleep(0.1)
             raise TimeoutError(
-                'ko: Loading time exceeded %s seconds' % timeout)
+                'Loading time exceeded %s seconds' % timeout)
         elif output_type in OQ_EXTRACT_TO_LAYER_TYPES:
             self.irmt.iface.newProject()
             dlg = OUTPUT_TYPE_LOADERS[output_type](
@@ -601,10 +599,9 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                     return 'ok'
                 if self.loading_exception[dlg]:
                     raise self.loading_exception[dlg]
-                    return 'ko'
                 time.sleep(0.1)
             raise TimeoutError(
-                'ko: Loading time exceeded %s seconds' % timeout)
+                'Loading time exceeded %s seconds' % timeout)
         elif output_type in OQ_EXTRACT_TO_VIEW_TYPES:
             self.irmt.iface.newProject()
             self.irmt.viewer_dock.load_no_map_output(
@@ -739,29 +736,44 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                            'The loaded layer does not contain any feature!')
         fids = [f.id() for f in features]
 
+        spy = QSignalSpy(layer.selectionChanged)
+
         # clear selection (force signal)
         layer.removeSelection()
         QGIS_APP.processEvents()
+        self.assertGreater(
+            len(spy), 0, "selectionChanged was not emitted on removeSelection")
 
-        spy = QSignalSpy(layer.selectionChanged)
-
+        initial_spy_count = len(spy)
         # select first feature
         layer.selectByIds([fids[0]])
         QGIS_APP.processEvents()
+        self.assertGreater(
+            len(spy), initial_spy_count,
+            "selectionChanged not emitted after selecting first feature")
 
-        self.assertGreater(len(spy), 0, "selectionChanged was not emitted")
-
+        initial_spy_count = len(spy)
         # change selection meaningfully
         if len(fids) > 1:
             layer.selectByIds([fids[0], fids[-1]])
+            QGIS_APP.processEvents()
+            self.assertGreater(
+                len(spy), initial_spy_count,
+                "selectionChanged not emitted after second selection")
         else:
             # force a "change" by toggling selection
             layer.removeSelection()
             QGIS_APP.processEvents()
+            self.assertGreater(
+                len(spy), initial_spy_count,
+                "selectionChanged not emitted on second removeSelection")
             layer.selectByIds([fids[0]])
+            QGIS_APP.processEvents()
+            self.assertGreater(
+                len(spy), initial_spy_count + 1,
+                "selectionChanged not emitted after second selection")
         # NOTE: in the past, we were also selecting all features, but it was
         # not necessary ant it made tests much slower in case of many features
-        QGIS_APP.processEvents()
 
 
 # OQ_CSV_TO_LAYER_TYPES
@@ -1009,7 +1021,7 @@ class AllLoadableOutputsFoundInDemosTestCase(LoadOqEngineOutputsTestCase):
                       " which are not actual outputs exposed by the"
                       " engine, but derived outputs accessed through"
                       " the extract API, or CSV outputs that are"
-                      " loaded in a commmon way. Therefore, it is ok.")
+                      " loaded in a common way. Therefore, it is ok.")
             else:
                 print("\nSome missing output types are '_aggr', which are"
                       " not actual outputs exposed by the engine, but"
