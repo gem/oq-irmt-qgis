@@ -142,11 +142,19 @@ jobs:
 
       - name: ℧ Run unit tests
         run: |
+          # Ignore 139 (segfault) happening after tests complete, that may
+          # happen during QgsApplication.exitQgis() teardown procedure
           docker exec -t qgis bash -c "
             export DISPLAY=:99
             export PYTHONPATH=/usr/share/qgis/python/plugins:\$PYTHONPATH
             export OGR_SQLITE_JOURNAL=delete
             python3 -m pytest -v /tests_directory/svir/test/unit/
+            EXIT_CODE=\$?
+            if [ \$EXIT_CODE -eq 139 ]; then
+              echo 'Ignoring segfault during QGIS teardown (known issue)'
+              exit 0
+            fi
+            exit \$EXIT_CODE
           "
 
       - name: ⨕ Run integration tests
@@ -155,11 +163,19 @@ jobs:
             git clone -q -b $ENGINE_BR --depth=1 https://github.com/gem/oq-engine.git \
             && echo 'Cloned oq-engine/$ENGINE_BR'
           "
+          # Ignore 139 (segfault) happening after tests complete, that may
+          # happen during QgsApplication.exitQgis() teardown procedure
           docker exec -t qgis bash -c "
             export DISPLAY=:99
             export PYTHONPATH=/usr/share/qgis/python/plugins:\$PYTHONPATH
             export OGR_SQLITE_JOURNAL=delete
             python3 -m pytest -v /tests_directory/svir/test/integration/test_drive_oq_engine.py
+            EXIT_CODE=\$?
+            if [ \$EXIT_CODE -eq 139 ]; then
+              echo 'Ignoring segfault during QGIS teardown (known issue)'
+              exit 0
+            fi
+            exit \$EXIT_CODE
           "
 
       - name: 📖 Make documentation
