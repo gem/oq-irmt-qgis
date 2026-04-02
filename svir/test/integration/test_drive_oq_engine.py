@@ -32,7 +32,6 @@ import copy
 import csv
 import time
 import operator
-import requests
 from qgis.core import QgsApplication
 from qgis.utils import iface
 from qgis.testing import unittest, start_app  # , stop_app
@@ -59,7 +58,8 @@ if QGIS_APP is None:
 
 LONG_LOADING_TIME = 10  # seconds
 
-# If defined, only the specified output type will be tested, skipping all the others
+# If defined, only the specified output type will be tested,
+# skipping all the others
 ONLY_OUTPUT_TYPE = os.environ.get('ONLY_OUTPUT_TYPE')
 
 # Run all tests unless explicitly specified setting those env variables to '0'
@@ -179,6 +179,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         super().tearDownClass()
+        cls.irmt.unload()  # clean up toolbar/menu from iface before next class
         QSettings().setValue(
             'irmt/experimental_enabled', cls.initial_experimental_enabled)
         # print("\n\nGLOBAL SUMMARY OF TESTING OQ-ENGINE OUTPUT LOADERS")
@@ -512,7 +513,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             else:  # OQ_ZIPPED_TYPES
                 filetype = 'zip'
             # TODO: we should test the actual downloader, asynchronously
-            filepath = self.download_output(output['id'], filetype, output_type)
+            filepath = self.download_output(
+                output['id'], filetype, output_type)
             assert filepath is not None
             self.irmt.iface.newProject()
             if output_type == 'fullreport':
