@@ -133,7 +133,7 @@ jobs:
 
       - name: 📦 Install pytest-qgis in container
         run: |
-          docker exec qgis bash -c "pip3 install pytest-qgis"
+          docker exec qgis bash -c "pip3 install --break-system-packages pytest-qgis"
 
       - name: Setup debugging session
         uses: mxschmitt/action-tmate@v3
