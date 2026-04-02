@@ -30,46 +30,42 @@ jobs:
         PYTHON_VERSION: ['3.11', '3.12']
         ENGINE_APPLICATION_MODE: ['PUBLIC', 'RESTRICTED']
     runs-on: ${{ matrix.os }}
-    container:
-      image: ${{ matrix.QGIS_DOCKER_VERSION }}   # ← whole job runs inside QGIS container
-      options: --privileged                        # needed for Xvfb inside container
     env:
       GITHUB_DEF_BR: master
       OQ_APPLICATION_MODE: ${{ matrix.ENGINE_APPLICATION_MODE }}
-      DISPLAY: ":99"
-      # Make sure the QGIS bundled Python plugins are importable
-      PYTHONPATH: /usr/share/qgis/python/plugins
       OGR_SQLITE_JOURNAL: delete   # prevents WAL from modifying read-only geopackages
+
     steps:
       - uses: actions/checkout@v4
 
-      - name: 🖥 Start virtual display and install dependencies
-        run: |
-          apt-get update --allow-releaseinfo-change -q
-          DEBIAN_FRONTEND=noninteractive apt-get install -y \
-            xvfb python3-pip python3-scipy python3-matplotlib \
-            python3-pyqt5.qtwebkit python3-pexpect netcat-openbsd git curl
-          Xvfb :99 -screen 0 1024x768x24 &
-          # Give Xvfb a moment to be ready
-          sleep 2
-          # pytest-qgis handles QgsApplication init/teardown automatically
-          pip3 install --break-system-packages pytest-qgis
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.PYTHON_VERSION }}
 
-      - name: ⏳ Clone/install engine and restore oqdata
+      - name: ⏳ Install engine and restore oqdata
         run: |
           PY_VER=${{ matrix.PYTHON_VERSION }}
-          echo "Resolving branch..."
+          echo "Python version to use: $PY_VER"
+          python3 --version
+          python$PY_VER --version
+
           if [ -z "$GITHUB_HEAD_REF" ]; then
+            echo "Not a pull request, using branch: $GITHUB_DEF_BR"
             IRMT_BR=$GITHUB_DEF_BR
           else
+            echo "Pull request, using branch: $GITHUB_HEAD_REF"
             IRMT_BR=$GITHUB_HEAD_REF
           fi
           ENGINE_BR=$IRMT_BR
           if [ "$(git ls-remote --heads https://github.com/gem/oq-engine.git ${ENGINE_BR})" = "" ]; then
             ENGINE_BR='master'
           fi
+          echo "ENGINE_BR=${ENGINE_BR}" >> $GITHUB_ENV
+          echo "IRMT_BR=${IRMT_BR}" >> $GITHUB_ENV
 
           curl -O https://raw.githubusercontent.com/gem/oq-engine/master/install.py
+          echo "Engine branch: ${ENGINE_BR}"
           python$PY_VER install.py user --version=${ENGINE_BR}
 
           export PIP_DEFAULT_TIMEOUT=100
@@ -85,27 +81,59 @@ jobs:
             done
           fi
 
-          echo "Restore OQ-Engine demos for $ENGINE_BR branch "
+          echo "Restoring OQ-Engine demos for branch ${ENGINE_BR}"
           oq restore https://artifacts.openquake.org/travis/oqdata-${ENGINE_BR}.zip ~/oqdata
           python $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/manage.py migrate
 
           if [ "$OQ_APPLICATION_MODE" = "RESTRICTED" ]; then
-            echo "Creating a level 0 user and assigning to that user all the restored jobs"
+            echo "Creating a level 0 user and assigning restored jobs"
             python $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/manage.py \
               createuser level_0_user testuser1@test.com --level 0 --password level_0_password --no-email
             oq db "UPDATE job SET user_name = 'level_0_user'"
           fi
 
           oq --version
-          oq webui start 127.0.0.1:8800 --skip-browser &> webui.log &
+          oq webui start 172.17.0.1:8800 --skip-browser &> webui.log &
           echo "Waiting for WebUI on port 8800..."
-          until nc -z 127.0.0.1 8800; do
+          while ! nc -z 172.17.0.1 8800; do
             cat webui.log
             sleep 5
           done
-          curl http://127.0.0.1:8800/v1/engine_version
-        env:
-          OQ_ENGINE_HOST: http://127.0.0.1:8800  # now localhost; no docker bridge needed
+          curl http://172.17.0.1:8800/v1/engine_version
+
+      - name: 🐳 Start QGIS container
+        run: |
+          docker run -d -t --name qgis \
+            -v /tmp/.X11-unix:/tmp/.X11-unix \
+            -v ${PWD}:/tests_directory \
+            -e OQ_ENGINE_HOST='http://172.17.0.1:8800' \
+            -e BRANCH="$IRMT_BR" \
+            -e ONLY_CALC_ID="$ONLY_CALC_ID" \
+            -e ONLY_OUTPUT_TYPE="$ONLY_OUTPUT_TYPE" \
+            -e GEM_QGIS_TEST=y \
+            ${{ matrix.QGIS_DOCKER_VERSION }} bash -c "
+              apt-get update -q
+              DEBIAN_FRONTEND=noninteractive apt-get install -y xvfb
+              Xvfb :99 -screen 0 1024x768x24 &
+              sleep 2
+              tail -f /dev/null
+            "
+          echo "Waiting for Xvfb..."
+          COUNT=0
+          MAX_TRIES=20
+          until docker exec qgis test -S /tmp/.X11-unix/X99 || [ $COUNT -ge $MAX_TRIES ]; do
+            echo "Waiting for X ($COUNT)..."
+            sleep 3
+            COUNT=$((COUNT + 1))
+          done
+          if ! docker exec qgis test -S /tmp/.X11-unix/X99; then
+            echo "X environment still not ready, aborting"
+            exit 1
+          fi
+
+      - name: 📦 Install pytest-qgis in container
+        run: |
+          docker exec qgis bash -c "pip3 install pytest-qgis"
 
       - name: Setup debugging session
         uses: mxschmitt/action-tmate@v3
@@ -114,33 +142,41 @@ jobs:
 
       - name: ℧ Run unit tests
         run: |
-          python3 -m pytest -v svir/test/unit/
-        # pytest-qgis automatically initialises QgsApplication before the suite runs
+          docker exec -t qgis bash -c "
+            export DISPLAY=:99
+            export PYTHONPATH=/usr/share/qgis/python/plugins:\$PYTHONPATH
+            export OGR_SQLITE_JOURNAL=delete
+            python3 -m pytest -v /tests_directory/svir/test/unit/
+          "
 
-      - name: ⨕ Clone engine demos and run integration tests
+      - name: ⨕ Run integration tests
         run: |
-          if [ -z "$GITHUB_HEAD_REF" ]; then
-            IRMT_BR=$GITHUB_DEF_BR
-          else
-            IRMT_BR=$GITHUB_HEAD_REF
-          fi
-          # NOTE: we needto clone the engine inside the qgis docker in order to have demos folders available
-          ENGINE_BR=$IRMT_BR
-          if [ "$(git ls-remote --heads https://github.com/gem/oq-engine.git ${ENGINE_BR})" = "" ]; then
-            ENGINE_BR='master'
-          fi
-          # NOTE: cloning the engine is needed to find the demos directory, therefore being able to test running a calculation
-          git clone -q -b $ENGINE_BR --depth=1 https://github.com/gem/oq-engine.git
-
-          python3 -m pytest -v svir/test/integration/test_drive_oq_engine.py
+          docker exec qgis bash -c "
+            git clone -q -b $ENGINE_BR --depth=1 https://github.com/gem/oq-engine.git \
+            && echo 'Cloned oq-engine/$ENGINE_BR'
+          "
+          docker exec -t qgis bash -c "
+            export DISPLAY=:99
+            export PYTHONPATH=/usr/share/qgis/python/plugins:\$PYTHONPATH
+            export OGR_SQLITE_JOURNAL=delete
+            python3 -m pytest -v /tests_directory/svir/test/integration/test_drive_oq_engine.py
+          "
 
       - name: 📖 Make documentation
         run: |
-          DEBIAN_FRONTEND=noninteractive apt-get install -y \
-            latexmk texlive-latex-extra python3-sphinx python3-sphinx-rtd-theme dvipng
-          cd svir/help
-          make latexpdf
-          make html
+          docker exec qgis bash -c "
+            apt-get update -q
+            DEBIAN_FRONTEND=noninteractive apt-get install -y \
+              latexmk texlive-latex-extra python3-matplotlib \
+              python3-sphinx python3-sphinx-rtd-theme dvipng
+          "
+          docker exec -t qgis bash -c "
+            export DISPLAY=:99
+            export PYTHONPATH=\$PYTHONPATH:/tests_directory
+            cd /tests_directory/svir/help
+            make latexpdf
+            make html
+          "
 
       - name: ㏒ Display web logs
         if: always()
