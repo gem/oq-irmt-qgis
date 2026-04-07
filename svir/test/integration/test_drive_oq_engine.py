@@ -77,9 +77,8 @@ def run_all():
     csv_to_layer_test_cases = [
         LoadAggRiskTestCase,
         LoadAggLossesStatsTestCase,
-        LoadDmgByEventTestCase,
+        LoadRiskByEventTestCase,
         LoadEventsTestCase,
-        LoadAggLossTableTestCase,
         LoadRealizationsTestCase,
     ]
     extract_to_layer_test_cases = [
@@ -792,8 +791,7 @@ class LoadAggLossesStatsTestCase(LoadOqEngineOutputsTestCase):
         self.load_output_type('aggrisk')
 
 
-# FIXME: there are two overlapping tests for risk_by_event
-class LoadDmgByEventTestCase(LoadOqEngineOutputsTestCase):
+class LoadRiskByEventTestCase(LoadOqEngineOutputsTestCase):
     @unittest.skipIf(
         ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'risk_by_event',
         'only testing output type %s' % ONLY_OUTPUT_TYPE)
@@ -807,15 +805,6 @@ class LoadEventsTestCase(LoadOqEngineOutputsTestCase):
         'only testing output type %s' % ONLY_OUTPUT_TYPE)
     def test_load_events(self):
         self.load_output_type('events')
-
-
-# FIXME: there are two overlapping tests for risk_by_event
-class LoadAggLossTableTestCase(LoadOqEngineOutputsTestCase):
-    @unittest.skipIf(
-        ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'risk_by_event',
-        'only testing output type %s' % ONLY_OUTPUT_TYPE)
-    def test_load_risk_by_event(self):
-        self.load_output_type('risk_by_event')
 
 
 class LoadRealizationsTestCase(LoadOqEngineOutputsTestCase):
