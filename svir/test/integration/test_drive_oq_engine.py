@@ -32,12 +32,11 @@ import copy
 import csv
 import time
 import operator
-import requests
 from qgis.core import QgsApplication
 from qgis.utils import iface
 from qgis.testing import unittest, start_app  # , stop_app
 from qgis.PyQt.QtCore import QTimer, QSettings, Qt
-from qgis.PyQt.QtTest import QTest
+from qgis.PyQt.QtTest import QTest, QSignalSpy
 from svir.irmt import Irmt
 from svir.utilities.shared import (
                                    OQ_CSV_TO_LAYER_TYPES,
@@ -59,7 +58,8 @@ if QGIS_APP is None:
 
 LONG_LOADING_TIME = 10  # seconds
 
-# If defined, only the specified output type will be tested, skipping all the others
+# If defined, only the specified output type will be tested,
+# skipping all the others
 ONLY_OUTPUT_TYPE = os.environ.get('ONLY_OUTPUT_TYPE')
 
 # Run all tests unless explicitly specified setting those env variables to '0'
@@ -77,9 +77,8 @@ def run_all():
     csv_to_layer_test_cases = [
         LoadAggRiskTestCase,
         LoadAggLossesStatsTestCase,
-        LoadDmgByEventTestCase,
+        LoadRiskByEventTestCase,
         LoadEventsTestCase,
-        LoadAggLossTableTestCase,
         LoadRealizationsTestCase,
     ]
     extract_to_layer_test_cases = [
@@ -285,7 +284,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             return
         if calc_status['status'] in ('complete', 'failed'):
             self.timer.stop()
-            if calc_status['status'] == 'falied':
+            if calc_status['status'] == 'failed':
                 print('Calculation #%s failed' % calc_id)
         calc_log = self.irmt.drive_oq_engine_server_dlg.get_calc_log(calc_id)
         if isinstance(calc_log, Exception):
@@ -309,7 +308,10 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             print(f'\t\t{resp.status_code=}')
             print(f'\t\t{resp.text=}')
             raise Exception(resp)
-        filename = resp.headers['content-disposition'].split('filename=')[1]
+        cont_disp = resp.headers.get('content-disposition', '')
+        if 'filename=' not in cont_disp:
+            raise RuntimeError("Missing filename in content-disposition")
+        filename = cont_disp.split('filename=')[1].strip('"')
         filepath = os.path.join(dest_folder, filename)
         with open(filepath, "wb") as f:
             f.write(resp.content)
@@ -512,8 +514,9 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
             else:  # OQ_ZIPPED_TYPES
                 filetype = 'zip'
             # TODO: we should test the actual downloader, asynchronously
-            filepath = self.download_output(output['id'], filetype, output_type)
-            assert filepath is not None
+            filepath = self.download_output(
+                output['id'], filetype, output_type)
+            self.assertTrue(os.path.exists(filepath))
             self.irmt.iface.newProject()
             if output_type == 'fullreport':
                 dlg = ShowFullReportDialog(filepath)
@@ -541,7 +544,6 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 return 'ok'
             else:
                 raise RuntimeError('The ok button is disabled')
-                return 'ko'
         elif output_type == 'ruptures':
             dlg = OUTPUT_TYPE_LOADERS[output_type](
                 self.irmt.drive_oq_engine_server_dlg, self.irmt.iface,
@@ -552,11 +554,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 mode='testing')
             self.loading_completed[dlg] = False
             self.loading_exception[dlg] = None
-            dlg.loading_completed.connect(
-                lambda dlg: self.on_loading_completed(dlg))
-            dlg.loading_exception.connect(
-                lambda dlg, exception: self.on_loading_exception(
-                    dlg, exception))
+            dlg.loading_completed.connect(self.on_loading_completed)
+            dlg.loading_exception.connect(self.on_loading_exception)
             timeout = 30
             start_time = time.time()
             QTest.mouseClick(dlg.ok_button, Qt.LeftButton)
@@ -566,12 +565,10 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                     print('\t\tok')
                     return 'ok'
                 if self.loading_exception[dlg]:
-                    raise self.loading_exception
-                    return 'ko'
+                    raise self.loading_exception[dlg]
                 time.sleep(0.1)
             raise TimeoutError(
                 'Loading time exceeded %s seconds' % timeout)
-            return 'ko'
         elif output_type in OQ_EXTRACT_TO_LAYER_TYPES:
             self.irmt.iface.newProject()
             dlg = OUTPUT_TYPE_LOADERS[output_type](
@@ -583,11 +580,8 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                 mode='testing')
             self.loading_completed[dlg] = False
             self.loading_exception[dlg] = None
-            dlg.loading_completed.connect(
-                lambda dlg: self.on_loading_completed(dlg))
-            dlg.loading_exception.connect(
-                lambda dlg, exception: self.on_loading_exception(
-                    dlg, exception))
+            dlg.loading_completed.connect(self.on_loading_completed)
+            dlg.loading_exception.connect(self.on_loading_exception)
             dlg.init_done.connect(
                 lambda dlg: self.on_init_done(
                     dlg,
@@ -603,12 +597,10 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                     print('\t\tok')
                     return 'ok'
                 if self.loading_exception[dlg]:
-                    raise self.loading_exception
-                    return 'ko'
+                    raise self.loading_exception[dlg]
                 time.sleep(0.1)
             raise TimeoutError(
                 'Loading time exceeded %s seconds' % timeout)
-            return 'ko'
         elif output_type in OQ_EXTRACT_TO_VIEW_TYPES:
             self.irmt.iface.newProject()
             self.irmt.viewer_dock.load_no_map_output(
@@ -696,7 +688,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         # curves can not be computed due to an incompatible setting of
         # recover-based damage states. In this case, the plugin correctly
         # gives instructions to the user and the plot area remains empty.
-        _, exported_file_path = tempfile.mkstemp(suffix=".csv")
+        fd, exported_file_path = tempfile.mkstemp(suffix=".csv")
         self.irmt.viewer_dock.write_export_file(exported_file_path,
                                                 empty_is_ok)
         # NOTE: we are only checking that the exported CSV has at least 2 rows
@@ -726,6 +718,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
                     n_rows, 2,
                     "The exported file %s has only %s rows" % (
                         exported_file_path, n_rows))
+        os.close(fd)
 
     def _set_output_type(self, output_type):
         self.irmt.viewer_dock.output_type_cbx.setCurrentIndex(-1)
@@ -737,14 +730,45 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
         layer = self.irmt.iface.activeLayer()
         # the behavior should be slightly different (pluralizing labels, etc)
         # depending on the amount of features selected
-        num_feats = layer.featureCount()
-        self.assertGreater(
-            num_feats, 0, 'The loaded layer does not contain any feature!')
-        # select first feature only
-        layer.select(1)
+        features = list(layer.getFeatures())
+        self.assertGreater(len(features), 0,
+                           'The loaded layer does not contain any feature!')
+        fids = [f.id() for f in features]
+
+        spy = QSignalSpy(layer.selectionChanged)
+
+        # it does not emit selectionChanged if nothing was selected
         layer.removeSelection()
-        # select first and last features (just one if there is only one)
-        layer.select([1, num_feats])
+        QGIS_APP.processEvents()
+
+        initial_spy_count = len(spy)
+        # select first feature
+        layer.selectByIds([fids[0]])
+        QGIS_APP.processEvents()
+        self.assertGreater(
+            len(spy), initial_spy_count,
+            "selectionChanged not emitted after selecting first feature")
+
+        initial_spy_count = len(spy)
+        # change selection meaningfully
+        if len(fids) > 1:
+            layer.selectByIds([fids[0], fids[-1]])
+            QGIS_APP.processEvents()
+            self.assertGreater(
+                len(spy), initial_spy_count,
+                "selectionChanged not emitted after second selection")
+        else:
+            # force a "change" by toggling selection
+            layer.removeSelection()
+            QGIS_APP.processEvents()
+            self.assertGreater(
+                len(spy), initial_spy_count,
+                "selectionChanged not emitted on second removeSelection")
+            layer.selectByIds([fids[0]])
+            QGIS_APP.processEvents()
+            self.assertGreater(
+                len(spy), initial_spy_count + 1,
+                "selectionChanged not emitted after second selection")
         # NOTE: in the past, we were also selecting all features, but it was
         # not necessary ant it made tests much slower in case of many features
 
@@ -767,7 +791,7 @@ class LoadAggLossesStatsTestCase(LoadOqEngineOutputsTestCase):
         self.load_output_type('aggrisk')
 
 
-class LoadDmgByEventTestCase(LoadOqEngineOutputsTestCase):
+class LoadRiskByEventTestCase(LoadOqEngineOutputsTestCase):
     @unittest.skipIf(
         ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'risk_by_event',
         'only testing output type %s' % ONLY_OUTPUT_TYPE)
@@ -781,14 +805,6 @@ class LoadEventsTestCase(LoadOqEngineOutputsTestCase):
         'only testing output type %s' % ONLY_OUTPUT_TYPE)
     def test_load_events(self):
         self.load_output_type('events')
-
-
-class LoadAggLossTableTestCase(LoadOqEngineOutputsTestCase):
-    @unittest.skipIf(
-        ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'risk_by_event',
-        'only testing output type %s' % ONLY_OUTPUT_TYPE)
-    def test_load_risk_by_event(self):
-        self.load_output_type('risk_by_event')
 
 
 class LoadRealizationsTestCase(LoadOqEngineOutputsTestCase):
@@ -994,7 +1010,7 @@ class AllLoadableOutputsFoundInDemosTestCase(LoadOqEngineOutputsTestCase):
                       " which are not actual outputs exposed by the"
                       " engine, but derived outputs accessed through"
                       " the extract API, or CSV outputs that are"
-                      " loaded in a commmon way. Therefore, it is ok.")
+                      " loaded in a common way. Therefore, it is ok.")
             else:
                 print("\nSome missing output types are '_aggr', which are"
                       " not actual outputs exposed by the engine, but"
