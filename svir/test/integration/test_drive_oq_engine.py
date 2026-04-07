@@ -792,6 +792,7 @@ class LoadAggLossesStatsTestCase(LoadOqEngineOutputsTestCase):
         self.load_output_type('aggrisk')
 
 
+# FIXME: there are two overlapping tests for risk_by_event
 class LoadDmgByEventTestCase(LoadOqEngineOutputsTestCase):
     @unittest.skipIf(
         ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'risk_by_event',
@@ -808,6 +809,7 @@ class LoadEventsTestCase(LoadOqEngineOutputsTestCase):
         self.load_output_type('events')
 
 
+# FIXME: there are two overlapping tests for risk_by_event
 class LoadAggLossTableTestCase(LoadOqEngineOutputsTestCase):
     @unittest.skipIf(
         ONLY_OUTPUT_TYPE and ONLY_OUTPUT_TYPE != 'risk_by_event',
