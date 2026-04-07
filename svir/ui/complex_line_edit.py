@@ -63,7 +63,7 @@ class ComplexLineEdit(QLineEdit):
         x = self.settings['padding-x']
         for text in self.current_text():
             text = text.strip()
-            width = self.font_metrics.width(text)
+            width = self.font_metrics.horizontalAdvance(text)
 
             # add padding
             height = self.height() - self.settings['padding-y'] * 2
