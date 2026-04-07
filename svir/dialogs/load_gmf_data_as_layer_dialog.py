@@ -110,7 +110,7 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
             return
         event_ids = events['id']
         if 'GEM_QGIS_TEST' in os.environ:
-            self.eid = event_ids[0]
+            self.eid = self.get_closest_element(-1, event_ids)
             ok = True
         elif 'scenario' in self.calculation_mode:
             input_msg = f"Events: {event_ids}"
