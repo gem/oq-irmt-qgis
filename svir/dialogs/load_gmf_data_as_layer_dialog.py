@@ -90,42 +90,60 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
         self.set_eid(events_npz)
 
     def get_closest_element(self, element, elements):
-        return elements[np.abs(elements - element).argmin()]
+        elements = np.asarray(elements)
+        if elements.size == 0:
+            raise ValueError("elements array is empty")
+        # Promote to signed integer to avoid uint32 overflow
+        elements_signed = elements.astype(np.int64)
+        element_signed = int(element)
+        idx = np.abs(elements_signed - element_signed).argmin()
+        return elements[idx]
 
     def set_eid(self, events_npz):
         self.events_npz = events_npz
         events = events_npz['array']
         events = events[events['rlz_id'] == self.rlz_id]
-
+        if len(events) == 0:
+            log_msg('No events found for the selected realization.',
+                    level='C', message_bar=self.iface.messageBar())
+            self.reject()
+            return
+        event_ids = events['id']
         if 'GEM_QGIS_TEST' in os.environ:
-            self.eid = events['id'][0]
+            self.eid = event_ids[0]
             ok = True
         elif 'scenario' in self.calculation_mode:
-            input_msg = f"Events: {events['id']}"
+            input_msg = f"Events: {event_ids}"
         else:
-            input_msg = "Range (%s - %s)" % (events[0]['id'], events[-1]['id'])
+            input_msg = "Range (%s - %s)" % (event_ids[0], event_ids[-1])
 
         if 'GEM_QGIS_TEST' not in os.environ:
-            self.eid = -1  # assuming events start from 0
-            while self.eid not in events['id']:
-                if self.eid == -1:
-                    is_first_iteration = True
-                self.eid = self.get_closest_element(self.eid, events['id'])
+            self.eid = -1
+            is_first_iteration = True
+
+            while self.eid not in event_ids:
+                self.eid = self.get_closest_element(self.eid, event_ids)
                 if is_first_iteration:
                     msg = 'The first relevant event id is %s' % self.eid
                     level = 'I'
+                    is_first_iteration = False
                 else:
                     msg = 'The closest relevant event id is %s' % self.eid
                     level = 'W'
-                log_msg(msg, level=level, message_bar=self.iface.messageBar())
+                log_msg(msg, level=level,
+                        message_bar=self.iface.messageBar())
                 self.eid, ok = QInputDialog.getInt(
                     self.drive_engine_dlg,
                     'Select an event ID',
                     input_msg,
-                    self.eid, events[0]['id'], events[-1]['id'])
+                    self.eid,
+                    int(event_ids[0]),
+                    int(event_ids[-1])
+                )
                 if not ok:
                     self.reject()
                     return
+
         if not ok:
             self.reject()
             return
