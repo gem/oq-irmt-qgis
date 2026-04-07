@@ -738,11 +738,9 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
 
         spy = QSignalSpy(layer.selectionChanged)
 
-        # clear selection (force signal)
+        # it does not emit selectionChanged if nothing was selected
         layer.removeSelection()
         QGIS_APP.processEvents()
-        self.assertGreater(
-            len(spy), 0, "selectionChanged was not emitted on removeSelection")
 
         initial_spy_count = len(spy)
         # select first feature
