@@ -118,7 +118,7 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
             input_msg = "Range (%s - %s)" % (event_ids[0], event_ids[-1])
 
         if 'GEM_QGIS_TEST' not in os.environ:
-            self.eid = -1
+            self.eid = -1  # assuming events start from 0
             is_first_iteration = True
 
             while self.eid not in event_ids:
