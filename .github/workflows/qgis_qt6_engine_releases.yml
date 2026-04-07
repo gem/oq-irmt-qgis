@@ -1,0 +1,201 @@
+name: QT6 Tests vs Engine releases (also for risk demos)
+on:
+  # NOTE: enables only scheduled or triggered manually, NOT on pull requests
+  workflow_dispatch:
+    inputs:
+      git-ref:
+        description: Git Ref
+        default: master
+        required: true
+        type: string
+      debug_enabled:
+        type: boolean
+        description: "Run the build with tmate debugging enabled"
+        required: false
+        default: false
+  schedule:
+    - cron: "0 2 * * *"
+
+jobs:
+  Tests_and_docs:
+    name: OQ ${{ matrix.ENGINE_BR }} ${{ matrix.QGIS_DOCKER_VERSION }} ${{ matrix.DEMOS }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # NOTE: it would be better to point to lts and latest if possible
+        # NOTE: checking also master to make sure risk workshop demos keep working also on master
+        ENGINE_BR: ['engine-3.23', 'engine-3.25', 'master']  # NOTE: add latest when different from lts
+        # NOTE: we might test also for qgis/qgis:3.22 that is the version of qgis-server that we are currently using in the Geoviewer, but it currently causes a segfault
+        # NOTE: qgis:stable points to the latest release, whereas qgis:latest points to qgis master
+        # QGIS_DOCKER_VERSION: ['qgis/qgis:ltr', 'qgis/qgis:stable']
+        QGIS_DOCKER_VERSION: ['qgis/qgis:4.0.0']
+        DEMOS: ['oqdata', 'risk-oqdata']
+        PYTHON_VERSION: ['3.12']
+    steps:
+      - name: Clone Repository (Master)
+        uses: actions/checkout@v4
+        if: github.event.inputs.git-ref == ''
+      - name: Clone Repository (Custom Ref)
+        uses: actions/checkout@v4
+        if: github.event.inputs.git-ref != ''
+        with:
+          ref: ${{ github.event.inputs.git-ref }}
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Prepare Start file for docker
+        run: |
+          set -x
+          $(cat << EOF  > ./startX.sh
+          apt update --allow-releaseinfo-change
+          DEBIAN_FRONTEND=noninteractive apt install -y python3-scipy python3-matplotlib python3-pyqt6 python3-pytest python3-pexpect xvfb git expect
+          chmod +x /tests_directory/qgis_startup.py
+          cp /tests_directory/qgis_startup.py /usr/bin/
+          cp /tests_directory/qgis_testrunner.py /usr/bin/
+          export DISPLAY=:1.0
+          Xvfb :1 -screen 0 1024x768x16
+          EOF
+          )
+          curl -O https://raw.githubusercontent.com/qgis/QGIS/master/.docker/qgis_resources/test_runner/qgis_setup.sh
+          curl -O https://raw.githubusercontent.com/qgis/QGIS/master/.docker/qgis_resources/test_runner/qgis_testrunner.sh
+          curl -O https://raw.githubusercontent.com/qgis/QGIS/master/.docker/qgis_resources/test_runner/qgis_testrunner.py
+          curl -O https://raw.githubusercontent.com/qgis/QGIS/master/.docker/qgis_resources/test_runner/qgis_startup.py
+          chmod +x ./qgis_setup.sh
+          chmod +x ./qgis_testrunner.sh
+          chmod +x ./qgis_testrunner.py
+          chmod +x ./startX.sh
+      - name: ⏳ Clone/install engine and restore oqdata
+        run: |
+          set -x
+          PY_VER=${{ matrix.PYTHON_VERSION }}
+          ENGINE_BR=${{ matrix.ENGINE_BR }}
+          IRMT_BR=$ENGINE_BR
+          if [[ "$ENGINE_BR" == "master" ]]; then
+            # TODO: in future releases we should test both RESTRICTED and PUBLIC with all engine versions
+            export OQ_APPLICATION_MODE="RESTRICTED"
+          else
+            export OQ_APPLICATION_MODE="PUBLIC"
+          fi
+          git fetch
+          git checkout $IRMT_BR
+          curl -O https://raw.githubusercontent.com/gem/oq-engine/master/install.py
+          ls -lrt install.py
+          echo "Using branch ${ENGINE_BR}"
+          if [ "$(git ls-remote --heads https://github.com/gem/oq-engine.git ${ENGINE_BR})" = "" ]; then
+              echo "Branch ${ENGINE_BR} not found in gem/oq-engine repository"
+              exit 1
+          fi
+          # get release version from branch name (e.g. 'engine-3.16' -> '3.16')
+          prefix="engine-"
+          if [[ $ENGINE_BR == ${prefix}* ]]; then
+              RELEASE_VERSION="${ENGINE_BR#${prefix}}"
+          else
+              RELEASE_VERSION=$ENGINE_BR
+          fi
+          python$PY_VER install.py user --version=${RELEASE_VERSION}
+          export PIP_DEFAULT_TIMEOUT=100
+          echo "Restore ${{matrix.DEMOS}} demos for $ENGINE_BR branch "
+          source $HOME/openquake/bin/activate
+          oq reset -y
+
+          if [[ "$OQ_APPLICATION_MODE" == "RESTRICTED" ]]; then
+            # NOTE: I can't find the templates to actualize, so I am creating empty files instead (they just need to exist in this case)
+            touch $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/templates/registration/user_creation_email_content.txt
+            touch $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/templates/registration/password_reset_email_content.txt
+            touch $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/templates/registration/user_creation_email_subject.txt
+            touch $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/templates/registration/password_reset_email_subject.txt
+          fi
+
+          oq restore https://artifacts.openquake.org/travis/${{matrix.DEMOS}}-${ENGINE_BR}.zip ~/oqdata
+
+          python $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/manage.py migrate
+
+          if [[ "$OQ_APPLICATION_MODE" == "RESTRICTED" ]]; then
+            python $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/manage.py createuser level_0_user testuser1@test.com --level 0 --password level_0_password --no-email
+            oq db "UPDATE job SET user_name = 'level_0_user'"
+          fi
+      - name: Setup SSH session to debug docker container
+        uses: mxschmitt/action-tmate@v3
+        timeout-minutes: 120
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
+
+      - name: ⏳ Start WebUI and run docker
+        run: |
+          set -x
+          ENGINE_BR=${{ matrix.ENGINE_BR }}
+          IRMT_BR=$ENGINE_BR
+          if [[ "$ENGINE_BR" == "master" ]]; then
+            # TODO: in future releases we should test both RESTRICTED and PUBLIC with all engine versions
+            export OQ_APPLICATION_MODE="RESTRICTED"
+          else
+            export OQ_APPLICATION_MODE="PUBLIC"
+          fi
+          source $HOME/openquake/bin/activate
+          oq webui start 172.17.0.1:8800 --skip-browser &> webui.log &
+          echo "Waiting WEBUI up on port 8800...."
+          while ! nc -z 172.17.0.1 8800; do
+            sleep 5
+          done
+          curl http://172.17.0.1:8800/v1/engine_version
+          #
+          DOCKER_HOST=`ip -4 addr show docker0 | grep -Po 'inet \K[\d.]+'`
+          ENGINE_HOST=`echo http://$DOCKER_HOST:8800`
+          docker run -d -t --name qgis -v /tmp/.X11-unix:/tmp/.X11-unix -v ${PWD}:/tests_directory -e OQ_ENGINE_HOST='http://172.17.0.1:8800' \
+            -e BRANCH="$IRMT_BR" -e ONLY_CALC_ID="$ONLY_CALC_ID" -e ONLY_OUTPUT_TYPE="$ONLY_OUTPUT_TYPE" -e GEM_QGIS_TEST=y ${{ matrix.QGIS_DOCKER_VERSION }} \
+            bash -c "/tests_directory/startX.sh"
+
+          COUNT=0
+          SOCKET=/tmp/.X11-unix/X1
+          MAX_TRIES=20
+          while [ ! -S "$SOCKET" ] && [ "$COUNT" -lt "$MAX_TRIES" ]; do
+              echo "waiting for X ($COUNT)..."
+              sleep 3
+              COUNT=$((COUNT + 1))
+          done
+          if [ ! -S "$SOCKET" ]; then
+              echo "X environment still not ready, aborting"
+              exit 1
+          fi
+      - name: ℧ Run unit test
+        run: |
+          set -x
+          ENGINE_BR=${{ matrix.ENGINE_BR }}
+          IRMT_BR=$ENGINE_BR
+          git fetch
+          git checkout $IRMT_BR
+          # OGR_SQLITE_JOURNAL=delete prevents QGIS from using WAL, which modifies geopackages even if they are just read
+          docker exec -t qgis bash -c "export DISPLAY=:1.0; export PYTHONPATH=/usr/share/qgis/python/plugins/:$PYTHONPATH; OGR_SQLITE_JOURNAL=delete python3 -m pytest -v /tests_directory/svir/test/unit/"
+      - name: ⨕ Run Integration test
+        run: |
+          set -x
+          ENGINE_BR=${{ matrix.ENGINE_BR }}
+          IRMT_BR=$ENGINE_BR
+          git fetch
+          git checkout $IRMT_BR
+          # get release version from branch name (e.g. 'engine-3.16' -> '3.16')
+          prefix="engine-"
+          if [[ $ENGINE_BR == ${prefix}* ]]; then
+              RELEASE_VERSION="${ENGINE_BR#${prefix}}"
+          else
+              RELEASE_VERSION=$ENGINE_BR
+          fi
+          # NOTE: if we want to enable it, we need to use the proper folder after engine user installation
+          OQ_TEST_RUN_CALC=0
+          if [ "${{ matrix.DEMOS }}" != "risk-oqdata" -a "${RELEASE_VERSION}" != "3.16" ]; then
+            OQ_CHECK_MISSING_OUTPUTS=1
+          else
+            OQ_CHECK_MISSING_OUTPUTS=0
+          fi
+          echo "OQ_CHECK_MISSING_OUTPUTS: ${OQ_CHECK_MISSING_OUTPUTS}"
+          echo "OQ_TEST_RUN_CALC: ${OQ_TEST_RUN_CALC}"
+          # NOTE: the check on the existence of the engine branch is already done in the previous step
+          docker exec qgis sh -c "export DISPLAY=:1.0; echo 'Running against oq-engine on branch ${ENGINE_BR}'"
+          docker exec qgis sh -c "export DISPLAY=:1.0; /tests_directory/qgis_setup.sh svir"
+          docker exec -e OQ_CHECK_MISSING_OUTPUTS=${OQ_CHECK_MISSING_OUTPUTS} -e OQ_TEST_RUN_CALC=${OQ_TEST_RUN_CALC} \
+            -t qgis sh -c "export DISPLAY=:1.0; cd /tests_directory && ./qgis_testrunner.sh svir.test.integration.test_drive_oq_engine"
+      - name: ㏒ Display web logs
+        run: |
+          set -x
+          cat webui.log
