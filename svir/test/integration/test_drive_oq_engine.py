@@ -178,6 +178,7 @@ class LoadOqEngineOutputsTestCase(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         super().tearDownClass()
+        cls.irmt.unload()  # clean up toolbar/menu from iface before next class
         QSettings().setValue(
             'irmt/experimental_enabled', cls.initial_experimental_enabled)
         # print("\n\nGLOBAL SUMMARY OF TESTING OQ-ENGINE OUTPUT LOADERS")
