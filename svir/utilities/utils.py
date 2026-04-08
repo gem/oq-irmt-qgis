@@ -50,6 +50,7 @@ from qgis.core import (
                        QgsRectangle,
                        QgsLayerTreeLayer,
                        QgsCoordinateTransformContext,
+                       QgsWkbTypes,
                        )
 from qgis.gui import QgsMessageBar, QgsMessageBarItem
 from qgis.utils import iface
@@ -915,7 +916,13 @@ def convert_to_mem_layer_and_cast_bool_fields_to_int(original_layer):
 
     # Create editable memory layer with same field names/order
     # NOTE: adding fields to csv-based layer data providers fails silently
-    mem_layer = QgsVectorLayer("None", original_layer.name(), "memory")
+    # Get geometry type: 'Point', 'LineString', 'Polygon', or 'None'
+    geom_type = QgsWkbTypes.displayString(original_layer.wkbType())
+    crs_authid = original_layer.crs().authid()
+    # Construct a URI that includes geometry type and CRS
+    # Example: "Point?crs=epsg:4326"
+    uri = f"{geom_type}?crs={crs_authid}"
+    mem_layer = QgsVectorLayer(uri, original_layer.name(), "memory")
     mem_layer_data = mem_layer.dataProvider()
     mem_layer_data.addAttributes(new_fields)
     mem_layer.updateFields()
@@ -931,6 +938,8 @@ def convert_to_mem_layer_and_cast_bool_fields_to_int(original_layer):
                 value = int(value) if value is not None else None
             attrs.append(value)
         new_feat.setAttributes(attrs)
+        if feature.hasGeometry():
+            new_feat.setGeometry(feature.geometry())
         mem_layer.addFeature(new_feat)
     mem_layer.commitChanges()
     return mem_layer
@@ -964,7 +973,8 @@ def import_layer_from_csv(parent,
         else:
             url_query.addQueryItem('xField', longitude_field)
             url_query.addQueryItem('yField', latitude_field)
-        url_query.addQueryItem('spatialIndex', 'no')
+            url_query.addQueryItem('geomType', 'point')
+        url_query.addQueryItem('spatialIndex', 'yes')
         url_query.addQueryItem('crs', 'epsg:4326')
     url_query.addQueryItem('subsetIndex', 'no')
     url_query.addQueryItem('watchFile', 'no')
