@@ -24,13 +24,12 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
+import os
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtCore import QFile
 
 from qgis.testing import unittest, start_app
 from qgis.testing.mocked import get_iface
-
-import svir.resources  # NOQA: triggers qInitResources()
 
 QGIS_APP = start_app()
 IFACE = get_iface()
@@ -46,6 +45,7 @@ class IrmtTest(unittest.TestCase):
     def setUp(self):
         """Runs before each test."""
         super().setUp()
+        self.plugin_dir = os.path.dirname(os.path.dirname(__file__))
 
     def tearDown(self):
         """Runs after each test."""
@@ -53,9 +53,10 @@ class IrmtTest(unittest.TestCase):
 
     def test_icon_png(self):
         """Test we can click OK."""
-        path = ':/plugins/irmt/icon.svg.png'
-        self.assertTrue(QFile.exists(path), f"Resource not found: {path}")
-        icon = QIcon(path)
+        icon_path = os.path.join(self.plugin_dir, 'resources', 'icon.svg.png')
+        self.assertTrue(QFile.exists(icon_path),
+                        f"Resource not found: {icon_path}")
+        icon = QIcon(icon_path)
         self.assertFalse(icon.isNull())
 
     def test_toggle_active_actions(self):
