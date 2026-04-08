@@ -20,7 +20,8 @@ class ComplexLineEdit(QLineEdit):
             'highlight_disabled': QColor(179, 179, 179),
             'text': QColor(0, 105, 92),
             'text_disabled': QColor(179, 179, 179),
-            'font': QFontDatabase.systemFont(QFontDatabase.SystemFont.GeneralFont),
+            'font': QFontDatabase.systemFont(
+                QFontDatabase.SystemFont.GeneralFont),
             'padding-x': 8,
             'padding-y': 2,
             }
@@ -35,12 +36,15 @@ class ComplexLineEdit(QLineEdit):
         qp.end()
 
     def mouseReleaseEvent(self, event):
+        # Convert event.pos() (QPoint) to QPointF to match QRectF requirements
+        # In Qt6, event.position() returns a QPointF directly
+        click_pos = event.position()
         for text, rect in self.close_rectangles.items():
-            if event.pos() in rect:
+            if rect.contains(click_pos):
                 selected = self.parent.get_selected_items()
-                selected.remove(text)
-                self.parent.set_selected_items(selected)
-
+                if text in selected:
+                    selected.remove(text)
+                    self.parent.set_selected_items(selected)
                 event.accept()
                 return
         self.parent.showPopup()
@@ -126,7 +130,9 @@ class ComplexLineEdit(QLineEdit):
         # start text one padding in
         left = rect.left() + self.settings['padding-x']
         rect.setLeft(left)
-        qp.drawText(rect, Qt.AlignmentFlag.AlignLeft, text)
+        qp.drawText(rect,
+                    Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
+                    text)
 
     def current_text(self):
         items = self.text().split('; ')
