@@ -53,7 +53,8 @@ class IrmtTest(unittest.TestCase):
 
     def test_icon_png(self):
         """Test we can click OK."""
-        path = ':/plugins/IRMT/icon.png'
+        path = ':/plugins/irmt/icon.svg.png'
+        self.assertTrue(QFile.exists(path), f"Resource not found: {path}")
         icon = QIcon(path)
         self.assertFalse(icon.isNull())
 
