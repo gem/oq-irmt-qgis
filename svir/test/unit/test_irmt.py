@@ -25,6 +25,7 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
+import svir
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtCore import QFile
 
@@ -45,7 +46,7 @@ class IrmtTest(unittest.TestCase):
     def setUp(self):
         """Runs before each test."""
         super().setUp()
-        self.plugin_dir = os.path.dirname(os.path.dirname(__file__))
+        self.plugin_dir = os.path.dirname(svir.__file__)
 
     def tearDown(self):
         """Runs after each test."""
