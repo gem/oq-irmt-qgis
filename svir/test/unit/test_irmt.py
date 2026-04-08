@@ -25,9 +25,12 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 from qgis.PyQt.QtGui import QIcon
+from qgis.PyQt.QtCore import QFile
 
 from qgis.testing import unittest, start_app
 from qgis.testing.mocked import get_iface
+
+import svir.resources  # NOQA: triggers qInitResources()
 
 QGIS_APP = start_app()
 IFACE = get_iface()

@@ -143,6 +143,7 @@ jobs:
           # OGR_SQLITE_JOURNAL=delete prevents QGIS from using WAL, which modifies geopackages even if they are just read
           docker exec -t qgis bash -c 'export DISPLAY=:1.0; export PYTHONPATH=/usr/share/qgis/python/plugins/:$PYTHONPATH; OGR_SQLITE_JOURNAL=delete python3 -m pytest -v /tests_directory/svir/test/unit/'
       - name: ⨕ Run Integration test
+        if: always()
         run: |
           set -x
           echo " Check if this is a pull request or not"
