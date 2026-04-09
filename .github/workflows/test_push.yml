@@ -2,6 +2,11 @@ name: PR unit and integration tests
 on:
   workflow_dispatch:
     inputs:
+      git-ref:
+        description: Git Ref
+        default: master
+        required: true
+        type: string
       debug_enabled:
         type: boolean
         description: "Run the build with tmate debugging enabled"
@@ -44,7 +49,7 @@ jobs:
           set -x
           $(cat << EOF  > ./startX.sh
           apt update --allow-releaseinfo-change
-          DEBIAN_FRONTEND=noninteractive apt install -y python3-scipy python3-matplotlib python3-pyqt5.qtwebkit python3-pytest python3-pexpect xvfb git expect
+          DEBIAN_FRONTEND=noninteractive apt install -y python3-scipy python3-matplotlib python3-pyqt6 python3-pytest python3-pexpect xvfb git expect
           chmod +x /tests_directory/qgis_startup.py
           cp /tests_directory/qgis_startup.py /usr/bin/
           cp /tests_directory/qgis_testrunner.py /usr/bin/
