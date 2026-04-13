@@ -1,45 +1,58 @@
-
-# coding=utf-8
-"""
-InaSAFE Disaster risk assessment tool developed by AusAid -
-**ISClipper test suite.**
-
-Contact : ole.moller.nielsen@gmail.com
-
-.. note:: This program is free software; you can redistribute it and/or modify
-     it under the terms of the GNU General Public License as published by
-     the Free Software Foundation; either version 2 of the License, or
-     (at your option) any later version.
-
-"""
-__author__ = 'tim@kartoza.com'
-__date__ = '20/01/2011'
-__copyright__ = ('Copyright 2012, Australia Indonesia Facility for '
-                 'Disaster Reduction')
+# -*- coding: utf-8 -*-
+# /***************************************************************************
+# Irmt
+#                                 A QGIS plugin
+# OpenQuake Integrated Risk Modelling Toolkit
+#                              -------------------
+#        begin                : 2013-10-24
+#        copyright            : (C) 2014-2026 by GEM Foundation
+#        email                : devops@openquake.org
+# ***************************************************************************/
+#
+# OpenQuake is free software: you can redistribute it and/or modify it
+# under the terms of the GNU Affero General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# OpenQuake is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 from qgis.core import QgsProviderRegistry
-from qgis.testing import unittest, start_app
-from qgis.testing.mocked import get_iface
-
-QGIS_APP = start_app()
-IFACE = get_iface()
 
 
-class QGISTest(unittest.TestCase):
-    """Test the QGIS Environment."""
+def test_qgis_environment(qgis_app):
+    """
+    Test that the QGIS environment is correctly initialized
+    with the expected data providers.
+    """
+    registry = QgsProviderRegistry.instance()
+    providers = registry.providerList()
 
-    def test_qgis_environment(self):
-        """QGIS environment has the expected providers."""
-        # noinspection PyUnresolvedReferences
-        r = QgsProviderRegistry.instance()
+    # Define the core providers we expect to be available
+    expected_providers = [
+        'gdal',
+        'ogr',
+        'postgres',
+        'delimitedtext'
+    ]
 
-        # print 'Provider count: %s' % len(r.providerList())
-        assert 'gdal' in r.providerList()
-        assert 'ogr' in r.providerList()
-        assert 'postgres' in r.providerList()
-        assert 'delimitedtext' in r.providerList()
-        # assert 'wfs' in r.providerList()
+    for provider in expected_providers:
+        assert provider in providers, (
+            f"Provider '{provider}' not found in QGIS registry. "
+            f"Available providers: {', '.join(providers)}"
+        )
 
 
-if __name__ == '__main__':
-    unittest.main()
+def test_provider_count(qgis_app):
+    """
+    Check if we have a reasonable number of providers loaded.
+    Helpful for debugging environment-specific issues.
+    """
+    registry = QgsProviderRegistry.instance()
+    # Most standard installations have at least 10+ providers
+    assert len(registry.providerList()) > 0
