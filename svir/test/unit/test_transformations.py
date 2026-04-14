@@ -55,7 +55,7 @@ def input_list():
     return [2, 0, 2, 1, 2, 3, 2]
 
 
-# --- Missing Values Tests ---
+# Missing Values Tests
 
 @pytest.mark.parametrize("null_value_type", [
     "PYTHON_NONE",
@@ -84,7 +84,7 @@ def test_transform_with_missing_values(logic, null_value_type):
     assert transformed_dict == expected_dict
 
 
-# --- Rank Transformation Tests ---
+# Rank Transformation Tests
 
 @pytest.mark.parametrize("variant, inverse, expected", [
     ("AVERAGE", False, [4.5, 1, 4.5, 2, 4.5, 7, 4.5]),
@@ -105,7 +105,7 @@ def test_rank_variants(logic, input_list, variant, inverse, expected):
     assert result == expected
 
 
-# --- Min-Max Transformation Tests ---
+# Min-Max Transformation Tests
 
 def test_min_max_direct(logic, input_list):
     alg = logic.algs["MIN_MAX"]
@@ -121,7 +121,7 @@ def test_min_max_inverse(logic, input_list):
     assert result == pytest.approx(expected)
 
 
-# --- Z-Score Transformation Tests ---
+# Z-Score Transformation Tests
 
 def test_z_score_direct(logic, input_list):
     alg = logic.algs["Z_SCORE"]
@@ -138,7 +138,7 @@ def test_z_score_inverse(logic, input_list):
     assert pytest.approx(result[5], abs=1e-6) == -5.3533068
 
 
-# --- Log10 Transformation Tests ---
+# Log10 Transformation Tests
 
 def test_log10_standard_positive(logic):
     alg = logic.algs["LOG10"]
@@ -173,7 +173,7 @@ def test_log10_zero_logic(logic, variant, expect_null):
         assert result[2] == 0  # In your log logic, 0 usually implies log10(1)
 
 
-# --- Quadratic Transformation Tests ---
+# Quadratic Transformation Tests
 
 @pytest.mark.parametrize("variant, inverse, expected_val", [
     ("INCREASING", False, 0.1029),
@@ -188,7 +188,7 @@ def test_quadratic_variants(logic, variant, inverse, expected_val):
     assert pytest.approx(result[0], abs=1e-4) == expected_val
 
 
-# --- Sigmoid Transformation Tests ---
+# Sigmoid Transformation Tests
 
 def test_sigmoid_direct(logic):
     alg = logic.algs["SIGMOID"]
