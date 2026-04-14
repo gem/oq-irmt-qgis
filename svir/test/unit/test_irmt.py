@@ -9,8 +9,6 @@
 #        email                : devops@openquake.org
 # ***************************************************************************/
 #
-# Copyright (c) 2013-2014, GEM Foundation.
-#
 # OpenQuake is free software: you can redistribute it and/or modify it
 # under the terms of the GNU Affero General Public License as published
 # by the Free Software Foundation, either version 3 of the License, or
@@ -25,51 +23,40 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
+import pytest
 import svir
+
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtCore import QFile
 
-from qgis.testing import unittest, start_app
-from qgis.testing.mocked import get_iface
 
-QGIS_APP = start_app()
-IFACE = get_iface()
-
-# import irmt
-# IRMT = irmt.classFactory(IFACE)
-# IRMT.ui = irmt.plugin.dlg.ui  # useful for shorthand later
+@pytest.fixture
+def plugin_dir():
+    """Fixture to provide the absolute path to the plugin directory."""
+    return os.path.dirname(svir.__file__)
 
 
-class IrmtTest(unittest.TestCase):
-    """Test OpenQuake IRMT works."""
-
-    def setUp(self):
-        """Runs before each test."""
-        super().setUp()
-        self.plugin_dir = os.path.dirname(svir.__file__)
-
-    def tearDown(self):
-        """Runs after each test."""
-        super().tearDown()
-
-    def test_icon_png(self):
-        """Test we can click OK."""
-        icon_path = os.path.join(self.plugin_dir, 'resources', 'icon.svg.png')
-        self.assertTrue(QFile.exists(icon_path),
-                        f"Resource not found: {icon_path}")
-        icon = QIcon(icon_path)
-        self.assertFalse(icon.isNull())
-
-    def test_toggle_active_actions(self):
-        # print(IRMT.registered_actions())
-        # self.assertFalse()
-        pass
+@pytest.fixture
+def iface():
+    """Provide a mocked QGIS interface."""
+    from qgis.testing.mocked import get_iface
+    return get_iface()
 
 
-if __name__ == "__main__":
-    suite = unittest.TestSuite()
-    loader = unittest.TestLoader()
-    tests = loader.loadTestsFromTestCase(IrmtTest)
-    suite.addTests(tests)
-    runner = unittest.TextTestRunner(verbosity=2)
-    runner.run(suite)
+def test_icon_png(plugin_dir):
+    """Test that the plugin icon exists and can be loaded as a QIcon."""
+    icon_path = os.path.join(plugin_dir, 'resources', 'icon.svg.png')
+    # Verification using QFile
+    assert QFile.exists(icon_path), f"Resource not found: {icon_path}"
+    icon = QIcon(icon_path)
+    # Verification that the icon is a valid image
+    assert not icon.isNull(), f"Icon at {icon_path} is null or invalid."
+
+
+def test_toggle_active_actions():
+    """Placeholder for testing registered actions."""
+    # The original unittest version contained only the
+    # following commented lines
+    # print(IRMT.registered_actions())
+    # self.assertFalse()
+    pass
