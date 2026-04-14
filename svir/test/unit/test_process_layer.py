@@ -22,150 +22,147 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
-# import qgis libs so that we set the correct sip api version
-import os.path
+import os
+import gc
+import pytest
 from qgis.core import QgsVectorLayer, QgsField
-
 
 from svir.calculations.process_layer import ProcessLayer
 from svir.utilities.shared import (
     INT_FIELD_TYPE, INT_FIELD_TYPE_NAME,
-    STRING_FIELD_TYPE, STRING_FIELD_TYPE_NAME)
-
-from qgis.testing import unittest, start_app
-from qgis.testing.mocked import get_iface
-
-QGIS_APP = start_app()
-IFACE = get_iface()
+    STRING_FIELD_TYPE, STRING_FIELD_TYPE_NAME
+)
 
 
-class CheckProjectionsTestCase(unittest.TestCase):
-    def setUp(self):
-        super().setUp()
-        curr_dir_name = os.path.dirname(__file__)
-        data_dir_name = os.path.join(
-            curr_dir_name, os.pardir,
-            'data', 'process_layer', 'check_projections')
-
-        loss_layer_epsg4326_file_path = os.path.join(
-            data_dir_name, 'loss_layer_epsg4326.shp')
-        zonal_layer_epsg4326_file_path = os.path.join(
-            data_dir_name, 'zonal_layer_epsg4326.shp')
-        zonal_layer_epsg4269_file_path = os.path.join(
-            data_dir_name, 'zonal_layer_epsg4269.shp')
-
-        self.loss_layer_epsg4326 = QgsVectorLayer(
-            loss_layer_epsg4326_file_path, 'loss_layer_epsg4326', 'ogr')
-        self.zonal_layer_epsg4326 = QgsVectorLayer(
-            zonal_layer_epsg4326_file_path, 'zonal_layer_epsg4326', 'ogr')
-        self.zonal_layer_epsg4269 = QgsVectorLayer(
-            zonal_layer_epsg4269_file_path, 'zonal_layer_epsg4269', 'ogr')
-
-    def test_same_projections(self):
-        res, msg = \
-            ProcessLayer(self.loss_layer_epsg4326).has_same_projection_as(
-                self.zonal_layer_epsg4326)
-        self.assertEqual(res, True)
-
-    def test_different_projections(self):
-        res, msg = \
-            ProcessLayer(self.loss_layer_epsg4326).has_same_projection_as(
-                self.zonal_layer_epsg4269)
-        self.assertEqual(res, False)
+@pytest.fixture
+def data_dir():
+    """Resolve path to the process_layer data directory."""
+    return os.path.abspath(
+        os.path.join(
+            os.path.dirname(__file__),
+            os.pardir, 'data', 'process_layer'
+        )
+    )
 
 
-class CompareLayerContentTestCase(unittest.TestCase):
-
-    def setUp(self):
-        super().setUp()
-        # a and b are equal
-        # c is longer than a and b but they have the same partial content
-        # d is different with respect to all the others
-        curr_dir_name = os.path.dirname(__file__)
-        data_dir_name = os.path.join(
-            curr_dir_name, os.pardir, 'data', 'process_layer', 'compare')
-        layer_a_file_path = os.path.join(data_dir_name, 'layer_a.shp')
-        layer_b_file_path = os.path.join(data_dir_name, 'layer_b.shp')
-        layer_c_file_path = os.path.join(data_dir_name, 'layer_c.shp')
-        layer_d_file_path = os.path.join(data_dir_name, 'layer_d.shp')
-        self.layer_a = QgsVectorLayer(layer_a_file_path, 'layer_a', 'ogr')
-        self.layer_b = QgsVectorLayer(layer_b_file_path, 'layer_b', 'ogr')
-        self.layer_c = QgsVectorLayer(layer_c_file_path, 'layer_c', 'ogr')
-        self.layer_d = QgsVectorLayer(layer_d_file_path, 'layer_d', 'ogr')
-
-    def test_same_content_case_layers_are_equal(self):
-        res = ProcessLayer(self.layer_a).has_same_content_as(self.layer_b)
-        self.assertEqual(res, True)
-
-    def test_same_content_case_first_layer_has_more_features(self):
-        res = ProcessLayer(self.layer_c).has_same_content_as(self.layer_a)
-        self.assertEqual(res, False)
-
-    def test_same_content_case_second_layer_has_more_features(self):
-        res = ProcessLayer(self.layer_a).has_same_content_as(self.layer_c)
-        self.assertEqual(res, False)
-
-    def test_same_content_case_layers_are_completely_different(self):
-        res = ProcessLayer(self.layer_a).has_same_content_as(self.layer_d)
-        self.assertEqual(res, False)
+@pytest.fixture
+def projection_layers(data_dir):
+    """Load layers for projection testing."""
+    subdir = os.path.join(data_dir, 'check_projections')
+    layers = {
+        'loss_4326': QgsVectorLayer(
+            os.path.join(subdir, 'loss_layer_epsg4326.shp'),
+            'loss_4326', 'ogr'),
+        'zonal_4326': QgsVectorLayer(
+            os.path.join(subdir, 'zonal_layer_epsg4326.shp'),
+            'zonal_4326', 'ogr'),
+        'zonal_4269': QgsVectorLayer(
+            os.path.join(subdir, 'zonal_layer_epsg4269.shp'),
+            'zonal_4269', 'ogr')
+    }
+    yield layers
+    layers.clear()
+    gc.collect()
 
 
-class AddAttributesTestCase(unittest.TestCase):
+@pytest.fixture
+def compare_layers(data_dir):
+    """Load layers for content comparison testing."""
+    subdir = os.path.join(data_dir, 'compare')
 
-    def setUp(self):
-        super().setUp()
-        uri = 'Point?crs=epsg:4326'
-        self.layer = QgsVectorLayer(uri, 'TestLayer', 'memory')
+    layers = {
+        'a': QgsVectorLayer(os.path.join(subdir, 'layer_a.shp'), 'a', 'ogr'),
+        'b': QgsVectorLayer(os.path.join(subdir, 'layer_b.shp'), 'b', 'ogr'),
+        'c': QgsVectorLayer(os.path.join(subdir, 'layer_c.shp'), 'c', 'ogr'),
+        'd': QgsVectorLayer(os.path.join(subdir, 'layer_d.shp'), 'd', 'ogr')
+    }
+    yield layers
+    layers.clear()
+    gc.collect()
 
-    def test_find_attribute_id(self):
-        field_names = ['first', 'second']
-        field_one = QgsField(field_names[0], STRING_FIELD_TYPE)
-        field_one.setTypeName(STRING_FIELD_TYPE_NAME)
-        field_two = QgsField(field_names[1], INT_FIELD_TYPE)
-        field_two.setTypeName(INT_FIELD_TYPE_NAME)
-        attributes = [field_one, field_two]
-        ProcessLayer(self.layer).add_attributes(attributes)
-        added_field_names = [field.name() for field in self.layer.fields()]
-        # Check that both attributes are correctly found
-        for attr_name in added_field_names:
-            # it raises AttributeError if not found
-            ProcessLayer(self.layer).find_attribute_id(attr_name)
-        # Check that an inexistent field doesn't get found and that the
-        # AttributeError exception is correctly raised
-        with self.assertRaises(AttributeError):
-            ProcessLayer(self.layer).find_attribute_id('dummy')
 
-    def test_add_attributes(self):
-        field_one = QgsField('first', STRING_FIELD_TYPE)
-        field_one.setTypeName(STRING_FIELD_TYPE_NAME)
-        field_two = QgsField('second', INT_FIELD_TYPE)
-        field_two.setTypeName(INT_FIELD_TYPE_NAME)
-        attributes = [field_one, field_two]
-        added_attributes = ProcessLayer(self.layer).add_attributes(attributes)
-        expected_dict = {'first': 'first',
-                         'second': 'second'}
-        self.assertDictEqual(added_attributes, expected_dict)
-        # Let's add 2 other fields with the same names of the previous ones
-        # ==> Since the names are already taken, we expect to add fields with
-        # the same names plus '_1'
-        field_three = QgsField('first', STRING_FIELD_TYPE)
-        field_three.setTypeName(STRING_FIELD_TYPE_NAME)
-        field_four = QgsField('second', INT_FIELD_TYPE)
-        field_four.setTypeName(INT_FIELD_TYPE_NAME)
-        attributes = [field_three, field_four]
-        added_attributes = ProcessLayer(self.layer).add_attributes(attributes)
-        expected_dict = {'first': 'first_1',
-                         'second': 'second_1'}
-        self.assertEqual(added_attributes, expected_dict)
-        # Let's add 2 other fields with the same names of the previous ones
-        # ==> Since the names are already taken, as well as the corresponding
-        # '_1' versions, we expect to add fields with the same names plus '_2'
-        field_five = QgsField('first', STRING_FIELD_TYPE)
-        field_five.setTypeName(STRING_FIELD_TYPE_NAME)
-        field_six = QgsField('second', INT_FIELD_TYPE)
-        field_six.setTypeName(INT_FIELD_TYPE_NAME)
-        attributes = [field_five, field_six]
-        added_attributes = ProcessLayer(self.layer).add_attributes(attributes)
-        expected_dict = {'first': 'first_2',
-                         'second': 'second_2'}
-        self.assertEqual(added_attributes, expected_dict)
+@pytest.fixture
+def memory_layer():
+    """Create a fresh memory layer for attribute testing."""
+    uri = 'Point?crs=epsg:4326'
+    return QgsVectorLayer(uri, 'TestLayer', 'memory')
+
+
+# Projection Tests
+
+def test_same_projections(projection_layers):
+    """Test that identical projections are correctly identified."""
+    res, _ = ProcessLayer(
+        projection_layers['loss_4326']).has_same_projection_as(
+            projection_layers['zonal_4326'])
+    assert res is True
+
+
+def test_different_projections(projection_layers):
+    """Test that different projections are correctly identified."""
+    res, _ = ProcessLayer(
+        projection_layers['loss_4326']).has_same_projection_as(
+            projection_layers['zonal_4269'])
+    assert res is False
+
+
+# --- Content Comparison Tests ---
+
+def test_same_content_equal_layers(compare_layers):
+    """Test layers with identical content."""
+    res = ProcessLayer(compare_layers['a']).has_same_content_as(
+        compare_layers['b'])
+    assert res is True
+
+
+@pytest.mark.parametrize(
+    "primary,secondary", [('c', 'a'), ('a', 'c'), ('a', 'd')])
+def test_different_content(compare_layers, primary, secondary):
+    """Test various cases where layer content differs."""
+    res = ProcessLayer(compare_layers[primary]).has_same_content_as(
+        compare_layers[secondary]
+    )
+    assert res is False
+
+
+# Attribute Tests
+
+def test_find_attribute_id(memory_layer):
+    """Test attribute ID lookup and error handling."""
+    field_one = QgsField('first', STRING_FIELD_TYPE)
+    field_one.setTypeName(STRING_FIELD_TYPE_NAME)
+    field_two = QgsField('second', INT_FIELD_TYPE)
+    field_two.setTypeName(INT_FIELD_TYPE_NAME)
+
+    ProcessLayer(memory_layer).add_attributes([field_one, field_two])
+
+    proc = ProcessLayer(memory_layer)
+    assert proc.find_attribute_id('first') is not None
+    assert proc.find_attribute_id('second') is not None
+
+    with pytest.raises(AttributeError):
+        proc.find_attribute_id('dummy')
+
+
+def test_add_attributes_duplicate_handling(memory_layer):
+    """Test that duplicate field names are handled with suffixes."""
+    proc = ProcessLayer(memory_layer)
+
+    # Helper to generate fresh field objects to avoid mutation issues
+    def get_fields():
+        return [
+            QgsField('first', STRING_FIELD_TYPE),
+            QgsField('second', INT_FIELD_TYPE)
+        ]
+
+    # Initial add: expects 'first', 'second'
+    res1 = proc.add_attributes(get_fields())
+    assert res1 == {'first': 'first', 'second': 'second'}
+
+    # Duplicate names: expects 'first_1', 'second_1'
+    res2 = proc.add_attributes(get_fields())
+    assert res2 == {'first': 'first_1', 'second': 'second_1'}
+
+    # Triplicate names: expects 'first_2', 'second_2'
+    res3 = proc.add_attributes(get_fields())
+    assert res3 == {'first': 'first_2', 'second': 'second_2'}

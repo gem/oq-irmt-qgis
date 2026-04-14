@@ -1,92 +1,80 @@
-# coding=utf-8
-"""
-InaSAFE Disaster risk assessment tool developed by AusAid -
-**Exception Classes.**
+# -*- coding: utf-8 -*-
+# /***************************************************************************
+# Irmt
+#                                 A QGIS plugin
+# OpenQuake Integrated Risk Modelling Toolkit
+#                              -------------------
+#        begin                : 2013-10-24
+#        copyright            : (C) 2013-2026 by GEM Foundation
+#        email                : devops@openquake.org
+# ***************************************************************************/
+#
+# OpenQuake is free software: you can redistribute it and/or modify it
+# under the terms of the GNU Affero General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# OpenQuake is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
-Custom exception classes for the IS application.
-
-Contact : ole.moller.nielsen@gmail.com
-
-.. note:: This program is free software; you can redistribute it and/or modify
-     it under the terms of the GNU General Public License as published by
-     the Free Software Foundation; either version 2 of the License, or
-     (at your option) any later version.
-
-"""
-
-__author__ = 'marco@opengis.ch'
-__revision__ = '$Format:%H$'
-__date__ = '12/10/2014'
-__copyright__ = ('Copyright 2012, Australia Indonesia Facility for '
-                 'Disaster Reduction')
-
-import os
 import time
-import unittest
-import tempfile
-import uuid
 
 from svir.metadata.metadata_utilities import (
-    valid_iso_xml,
-    ISO_METADATA_KEYWORD_TAG,
-    ISO_METADATA_KEYWORD_NESTING, generate_iso_metadata)
+    valid_iso_xml, ISO_METADATA_KEYWORD_TAG, ISO_METADATA_KEYWORD_NESTING,
+    generate_iso_metadata)
 
 
-class TestCase(unittest.TestCase):
+def test_valid_iso_xml(tmp_path):
+    """Test ISO XML validation and auto-generation of missing tags."""
+    # pytest's tmp_path provides a unique temporary directory
+    xml_file = tmp_path / "test_metadata.xml"
+    filename = str(xml_file)
 
-    def test_valid_iso_xml(self):
-        # test when XML file is non existent
-        # NOTE: we are not creating a new temporary file here, but just
-        # attempting to look for a non-existing file.
-        # valid_iso_xml will create a new xml file from a template, if the
-        # filename is not found.
-        random_name = '%s.xml' % uuid.uuid4()
-        filename = os.path.join(tempfile.gettempdir(), random_name)
-        tree = valid_iso_xml(filename)
-        root = tree.getroot()
-        self.assertIsNotNone(root.find(ISO_METADATA_KEYWORD_TAG))
+    # valid_iso_xml should create a new file if it doesn't exist
+    tree = valid_iso_xml(filename)
+    root = tree.getroot()
+    assert root.find(ISO_METADATA_KEYWORD_TAG) is not None
 
-        data_identification = root.find(ISO_METADATA_KEYWORD_NESTING[0] + '/'
-                                        + ISO_METADATA_KEYWORD_NESTING[1])
-        supplemental_info = root.find(ISO_METADATA_KEYWORD_NESTING[0] + '/'
-                                      + ISO_METADATA_KEYWORD_NESTING[1] + '/'
-                                      + ISO_METADATA_KEYWORD_NESTING[2])
+    # Navigate the nesting to find specific tags
+    path_step1 = ISO_METADATA_KEYWORD_NESTING[0]
+    path_step2 = ISO_METADATA_KEYWORD_NESTING[1]
+    path_step3 = ISO_METADATA_KEYWORD_NESTING[2]
+    data_identification = root.find(f"{path_step1}/{path_step2}")
+    supplemental_info = root.find(f"{path_step1}/{path_step2}/{path_step3}")
 
-        data_identification.remove(supplemental_info)
-        # the xml should now miss the supplementalInformation tag
-        self.assertIsNone(root.find(ISO_METADATA_KEYWORD_TAG))
+    # Remove the tag to invalidate the XML structure
+    data_identification.remove(supplemental_info)
 
-        # lets fix the xml
-        tree = valid_iso_xml(filename)
-        self.assertIsNotNone(tree.getroot().find(ISO_METADATA_KEYWORD_TAG))
-        os.remove(filename)
+    # Verify the specific keyword tag is now missing
+    assert root.find(ISO_METADATA_KEYWORD_TAG) is None
 
-    def test_generate_iso_metadata(self):
-        today = time.strftime("%Y-%m-%d")
-        keywords = {
-            'category': 'exposure',
-            'datatype': 'itb',
-            'subcategory': 'building',
-            'title': 'Test TITLE'}
-
-        metadata_xml = generate_iso_metadata(keywords)
-        # lets see if the title substitution went well
-        self.assertIn(
-            '<gco:CharacterString>Test TITLE',
-            metadata_xml,
-            'XML should include %s' % today)
-
-        # lets check if the date generation worked
-        self.assertIn(
-            today,
-            metadata_xml,
-            'XML should include today\'s date (%s)' % today)
+    # Running valid_iso_xml again should fix/re-generate the missing parts
+    tree_fixed = valid_iso_xml(filename)
+    assert tree_fixed.getroot().find(ISO_METADATA_KEYWORD_TAG) is not None
 
 
-if __name__ == '__main__':
-    suite = unittest.TestSuite()
-    loader = unittest.TestLoader()
-    tests = loader.loadTestsFromTestCase(TestCase)
-    suite.addTests(tests)
-    runner = unittest.TextTestRunner(verbosity=2)
-    runner.run(suite)
+def test_generate_iso_metadata():
+    """Test that ISO metadata string contains expected keywords and dates."""
+    today = time.strftime("%Y-%m-%d")
+    keywords = {
+        'category': 'exposure',
+        'datatype': 'itb',
+        'subcategory': 'building',
+        'title': 'Test TITLE'
+    }
+    metadata_xml = generate_iso_metadata(keywords)
+
+    # Check for title substitution
+    assert '<gco:CharacterString>Test TITLE' in metadata_xml, (
+        "XML should include the title 'Test TITLE'"
+    )
+
+    # Check for date generation
+    assert today in metadata_xml, (
+        f"XML should include today's date ({today})"
+    )
