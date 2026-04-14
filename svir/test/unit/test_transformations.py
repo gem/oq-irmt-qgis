@@ -24,6 +24,7 @@
 
 import numpy as np
 import pytest
+import warnings
 
 # We strictly avoid top-level QGIS/SVIR imports to prevent deadlocks
 
@@ -149,7 +150,10 @@ def test_log10_standard_positive(logic):
 def test_log10_negative_values(logic):
     alg = logic.algs["LOG10"]
     input_vals = [101249, -94062]
-    result, _ = alg(input_vals)
+    with warnings.catch_warnings():
+        msg = "invalid value encountered in log10"
+        warnings.filterwarnings('ignore', message=msg)
+        result, _ = alg(input_vals)
     assert pytest.approx(result[0], abs=1e-6) == 5.005390
     assert np.isnan(result[1])
 
