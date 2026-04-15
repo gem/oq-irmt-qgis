@@ -855,6 +855,15 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         else:
             return []
 
+    def _add_action_btn(self, action, output, outtype, calculation_mode,
+                        row, additional_cols):
+        button = QPushButton()
+        self.connect_button_to_action(
+            button, action, output, outtype, calculation_mode)
+        self.output_list_tbl.setCellWidget(row, additional_cols, button)
+        self.calc_list_tbl.setColumnWidth(additional_cols, BUTTON_WIDTH)
+        return additional_cols + 1
+
     def show_output_list(self, output_list, calculation_mode):
         if not output_list:
             self.clear_output_list()
@@ -927,28 +936,17 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                             action = 'Load from zip'
                         else:
                             action = 'Download'
-                            button = QPushButton()
-                            self.connect_button_to_action(
-                                button, action, output, outtype,
-                                calculation_mode)
-                            self.output_list_tbl.setCellWidget(
-                                row, additional_cols, button)
-                            self.calc_list_tbl.setColumnWidth(
-                                additional_cols, BUTTON_WIDTH)
-                            additional_cols += 1
+                            additional_cols = self._add_action_btn(
+                                action, output, outtype, calculation_mode,
+                                row, additional_cols)
                             continue
                     elif output['type'] in OQ_CSV_TO_LAYER_TYPES:
                         action = 'Load table'
                     else:
                         action = 'Load layer'
-                    button = QPushButton()
-                    self.connect_button_to_action(
-                        button, action, output, outtype, calculation_mode)
-                    self.output_list_tbl.setCellWidget(
-                        row, additional_cols, button)
-                    self.calc_list_tbl.setColumnWidth(
-                        additional_cols, BUTTON_WIDTH)
-                    additional_cols += 1
+                    additional_cols = self._add_action_btn(
+                        action, output, outtype, calculation_mode,
+                        row, additional_cols)
                     load_action_button_was_added = True
                 if (not aggregate_action_button_was_added and
                         "%s_aggr" % output['type'] in OQ_EXTRACT_TO_VIEW_TYPES
@@ -957,25 +955,16 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                                  and 'avg_losses-stats' in output_types)):
                     mod_output = copy.deepcopy(output)
                     mod_output['type'] = "%s_aggr" % output['type']
-                    button = QPushButton()
-                    self.connect_button_to_action(
-                        button, 'Aggregate', mod_output, outtype,
-                        calculation_mode)
-                    self.output_list_tbl.setCellWidget(
-                        row, additional_cols, button)
-                    additional_cols += 1
+                    additional_cols = self._add_action_btn(
+                        'Aggregate', mod_output, outtype, calculation_mode,
+                        row, additional_cols)
                     aggregate_action_button_was_added = True
                 # For each output id, add a Download btn per each output type
                 # (like in the webui)
                 action = 'Download'
-                button = QPushButton()
-                self.connect_button_to_action(
-                    button, action, output, outtype, calculation_mode)
-                self.output_list_tbl.setCellWidget(
-                    row, additional_cols, button)
-                self.calc_list_tbl.setColumnWidth(
-                    additional_cols, BUTTON_WIDTH)
-                additional_cols += 1
+                additional_cols = self._add_action_btn(
+                    action, output, outtype, calculation_mode,
+                    row, additional_cols)
         col_names = [key.capitalize() for key in selected_keys]
         empty_col_names = ['' for outtype in range(max_actions)]
         headers = col_names + empty_col_names
