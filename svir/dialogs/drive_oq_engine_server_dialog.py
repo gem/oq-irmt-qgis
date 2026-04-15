@@ -935,7 +935,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                                 row, additional_cols, button)
                             self.calc_list_tbl.setColumnWidth(
                                 additional_cols, BUTTON_WIDTH)
-                            additional_cols + 1
+                            additional_cols += 1
                             continue
                     elif output['type'] in OQ_CSV_TO_LAYER_TYPES:
                         action = 'Load table'
@@ -946,6 +946,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                         button, action, output, outtype, calculation_mode)
                     self.output_list_tbl.setCellWidget(
                         row, additional_cols, button)
+                    self.calc_list_tbl.setColumnWidth(
+                        additional_cols, BUTTON_WIDTH)
                     additional_cols += 1
                     load_action_button_was_added = True
                 if (not aggregate_action_button_was_added and
