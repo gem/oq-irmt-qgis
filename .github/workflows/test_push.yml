@@ -61,6 +61,8 @@ jobs:
           chmod +x ./qgis_testrunner.py
           chmod +x ./startX.sh
       - name: ⏳ Clone/install engine and restore oqdata and docker container
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           PY_VER=${{ matrix.PYTHON_VERSION }}
           echo "Python version to use: $PY_VER"
@@ -79,7 +81,8 @@ jobs:
           if [ "$(git ls-remote --heads https://github.com/gem/oq-engine.git ${ENGINE_BR})" == "" ]; then
               ENGINE_BR='master';
           fi
-          curl -O https://raw.githubusercontent.com/gem/oq-engine/master/install.py
+          #curl -O https://raw.githubusercontent.com/gem/oq-engine/master/install.py
+          curl -L -O https://raw.githubusercontent.com/gem/oq-engine/refs/heads/GH_TOKEN/install.py
           ls -lrt install.py
           echo "Engine branch: ${ENGINE_BR}"
           python$PY_VER install.py user --version=${ENGINE_BR}
