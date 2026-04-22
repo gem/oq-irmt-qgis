@@ -61,6 +61,8 @@ jobs:
           chmod +x ./qgis_testrunner.py
           chmod +x ./startX.sh
       - name: ⏳ Clone/install engine and restore oqdata and docker container
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           PY_VER=${{ matrix.PYTHON_VERSION }}
           echo "Python version to use: $PY_VER"
