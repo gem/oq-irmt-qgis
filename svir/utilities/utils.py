@@ -1248,7 +1248,7 @@ def write_metadata_to_layer(
     layer.setMetadata(lm)
 
 
-def zoom_to_group(group):
+def zoom_to_group(iface, group):
     extent = QgsRectangle()
     if Qgis.QGIS_VERSION_INT < 33400:
         extent.setMinimal()
