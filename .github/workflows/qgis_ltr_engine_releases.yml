@@ -166,8 +166,9 @@ jobs:
           git fetch
           git checkout $IRMT_BR
           # Use the most recent testing implementation, regardless from the IRMT version being tested
-          git checkout origin/master -- svir/test/integration/conftest.py
-          git checkout origin/master -- svir/test/integration/test_drive_oq_engine.py
+          # FIXME: replace pytestint -> master as soon as the new files are merged in master
+          git checkout origin/pytestint -- svir/test/integration/conftest.py
+          git checkout origin/pytestint -- svir/test/integration/test_drive_oq_engine.py
           # get release version from branch name (e.g. 'engine-3.16' -> '3.16')
           prefix="engine-"
           if [[ $ENGINE_BR == ${prefix}* ]]; then
