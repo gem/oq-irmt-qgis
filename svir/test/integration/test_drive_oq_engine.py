@@ -148,10 +148,6 @@ class EngineOutputLoader:
             assert_and_emit(dlg, dlg.loading_exception, _assert_greater,
                             dlg.category_cbx.count(), 0, 'No category found')
             dlg.category_cbx.setCurrentIndex(0)
-        # elif dlg.output_type in ['hcurves', 'gmf_data']:
-        #     if dlg.imt_cbx.count() > 0:
-        #         # Select the first available IMT
-        #         dlg.imt_cbx.setCurrentIndex(0)
         if dlg.ok_button.isEnabled():
             dlg.accept()
             # QTest.mouseClick(dlg.ok_button, Qt.LeftButton)
@@ -433,7 +429,6 @@ class EngineOutputLoader:
 # Pytest Functions
 
 
-# @pytest.mark.parametrize("output_type", ALL_TESTABLE_OUTPUTS)
 @pytest.mark.parametrize("output_type", OQ_ALL_TYPES)
 def test_load_engine_outputs(
         output_type, irmt_plugin, qgis_app, oq_engine_data):
@@ -449,9 +444,6 @@ def test_load_engine_outputs(
     loader.execute_test_for_output(output_type)
 
 
-@pytest.mark.skipif(
-    not OQ_CHECK_MISSING_OUTPUTS or ONLY_OUTPUT_TYPE is not None,
-    reason="Skipping missing outputs check")
 def test_all_loadable_output_types_found_in_demos(oq_engine_data):
     loadable_output_types_found = set()
     loadable_output_types_not_found = set()
@@ -481,8 +473,6 @@ def test_all_loadable_output_types_found_in_demos(oq_engine_data):
                 f"{critical_missing}")
 
 
-@pytest.mark.skipif(
-    ONLY_OUTPUT_TYPE is not None, reason="Skipping missing loaders check")
 def test_all_loaders_are_implemented(oq_engine_data):
     not_implemented_loaders = set()
     for calc in oq_engine_data['calc_list']:
@@ -496,8 +486,6 @@ def test_all_loaders_are_implemented(oq_engine_data):
         print(", ".join(not_implemented_loaders))
 
 
-@pytest.mark.skipif(not OQ_TEST_RUN_CALC or ONLY_OUTPUT_TYPE,
-                    reason="Skipping calculation execution test.")
 def test_run_calculation(irmt_plugin, qgis_app):
     """
     Triggers an actual OpenQuake engine calculation and ensures it completes.
@@ -536,7 +524,3 @@ def test_run_calculation(irmt_plugin, qgis_app):
     # Teardown
     irmt_plugin.drive_oq_engine_server_dlg.remove_calc(risk_calc_id)
     irmt_plugin.drive_oq_engine_server_dlg.remove_calc(hazard_calc_id)
-
-
-def test_dummy(irmt_plugin):
-    pass
