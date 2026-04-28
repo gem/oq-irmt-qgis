@@ -26,42 +26,11 @@
 
 
 import hashlib
-import logging
 import re
 
-from qgis.PyQt import QtWidgets
-from qgis.utils import iface
-
-QGIS_APP = None  # Static variable used to hold hand to running QGIS app
-CANVAS = None
-PARENT = None
-IFACE = None
-LOGGER = logging.getLogger('OpenQuake')
 GEOCRS = 4326  # constant for EPSG:GEOCRS Geographic CRS id
 GOOGLECRS = 3857  # constant for EPSG:GOOGLECRS Google Mercator id
 # DEVNULL = open(os.devnull, 'w')
-
-
-def get_dock():
-    """Get a dock for testing.
-
-    If you call this function from a QGIS Desktop, you will get the real dock,
-    however, you use a fake QGIS interface, it will create a fake dock for you.
-
-    :returns: A dock.
-    :rtype: QDockWidget
-    """
-    # Don't move this import.
-    from svir.dialogs.viewer_dock import ViewerDock as DockObject
-    if iface:
-        docks = iface.mainWindow().findChildren(QtWidgets.QDockWidget)
-        for dock in docks:
-            if isinstance(dock, DockObject):
-                return dock
-        else:
-            return DockObject(iface)
-    else:
-        return DockObject(IFACE)
 
 
 def assert_hash_for_file(hash_string, filename):

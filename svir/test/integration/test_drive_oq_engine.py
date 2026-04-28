@@ -486,7 +486,7 @@ def test_all_loaders_are_implemented(oq_engine_data):
                 not_implemented_loaders.add(output['type'])
     if not_implemented_loaders:
         msg = (
-            f"New OpenQuake Engine output types detected that are not yet "
+            f"Some OpenQuake Engine output types detected are not yet "
             f"supported by IRMT loaders:"
             f" {', '.join(sorted(not_implemented_loaders))}"
         )
