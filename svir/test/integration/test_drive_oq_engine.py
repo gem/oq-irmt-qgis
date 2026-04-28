@@ -30,6 +30,7 @@ import copy
 import csv
 import tempfile
 import pytest
+import warnings
 
 from qgis.PyQt.QtCore import Qt
 from qgis.PyQt.QtTest import QTest, QSignalSpy
@@ -444,6 +445,8 @@ def test_load_engine_outputs(
     loader.execute_test_for_output(output_type)
 
 
+@pytest.mark.skipif(not OQ_CHECK_MISSING_OUTPUTS,
+                    reason="Skipping missing outputs check")
 def test_all_loadable_output_types_found_in_demos(oq_engine_data):
     loadable_output_types_found = set()
     loadable_output_types_not_found = set()
@@ -468,9 +471,11 @@ def test_all_loadable_output_types_found_in_demos(oq_engine_data):
                 otype in OQ_CSV_TO_LAYER_TYPES
                 for otype in loadable_output_types_found)
                    for t in critical_missing):
-            raise RuntimeError(
-                f"Loadable output types not found in any demo:"
-                f"{critical_missing}")
+            pytest.fail(
+                f"The following loadable output types were not found in"
+                f" any demo and aren't covered by existing CSV loaders:"
+                f" {critical_missing}"
+            )
 
 
 def test_all_loaders_are_implemented(oq_engine_data):
@@ -479,13 +484,17 @@ def test_all_loaders_are_implemented(oq_engine_data):
         for output in oq_engine_data['output_list'][calc['id']]:
             if output['type'] not in OQ_ALL_TYPES:
                 not_implemented_loaders.add(output['type'])
-
     if not_implemented_loaders:
-        print("\n\nLoaders for the following output types found have not"
-              " been implemented yet:")
-        print(", ".join(not_implemented_loaders))
+        msg = (
+            f"New OpenQuake Engine output types detected that are not yet "
+            f"supported by IRMT loaders:"
+            f" {', '.join(sorted(not_implemented_loaders))}"
+        )
+        warnings.warn(UserWarning(msg))
 
 
+@pytest.mark.skipif(not OQ_TEST_RUN_CALC,
+                    reason="Skipping calculation execution test.")
 def test_run_calculation(irmt_plugin, qgis_app):
     """
     Triggers an actual OpenQuake engine calculation and ensures it completes.
