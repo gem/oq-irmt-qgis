@@ -570,11 +570,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 tree_node = add_to_group
             else:
                 tree_node = QgsProject.instance().layerTreeRoot()
-            if self.mode != 'testing':
-                # NOTE: the following commented line would cause (unexpectedly)
-                #       "QGIS died on signal 11" and double creation of some
-                #       layers during integration tests
-                QgsProject.instance().addMapLayer(self.layer, False)
+            QgsProject.instance().addMapLayer(self.layer, False)
             tree_node.insertLayer(0, self.layer)
             self.iface.setActiveLayer(self.layer)
             if add_to_group:
@@ -1031,6 +1027,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         elif self.output_type in OQ_CSV_TO_LAYER_TYPES:
             self.load_from_csv()
             super().accept()
+        self.loading_completed.emit(self)
 
     def aggregate_by_zone(self):
         loss_layer = self.layer

@@ -160,7 +160,7 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
             log_msg('Layer %s was loaded successfully' % self.layer.name(),
                     level='S', message_bar=self.iface.messageBar())
         if rup_group:
-            zoom_to_group(rup_group)
+            zoom_to_group(self.iface, rup_group)
         else:
             self.iface.zoomToActiveLayer()
 
