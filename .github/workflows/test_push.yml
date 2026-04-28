@@ -153,7 +153,7 @@ jobs:
           fi
           # NOTE: cloning the engine is needed to find the demos directory, therefore being able to test running a calculation
           docker exec qgis sh -c "export DISPLAY=:1.0; git clone -q -b $ENGINE_BR --depth=1 https://github.com/gem/oq-engine.git && echo 'Running against oq-engine/$GITHUB_BR'"
-          docker exec -t qgis bash -c "export DISPLAY=:1.0; export PYTHONPATH=/usr/share/qgis/python/plugins/:$PYTHONPATH; python3 -m pytest -v /tests_directory/svir/test/integration/"
+          docker exec -t qgis bash -c "export DISPLAY=:1.0; export PYTHONPATH=/usr/share/qgis/python/plugins/:$PYTHONPATH; python3 -m pytest -v -s /tests_directory/svir/test/integration/"
       - name: 📖 Make documentation
         run: |
           set -x
