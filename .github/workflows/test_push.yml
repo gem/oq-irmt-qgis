@@ -32,7 +32,7 @@ jobs:
         # QGIS_DOCKER_VERSION: ['qgis/qgis:ltr', 'qgis/qgis:stable']
         QGIS_DOCKER_VERSION: ['qgis/qgis:stable']
         # NOTE: qgis uses its own python, but we want to check if there are problems interfacing with the engine while it uses different python versions
-        PYTHON_VERSION: ['3.11', '3.12']
+        PYTHON_VERSION: ['3.11', '3.12', '3.13']
         ENGINE_APPLICATION_MODE: ['PUBLIC', 'RESTRICTED']
     runs-on: ${{ matrix.os }}
     env:
@@ -56,6 +56,8 @@ jobs:
           )
           chmod +x ./startX.sh
       - name: ⏳ Clone/install engine and restore oqdata and docker container
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           PY_VER=${{ matrix.PYTHON_VERSION }}
           echo "Python version to use: $PY_VER"
@@ -136,7 +138,7 @@ jobs:
         run: |
           set -x
           # OGR_SQLITE_JOURNAL=delete prevents QGIS from using WAL, which modifies geopackages even if they are just read
-          docker exec -t qgis bash -c 'export DISPLAY=:1.0; export PYTHONPATH=/usr/share/qgis/python/plugins/:$PYTHONPATH; OGR_SQLITE_JOURNAL=delete python3 -m pytest -v /tests_directory/svir/test/unit/'
+          docker exec -t qgis bash -c "export DISPLAY=:1.0; export PYTHONPATH=/usr/share/qgis/python/plugins/:$PYTHONPATH; OGR_SQLITE_JOURNAL=delete python3 -m pytest -v -s -ra /tests_directory/svir/test/unit/"
       - name: ⨕ Run Integration test
         if: always()
         run: |
@@ -156,9 +158,8 @@ jobs:
               ENGINE_BR='master';
           fi
           # NOTE: cloning the engine is needed to find the demos directory, therefore being able to test running a calculation
-          docker exec qgis bash -c 'export DISPLAY=:1.0; git clone -q -b '"$ENGINE_BR"' --depth=1 https://github.com/gem/oq-engine.git && echo "Running against oq-engine/'"$GITHUB_BR"'"'
-          docker exec qgis bash -c 'export DISPLAY=:1.0; /usr/bin/qgis_setup.sh svir'
-          docker exec -t qgis bash -c "export DISPLAY=:1.0; export LC_ALL=C.UTF-8; export LANG=C.UTF-8; export PYTHONPATH=/root/.local/share/QGIS/QGIS4/profiles/default/python/plugins:/tests_directory:\$PYTHONPATH; cd /tests_directory && /usr/bin/qgis_testrunner.sh svir.test.integration.test_drive_oq_engine"
+          docker exec qgis bash -c "export DISPLAY=:1.0; git clone -q -b $ENGINE_BR --depth=1 https://github.com/gem/oq-engine.git && echo 'Running against oq-engine/$GITHUB_BR'"
+          docker exec -t qgis bash -c "export DISPLAY=:1.0; export PYTHONPATH=/usr/share/qgis/python/plugins/:$PYTHONPATH; python3 -m pytest -v -s -ra /tests_directory/svir/test/integration/"
       - name: 📖 Make documentation
         run: |
           set -x

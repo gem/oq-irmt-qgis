@@ -129,11 +129,7 @@ class LoadDisaggRlzsAsLayerDialog(LoadOutputAsLayerDialog):
         irmt_version = get_irmt_version()
         custom_site_id_layer.setCustomProperty('irmt_version', irmt_version)
         custom_site_id_layer.setCustomProperty('calc_id', self.calc_id)
-        if self.mode != 'testing':
-            # NOTE: the following commented line would cause (unexpectedly)
-            #       "QGIS died on signal 11" and double creation of some
-            #       layers during integration tests
-            QgsProject.instance().addMapLayer(custom_site_id_layer, False)
+        QgsProject.instance().addMapLayer(custom_site_id_layer, False)
         tree_node = QgsProject.instance().layerTreeRoot()
         tree_node.insertLayer(0, custom_site_id_layer)
         # self.iface.setActiveLayer(custom_site_id_layer)
