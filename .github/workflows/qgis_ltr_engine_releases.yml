@@ -165,9 +165,6 @@ jobs:
           IRMT_BR=$ENGINE_BR
           git fetch
           git checkout $IRMT_BR
-          # Use the most recent testing implementation, regardless from the IRMT version being tested
-          git checkout origin/master -- svir/test/integration/conftest.py
-          git checkout origin/master -- svir/test/integration/test_drive_oq_engine.py
           # get release version from branch name (e.g. 'engine-3.16' -> '3.16')
           prefix="engine-"
           if [[ $ENGINE_BR == ${prefix}* ]]; then
