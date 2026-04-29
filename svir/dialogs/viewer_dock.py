@@ -66,7 +66,7 @@ from svir import IS_MATPLOTLIB_INSTALLED
 
 if IS_MATPLOTLIB_INSTALLED:
     import matplotlib
-    matplotlib.use('Qt5Agg')  # NOQA
+    matplotlib.use('QtAgg')  # NOQA
     from matplotlib.backends.qt_compat import QtCore, QtWidgets  # NOQA
     from matplotlib.backends.backend_qt5agg import (
         FigureCanvas,
