@@ -225,7 +225,7 @@ class EngineOutputLoader:
                 lambda d, e: self.loading_exception.update({d: e}))
 
             timeout, start_time = 30, time.time()
-            QTest.mouseClick(dlg.ok_button, Qt.MouseButtonLeftButton)
+            QTest.mouseClick(dlg.ok_button, Qt.MouseButton.LeftButton)
 
             while time.time() - start_time < timeout:
                 self.qgis_app.processEvents()
