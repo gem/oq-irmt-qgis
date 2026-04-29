@@ -25,9 +25,10 @@ jobs:
         # NOTE: we might test also for qgis/qgis:3.22 that is the version of qgis-server that we are currently using in the Geoviewer, but it currently causes a segfault
         # NOTE: qgis:stable points to the latest release, wheread qgis:latest points to qgis master
         # QGIS_DOCKER_VERSION: ['qgis/qgis:ltr', 'qgis/qgis:stable']
-        QGIS_DOCKER_VERSION: ['qgis/qgis:3.44.7']
+        # QGIS_DOCKER_VERSION: ['qgis/qgis:3.44.7']
+        QGIS_DOCKER_VERSION: ['qgis/qgis:ltr']
         # NOTE: qgis uses its own python, but we want to check if there are problems interfacing with the engine while it uses different python versions
-        PYTHON_VERSION: ['3.11', '3.12']
+        PYTHON_VERSION: ['3.11', '3.12', '3.13']
         ENGINE_APPLICATION_MODE: ['PUBLIC', 'RESTRICTED']
     runs-on: ${{ matrix.os }}
     env:
@@ -45,20 +46,10 @@ jobs:
           $(cat << EOF  > ./startX.sh
           apt update --allow-releaseinfo-change
           DEBIAN_FRONTEND=noninteractive apt install -y python3-scipy python3-matplotlib python3-pyqt5.qtwebkit python3-pytest python3-pexpect xvfb git expect
-          chmod +x /tests_directory/qgis_startup.py
-          cp /tests_directory/qgis_startup.py /usr/bin/
-          cp /tests_directory/qgis_testrunner.py /usr/bin/
           export DISPLAY=:1.0
           Xvfb :1 -screen 0 1024x768x16
           EOF
           )
-          curl -O https://raw.githubusercontent.com/qgis/QGIS/master/.docker/qgis_resources/test_runner/qgis_setup.sh
-          curl -O https://raw.githubusercontent.com/qgis/QGIS/master/.docker/qgis_resources/test_runner/qgis_testrunner.sh
-          curl -O https://raw.githubusercontent.com/qgis/QGIS/master/.docker/qgis_resources/test_runner/qgis_testrunner.py
-          curl -O https://raw.githubusercontent.com/qgis/QGIS/master/.docker/qgis_resources/test_runner/qgis_startup.py
-          chmod +x ./qgis_setup.sh
-          chmod +x ./qgis_testrunner.sh
-          chmod +x ./qgis_testrunner.py
           chmod +x ./startX.sh
       - name: ⏳ Clone/install engine and restore oqdata and docker container
         env:
@@ -143,7 +134,7 @@ jobs:
         run: |
           set -x
           # OGR_SQLITE_JOURNAL=delete prevents QGIS from using WAL, which modifies geopackages even if they are just read
-          docker exec -t qgis bash -c "export DISPLAY=:1.0; export PYTHONPATH=/usr/share/qgis/python/plugins/:$PYTHONPATH; OGR_SQLITE_JOURNAL=delete python3 -m pytest -v /tests_directory/svir/test/unit/"
+          docker exec -t qgis bash -c "export DISPLAY=:1.0; export PYTHONPATH=/usr/share/qgis/python/plugins/:$PYTHONPATH; OGR_SQLITE_JOURNAL=delete python3 -m pytest -v -s -ra /tests_directory/svir/test/unit/"
       - name: ⨕ Run Integration test
         run: |
           set -x
@@ -163,8 +154,7 @@ jobs:
           fi
           # NOTE: cloning the engine is needed to find the demos directory, therefore being able to test running a calculation
           docker exec qgis sh -c "export DISPLAY=:1.0; git clone -q -b $ENGINE_BR --depth=1 https://github.com/gem/oq-engine.git && echo 'Running against oq-engine/$GITHUB_BR'"
-          docker exec qgis sh -c "export DISPLAY=:1.0; /tests_directory/qgis_setup.sh svir"
-          docker exec -t qgis sh -c "export DISPLAY=:1.0; cd /tests_directory && ./qgis_testrunner.sh svir.test.integration.test_drive_oq_engine"
+          docker exec -t qgis bash -c "export DISPLAY=:1.0; export PYTHONPATH=/usr/share/qgis/python/plugins/:$PYTHONPATH; python3 -m pytest -v -s -ra /tests_directory/svir/test/integration/"
       - name: 📖 Make documentation
         run: |
           set -x

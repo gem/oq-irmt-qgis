@@ -206,7 +206,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.loss_type_lbl.setSizePolicy(
             QSizePolicy.Minimum, QSizePolicy.Minimum)
         self.loss_type_cbx = QComboBox()
-        self.loss_type_cbx.currentIndexChanged['QString'].connect(
+        self.loss_type_cbx.currentTextChanged.connect(
             self.on_loss_type_changed)
         self.add_widget_to_type_dep_layout(
             self.loss_type_lbl, 'loss_type_lbl', self.typeDepHLayout2)
@@ -257,7 +257,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.imt_lbl.setSizePolicy(
             QSizePolicy.Minimum, QSizePolicy.Minimum)
         self.imt_cbx = QComboBox()
-        self.imt_cbx.currentIndexChanged['QString'].connect(
+        self.imt_cbx.currentTextChanged.connect(
             self.on_imt_changed)
         self.add_widget_to_type_dep_layout(
             self.imt_lbl, 'imt_lbl', self.typeDepHLayout1)
@@ -269,7 +269,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.ep_lbl.setSizePolicy(
             QSizePolicy.Minimum, QSizePolicy.Minimum)
         self.ep_cbx = QComboBox()
-        self.ep_cbx.currentIndexChanged['QString'].connect(
+        self.ep_cbx.currentTextChanged.connect(
             self.on_ep_changed)
         self.add_widget_to_type_dep_layout(
             self.ep_lbl, "ep_lbl", self.typeDepVLayout)
@@ -282,7 +282,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
             QSizePolicy.Minimum, QSizePolicy.Minimum)
         self.abs_rel_cbx = QComboBox()
         self.abs_rel_cbx.addItems(['Absolute', 'Relative'])
-        self.abs_rel_cbx.currentIndexChanged['QString'].connect(
+        self.abs_rel_cbx.currentTextChanged.connect(
             self.on_abs_rel_changed)
         self.add_widget_to_type_dep_layout(
             self.abs_rel_lbl, 'abs_rel_lbl', self.typeDepHLayout1)
@@ -294,7 +294,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.poe_lbl.setSizePolicy(
             QSizePolicy.Minimum, QSizePolicy.Minimum)
         self.poe_cbx = QComboBox()
-        self.poe_cbx.currentIndexChanged['QString'].connect(
+        self.poe_cbx.currentTextChanged.connect(
             self.on_poe_changed)
         self.add_widget_to_type_dep_layout(
             self.poe_lbl, 'poe_lbl', self.typeDepHLayout1)
@@ -306,7 +306,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.rlz_or_stat_lbl.setSizePolicy(
             QSizePolicy.Minimum, QSizePolicy.Minimum)
         self.rlz_or_stat_cbx = QComboBox()
-        self.rlz_or_stat_cbx.currentIndexChanged['QString'].connect(
+        self.rlz_or_stat_cbx.currentTextChanged.connect(
             self.on_rlz_or_stat_changed)
         self.add_widget_to_type_dep_layout(
             self.rlz_or_stat_lbl, 'rlz_or_stat_lbl', self.typeDepHLayout1)
