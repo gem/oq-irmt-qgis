@@ -150,14 +150,11 @@ class EngineOutputLoader:
                             dlg.category_cbx.count(), 0, 'No category found')
             dlg.category_cbx.setCurrentIndex(0)
         if dlg.ok_button.isEnabled():
-            dlg.accept()
-            # QTest.mouseClick(dlg.ok_button, Qt.LeftButton)
-            # if dlg.output_type == 'asset_risk':
-            #     # NOTE: avoiding to emit loading_completed for asset_risk,
-            #     # because in this case there's a second asynchronous call to
-            #     # the extract api, and the signal is emitted by the callback
-            #     return
-            if dlg.output_type in ('asset_risk', 'hcurves', 'gmf_data'):
+            QTest.mouseClick(dlg.ok_button, Qt.LeftButton)
+            if dlg.output_type == 'asset_risk':
+                # NOTE: avoiding to emit loading_completed for asset_risk,
+                # because in this case there's a second asynchronous call to
+                # the extract api, and the signal is emitted by the callback
                 return
         else:
             raise RuntimeError('The ok button is disabled')
