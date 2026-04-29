@@ -1,69 +1,79 @@
+# -*- coding: utf-8 -*-
+# /***************************************************************************
+# Irmt
+#                                 A QGIS plugin
+# OpenQuake Integrated Risk Modelling Toolkit
+#                              -------------------
+#        begin                : 2013-10-24
+#        copyright            : (C) 2013-2026 by GEM Foundation
+#        email                : devops@openquake.org
+# ***************************************************************************/
+#
+# OpenQuake is free software: you can redistribute it and/or modify it
+# under the terms of the GNU Affero General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# OpenQuake is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
+
 import os
 import logging
 import configparser
-from qgis.testing import unittest, start_app
-
-# coding=utf-8
-"""Tests for map creation in QGIS plugin."""
-
-__author__ = 'Tim Sutton <tim@kartoza.com>'
-__revision__ = '$Format:%H$'
-__date__ = '17/10/2010'
-__license__ = "GPL"
-__copyright__ = 'Copyright 2012, Australia Indonesia Facility for '
-__copyright__ += 'Disaster Reduction'
+import pytest
 
 LOGGER = logging.getLogger('OpenQuake')
 
-start_app()
+
+@pytest.fixture
+def metadata_path():
+    """Fixture to resolve the path to metadata.txt."""
+    return os.path.abspath(
+        os.path.join(
+            os.path.dirname(__file__),
+            os.pardir,
+            os.pardir,
+            'metadata.txt'
+        )
+    )
 
 
-class TestInit(unittest.TestCase):
-    """Test that the plugin init is usable for QGIS.
+def test_read_init(qgis_app, metadata_path):
+    """Test that the plugin __init__ will validate."""
+    required_metadata = [
+        'name',
+        'description',
+        'version',
+        'qgisMinimumVersion',
+        'email',
+        'author'
+    ]
 
-    Based heavily on the validator class by Alessandro
-    Passoti available here:
+    LOGGER.info(f"Checking metadata at: {metadata_path}")
 
-    http://github.com/qgis/qgis-django/blob/master/qgis-app/
-             plugins/validator.py
+    parser = configparser.ConfigParser()
+    parser.optionxform = str
 
-    """
+    assert os.path.exists(metadata_path), (
+        f"metadata.txt not found at {metadata_path}"
+    )
 
-    def test_read_init(self):
-        """Test that the plugin __init__ will validate on plugins.qgis.org."""
+    parser.read(metadata_path)
 
-        # You should update this list according to the latest in
-        # https://github.com/qgis/qgis-django/blob/master/qgis-app/
-        #        plugins/validator.py
+    assert parser.has_section('general'), (
+        f"Cannot find a section named 'general' in {metadata_path}"
+    )
 
-        required_metadata = [
-            'name',
-            'description',
-            'version',
-            'qgisMinimumVersion',
-            'email',
-            'author']
+    metadata_dict = dict(parser.items('general'))
 
-        file_path = os.path.abspath(
-            os.path.join(
-                os.path.dirname(__file__),
-                os.pardir,
-                os.pardir,
-                'metadata.txt'))
-        LOGGER.info(file_path)
-        metadata = []
-        parser = configparser.ConfigParser()
-        parser.optionxform = str
-        parser.read(file_path)
-        message = 'Cannot find a section named "general" in %s' % file_path
-        self.assertTrue(parser.has_section('general'), message)
-        metadata.extend(parser.items('general'))
-
-        for expectation in required_metadata:
-            message = ('Cannot find metadata "%s" in metadata source (%s).' % (
-                expectation, file_path))
-            self.assertIn(expectation, dict(metadata), message)
-
-
-if __name__ == '__main__':
-    unittest.main()
+    for expectation in required_metadata:
+        error_msg = (
+            f"Cannot find metadata '{expectation}' in "
+            f"metadata source ({metadata_path})."
+        )
+        assert expectation in metadata_dict, error_msg
