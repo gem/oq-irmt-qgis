@@ -2,6 +2,11 @@ name: PR unit and integration tests
 on:
   workflow_dispatch:
     inputs:
+      git-ref:
+        description: Git Ref
+        default: master
+        required: true
+        type: string
       debug_enabled:
         type: boolean
         description: "Run the build with tmate debugging enabled"
@@ -25,8 +30,7 @@ jobs:
         # NOTE: we might test also for qgis/qgis:3.22 that is the version of qgis-server that we are currently using in the Geoviewer, but it currently causes a segfault
         # NOTE: qgis:stable points to the latest release, wheread qgis:latest points to qgis master
         # QGIS_DOCKER_VERSION: ['qgis/qgis:ltr', 'qgis/qgis:stable']
-        # QGIS_DOCKER_VERSION: ['qgis/qgis:3.44.7']
-        QGIS_DOCKER_VERSION: ['qgis/qgis:ltr']
+        QGIS_DOCKER_VERSION: ['qgis/qgis:stable']
         # NOTE: qgis uses its own python, but we want to check if there are problems interfacing with the engine while it uses different python versions
         PYTHON_VERSION: ['3.11', '3.12', '3.13']
         ENGINE_APPLICATION_MODE: ['PUBLIC', 'RESTRICTED']
@@ -45,7 +49,7 @@ jobs:
           set -x
           $(cat << EOF  > ./startX.sh
           apt update --allow-releaseinfo-change
-          DEBIAN_FRONTEND=noninteractive apt install -y python3-scipy python3-matplotlib python3-pyqt5.qtwebkit python3-pytest python3-pexpect xvfb git expect
+          DEBIAN_FRONTEND=noninteractive apt install -y python3-scipy python3-matplotlib python3-pyqt6 python3-pytest python3-pexpect xvfb git expect
           export DISPLAY=:1.0
           Xvfb :1 -screen 0 1024x768x16
           EOF
@@ -128,14 +132,15 @@ jobs:
           fi
       - name: Setup debugging session
         uses: mxschmitt/action-tmate@v3
-        timeout-minutes: 60
+        timeout-minutes: 120
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
       - name: ℧ Run unit test
         run: |
           set -x
           # OGR_SQLITE_JOURNAL=delete prevents QGIS from using WAL, which modifies geopackages even if they are just read
-          docker exec -t qgis bash -c "export DISPLAY=:1.0; export PYTHONPATH=/usr/share/qgis/python/plugins/:$PYTHONPATH; OGR_SQLITE_JOURNAL=delete python3 -m pytest -v -s -ra /tests_directory/svir/test/unit/"
+          docker exec -t qgis bash -c "export DISPLAY=:1.0; export PYTHONPATH=/usr/share/qgis/python/:/usr/share/qgis/python/plugins/:$PYTHONPATH; OGR_SQLITE_JOURNAL=delete python3 -m pytest -v -s -ra /tests_directory/svir/test/unit/"
       - name: ⨕ Run Integration test
+        if: always()
         run: |
           set -x
           echo " Check if this is a pull request or not"
@@ -153,13 +158,13 @@ jobs:
               ENGINE_BR='master';
           fi
           # NOTE: cloning the engine is needed to find the demos directory, therefore being able to test running a calculation
-          docker exec qgis sh -c "export DISPLAY=:1.0; git clone -q -b $ENGINE_BR --depth=1 https://github.com/gem/oq-engine.git && echo 'Running against oq-engine/$GITHUB_BR'"
-          docker exec -t qgis bash -c "export DISPLAY=:1.0; export PYTHONPATH=/usr/share/qgis/python/plugins/:$PYTHONPATH; python3 -m pytest -v -s -ra /tests_directory/svir/test/integration/"
+          docker exec qgis bash -c "export DISPLAY=:1.0; git clone -q -b $ENGINE_BR --depth=1 https://github.com/gem/oq-engine.git && echo 'Running against oq-engine/$GITHUB_BR'"
+          docker exec -t qgis bash -c "export DISPLAY=:1.0; export PYTHONPATH=/usr/share/qgis/python/:/usr/share/qgis/python/plugins/:$PYTHONPATH; python3 -m pytest -v -s -ra /tests_directory/svir/test/integration/"
       - name: 📖 Make documentation
         run: |
           set -x
-          docker exec qgis sh -c "export DISPLAY=:1.0; apt update --allow-releaseinfo-change; DEBIAN_FRONTEND=noninteractive apt install -y latexmk texlive-latex-extra python3-matplotlib python3-sphinx python3-sphinx-rtd-theme dvipng"
-          docker exec -t qgis sh -c "export DISPLAY=:1.0; export PYTHONPATH=$PYTHONPATH:/tests_directory; cd /tests_directory/svir/help; make latexpdf; make html"
+          docker exec qgis bash -c 'export DISPLAY=:1.0; apt update --allow-releaseinfo-change; DEBIAN_FRONTEND=noninteractive apt install -y latexmk texlive-latex-extra python3-matplotlib python3-sphinx python3-sphinx-rtd-theme dvipng'
+          docker exec -t qgis bash -c 'export DISPLAY=:1.0; export PYTHONPATH=$PYTHONPATH:/tests_directory; cd /tests_directory/svir/help; make latexpdf; make html'
       - name: ㏒ Display web logs
         run: |
           set -x

@@ -54,7 +54,7 @@ class ConnectionProfileDialog(QDialog, FORM_CLASS):
             self.username_edt.setText(profile['username'])
             self.password_edt.setText(profile['password'])
             self.hostname_edt.setText(profile['hostname'])
-        self.ok_button = self.buttonBox.button(QDialogButtonBox.Ok)
+        self.ok_button = self.buttonBox.button(QDialogButtonBox.StandardButton.Ok)
         self.ok_button.setEnabled(self.initial_profile_name != '')
 
     @pyqtSlot(str)

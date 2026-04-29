@@ -90,7 +90,7 @@ def start_worker(worker, message_bar, message):
     # configure the QgsMessageBar
     message_bar_item = message_bar.createMessage(message)
     progress_bar = QProgressBar()
-    progress_bar.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+    progress_bar.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
     cancel_button = QPushButton()
     cancel_button.setText('Cancel')
     cancel_button.clicked.connect(worker.kill)

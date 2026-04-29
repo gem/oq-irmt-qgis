@@ -66,7 +66,7 @@ from svir import IS_MATPLOTLIB_INSTALLED
 
 if IS_MATPLOTLIB_INSTALLED:
     import matplotlib
-    matplotlib.use('Qt5Agg')  # NOQA
+    matplotlib.use('QtAgg')  # NOQA
     from matplotlib.backends.qt_compat import QtCore, QtWidgets  # NOQA
     from matplotlib.backends.backend_qt5agg import (
         FigureCanvas,
@@ -169,7 +169,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.plot_figure = Figure()
         self.plot_canvas = FigureCanvas(self.plot_figure)
         self.plot_canvas.setSizePolicy(
-            QSizePolicy.Preferred, QSizePolicy.MinimumExpanding)
+            QSizePolicy.Policy.Preferred, QSizePolicy.Policy.MinimumExpanding)
         self.plot_toolbar = NavigationToolbar(self.plot_canvas, self)
         self.plot = self.plot_figure.add_subplot(111)
         self.legend = None
@@ -181,8 +181,8 @@ class ViewerDock(QDockWidget, FORM_CLASS):
 
         self.table = QTableWidget()
         self.table.setSizePolicy(
-            QSizePolicy.Preferred, QSizePolicy.MinimumExpanding)
-        self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)
+            QSizePolicy.Policy.Preferred, QSizePolicy.Policy.MinimumExpanding)
+        self.table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.table_layout.addWidget(self.table)
         self.table.hide()
 
@@ -204,9 +204,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
     def create_loss_type_selector(self):
         self.loss_type_lbl = QLabel('Loss Category')
         self.loss_type_lbl.setSizePolicy(
-            QSizePolicy.Minimum, QSizePolicy.Minimum)
+            QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
         self.loss_type_cbx = QComboBox()
-        self.loss_type_cbx.currentTextChanged.connect(
+        self.loss_type_cbx.currentIndexChanged.connect(
             self.on_loss_type_changed)
         self.add_widget_to_type_dep_layout(
             self.loss_type_lbl, 'loss_type_lbl', self.typeDepHLayout2)
@@ -255,9 +255,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
     def create_imt_selector(self):
         self.imt_lbl = QLabel('Intensity Measure Type')
         self.imt_lbl.setSizePolicy(
-            QSizePolicy.Minimum, QSizePolicy.Minimum)
+            QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
         self.imt_cbx = QComboBox()
-        self.imt_cbx.currentTextChanged.connect(
+        self.imt_cbx.currentIndexChanged.connect(
             self.on_imt_changed)
         self.add_widget_to_type_dep_layout(
             self.imt_lbl, 'imt_lbl', self.typeDepHLayout1)
@@ -267,9 +267,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
     def create_ep_selector(self):
         self.ep_lbl = QLabel('Exceedance Probability')
         self.ep_lbl.setSizePolicy(
-            QSizePolicy.Minimum, QSizePolicy.Minimum)
+            QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
         self.ep_cbx = QComboBox()
-        self.ep_cbx.currentTextChanged.connect(
+        self.ep_cbx.currentIndexChanged.connect(
             self.on_ep_changed)
         self.add_widget_to_type_dep_layout(
             self.ep_lbl, "ep_lbl", self.typeDepVLayout)
@@ -279,10 +279,10 @@ class ViewerDock(QDockWidget, FORM_CLASS):
     def create_abs_rel_selector(self):
         self.abs_rel_lbl = QLabel('Absolute or relative')
         self.abs_rel_lbl.setSizePolicy(
-            QSizePolicy.Minimum, QSizePolicy.Minimum)
+            QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
         self.abs_rel_cbx = QComboBox()
         self.abs_rel_cbx.addItems(['Absolute', 'Relative'])
-        self.abs_rel_cbx.currentTextChanged.connect(
+        self.abs_rel_cbx.currentIndexChanged.connect(
             self.on_abs_rel_changed)
         self.add_widget_to_type_dep_layout(
             self.abs_rel_lbl, 'abs_rel_lbl', self.typeDepHLayout1)
@@ -292,9 +292,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
     def create_poe_selector(self):
         self.poe_lbl = QLabel('Probability of Exceedance')
         self.poe_lbl.setSizePolicy(
-            QSizePolicy.Minimum, QSizePolicy.Minimum)
+            QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
         self.poe_cbx = QComboBox()
-        self.poe_cbx.currentTextChanged.connect(
+        self.poe_cbx.currentIndexChanged.connect(
             self.on_poe_changed)
         self.add_widget_to_type_dep_layout(
             self.poe_lbl, 'poe_lbl', self.typeDepHLayout1)
@@ -304,9 +304,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
     def create_rlz_or_stat_selector(self):
         self.rlz_or_stat_lbl = QLabel('Realization or statistic')
         self.rlz_or_stat_lbl.setSizePolicy(
-            QSizePolicy.Minimum, QSizePolicy.Minimum)
+            QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
         self.rlz_or_stat_cbx = QComboBox()
-        self.rlz_or_stat_cbx.currentTextChanged.connect(
+        self.rlz_or_stat_cbx.currentIndexChanged.connect(
             self.on_rlz_or_stat_changed)
         self.add_widget_to_type_dep_layout(
             self.rlz_or_stat_lbl, 'rlz_or_stat_lbl', self.typeDepHLayout1)
@@ -316,7 +316,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
     def create_exclude_no_dmg_ckb(self):
         self.exclude_no_dmg_ckb = QCheckBox('Exclude "no damage"')
         self.exclude_no_dmg_ckb.setSizePolicy(
-            QSizePolicy.Minimum, QSizePolicy.Minimum)
+            QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
         self.exclude_no_dmg_ckb.setChecked(True)
         self.exclude_no_dmg_ckb.stateChanged[int].connect(
             self.on_exclude_no_dmg_ckb_state_changed)
@@ -335,7 +335,7 @@ class ViewerDock(QDockWidget, FORM_CLASS):
         self.n_simulations_lbl = QLabel('Simulations per building')
         self.n_simulations_lbl.setToolTip(simulations_explanation)
         self.approach_lbl.setSizePolicy(
-            QSizePolicy.Minimum, QSizePolicy.Minimum)
+            QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
         self.n_simulations_sbx = QSpinBox()
         self.n_simulations_sbx.setToolTip(simulations_explanation)
         self.n_simulations_sbx.setRange(1, 500)
@@ -1727,8 +1727,9 @@ class ViewerDock(QDockWidget, FORM_CLASS):
     def on_ep_changed(self):
         self.filter_agg_curves()
 
-    @pyqtSlot(str)
-    def on_loss_type_changed(self, loss_type):
+    @pyqtSlot(int)
+    def on_loss_type_changed(self, index):
+        # loss_type = self.loss_type_cbx.itemText(index)
         if self.output_type in ('aggcurves', 'aggcurves-stats'):
             self.filter_agg_curves()
         elif self.output_type in ('damages-rlzs_aggr', 'damages-stats_aggr'):

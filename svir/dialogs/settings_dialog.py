@@ -175,8 +175,8 @@ class SettingsDialog(QDialog, FORM_CLASS):
         msg = ("All current settings will be deleted and replaced by defaults."
                " Are you sure?")
         reply = QMessageBox.question(
-            self, 'Warning', msg, QMessageBox.Yes, QMessageBox.No)
-        if reply == QMessageBox.Yes:
+            self, 'Warning', msg, QMessageBox.StandardButton.Yes, QMessageBox.StandardButton.No)
+        if reply == QMessageBox.StandardButton.Yes:
             self.restore_state(restore_defaults=True)
 
     @pyqtSlot(int)
@@ -188,7 +188,7 @@ class SettingsDialog(QDialog, FORM_CLASS):
     def on_eng_edit_btn_clicked(self):
         profile_name = self.engine_profile_cbx.currentText()
         self.profile_dlg = ConnectionProfileDialog(profile_name, parent=self)
-        if self.profile_dlg.exec_():
+        if self.profile_dlg.exec():
             self.refresh_profile_cbxs()
 
     @pyqtSlot()
@@ -234,7 +234,7 @@ class SettingsDialog(QDialog, FORM_CLASS):
     @pyqtSlot()
     def on_eng_new_btn_clicked(self):
         self.profile_dlg = ConnectionProfileDialog(parent=self)
-        if self.profile_dlg.exec_():
+        if self.profile_dlg.exec():
             self.refresh_profile_cbxs()
 
     @pyqtSlot()
@@ -247,7 +247,7 @@ class SettingsDialog(QDialog, FORM_CLASS):
                 'Remove connection profile',
                 ('If you continue, the selected profile will be permanently'
                  ' deleted. Are you sure?'),
-                QMessageBox.Yes | QMessageBox.No) != QMessageBox.Yes:
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No) != QMessageBox.StandardButton.Yes:
             return
         profiles = json.loads(
             QSettings().value('irmt/engine_profiles'))
@@ -261,7 +261,7 @@ class SettingsDialog(QDialog, FORM_CLASS):
         QSettings().setValue('irmt/engine_profiles', json.dumps(profiles))
 
     def select_color(self, button):
-        initial = button.palette().color(QPalette.Button)
+        initial = button.palette().color(QPalette.ColorRole.Button)
         color = QColorDialog.getColor(initial)
         if color.isValid():
             self.set_button_color(button, color)

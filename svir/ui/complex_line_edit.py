@@ -1,10 +1,10 @@
-from PyQt5.QtGui import (
+from qgis.PyQt.QtGui import (
     QPainter, QColor, QPainterPath, QPen,
     QFontMetrics,
     QFontDatabase,
     )
-from PyQt5.QtCore import Qt, QRectF
-from PyQt5.QtWidgets import QLineEdit
+from qgis.PyQt.QtCore import Qt, QRectF
+from qgis.PyQt.QtWidgets import QLineEdit
 
 
 class ComplexLineEdit(QLineEdit):
@@ -20,7 +20,8 @@ class ComplexLineEdit(QLineEdit):
             'highlight_disabled': QColor(179, 179, 179),
             'text': QColor(0, 105, 92),
             'text_disabled': QColor(179, 179, 179),
-            'font': QFontDatabase.systemFont(QFontDatabase.GeneralFont),
+            'font': QFontDatabase.systemFont(
+                QFontDatabase.SystemFont.GeneralFont),
             'padding-x': 8,
             'padding-y': 2,
             }
@@ -35,19 +36,22 @@ class ComplexLineEdit(QLineEdit):
         qp.end()
 
     def mouseReleaseEvent(self, event):
+        # Convert event.pos() (QPoint) to QPointF to match QRectF requirements
+        # In Qt6, event.position() returns a QPointF directly
+        click_pos = event.position()
         for text, rect in self.close_rectangles.items():
-            if event.pos() in rect:
+            if rect.contains(click_pos):
                 selected = self.parent.get_selected_items()
-                selected.remove(text)
-                self.parent.set_selected_items(selected)
-
+                if text in selected:
+                    selected.remove(text)
+                    self.parent.set_selected_items(selected)
                 event.accept()
                 return
         self.parent.showPopup()
 
     def draw_items(self, event, qp):
         font = self.settings['font']
-        qp.setRenderHint(QPainter.Antialiasing)
+        qp.setRenderHint(QPainter.RenderHint.Antialiasing)
         qp.setFont(font)
 
         self.close_rectangles = {}
@@ -63,7 +67,7 @@ class ComplexLineEdit(QLineEdit):
         x = self.settings['padding-x']
         for text in self.current_text():
             text = text.strip()
-            width = self.font_metrics.width(text)
+            width = self.font_metrics.horizontalAdvance(text)
 
             # add padding
             height = self.height() - self.settings['padding-y'] * 2
@@ -102,7 +106,7 @@ class ComplexLineEdit(QLineEdit):
         # add close button
         circle_size = rect.height() / 1.8
         pen_size = 2
-        qp.setPen(QPen(text_color, pen_size, Qt.SolidLine))
+        qp.setPen(QPen(text_color, pen_size, Qt.PenStyle.SolidLine))
         rect = QRectF(
             rect.right() - circle_size - self.settings['padding-x']/2,
             rect.top() + (rect.height() - circle_size)/2,
@@ -126,7 +130,9 @@ class ComplexLineEdit(QLineEdit):
         # start text one padding in
         left = rect.left() + self.settings['padding-x']
         rect.setLeft(left)
-        qp.drawText(rect, Qt.AlignLeft, text)
+        qp.drawText(rect,
+                    Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
+                    text)
 
     def current_text(self):
         items = self.text().split('; ')

@@ -150,7 +150,7 @@ class EngineOutputLoader:
                             dlg.category_cbx.count(), 0, 'No category found')
             dlg.category_cbx.setCurrentIndex(0)
         if dlg.ok_button.isEnabled():
-            QTest.mouseClick(dlg.ok_button, Qt.LeftButton)
+            QTest.mouseClick(dlg.ok_button, Qt.MouseButton.LeftButton)
             if dlg.output_type == 'asset_risk':
                 # NOTE: avoiding to emit loading_completed for asset_risk,
                 # because in this case there's a second asynchronous call to
@@ -194,7 +194,7 @@ class EngineOutputLoader:
                 dlg = LoadInputsDialog(
                     self.irmt.drive_oq_engine_server_dlg,
                     filepath, self.irmt.iface, mode='testing')
-                QTest.mouseClick(dlg.ok_button, Qt.LeftButton)
+                QTest.mouseClick(dlg.ok_button, Qt.MouseButton.LeftButton)
                 return 'ok'
 
             dlg = OUTPUT_TYPE_LOADERS[output_type](
@@ -205,7 +205,7 @@ class EngineOutputLoader:
                 calculation_mode=calculation_mode, mode='testing')
 
             if dlg.ok_button.isEnabled():
-                QTest.mouseClick(dlg.ok_button, Qt.LeftButton)
+                QTest.mouseClick(dlg.ok_button, Qt.MouseButton.LeftButton)
                 return 'ok'
             raise RuntimeError('The ok button is disabled')
 
@@ -225,7 +225,7 @@ class EngineOutputLoader:
                 lambda d, e: self.loading_exception.update({d: e}))
 
             timeout, start_time = 30, time.time()
-            QTest.mouseClick(dlg.ok_button, Qt.LeftButton)
+            QTest.mouseClick(dlg.ok_button, Qt.MouseButton.LeftButton)
 
             while time.time() - start_time < timeout:
                 self.qgis_app.processEvents()

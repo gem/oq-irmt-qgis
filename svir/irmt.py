@@ -65,10 +65,6 @@ from svir.utilities.shared import DEBUG, OQ_XMARKER_TYPES
 from svir.ui.tool_button_with_help_link import QToolButtonWithHelpLink
 from svir.processing_provider.provider import Provider
 
-# DO NOT REMOVE THIS
-# noinspection PyUnresolvedReferences
-import svir.resources_rc  # pylint: disable=unused-import  # NOQA
-
 from svir import IS_MATPLOTLIB_INSTALLED
 
 
@@ -145,6 +141,12 @@ class Irmt(object):
         self.provider = Provider()
         QgsApplication.processingRegistry().addProvider(self.provider)
 
+    def getIcon(self, name):
+        irmt_dir = os.path.dirname(__file__)
+        resources_dir = os.path.join(irmt_dir, 'resources')
+        icon_path = os.path.join(resources_dir, name)
+        return icon_path
+
     def initGui(self):
         if not IS_MATPLOTLIB_INSTALLED:
             # the warning should have already been displayed by the __init__
@@ -165,7 +167,7 @@ class Irmt(object):
 
         # Action to drive the oq-engine server
         self.add_menu_item("drive_engine_server",
-                           ":/plugins/irmt/drive_oqengine.svg",
+                           self.getIcon('drive_oqengine.svg'),
                            u"Drive the OpenQuake Engine",
                            self.on_drive_oq_engine_server_btn_clicked,
                            enable=True,
@@ -175,7 +177,7 @@ class Irmt(object):
         # Action to activate the modal dialog to select a layer and one of
         # its attributes, in order to transform that attribute
         self.add_menu_item("transform_attributes",
-                           ":/plugins/irmt/transform.svg",
+                           self.getIcon('transform.svg'),
                            u"&Transform attributes",
                            self.transform_attributes,
                            enable=False,
@@ -185,7 +187,7 @@ class Irmt(object):
         # Action to open the Processing algorithm
         # "Join attributes by location (summary)"
         self.add_menu_item("aggregate",
-                           ":/plugins/irmt/aggregate.svg",
+                           self.getIcon('aggregate.svg'),
                            u"&Aggregate points by zone",
                            self.aggregate,
                            enable=True,
@@ -198,7 +200,7 @@ class Irmt(object):
         # Action to activate the modal dialog to set up show_settings for the
         # connection with the engine
         self.add_menu_item("show_settings",
-                           ":/plugins/irmt/settings.svg",
+                           self.getIcon('settings.svg'),
                            u"&OpenQuake IRMT settings",
                            self.show_settings,
                            enable=True,
@@ -208,7 +210,7 @@ class Irmt(object):
 
         # Action to open the plugin's manual
         self.add_menu_item("help",
-                           ":/plugins/irmt/manual.svg",
+                           self.getIcon('manual.svg'),
                            u"OpenQuake IRMT &manual",
                            self.show_manual,
                            enable=True,
@@ -500,7 +502,7 @@ class Irmt(object):
         Open a dialog to specify the connection settings used to interact
         with the OpenQuake Engine
         """
-        SettingsDialog(self.iface, self).exec_()
+        SettingsDialog(self.iface, self).exec()
 
     def transform_attributes(self):
         """
@@ -515,7 +517,7 @@ class Irmt(object):
             return
 
         dlg = TransformationDialog(self.iface)
-        if dlg.exec_():
+        if dlg.exec():
             layer = self.iface.activeLayer()
             input_attr_names = [
                 field_name_plus_alias.split('(')[0].strip()
@@ -598,7 +600,7 @@ class Irmt(object):
 
         # Action to drive the oq-engine server
         action = self.add_menu_item("toggle_viewer_dock",
-                                    ":/plugins/irmt/plot.svg",
+                                    self.getIcon('plot.svg'),
                                     u"Toggle viewer dock",
                                     self.toggle_dock_visibility,
                                     enable=True,
@@ -608,7 +610,7 @@ class Irmt(object):
 
         self.viewer_dock = ViewerDock(self.iface, action)
         self.viewer_dock.setObjectName('IRMT-Dock')
-        self.iface.addDockWidget(Qt.RightDockWidgetArea, self.viewer_dock)
+        self.iface.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.viewer_dock)
         legend_tab = self.iface.mainWindow().findChild(QApplication, 'Legend')
         if legend_tab:
             self.iface.mainWindow().tabifyDockWidget(

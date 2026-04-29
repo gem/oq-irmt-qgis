@@ -119,7 +119,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         # Set up the user interface from Designer.
         self.setupUi(self)
         # Disable ok_button until all user options are set
-        self.ok_button = self.buttonBox.button(QDialogButtonBox.Ok)
+        self.ok_button = self.buttonBox.button(QDialogButtonBox.StandardButton.Ok)
         self.ok_button.setDisabled(True)
         self.oqparam = self.drive_engine_dlg.get_oqparam()
 
@@ -178,7 +178,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.rlz_or_stat_lbl = QLabel(label)
         self.rlz_or_stat_cbx = QComboBox()
         self.rlz_or_stat_cbx.setEnabled(False)
-        self.rlz_or_stat_cbx.currentIndexChanged['QString'].connect(
+        self.rlz_or_stat_cbx.currentIndexChanged.connect(
             self.on_rlz_or_stat_changed)
         if all_ckb:
             self.load_all_rlzs_or_stats_chk = QCheckBox(
@@ -190,7 +190,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.vlayout.addWidget(self.rlz_or_stat_cbx)
 
     def on_load_all_rlzs_or_stats_chk_stateChanged(self, state):
-        self.rlz_or_stat_cbx.setEnabled(state == Qt.Unchecked)
+        self.rlz_or_stat_cbx.setEnabled(state == Qt.CheckState.Unchecked)
 
     def create_selector(
             self, name, label_text, filter_ckb=False, add_to_layout=None,
@@ -224,7 +224,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.imt_lbl = QLabel('Intensity Measure Type')
         self.imt_cbx = QComboBox()
         self.imt_cbx.setEnabled(False)
-        self.imt_cbx.currentIndexChanged['QString'].connect(
+        self.imt_cbx.currentIndexChanged.connect(
             self.on_imt_changed)
         if all_ckb:
             self.load_all_imts_chk = QCheckBox('Load all IMTs')
@@ -235,13 +235,13 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.vlayout.addWidget(self.imt_cbx)
 
     def on_load_all_imts_chk_stateChanged(self, state):
-        self.imt_cbx.setEnabled(state == Qt.Unchecked)
+        self.imt_cbx.setEnabled(state == Qt.CheckState.Unchecked)
 
     def create_poe_selector(self, all_ckb=False):
         self.poe_lbl = QLabel('Probability of Exceedance')
         self.poe_cbx = QComboBox()
         self.poe_cbx.setEnabled(False)
-        self.poe_cbx.currentIndexChanged['QString'].connect(
+        self.poe_cbx.currentIndexChanged.connect(
             self.on_poe_changed)
         if all_ckb:
             self.load_all_poes_chk = QCheckBox('Load all PoEs')
@@ -252,13 +252,13 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.vlayout.addWidget(self.poe_cbx)
 
     def on_load_all_poes_chk_stateChanged(self, state):
-        self.poe_cbx.setEnabled(state == Qt.Unchecked)
+        self.poe_cbx.setEnabled(state == Qt.CheckState.Unchecked)
 
     def create_loss_type_selector(self):
         self.loss_type_lbl = QLabel('Loss Category')
         self.loss_type_cbx = QComboBox()
         self.loss_type_cbx.setEnabled(False)
-        self.loss_type_cbx.currentIndexChanged['QString'].connect(
+        self.loss_type_cbx.currentIndexChanged.connect(
             self.on_loss_type_changed)
         self.vlayout.addWidget(self.loss_type_lbl)
         self.vlayout.addWidget(self.loss_type_cbx)
@@ -282,7 +282,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.dmg_state_lbl = QLabel('Damage State')
         self.dmg_state_cbx = QComboBox()
         self.dmg_state_cbx.setEnabled(False)
-        self.dmg_state_cbx.currentIndexChanged['QString'].connect(
+        self.dmg_state_cbx.currentIndexChanged.connect(
             self.on_dmg_state_changed)
         self.vlayout.addWidget(self.dmg_state_lbl)
         self.vlayout.addWidget(self.dmg_state_cbx)
@@ -347,7 +347,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         self.zonal_layer_gbx_v_layout.addWidget(self.discard_nonmatching_chk)
         self.vlayout.addWidget(self.zonal_layer_gbx)
         self.zonal_layer_tbn.clicked.connect(self.open_load_zonal_layer_dialog)
-        self.zonal_layer_cbx.currentIndexChanged[int].connect(
+        self.zonal_layer_cbx.currentIndexChanged.connect(
             self.on_zonal_layer_cbx_currentIndexChanged)
         self.zonal_layer_gbx.toggled[bool].connect(
             self.on_zonal_layer_gbx_toggled)
@@ -600,7 +600,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         symbol.setOpacity(1)
         if isinstance(symbol, QgsMarkerSymbol):
             # do it only for the layer with points
-            symbol.symbolLayer(0).setStrokeStyle(Qt.PenStyle(Qt.NoPen))
+            symbol.symbolLayer(0).setStrokeStyle(Qt.PenStyle(Qt.PenStyle.NoPen))
 
         style = get_style(layer, iface.messageBar())
 
@@ -677,7 +677,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 symbol = QgsSymbol.defaultSymbol(layer.geometryType()).clone()
                 symbol.deleteSymbolLayer(0)
                 symbol.appendSymbolLayer(square)
-                symbol.symbolLayer(0).setStrokeStyle(Qt.PenStyle(Qt.NoPen))
+                symbol.symbolLayer(0).setStrokeStyle(Qt.PenStyle(Qt.PenStyle.NoPen))
             elif output_type in ['asset_risk', 'input']:
                 # options are EqualInterval, Quantile, Jenks, StdDev, Pretty
                 # jenks = natural breaks
@@ -951,7 +951,7 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 ld.type = ogr.GeometryTypeToName(c.GetGeomType())
                 layer_defs.append(ld)
             dlg.populateLayerTable(layer_defs)
-            dlg.exec_()
+            dlg.exec()
             if not dlg.selection():
                 return None
             for sel in dlg.selection():

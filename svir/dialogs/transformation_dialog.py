@@ -57,7 +57,7 @@ class TransformationDialog(QDialog, FORM_CLASS):
         hlayout.addWidget(self.fields_multiselect)
         self.vertical_layout.insertLayout(1, hlayout)
         self.adjustSize()
-        self.ok_button = self.buttonBox.button(QDialogButtonBox.Ok)
+        self.ok_button = self.buttonBox.button(QDialogButtonBox.StandardButton.Ok)
         self.fill_fields_multiselect()
 
         alg_list = list(TRANSFORMATION_ALGS.keys())

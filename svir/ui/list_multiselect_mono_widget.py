@@ -39,7 +39,7 @@ class ListMultiSelectMonoWidget(ListMultiSelectWidget):
         self.message_bar = message_bar
         super(ListMultiSelectMonoWidget, self).__init__(parent, title)
         self.unselected_widget.setSelectionMode(
-            QAbstractItemView.SingleSelection)
+            QAbstractItemView.SelectionMode.SingleSelection)
 
     def _select(self):
         if self.selected_widget.count():

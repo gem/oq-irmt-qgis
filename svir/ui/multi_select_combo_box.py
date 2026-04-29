@@ -31,7 +31,7 @@ class MultiSelectComboBox(QComboBox):
 
         self.setModel(self.mlist.model())
         self.setView(self.mlist)
-        self.view().setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        self.view().setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.setLineEdit(self.line_edit)
 
         # NOTE: this is necessary to handle the case in which an item in the
@@ -300,4 +300,4 @@ if __name__ == "__main__":
     wdg.layout().addWidget(mscb)
     wdg.layout().addWidget(mscbmono)
     win.show()
-    app.exec_()
+    app.exec()

@@ -203,7 +203,7 @@ def _on_tb_btn_clicked(message, tb_text):
     vbox.addWidget(text_browser)
     dlg.setLayout(vbox)
     dlg.setMinimumSize(700, 500)
-    dlg.exec_()
+    dlg.exec()
 
 
 def tr(message):
@@ -225,14 +225,14 @@ def confirmation_on_close(parent, event=None):
     """
     msg = tr("WARNING: all unsaved changes will be lost. Are you sure?")
     reply = QMessageBox.question(
-        parent, 'Message', msg, QMessageBox.Yes, QMessageBox.No)
+        parent, 'Message', msg, QMessageBox.StandardButton.Yes, QMessageBox.StandardButton.No)
     if event is not None:
-        if reply == QMessageBox.Yes:
+        if reply == QMessageBox.StandardButton.Yes:
             event.accept()
         else:
             event.ignore()
     else:
-        if reply == QMessageBox.Yes:
+        if reply == QMessageBox.StandardButton.Yes:
             parent.__class__.__base__.reject(parent)
 
 
@@ -589,7 +589,7 @@ def confirm_overwrite(parent, files):
         'If you continue the following files will be '
         'overwritten: %s\n\n'
         'Continue?' % '\n'.join(files),
-        QMessageBox.Yes | QMessageBox.No)
+        QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
 
 
 class Register(collections.OrderedDict):
@@ -653,7 +653,7 @@ class WaitCursorManager(object):
             self.message = self.message_bar.pushWidget(
                 self.message, level=Qgis.Info)
             QApplication.processEvents()
-        QApplication.setOverrideCursor(Qt.WaitCursor)
+        QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
 
     def __exit__(self, exc_type, exc_value, traceback):
         QApplication.restoreOverrideCursor()
