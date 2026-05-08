@@ -5,7 +5,7 @@
 # OpenQuake Integrated Risk Modelling Toolkit
 #                              -------------------
 #        begin                : 2016-06-29
-#        copyright            : (C) 2016 by GEM Foundation
+#        copyright            : (C) 2016-2026 by GEM Foundation
 #        email                : devops@openquake.org
 # ***************************************************************************/
 #
@@ -695,11 +695,11 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             else:
                 raise NotImplementedError(select_from)
             if select_from == 'Directory':
-                _, zipped_file_name = tempfile.mkstemp()
+                _, zipped_file_name = tempfile.mkstemp(suffix='.zip')
                 with zipfile.ZipFile(zipped_file_name, 'w') as zipped_file:
                     zipdir(selected_dir, zipped_file)
         else:  # given filenames
-            _, zipped_file_name = tempfile.mkstemp()
+            _, zipped_file_name = tempfile.mkstemp(suffix='.zip')
             with zipfile.ZipFile(zipped_file_name, 'w') as zipped_file:
                 for file_name in file_names:
                     zipped_file.write(file_name)
@@ -1157,7 +1157,6 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
         self.timer.timeout.connect(self.refresh_calc_list)
         self.timer.start(5000)  # refresh calc list time in milliseconds
         self.is_polling = True
-        self.reconnect_btn.setEnabled(False)
 
     def stop_polling(self):
         # NOTE: perhaps we should disconnect the timeout signal here?
@@ -1165,7 +1164,6 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             self.timer.stop()
         # QObject.disconnect(self.timer, SIGNAL('timeout()'))
         self.is_polling = False
-        self.reconnect_btn.setEnabled(True)
 
     @pyqtSlot()
     def on_run_calc_btn_clicked(self):

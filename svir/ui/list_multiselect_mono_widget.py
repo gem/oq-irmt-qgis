@@ -6,7 +6,7 @@
  OpenQuake Social Vulnerability and Integrated Risk
                               -------------------
         begin                : 2017-10-04
-        copyright            : (C) 2017 by GEM Foundation
+        copyright            : (C) 2017-2026 by GEM Foundation
         email                : devops@openquake.org
  ***************************************************************************/
 

@@ -5,7 +5,7 @@
 # OpenQuake Integrated Risk Modelling Toolkit
 #                              -------------------
 #        begin                : 2015-03-27
-#        copyright            : (C) 2015 by GEM Foundation
+#        copyright            : (C) 2015-2026 by GEM Foundation
 #        email                : devops@openquake.org
 # ***************************************************************************/
 #

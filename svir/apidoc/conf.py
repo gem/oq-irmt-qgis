@@ -60,7 +60,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'OpenQuake IRMT'
-copyright = u'2017, GEM Foundation'
+copyright = u'2017-2026, GEM Foundation'
 author = u'GEM Foundation'
 
 # The version info for the project you're documenting, acts as replacement for
