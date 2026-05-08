@@ -1,51 +1,36 @@
+# -*- coding: utf-8 -*-
+# /***************************************************************************
+# Irmt
+#                                 A QGIS plugin
+# OpenQuake Integrated Risk Modelling Toolkit
+#                              -------------------
+#        begin                : 2013-10-24
+#        copyright            : (C) 2014-2026 by GEM Foundation
+#        email                : devops@openquake.org
+# ***************************************************************************/
+#
+# OpenQuake is free software: you can redistribute it and/or modify it
+# under the terms of the GNU Affero General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# OpenQuake is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
-# coding=utf-8
 """Helper module for gui test suite."""
 
 
 import hashlib
-import logging
 import re
 
-from qgis.PyQt import QtWidgets
-from qgis.utils import iface
-
-QGIS_APP = None  # Static variable used to hold hand to running QGIS app
-CANVAS = None
-PARENT = None
-IFACE = None
-LOGGER = logging.getLogger('OpenQuake')
 GEOCRS = 4326  # constant for EPSG:GEOCRS Geographic CRS id
 GOOGLECRS = 3857  # constant for EPSG:GOOGLECRS Google Mercator id
 # DEVNULL = open(os.devnull, 'w')
-
-
-__copyright__ = "Copyright 2016, The InaSAFE Project"
-__license__ = "GPL version 3"
-__email__ = "info@inasafe.org"
-__revision__ = '$Format:%H$'
-
-
-def get_dock():
-    """Get a dock for testing.
-
-    If you call this function from a QGIS Desktop, you will get the real dock,
-    however, you use a fake QGIS interface, it will create a fake dock for you.
-
-    :returns: A dock.
-    :rtype: QDockWidget
-    """
-    # Don't move this import.
-    from svir.dialogs.viewer_dock import ViewerDock as DockObject
-    if iface:
-        docks = iface.mainWindow().findChildren(QtWidgets.QDockWidget)
-        for dock in docks:
-            if isinstance(dock, DockObject):
-                return dock
-        else:
-            return DockObject(iface)
-    else:
-        return DockObject(IFACE)
 
 
 def assert_hash_for_file(hash_string, filename):

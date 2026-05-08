@@ -23,7 +23,6 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 from qgis.core import QgsField
-from qgis.PyQt.QtCore import QVariant
 from svir.calculations.process_layer import ProcessLayer
 from svir.utilities.shared import (
     DOUBLE_FIELD_TYPE, STRING_FIELD_TYPE, ULONGLONG_FIELD_TYPE,
