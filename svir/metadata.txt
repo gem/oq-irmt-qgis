@@ -25,6 +25,7 @@ email=staff.it@globalquakemodel.org
 changelog=
     3.23.3
     * The testing infrastructure and some minor details were backported from master
+    * Fixed selection of event id in the loader for ground motion fields
     3.23.2
     * All references to the deprecated QtWebKit and to the related experimental applications were removed
     * The 'Remove' calculation button is not shown if the current user is not the owner of the calculation
