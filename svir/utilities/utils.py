@@ -31,10 +31,9 @@ import traceback
 import locale
 import zlib
 import io
+import re
+import html
 from datetime import datetime
-from pygments import highlight
-from pygments.lexers import PythonLexer
-from pygments.formatters import HtmlFormatter
 from copy import deepcopy
 from time import time
 from pprint import pformat
@@ -192,13 +191,60 @@ def log_msg(message, tag='GEM OpenQuake IRMT plugin', level='I',
                   file=sys.stdout)
 
 
+def format_traceback_html(tb_text):
+    """Formats a Python traceback as HTML without pygments."""
+    lines = tb_text.splitlines()
+    result = []
+    for line in lines:
+        escaped = html.escape(line)
+        # "Traceback (most recent call last):" header
+        if re.match(r'^Traceback \(most recent call last\):', line):
+            escaped = (f'<span style="color:#cc0000;font-weight:bold;">'
+                       f'{escaped}</span>')
+        # File/line references: '  File "...", line N, in ...'
+        elif re.match(r'^\s+File "', line):
+            escaped = re.sub(
+                r'(File &quot;)([^&]+)(&quot;, line )(\d+)(.*)',
+                r'\1<span style="color:#0066cc;">\2</span>\3'
+                r'<span style="color:#aa6600;">\4</span>\5',
+                escaped
+            )
+            escaped = f'<span style="color:#555;">{escaped}</span>'
+        # The actual code line inside the traceback (indented, not a File line)
+        elif re.match(r'^\s+\S', line) and not re.match(r'^\s+File "', line):
+            escaped = f'<span style="color:#333;">{escaped}</span>'
+        # Exception type and message: "SomeError: message"
+        elif (re.match(r'^\w+(\.\w+)*Error', line)
+              or re.match(r'^\w+(\.\w+)*Exception', line)
+              or re.match(r'^\w+(\.\w+)*Warning', line)):
+            escaped = re.sub(
+                r'^([^:]+)(: ?)(.*)',
+                r'<span style="color:#cc0000;font-weight:bold;">\1</span>'
+                r'<span style="color:#555;">:\2</span>'
+                r'<span style="color:#333;">\3</span>',
+                escaped
+            )
+        result.append(escaped)
+    body = '<br>'.join(result)
+    return f"""
+    <html><body>
+    <pre style="font-family: monospace; font-size: 12px;
+                background: #f8f8f8; padding: 10px;
+                border: 1px solid #ddd; border-radius: 4px;
+                white-space: pre-wrap; word-wrap: break-word;">
+{body}
+    </pre>
+    </body></html>
+    """
+
+
 def _on_tb_btn_clicked(message, tb_text):
     vbox = QVBoxLayout()
     dlg = QDialog()
     dlg.setWindowTitle('Traceback')
     text_browser = QTextBrowser()
     unformatted_msg = message
-    formatted_msg = highlight(tb_text, PythonLexer(), HtmlFormatter(full=True))
+    formatted_msg = format_traceback_html(tb_text)
     text_browser.setHtml(unformatted_msg + formatted_msg)
     vbox.addWidget(text_browser)
     dlg.setLayout(vbox)
