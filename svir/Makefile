@@ -114,19 +114,22 @@ package: compile doc
 	@echo "------------------------------------"
 	@echo "Exporting plugin to zip package.	"
 	@echo "------------------------------------"
-	rm -f $(PLUGINNAME)/$(PLUGINNAME).zip
+	rm -f $(PLUGINNAME).zip
 	git archive --prefix=$(PLUGINNAME)/ -o $(PLUGINNAME).zip HEAD
+	# Remove unwanted entries from the git archive
+	zip --delete $(PLUGINNAME).zip $(PLUGINNAME)/apidoc/\* $(PLUGINNAME)/test/\* $(PLUGINNAME)/help/source/\* $(PLUGINNAME)/Makefile $(PLUGINNAME)/help/Makefile $(PLUGINNAME)/help/make.bat
+	# Compress the PDF manual, inject into HTML _downloads, then add everything
 	# to save more space, we can use /ebook instead of /printer (but it would reduce the resolution of images)
 	gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dPDFSETTINGS=/printer -dNOPAUSE -dQUIET -dBATCH -sOutputFile=resized-irmt.pdf help/build/latex/irmt.pdf
 	# NOTE: assuming that _downloads contains a single folder with a unique name (otherwise you must identify the right folder and delete the others manually)
 	mv -f resized-irmt.pdf $(shell ls -d help/build/html/_downloads/*/)irmt.pdf
-	mkdir -p $(PLUGINNAME)/help/build; rm -r $(PLUGINNAME)/help/build/html; cp -r help/build/html $(PLUGINNAME)/help/build/html;
-	# mkdir -p $(PLUGINNAME)/apidoc/_build; rm -r $(PLUGINNAME)/apidoc/_build/html; cp -r apidoc/_build/html $(PLUGINNAME)/apidoc/_build/html
-	zip -r $(PLUGINNAME).zip $(PLUGINNAME)/help/build/html
-	# zip -r $(PLUGINNAME).zip $(PLUGINNAME)/apidoc/_build/html
-	zip --delete $(PLUGINNAME).zip $(PLUGINNAME)/test/\* $(PLUGINNAME)/help/source/\*
-	rm -r $(PLUGINNAME)/
-	echo "Created package: $(PLUGINNAME).zip"
+	mkdir -p $(PLUGINNAME)/help/build
+	cp -r help/build/html $(PLUGINNAME)/help/build/
+	find $(PLUGINNAME)/help/build/html -name ".*" -delete
+	zip -r $(PLUGINNAME).zip $(PLUGINNAME)/help/
+	# Clean up
+	rm -rf $(PLUGINNAME)/
+	@echo "Created package: $(PLUGINNAME).zip"
 
 package_no_compile:
 	git archive --prefix=$(PLUGINNAME)/ -o $(PLUGINNAME).zip HEAD
