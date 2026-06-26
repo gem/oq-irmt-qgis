@@ -24,6 +24,7 @@ email=staff.it@globalquakemodel.org
 # Uncomment the following line and add your changelog entries:
 changelog=
     3.23.3
+    * Fixed loader for multi-peril inputs, considering both existing variants 'multi_peril_csv' and 'multi_peril_file' existing in oq-engine demos
     * Removed dependency from pygments, problematic on some recent versions of QGIS on MacOS
     * The testing infrastructure and some minor details were backported from master
     * Fixed selection of event id in the loader for ground motion fields

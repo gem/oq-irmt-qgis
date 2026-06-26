@@ -90,12 +90,19 @@ class LoadInputsDialog(QDialog):
         config = configparser.ConfigParser(allow_no_value=True)
         config.read_string(ini_str)
         multi_peril_csv_str = None
+        # NOTE: the name is not always the same. Here we are considering two
+        # existing variants
+        multi_peril_key_variants = ['multi_peril_csv', 'multi_peril_file']
         for key in config:
-            if 'multi_peril_csv' in config[key]:
-                multi_peril_csv_str = config[key]['multi_peril_csv']
+            for mpk_variant in multi_peril_key_variants:
+                if mpk_variant in config[key]:
+                    multi_peril_csv_str = config[key][mpk_variant]
+            if multi_peril_csv_str is not None:
                 break
         if multi_peril_csv_str is None:
-            raise KeyError('multi_peril_csv not found in .ini file')
+            raise KeyError(
+                'Neither "multi_peril_csv" nor "multi_peril_file" was'
+                ' found in the .ini file')
         multi_peril_csv_dict = json.loads(
             multi_peril_csv_str.replace('\'', '"'))
         return multi_peril_csv_dict
