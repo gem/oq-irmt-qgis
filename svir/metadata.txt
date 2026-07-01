@@ -24,7 +24,7 @@ email=staff.it@globalquakemodel.org
 # Uncomment the following line and add your changelog entries:
 changelog=
     3.26.0
-    * TODO
+    * Checked compatibility with OpenQuake Engine 3.26
     3.25.2
     * Removed dependency from pygments, problematic on some recent versions of QGIS on MacOS
     * The testing infrastructure and some minor details were backported from master
