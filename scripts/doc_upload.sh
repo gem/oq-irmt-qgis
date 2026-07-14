@@ -12,7 +12,8 @@ VERSION="v$(grep 'version=' ../svir/metadata.txt | cut -d '=' -f 2)"
 echo VERSION=$VERSION
 
 USER=docs
-HOST=$USER@docs.gem.lan
+# HOST=$USER@docs.gem.lan  # does not resolve correctly; using corresponding IP instead
+HOST=$USER@172.30.50.218
 BASE_PATH="~/oq-irmt-qgis"
 HOST_PATH="$BASE_PATH/$VERSION"
 # If user is ptormene don't need other keys
