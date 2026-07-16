@@ -41,7 +41,10 @@ class LoadDamagesAsLayerDialog(LoadOutputAsLayerDialog):
                  calc_id, output_type='damages-rlzs',
                  path=None, mode=None, zonal_layer_path=None,
                  engine_version=None, calculation_mode=None):
-        assert output_type in ('damages-rlzs', 'damages-stats')
+        if output_type not in ('damages-rlzs', 'damages-stats'):
+            raise RuntimeError(
+                f"Invalid output_type {output_type}."
+                f" Expected either 'damages-rlzs' or 'damages-stats'")
         super().__init__(
             drive_engine_dlg, iface, viewer_dock, session, hostname,
             calc_id, output_type=output_type, path=path, mode=mode,

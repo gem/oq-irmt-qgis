@@ -40,7 +40,9 @@ class LoadAssetRiskAsLayerDialog(LoadOutputAsLayerDialog):
     def __init__(self, drive_engine_dlg, iface, viewer_dock, session, hostname,
                  calc_id, output_type='asset_risk', path=None, mode=None,
                  engine_version=None, calculation_mode=None):
-        assert output_type == 'asset_risk'
+        if output_type != 'asset_risk':
+            raise RuntimeError(
+                f"Invalid output_type {output_type}. Expected asset_risk")
         super().__init__(
             drive_engine_dlg, iface, viewer_dock, session, hostname,
             calc_id, output_type=output_type, path=path, mode=mode,

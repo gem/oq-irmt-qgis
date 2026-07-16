@@ -37,7 +37,10 @@ class LoadHazardCurvesAsLayerDialog(LoadOutputAsLayerDialog):
     def __init__(self, drive_engine_dlg, iface, viewer_dock, session, hostname,
                  calc_id, output_type='hcurves', path=None, mode=None,
                  engine_version=None, calculation_mode=None):
-        assert output_type == 'hcurves'
+        if output_type != 'hcurves':
+            raise RuntimeError(
+                f"Invalid output_type {output_type}."
+                f" Expected 'hcurves'")
         super().__init__(
             drive_engine_dlg, iface, viewer_dock, session, hostname,
             calc_id, output_type=output_type, path=path, mode=mode,

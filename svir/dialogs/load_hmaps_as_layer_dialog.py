@@ -38,7 +38,10 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
     def __init__(self, drive_engine_dlg, iface, viewer_dock, session, hostname,
                  calc_id, output_type='hmaps', path=None, mode=None,
                  engine_version=None, calculation_mode=None):
-        assert output_type == 'hmaps'
+        if output_type != 'hmaps':
+            raise RuntimeError(
+                f"Invalid output_type {output_type}."
+                f" Expected 'hmaps'")
         super().__init__(
             drive_engine_dlg, iface, viewer_dock, session, hostname,
             calc_id, output_type=output_type, path=path, mode=mode,
