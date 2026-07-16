@@ -40,7 +40,10 @@ class LoadCsvAsLayerDialog(LoadOutputAsLayerDialog):
     def __init__(self, drive_engine_dlg, iface, viewer_dock, session, hostname,
                  calc_id, output_type, path=None, mode=None,
                  engine_version=None, calculation_mode=None):
-        assert output_type in OQ_CSV_TO_LAYER_TYPES, output_type
+        if output_type not in OQ_CSV_TO_LAYER_TYPES:
+            raise RuntimeError(
+                f"Invalid output_type {output_type}."
+                f" Expected one of {OQ_CSV_TO_LAYER_TYPES}")
         super().__init__(
             drive_engine_dlg, iface, viewer_dock, session, hostname,
             calc_id, output_type=output_type, path=path, mode=mode,

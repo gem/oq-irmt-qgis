@@ -134,8 +134,12 @@ OUTPUT_TYPE_LOADERS = {
 for output_type in OQ_CSV_TO_LAYER_TYPES:
     OUTPUT_TYPE_LOADERS[output_type] = LoadCsvAsLayerDialog
 
-assert set(OUTPUT_TYPE_LOADERS) == OQ_TO_LAYER_TYPES, (
-    OUTPUT_TYPE_LOADERS, OQ_TO_LAYER_TYPES)
+
+if set(OUTPUT_TYPE_LOADERS) != OQ_TO_LAYER_TYPES:
+    raise RuntimeError(
+        f"OUTPUT_TYPE_LOADERS ({set(OUTPUT_TYPE_LOADERS)}) does not match "
+        f"OQ_TO_LAYER_TYPES ({OQ_TO_LAYER_TYPES})"
+    )
 
 
 def zipdir(path, ziph):
@@ -255,7 +259,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
 
     def check_engine_compatibility(self):
         engine_version = self.get_engine_version()
-        assert engine_version is not None
+        if engine_version is None:
+            raise RuntimeError("Failed to determine the engine version")
         self.engine_version = engine_version.split('-')[0]
         engine_version = tuple(int(x) for x in self.engine_version.split('.'))
         irmt_version = get_irmt_version()
@@ -1082,7 +1087,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
 
     def open_full_report(
             self, output_id=None, output_type=None, filepath=None):
-        assert filepath is not None
+        if filepath is None:
+            raise RuntimeError("filepath can not be None")
         # NOTE: it might be created here directly instead, but this way
         # we can use the qt-designer
         self.full_report_dlg = ShowFullReportDialog(filepath)
@@ -1094,7 +1100,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
     def open_output(
             self, output_id=None, output_type=None, filepath=None,
             calculation_mode=None):
-        assert output_type is not None
+        if output_type is None:
+            raise RuntimeError("output_type can not be None")
         if output_type not in OUTPUT_TYPE_LOADERS:
             raise NotImplementedError(output_type)
         open_output_dlg = OUTPUT_TYPE_LOADERS[output_type](
@@ -1109,7 +1116,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
 
     def notify_downloaded(
             self, output_id=None, output_type=None, filepath=None):
-        assert filepath is not None
+        if filepath is None:
+            raise RuntimeError("filepath can not be None")
         if output_id is not None:
             msg = 'Calculation %s was saved as %s' % (output_id, filepath)
         else:

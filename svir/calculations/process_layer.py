@@ -379,10 +379,11 @@ class ProcessLayer(object):
                 feat_id = feat.id()
                 value = transformed_dict[feat_id]
                 try:
-                    value = float(value)
-                except Exception:
-                    pass
-                self.layer.changeAttributeValue(feat_id, new_attr_id, value)
+                    converted_value = float(value)
+                except (TypeError, ValueError):
+                    converted_value = value
+                self.layer.changeAttributeValue(
+                    feat_id, new_attr_id, converted_value)
         return actual_new_attr_name, invalid_input_values
 
     def find_attribute_id(self, attribute_name):

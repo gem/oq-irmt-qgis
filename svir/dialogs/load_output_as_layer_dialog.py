@@ -24,6 +24,7 @@
 
 import os
 import copy
+import logging
 from random import randrange
 from osgeo import ogr
 from qgis.core import (QgsVectorLayer,
@@ -86,6 +87,8 @@ from svir.utilities.utils import (get_ui_class,
 from svir.tasks.extract_npz_task import TaskCanceled
 
 FORM_CLASS = get_ui_class('ui_load_output_as_layer.ui')
+
+logger = logging.getLogger(__name__)
 
 
 class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
@@ -846,8 +849,10 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             symbol = QgsSymbol.defaultSymbol(layer.geometryType())
             # configure a symbol layer
             layer_style = {}
-            layer_style['color'] = '%d, %d, %d' % (
-                randrange(0, 256), randrange(0, 256), randrange(0, 256))
+            layer_style['color'] = '%d, %d, %d' % (  # nosec B311
+                randrange(0, 256),
+                randrange(0, 256),
+                randrange(0, 256))
             layer_style['outline'] = '#000000'
             symbol_layer = QgsSimpleFillSymbolLayer.create(layer_style)
             # replace default symbol layer with the configured one
@@ -1006,9 +1011,9 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         try:
             self.iface.layerTreeView().currentLayerChanged.disconnect(
                 self.on_currentLayerChanged)
-        except Exception:
-            # it's connected only for some loaders
-            pass
+        except (TypeError, RuntimeError):
+            # not connected for some loaders - nothing to disconnect
+            logger.debug("Disconnecting currentLayerChanged signal")
         self.hide()
         if self.output_type in OQ_EXTRACT_TO_LAYER_TYPES:
             self.load_from_npz()

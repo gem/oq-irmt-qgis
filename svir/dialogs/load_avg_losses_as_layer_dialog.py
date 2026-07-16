@@ -41,7 +41,10 @@ class LoadAvgLossesAsLayerDialog(LoadOutputAsLayerDialog):
                  calc_id, output_type=None,
                  path=None, mode=None, zonal_layer_path=None,
                  engine_version=None, calculation_mode=None):
-        assert output_type in ('avg_losses-rlzs', 'avg_losses-stats')
+        if output_type not in ('avg_losses-rlzs', 'avg_losses-stats'):
+            raise RuntimeError(
+                f"Invalid output_type {output_type}."
+                f" Expected either avg_losses-rlzs or avg_losses-stats")
         super().__init__(
             drive_engine_dlg, iface, viewer_dock, session, hostname,
             calc_id, output_type=output_type, path=path, mode=mode,

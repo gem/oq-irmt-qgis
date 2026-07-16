@@ -41,7 +41,10 @@ class LoadRupturesAsLayerDialog(LoadOutputAsLayerDialog):
     def __init__(self, drive_engine_dlg, iface, viewer_dock, session, hostname,
                  calc_id, output_type='ruptures', min_mag=4, path=None,
                  mode=None, engine_version=None, calculation_mode=None):
-        assert output_type == 'ruptures'
+        if output_type != 'ruptures':
+            raise RuntimeError(
+                f"Invalid output_type {output_type}."
+                f" Expected 'ruptures'")
         super().__init__(
             drive_engine_dlg, iface, viewer_dock, session, hostname,
             calc_id, output_type=output_type, path=path, mode=mode,

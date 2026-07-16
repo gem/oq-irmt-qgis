@@ -38,7 +38,10 @@ class LoadUhsAsLayerDialog(LoadOutputAsLayerDialog):
     def __init__(self, drive_engine_dlg, iface, viewer_dock, session, hostname,
                  calc_id, output_type='uhs', path=None, mode=None,
                  engine_version=None, calculation_mode=None):
-        assert output_type == 'uhs'
+        if output_type != 'uhs':
+            raise RuntimeError(
+                f"Invalid output_type {output_type}."
+                f" Expected 'uhs'")
         super().__init__(
             drive_engine_dlg, iface, viewer_dock, session, hostname,
             calc_id, output_type=output_type, path=path, mode=mode,
