@@ -849,10 +849,10 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
             symbol = QgsSymbol.defaultSymbol(layer.geometryType())
             # configure a symbol layer
             layer_style = {}
-            layer_style['color'] = '%d, %d, %d' % (  # nosec B311
-                randrange(0, 256),
-                randrange(0, 256),
-                randrange(0, 256))
+            layer_style['color'] = '%d, %d, %d' % (
+                randrange(0, 256),  # nosec B311 - safe: random colors
+                randrange(0, 256),  # nosec B311 - safe: random colors
+                randrange(0, 256))  # nosec B311 - safe: random colors
             layer_style['outline'] = '#000000'
             symbol_layer = QgsSimpleFillSymbolLayer.create(layer_style)
             # replace default symbol layer with the configured one
@@ -1013,7 +1013,8 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
                 self.on_currentLayerChanged)
         except (TypeError, RuntimeError):
             # not connected for some loaders - nothing to disconnect
-            logger.debug("Disconnecting currentLayerChanged signal")
+            logger.debug(
+                "Handling currentLayerChanged signal: nothing to disconnect")
         self.hide()
         if self.output_type in OQ_EXTRACT_TO_LAYER_TYPES:
             self.load_from_npz()
@@ -1109,7 +1110,8 @@ class LoadOutputAsLayerDialog(QDialog, FORM_CLASS):
         try:
             self.iface.layerTreeView().currentLayerChanged.disconnect(
                 self.on_currentLayerChanged)
-        except Exception:
-            # it's connected only for some loaders
-            pass
+        except (TypeError, RuntimeError):
+            # not connected for some loaders - nothing to disconnect
+            logger.debug(
+                "Handling currentLayerChanged signal: nothing to disconnect")
         super().reject()
