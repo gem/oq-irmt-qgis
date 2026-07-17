@@ -45,7 +45,8 @@ jobs:
           set -x
           $(cat << EOF  > ./startX.sh
           apt update --allow-releaseinfo-change
-          DEBIAN_FRONTEND=noninteractive apt install -y python3-scipy python3-matplotlib python3-pyqt5.qtwebkit python3-pytest python3-pexpect xvfb git expect
+          set -ex
+          DEBIAN_FRONTEND=noninteractive apt install -y python3-scipy python3-matplotlib python3-pytest python3-pexpect xvfb git expect
           chmod +x /tests_directory/qgis_startup.py
           cp /tests_directory/qgis_startup.py /usr/bin/
           cp /tests_directory/qgis_testrunner.py /usr/bin/
@@ -105,6 +106,20 @@ jobs:
         uses: mxschmitt/action-tmate@v3
         timeout-minutes: 60
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
+          COUNT=0
+          SOCKET=/tmp/.X11-unix/X1
+          MAX_TRIES=20
+          while [ ! -S "$SOCKET" ] && [ "$COUNT" -lt "$MAX_TRIES" ]; do
+              echo "waiting for X ($COUNT)..."
+              sleep 3
+              COUNT=$((COUNT + 1))
+          done
+          if [ ! -S "$SOCKET" ]; then
+              echo "X environment still not ready, aborting"
+              exit 1
+          fi
+      - name: 🔍 Show docker startup log
+        run: docker logs qgis
       - name: ℧ Run unit test
         run: |
           set -x
