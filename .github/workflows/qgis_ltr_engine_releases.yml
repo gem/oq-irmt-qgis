@@ -62,12 +62,6 @@ jobs:
           PY_VER=${{ matrix.PYTHON_VERSION }}
           ENGINE_BR=${{ matrix.ENGINE_BR }}
           IRMT_BR=$ENGINE_BR
-          if [[ "$ENGINE_BR" == "master" ]]; then
-            # TODO: in future releases we should test both RESTRICTED and PUBLIC with all engine versions
-            export OQ_APPLICATION_MODE="RESTRICTED"
-          else
-            export OQ_APPLICATION_MODE="PUBLIC"
-          fi
           git fetch
           git checkout $IRMT_BR
           curl -O https://raw.githubusercontent.com/gem/oq-engine/master/install.py
@@ -89,6 +83,13 @@ jobs:
           echo "Restore ${{matrix.DEMOS}} demos for $ENGINE_BR branch "
           source $HOME/openquake/bin/activate
           oq reset -y
+
+          if [[ "$ENGINE_BR" == "master" ]]; then
+            # TODO: in future releases we should test both RESTRICTED and PUBLIC with all engine versions
+            export OQ_APPLICATION_MODE="RESTRICTED"
+          else
+            export OQ_APPLICATION_MODE="PUBLIC"
+          fi
 
           if [[ "$OQ_APPLICATION_MODE" == "RESTRICTED" ]]; then
             # NOTE: I can't find the templates to actualize, so I am creating empty files instead (they just need to exist in this case)
@@ -162,6 +163,12 @@ jobs:
           set -x
           ENGINE_BR=${{ matrix.ENGINE_BR }}
           IRMT_BR=$ENGINE_BR
+          if [[ "$ENGINE_BR" == "master" ]]; then
+            # TODO: in future releases we should test both RESTRICTED and PUBLIC with all engine versions
+            export OQ_APPLICATION_MODE="RESTRICTED"
+          else
+            export OQ_APPLICATION_MODE="PUBLIC"
+          fi
           git fetch
           git checkout $IRMT_BR
           # get release version from branch name (e.g. 'engine-3.16' -> '3.16')
