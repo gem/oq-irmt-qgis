@@ -49,6 +49,7 @@ jobs:
           set -x
           $(cat << EOF  > ./startX.sh
           apt update --allow-releaseinfo-change
+          set -ex
           DEBIAN_FRONTEND=noninteractive apt install -y python3-scipy python3-matplotlib python3-pyqt6 python3-pytest python3-pexpect xvfb git expect
           export DISPLAY=:1.0
           Xvfb :1 -screen 0 1024x768x16
@@ -134,6 +135,8 @@ jobs:
         uses: mxschmitt/action-tmate@v3
         timeout-minutes: 120
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
+      - name: 🔍 Show docker startup log
+        run: docker logs qgis
       - name: ℧ Run unit test
         run: |
           set -x
