@@ -33,7 +33,6 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       GITHUB_DEF_BR: master
-      OQ_APPLICATION_MODE: ${{ matrix.ENGINE_APPLICATION_MODE }}
     steps:
       - uses: actions/checkout@v4
       - name: 🐍 Set up Python
@@ -81,6 +80,8 @@ jobs:
           export PIP_DEFAULT_TIMEOUT=100
           source $HOME/openquake/bin/activate
           oq reset -y
+          # defining OQ_APPLICATION_MODE in the job env instead currently causes problems in the oq-engine installation
+          export OQ_APPLICATION_MODE="${{ matrix.ENGINE_APPLICATION_MODE }}"
 
           if [ "$OQ_APPLICATION_MODE" = "RESTRICTED" ]; then
             echo "Creating email templates"
