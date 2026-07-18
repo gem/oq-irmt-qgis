@@ -28,7 +28,7 @@ $ python3 -m pip install --upgrade matplotlib
 On Ubuntu (Debian and similar):
 
 ```bash
-$ sudo apt install python3-matplotlib python3-pyqt5.qtwebkit
+$ sudo apt install python3-matplotlib
 ```
 
 On Fedora and similar:
