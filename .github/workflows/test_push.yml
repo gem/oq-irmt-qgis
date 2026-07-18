@@ -37,7 +37,6 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       GITHUB_DEF_BR: master
-      OQ_APPLICATION_MODE: ${{ matrix.ENGINE_APPLICATION_MODE }}
     steps:
       - uses: actions/checkout@v4
       - name: 🐍 Set up Python
