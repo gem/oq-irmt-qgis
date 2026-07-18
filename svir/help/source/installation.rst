@@ -24,7 +24,7 @@ On Ubuntu (Debian and similar):
 
 .. code-block:: bash
 
-    $ sudo apt install python3-matplotlib python3-pyqt5.qtwebkit
+    $ sudo apt install python3-matplotlib
 
 On Fedora and similar:
 
