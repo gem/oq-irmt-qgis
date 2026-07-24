@@ -67,7 +67,7 @@ jobs:
           IRMT_BR=$ENGINE_BR
           git fetch
           git checkout $IRMT_BR
-          curl -O https://raw.githubusercontent.com/gem/oq-engine/master/install.py
+          curl -O https://raw.githubusercontent.com/gem/oq-engine/${ENGINE_BR}/install.py
           ls -lrt install.py
           echo "Using branch ${ENGINE_BR}"
           if [ "$(git ls-remote --heads https://github.com/gem/oq-engine.git ${ENGINE_BR})" = "" ]; then
