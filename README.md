@@ -59,4 +59,4 @@ done in a clean folder.
 ## User manual
 
 The user manual for each of the released versions of this plugin is available
-[here](http://docs.openquake.org/oq-irmt-qgis/).
+[here](http://docs.openquake.org/oq-irmt-qgis/latest/).
