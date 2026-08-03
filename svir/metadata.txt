@@ -16,7 +16,7 @@ description=Tools to drive the OpenQuake Engine, running calculations and visual
 about=This plugin allows users to drive OpenQuake Engine calculations (https://github.com/gem/oq-engine) of physical hazard and risk, and to load the corresponding outputs as QGIS layers. For those outputs, data visualization tools are provided.
 version=3.26.0
 author=GEM Foundation
-email=staff.it@globalquakemodel.org
+email=paolo.tormene@globalquakemodel.org
 
 # end of mandatory metadata
 
