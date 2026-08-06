@@ -145,7 +145,7 @@ class Irmt(object):
         irmt_dir = os.path.dirname(__file__)
         resources_dir = os.path.join(irmt_dir, 'resources')
         icon_path = os.path.join(resources_dir, name)
-        return icon_path
+        return QIcon(icon_path)
 
     def initGui(self):
         if not IS_MATPLOTLIB_INSTALLED:

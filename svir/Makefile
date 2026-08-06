@@ -23,16 +23,11 @@ PLUGINNAME = svir
 
 EXTRAS = resources/start_plugin_icon.png metadata.txt
 
-COMPILED_RESOURCE_FILES = resources_rc.py
-
-PEP8EXCLUDE=pydev,resources_rc.py,conf.py,third_party,ui
+PEP8EXCLUDE=pydev,conf.py,third_party,ui
 
 #################################################
 # Normally you would not need to edit below here
 #################################################
-
-RESOURCE_SRC=$(shell grep '^ *<file' resources.qrc | sed 's@</file>@@g;s/.*>//g' | tr '\n' ' ')
-
 
 HELP = help/build/html
 
@@ -46,10 +41,7 @@ endif
 
 default: compile
 
-compile: $(COMPILED_RESOURCE_FILES)
-
-%_rc.py : %.qrc $(RESOURCE_SRC)
-	pyrcc5 -o $*_rc.py  $<
+compile:
 
 %.py : %.ui
 	pyuic5 -o $@ $<
@@ -68,7 +60,6 @@ deploy: compile doc transcompile
 	mkdir -p $(HOME)/$(QGISDIR)/python/plugins/$(PLUGINNAME)
 	cp -vf $(PY_FILES) $(HOME)/$(QGISDIR)/python/plugins/$(PLUGINNAME)
 	cp -vf $(COMPILED_UI_FILES) $(HOME)/$(QGISDIR)/python/plugins/$(PLUGINNAME)
-	cp -vf $(COMPILED_RESOURCE_FILES) $(HOME)/$(QGISDIR)/python/plugins/$(PLUGINNAME)
 	cp -vf $(EXTRAS) $(HOME)/$(QGISDIR)/python/plugins/$(PLUGINNAME)
 	cp -vfr i18n $(HOME)/$(QGISDIR)/python/plugins/$(PLUGINNAME)
 	cp -vfr $(HELP) $(HOME)/$(QGISDIR)/python/plugins/$(PLUGINNAME)/help
@@ -195,7 +186,7 @@ clean:
 	@echo "------------------------------------"
 	@echo "Removing uic and rcc generated files"
 	@echo "------------------------------------"
-	rm $(COMPILED_UI_FILES) $(COMPILED_RESOURCE_FILES)
+	rm $(COMPILED_UI_FILES)
 
 # build documentation with sphinx
 doc: build_manual  # build_apidoc

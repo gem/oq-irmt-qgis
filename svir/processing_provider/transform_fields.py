@@ -22,6 +22,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
+import os
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtCore import QCoreApplication
 from qgis.core import (
@@ -111,11 +112,12 @@ class TransformFieldsAlgorithm(QgsProcessingAlgorithm):
             "stats,statistics,sum,maximum,minimum,mean,average,"
             "standard,deviation,range").split(',')
 
-    def icon(self):
-        return QIcon(":/plugins/irmt/transform.svg")
-
     def svgIconPath(self):
-        return QIcon(":/plugins/irmt/transform.svg")
+        plugin_dir = os.path.dirname(os.path.dirname(__file__))
+        return os.path.join(plugin_dir, 'resources', 'transform.svg')
+
+    def icon(self):
+        return QIcon(self.svgIconPath())
 
     def initAlgorithm(self, config=None):
         """

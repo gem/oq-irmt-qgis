@@ -22,6 +22,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
+import os
 from qgis.core import QgsProcessingProvider
 from qgis.PyQt.QtGui import QIcon
 
@@ -66,4 +67,6 @@ class Provider(QgsProcessingProvider):
         the Processing toolbox.
         """
         # return QgsProcessingProvider.icon(self)
-        return QIcon(":/plugins/irmt/icon.svg.png")
+        plugin_dir = os.path.dirname(os.path.dirname(__file__))
+        icon_path = os.path.join(plugin_dir, 'resources', 'icon.svg.png')
+        return QIcon(icon_path)
