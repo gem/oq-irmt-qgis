@@ -4,13 +4,13 @@
 Installation and troubleshooting
 ********************************
 
-This plugin runs with `QGIS 3.0 <http://qgis.org/it/site/forusers/alldownloads.html>`_
+This plugin runs with `QGIS 4.0 <https://qgis.org/en/site/forusers/alldownloads.html>`_
 and above.
 
 On Microsoft Windows, QGIS includes all the software dependencies needed by the plugin.
 
 On macOS and Linux, please make sure that
-`Matplotlib <https://matplotlib.org/users/installing.html>`_ with Qt5 backend
+`Matplotlib <https://matplotlib.org/users/installing.html>`_ with Qt6 backend
 is installed.
 
 On macOS:
@@ -24,13 +24,13 @@ On Ubuntu (Debian and similar):
 
 .. code-block:: bash
 
-    $ sudo apt install python3-matplotlib
+    $ sudo apt install python3-matplotlib python3-pyqt6
 
 On Fedora and similar:
 
 .. code-block:: bash
 
-    $ sudo dnf install python3-matplotlib python3-matplotlib-qt5
+    $ sudo dnf install python3-matplotlib python3-matplotlib-qt6
 
 On macOS make sure to run the script located under
 `/Applications/Python X.Y/Install Certificates.command`,
@@ -63,7 +63,7 @@ done in a clean folder.
 How to run tests and build the documentation
 ============================================
 
-Tests run on a QGIS docker container based on Ubuntu Xenial (16.04LTS), launching one of the following commands from the `svir` directory:
+Tests run on a QGIS docker container, launching one of the following commands from the `svir` directory:
 
 .. code-block:: bash
 
@@ -75,3 +75,4 @@ The user manual, both in the html and pdf versions can be built by the same QGIS
 .. code-block:: bash
 
    $ ../scripts/make_doc.sh
+

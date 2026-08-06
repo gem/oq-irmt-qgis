@@ -25,12 +25,11 @@ docker run -d --name qgis -v /tmp/.X11-unix:/tmp/.X11-unix \
  -e ONLY_CALC_ID="$ONLY_CALC_ID" \
  -e ONLY_OUTPUT_TYPE="$ONLY_OUTPUT_TYPE" \
  -e GEM_QGIS_TEST=y \
- qgis/qgis:release-3_16
+ qgis/qgis:ltr
 
-docker exec -it qgis sh -c "apt update --allow-releaseinfo-change; DEBIAN_FRONTEND=noninteractive apt install -y python3-matplotlib"
+docker exec -it qgis sh -c "apt update --allow-releaseinfo-change; DEBIAN_FRONTEND=noninteractive apt install -y python3-matplotlib python3-pyqt6 python3-pytest"
 
 docker exec -it qgis sh -c "git clone -q -b $BRANCH --depth=1 https://github.com/gem/oq-engine.git && echo 'Running against oq-engine/$BRANCH'"
 
-docker exec -it qgis sh -c "qgis_setup.sh svir"
+docker exec -it qgis sh -c "export PYTHONPATH=/usr/share/qgis/python/:/usr/share/qgis/python/plugins/:$PYTHONPATH; python3 -m pytest -v -s -ra /tests_directory/svir/test/integration/"
 
-docker exec -it qgis sh -c "cd /tests_directory && qgis_testrunner.sh svir.test.integration.test_drive_oq_engine"

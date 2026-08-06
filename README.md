@@ -5,18 +5,18 @@ calculations of physical hazard and risk, and to load the corresponding outputs
 as QGIS layers. Those outputs are automatically styled and can be further explored
 through interactive data visualization tools that are provided by the plugin.
 
-This plugin has been created by the [GEM Foundation](http://www.globalquakemodel.org/gem/).
+This plugin has been created by the [GEM Foundation](https://www.globalquakemodel.org/).
 
 
 ## Installation and troubleshooting
 
-This plugin runs with [QGIS 3.0](http://qgis.org/en/site/forusers/alldownloads.html)
+This plugin runs with [QGIS 4.0](https://qgis.org/en/site/forusers/alldownloads.html)
 and above.
 
 On Microsoft Windows, QGIS includes all the software dependencies needed by the plugin.
 
 On macOS and Linux, please make sure that
-[Matplotlib](https://matplotlib.org/users/installing.html) with Qt5 backend is installed.
+[Matplotlib](https://matplotlib.org/users/installing.html) with Qt6 backend is installed.
 
 On macOS:
 
@@ -28,13 +28,13 @@ $ python3 -m pip install --upgrade matplotlib
 On Ubuntu (Debian and similar):
 
 ```bash
-$ sudo apt install python3-matplotlib
+$ sudo apt install python3-matplotlib python3-pyqt6
 ```
 
 On Fedora and similar:
 
 ```bash
-$ sudo dnf install python3-matplotlib python3-matplotlib-qt5
+$ sudo dnf install python3-matplotlib python3-matplotlib-qt6
 ```
 
 On macOS make sure to run the script located under
@@ -48,9 +48,13 @@ QGIS menu as **Plugins -> Manage and install plugins**. Please note that the **S
 the Plugins Manager contain a checkbox to **Show also experimental plugins**. If that option
 is checked, the latest version of the plugin that is marked as **experimental**
 will be available for installation. Otherwise, the latest **stable** version
-will be installable. Experimental versions contain new functionalities that may
-have not been properly tested yet, and that could cause the plugin or QGIS to
-break or to behave unexpectedly.
+will be installable.
+
+Note that the latest **stable** version of the plugin is compatible with the Long Term Support (LTS)
+version of the OpenQuake engine, whereas the latest **experimental** version of the plugin is aligned
+with the latest version of the OpenQuake engine. Experimental versions contain new functionalities
+that may have not been properly tested yet, and that could cause the plugin or QGIS to break or to
+behave unexpectedly.
 
 Some users reported issues about `upgrading` the plugin to its latest version.
 We recommend to `reinstall` the plugin instead, in order to make sure the new installation is
@@ -59,4 +63,5 @@ done in a clean folder.
 ## User manual
 
 The user manual for each of the released versions of this plugin is available
-[here](http://docs.openquake.org/oq-irmt-qgis/).
+[here](https://docs.openquake.org/oq-irmt-qgis/).
+
