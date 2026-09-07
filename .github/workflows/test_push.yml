@@ -119,7 +119,7 @@ jobs:
 
           COUNT=0
           SOCKET=/tmp/.X11-unix/X1
-          MAX_TRIES=20
+          MAX_TRIES=30
           while [ ! -S "$SOCKET" ] && [ "$COUNT" -lt "$MAX_TRIES" ]; do
               echo "waiting for X ($COUNT)..."
               sleep 3
