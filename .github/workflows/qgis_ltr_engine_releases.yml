@@ -33,15 +33,15 @@ jobs:
         PYTHON_VERSION: ['3.12']
     steps:
       - name: Clone Repository (Master)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         if: github.event.inputs.git-ref == ''
       - name: Clone Repository (Custom Ref)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         if: github.event.inputs.git-ref != ''
         with:
           ref: ${{ github.event.inputs.git-ref }}
       - name: 🐍 Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python-version }}
       - name: Prepare Start file for docker
@@ -142,7 +142,7 @@ jobs:
 
           COUNT=0
           SOCKET=/tmp/.X11-unix/X1
-          MAX_TRIES=20
+          MAX_TRIES=30
           while [ ! -S "$SOCKET" ] && [ "$COUNT" -lt "$MAX_TRIES" ]; do
               echo "waiting for X ($COUNT)..."
               sleep 3
