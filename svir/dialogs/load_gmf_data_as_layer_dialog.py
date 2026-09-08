@@ -23,6 +23,7 @@
 # along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
+import re
 import numpy as np
 from qgis.PyQt.QtWidgets import QInputDialog, QDialog
 from qgis.core import (
@@ -72,8 +73,10 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
 
         rlz_ids = np.unique(events_npz['array']['rlz_id'])
 
-        branch_paths = [f"{i}:{bp.decode('utf8')}"
-                        for i, bp in enumerate(self.rlzs_npz['array']['branch_path'])
+        branch_paths = [
+            f"{i}:{self.get_gmpe_display_name(bp.decode('utf8'))}"
+                        for i, bp in enumerate(
+                            self.rlzs_npz['array']['branch_path'])
                         if i in rlz_ids]
 
         if 'GEM_QGIS_TEST' in os.environ:
@@ -199,15 +202,29 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
                 message_bar=self.iface.messageBar(), params=None)
         self.rlzs_or_stats = [
             rlz_id for rlz_id in self.rlzs_npz['array']['rlz_id']]
-        self.gsims = [branch_path.decode('utf8').strip("\"")
+        self.gsims = [self.get_gmpe_display_name(branch_path.decode('utf8'))
                       for branch_path in self.rlzs_npz['array']['branch_path']]
+
+    @staticmethod
+    def get_gmpe_display_name(gmpe):
+        """Return the concise name to display for a GMPE/ModifiableGMPE."""
+        gmpe = gmpe.strip('"')
+        match = re.search(
+            r'\[ModifiableGMPE\.gmpe\.[^\]\r\n]+\]', gmpe)
+        if match:
+            return match.group(0)
+        lines = [line.strip() for line in gmpe.splitlines() if line.strip()]
+        if lines and lines[0] == 'ModifiableGMPE' and len(lines) > 1:
+            return lines[1].strip('"')
+        return gmpe
 
     def populate_rlz_or_stat_cbx(self):
         self.rlz_or_stat_cbx.clear()
         self.rlz_or_stat_cbx.setEnabled(True)
         for gsim, rlz in zip(self.gsims, self.rlzs_or_stats):
             # storing gsim as text, rlz as hidden data
-            self.rlz_or_stat_cbx.addItem(gsim, userData=rlz)
+            self.rlz_or_stat_cbx.addItem(
+                self.get_gmpe_display_name(gsim), userData=rlz)
         rlz_id = self.events_npz['array'][
             np.where(self.events_npz['array']['id'] == self.eid)]['rlz_id']
         self.rlz_or_stat_cbx.setCurrentIndex(
@@ -229,8 +246,8 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
             imts = list(self.oqparam['risk_imtls'])
         # Add secondary perils (if present) to the list of imts.
         # Engine-side set_imts is a property reading secondary imts from the
-        # SecondaryPeril subclasses; plugin-side sec_imts is missing, so we have to
-        # populate it manually
+        # SecondaryPeril subclasses; plugin-side sec_imts is missing, so we
+        # have to populate it manually
         if 'secondary_perils' in self.oqparam:
             secondary_perils = self.oqparam['secondary_perils']
             for secondary_peril in secondary_perils:
