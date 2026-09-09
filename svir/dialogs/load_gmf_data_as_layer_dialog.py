@@ -207,7 +207,28 @@ class LoadGmfDataAsLayerDialog(LoadOutputAsLayerDialog):
 
     @staticmethod
     def get_gmpe_display_name(gmpe):
-        """Return the concise name to display for a GMPE/ModifiableGMPE."""
+        """
+        Return the concise name to display for a GMPE/ModifiableGMPE.
+
+        For instance, extracting '[ModifiableGMPE.gmpe.YenierAtkinson2015BSSA]'
+        from:
+
+        '[ModifiableGMPE.sigma_model_alatik2015]
+        ergodic = true
+        tau_model = ""global""
+        [ModifiableGMPE.gmpe.YenierAtkinson2015BSSA]
+        [ModifiableGMPE.sigma_model_alatik2015.tau_coetab.PGV]
+        tau1 = 0.3733
+        tau2 = 0.3639
+        tau3 = 0.3434
+        tau4 = 0.3236
+        [ModifiableGMPE.sigma_model_alatik2015.tau_coetab.SA]
+        tau1 = 0.4518
+        tau2 = 0.427
+        tau3 = 0.3863
+        tau4 = 0.3508
+        [...]'
+        """
         gmpe = gmpe.strip('"')
         match = re.search(
             r'\[ModifiableGMPE\.gmpe\.[^\]\r\n]+\]', gmpe)
