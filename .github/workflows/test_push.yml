@@ -104,9 +104,8 @@ jobs:
 
           oq --version
 
-          # FIXME: remove these 2 lines as soon as they are not needed anymore engine-side
+          # FIXME: remove `oq db server start` as soon as soon as it is not needed anymore engine-side
           oq dbserver start
-          oq dbserver stop
 
           oq webui start 172.17.0.1:8800 --skip-browser &> webui.log &
           echo "Waiting WEBUI up on port 8800...."
