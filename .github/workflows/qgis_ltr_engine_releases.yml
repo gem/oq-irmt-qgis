@@ -86,7 +86,7 @@ jobs:
           echo "Restore ${{matrix.DEMOS}} demos for $ENGINE_BR branch "
           source $HOME/openquake/bin/activate
 
-          # FIXME: remove `oq db server start` as soon as soon as it is not needed anymore engine-side
+          # FIXME: remove `oq dbserver start` as soon as soon as it is not needed anymore engine-side
           oq dbserver start
 
           oq reset -y

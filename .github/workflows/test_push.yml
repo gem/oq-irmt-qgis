@@ -79,6 +79,10 @@ jobs:
           python$PY_VER install.py user --version=${ENGINE_BR}
           export PIP_DEFAULT_TIMEOUT=100
           source $HOME/openquake/bin/activate
+
+          # FIXME: remove `oq dbserver start` as soon as soon as it is not needed anymore engine-side
+          oq dbserver start
+
           oq reset -y
           # defining OQ_APPLICATION_MODE in the job env instead currently causes problems in the oq-engine installation
           export OQ_APPLICATION_MODE="${{ matrix.ENGINE_APPLICATION_MODE }}"
@@ -103,9 +107,6 @@ jobs:
           fi
 
           oq --version
-
-          # FIXME: remove `oq db server start` as soon as soon as it is not needed anymore engine-side
-          oq dbserver start
 
           oq webui start 172.17.0.1:8800 --skip-browser &> webui.log &
           echo "Waiting WEBUI up on port 8800...."
