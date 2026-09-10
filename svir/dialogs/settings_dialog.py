@@ -39,9 +39,10 @@ from svir.utilities.utils import (
                                   get_ui_class,
                                   get_style,
                                   engine_login,
+                                  get_engine_version,
+                                  get_authentication_status,
                                   log_msg,
                                   WaitCursorManager,
-                                  check_is_lockdown,
                                   )
 from svir.utilities.shared import (
                                    DEFAULT_SETTINGS,
@@ -208,19 +209,33 @@ class SettingsDialog(QDialog, FORM_CLASS):
         hostname, username, password = (profile['hostname'],
                                         profile['username'],
                                         profile['password'])
+        # First check the connection independently of authentication.  The
+        # engine version endpoint is public and therefore remains a reliable
+        # way to verify that this is an Engine server and that it is reachable.
         try:
-            is_lockdown = check_is_lockdown(hostname, session)
+            get_engine_version(hostname, session)
         except Exception as exc:
-            err_msg = ("Unable to connect")
+            err_msg = "Unable to connect"
             log_msg(err_msg, level='C', message_bar=self.message_bar,
                     exception=exc)
             return
-        else:
-            if not is_lockdown:
-                msg = 'Able to connect'
-                log_msg(msg, level='S', message_bar=self.message_bar,
-                        duration=3)
-                return
+
+        # Determine the authentication mode explicitly.  The status endpoint
+        # is public, so this also works before a session is authenticated.
+        try:
+            authentication_required = get_authentication_status(
+                hostname, session)
+        except Exception as exc:
+            err_msg = "Unable to determine the authentication status"
+            log_msg(err_msg, level='C', message_bar=self.message_bar,
+                    exception=exc)
+            return
+
+        if not authentication_required:
+            msg = 'Able to connect'
+            log_msg(msg, level='S', message_bar=self.message_bar, duration=3)
+            return
+
         try:
             login_func(hostname, username, password, session)
         except Exception as exc:

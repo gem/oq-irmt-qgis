@@ -1242,6 +1242,48 @@ class RedirectionError(Exception):
     pass
 
 
+def get_engine_version(hostname, session):
+    """Retrieve the engine version, ensuring that the server is reachable."""
+    engine_version_url = "%s/v1/engine_version" % hostname
+    with WaitCursorManager():
+        # FIXME: enable the user to set verify=True
+        resp = session.get(
+            engine_version_url, timeout=10, verify=False,
+            allow_redirects=False)
+        if resp.status_code == 302:
+            raise RedirectionError(
+                "Error %s loading %s: please check the url" % (
+                    resp.status_code, resp.url))
+        if not resp.ok:
+            raise ServerError(
+                "Error %s loading %s: %s" % (
+                    resp.status_code, resp.url, resp.reason))
+    return resp.text
+
+
+def get_authentication_status(hostname, session):
+    """Return whether the engine requires authentication."""
+    status_url = "%s/v1/authentication/status" % hostname
+    with WaitCursorManager():
+        # FIXME: enable the user to set verify=True
+        resp = session.get(status_url, timeout=10, verify=False,
+                           allow_redirects=False)
+        if resp.status_code == 302:
+            raise RedirectionError(
+                "Error %s loading %s: please check the url" % (
+                    resp.status_code, resp.url))
+        if not resp.ok:
+            raise ServerError(
+                "Error %s loading %s: %s" % (
+                    resp.status_code, resp.url, resp.reason))
+        try:
+            return resp.json()['authentication_required']
+        except (ValueError, KeyError, TypeError) as exc:
+            raise ServerError(
+                "Invalid authentication status response from %s" % status_url
+            ) from exc
+
+
 def check_is_lockdown(hostname, session):
     # try retrieving the engine version and see if the server
     # returns an HTTP 403 (Forbidden) error
