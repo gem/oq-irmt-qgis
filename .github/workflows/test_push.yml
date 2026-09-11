@@ -90,8 +90,17 @@ jobs:
             touch $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/templates/registration/password_reset_email_subject.txt
           fi
 
-          echo "Restore OQ-Engine demos for $ENGINE_BR branch "
-          oq restore https://artifacts.openquake.org/travis/oqdata-${ENGINE_BR}.zip ~/oqdata
+          # Demos are published independently from engine branches. Use the
+          # selected engine branch when its demo archive exists, otherwise use
+          # the master demo archive.
+          DEMOS_BR=$ENGINE_BR
+          DEMOS_URL="https://artifacts.openquake.org/travis/oqdata-${DEMOS_BR}.zip"
+          if ! curl --fail --silent --show-error --head "$DEMOS_URL" >/dev/null; then
+              DEMOS_BR=master
+              DEMOS_URL="https://artifacts.openquake.org/travis/oqdata-${DEMOS_BR}.zip"
+          fi
+          echo "Restore OQ-Engine demos for $DEMOS_BR branch"
+          oq restore "$DEMOS_URL" ~/oqdata
           python $HOME/openquake/lib/python$PY_VER/site-packages/openquake/server/manage.py migrate
 
           if [ "$OQ_APPLICATION_MODE" = "RESTRICTED" ]; then
