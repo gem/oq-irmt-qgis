@@ -43,9 +43,13 @@ jobs:
         run: |
           set -x
           $(cat << EOF  > ./startX.sh
-          apt update --allow-releaseinfo-change
+          # Some QGIS images may have a temporarily unreachable Ubuntu
+          # security mirror. The required packages are also available from the
+          # regular Ubuntu repositories, so do not prevent Xvfb from starting
+          # when only that mirror fails.
+          apt-get -o Acquire::Retries=2 -o Acquire::http::Timeout=30 update --allow-releaseinfo-change || echo "Warning: apt update did not complete"
           set -ex
-          DEBIAN_FRONTEND=noninteractive apt install -y python3-scipy python3-matplotlib python3-pytest python3-pexpect xvfb git expect
+          DEBIAN_FRONTEND=noninteractive apt-get install -y python3-scipy python3-matplotlib python3-pytest python3-pexpect xvfb git expect
           which git
           export DISPLAY=:1.0
           Xvfb :1 -screen 0 1024x768x16
