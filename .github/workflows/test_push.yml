@@ -10,6 +10,9 @@ on:
   push:
     branches:
       - '**'
+  pull_request:
+    branches:
+      - '**'
   schedule:
     - cron: "0 1 * * *"
 
@@ -60,18 +63,13 @@ jobs:
           echo "Python version to use: $PY_VER"
           python3 --version
           python$PY_VER --version
-          echo "Check if this is a pull request or not"
-          if [ -z "$GITHUB_HEAD_REF" ]
-             then
-              echo "It is not a pull request, use branch: $GITHUB_DEF_BR"
-              IRMT_BR=$GITHUB_DEF_BR
-             else
-              echo "It is a pull request, use branch: $GITHUB_HEAD_REF"
-              IRMT_BR=$GITHUB_HEAD_REF
-          fi
+          # GITHUB_HEAD_REF is only set for pull requests. For push and manual
+          # runs, GITHUB_REF_NAME is the branch on which the workflow runs.
+          IRMT_BR="${GITHUB_HEAD_REF:-${GITHUB_REF_NAME:-$GITHUB_DEF_BR}}"
+          echo "Repository branch: $IRMT_BR"
           ENGINE_BR=$IRMT_BR
-          if [ "$(git ls-remote --heads https://github.com/gem/oq-engine.git ${ENGINE_BR})" == "" ]; then
-              ENGINE_BR='master';
+          if [ -z "$(git ls-remote --heads https://github.com/gem/oq-engine.git "refs/heads/${ENGINE_BR}" | head -n 1)" ]; then
+              ENGINE_BR='master'
           fi
           curl -O https://raw.githubusercontent.com/gem/oq-engine/${ENGINE_BR}/install.py
           ls -lrt install.py
@@ -145,19 +143,14 @@ jobs:
           OQ_APPLICATION_MODE: ${{ matrix.ENGINE_APPLICATION_MODE }}
         run: |
           set -x
-          echo " Check if this is a pull request or not"
-          if [ -z "$GITHUB_HEAD_REF" ]
-             then
-              echo " Is not a pull request, use branch: $GITHUB_DEF_BR"
-              IRMT_BR=$GITHUB_DEF_BR
-             else
-              echo " Is a pull request, use branch: $GITHUB_HEAD_REF"
-              IRMT_BR=$GITHUB_HEAD_REF
-          fi
-          # NOTE: we needto clone the engine inside the qgis docker in order to have demos folders available
+          # GITHUB_HEAD_REF is only set for pull requests. For push and manual
+          # runs, GITHUB_REF_NAME is the branch on which the workflow runs.
+          IRMT_BR="${GITHUB_HEAD_REF:-${GITHUB_REF_NAME:-$GITHUB_DEF_BR}}"
+          echo "Repository branch: $IRMT_BR"
+          # NOTE: we need to clone the engine inside the qgis docker in order to have demos folders available
           ENGINE_BR=$IRMT_BR
-          if [ "$(git ls-remote --heads https://github.com/gem/oq-engine.git ${ENGINE_BR})" == "" ]; then
-              ENGINE_BR='master';
+          if [ -z "$(git ls-remote --heads https://github.com/gem/oq-engine.git "refs/heads/${ENGINE_BR}" | head -n 1)" ]; then
+              ENGINE_BR='master'
           fi
           # NOTE: cloning the engine is needed to find the demos directory, therefore being able to test running a calculation
           docker exec qgis sh -c "export DISPLAY=:1.0; git clone -q -b $ENGINE_BR --depth=1 https://github.com/gem/oq-engine.git && echo 'Running against oq-engine/$GITHUB_BR'"
