@@ -123,7 +123,7 @@ jobs:
 
           COUNT=0
           SOCKET=/tmp/.X11-unix/X1
-          MAX_TRIES=30
+          MAX_TRIES=60
           while [ ! -S "$SOCKET" ] && [ "$COUNT" -lt "$MAX_TRIES" ]; do
               echo "waiting for X ($COUNT)..."
               sleep 3
@@ -131,6 +131,10 @@ jobs:
           done
           if [ ! -S "$SOCKET" ]; then
               echo "X environment still not ready, aborting"
+              echo "QGIS container status:"
+              docker ps -a --filter name=qgis
+              echo "QGIS container logs:"
+              docker logs qgis || true
               exit 1
           fi
       - name: Setup debugging session
