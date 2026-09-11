@@ -172,7 +172,7 @@ jobs:
       - name: 📖 Make documentation
         run: |
           set -x
-          docker exec qgis sh -c "export DISPLAY=:1.0; apt-get -o Acquire::Retries=2 -o Acquire::http::Timeout=60 update --allow-releaseinfo-change; DEBIAN_FRONTEND=noninteractive apt-get -o Acquire::Retries=2 -o Acquire::http::Timeout=60 install -y --no-install-recommends make latexmk texlive-latex-extra python3-matplotlib python3-sphinx python3-sphinx-rtd-theme dvipng"
+          docker exec qgis sh -c "export DISPLAY=:1.0; apt-get -o Acquire::Retries=2 -o Acquire::http::Timeout=60 update --allow-releaseinfo-change; DEBIAN_FRONTEND=noninteractive apt-get -o Acquire::Retries=2 -o Acquire::http::Timeout=60 install -y --no-install-recommends make latexmk texlive-latex-extra tex-gyre python3-matplotlib python3-sphinx python3-sphinx-rtd-theme dvipng"
           docker exec -t qgis sh -c "export DISPLAY=:1.0; export PYTHONPATH=$PYTHONPATH:/tests_directory; cd /tests_directory/svir/help; make latexpdf; make html"
       - name: ㏒ Display web logs
         run: |
