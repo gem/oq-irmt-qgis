@@ -26,10 +26,10 @@ email=paolo.tormene@globalquakemodel.org
 changelog=
     3.27.1
     * Added support for the updated OpenQuake Engine authentication API
-    * Improved ModifiableGMPE display names when loading GMFs
+    3.26.3
+    * While loading GMFs, the dropdown selector for GMPEs displays only short names in case of ModifiableGMPE, without displaying all the parameters
     3.26.1
     * The plugin was migrated to QGIS 4, using PyQt6
-    * While loading GMFs, the dropdown selector for GMPEs displays only short names in case of ModifiableGMPE, without displaying all the parameters
     3.26.0
     * Checked compatibility with OpenQuake Engine 3.26
     3.25.2
