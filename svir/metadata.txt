@@ -24,8 +24,6 @@ email=paolo.tormene@globalquakemodel.org
 # Uncomment the following line and add your changelog entries:
 changelog=
     3.26.2
-    * Improved ModifiableGMPE display names when loading GMFs
-    3.26.1
     * While loading GMFs, the dropdown selector for GMPEs displays only short names in case of ModifiableGMPE, without displaying all the parameters
     3.26.0
     * Checked compatibility with OpenQuake Engine 3.26
