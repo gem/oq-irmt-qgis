@@ -210,9 +210,22 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
                     feat.setGeometry(QgsGeometry.fromPointXY(
                         QgsPointXY(lons[row_idx], lats[row_idx])))
                     for field_name in field_types:
-                        # NOTE: example field_name == 'quantile-0.15-PGA-0.01'
-                        rlz_or_stat, imt, poe = field_name.rsplit('-', 2)
-                        value = row[rlz_or_stat][imt][poe].item()
+                        # Example: field_name ==
+                        # 'quantile-0.15-Disp-9.999994999843054e-07'.
+                        # The realization/statistic and POE exponent may contain
+                        # hyphens, so find the separator around the IMT name
+                        # (IMTs themselves do not contain hyphens).
+                        for imt in self.imts:
+                            separator = '-%s-' % imt
+                            if separator in field_name:
+                                rlz_or_stat, poe = field_name.split(
+                                    separator, 1)
+                                value = row[rlz_or_stat][imt][poe].item()
+                                break
+                        else:
+                            raise ValueError(
+                                'Could not resolve hazard-map field %r' %
+                                field_name)
                         if isinstance(value, bytes):
                             value = value.decode('utf8')
                         feat.setAttribute(field_name, value)
@@ -222,8 +235,9 @@ class LoadHazardMapsAsLayerDialog(LoadOutputAsLayerDialog):
                     # add a feature
                     feat = QgsFeature(self.layer.fields())
                     for field_name in field_types:
-                        # NOTE: example field_name == 'PGA-0.01'
-                        imt, poe = field_name.split('-')
+                        # IMTs do not contain hyphens, while POEs may use
+                        # scientific notation (e.g. 9.999994999843054e-07).
+                        imt, poe = field_name.split('-', 1)
                         value = row[imt][poe].item()
                         if isinstance(value, bytes):
                             value = value.decode('utf8')
