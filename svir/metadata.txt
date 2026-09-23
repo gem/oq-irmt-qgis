@@ -24,6 +24,7 @@ email=paolo.tormene@globalquakemodel.org
 # Uncomment the following line and add your changelog entries:
 changelog=
     3.27.0
+    * Fixed loader for hazard maps in case POEs are in exponential notation
     * Added support for the updated OpenQuake Engine authentication API
     3.26.2
     * While loading GMFs, the dropdown selector for GMPEs displays only short names in case of ModifiableGMPE, without displaying all the parameters
