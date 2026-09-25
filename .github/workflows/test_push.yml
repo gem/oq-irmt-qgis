@@ -16,6 +16,11 @@ on:
         description: IRMT branch to test
         required: true
         type: string
+      integration_only:
+        description: Skip plugin unit tests and documentation build
+        required: false
+        type: boolean
+        default: false
   workflow_dispatch:
     inputs:
       debug_enabled:
@@ -187,6 +192,7 @@ jobs:
       - name: 🔍 Show docker startup log
         run: docker logs qgis
       - name: ℧ Run unit test
+        if: ${{ !inputs.integration_only }}
         run: |
           set -x
           # OGR_SQLITE_JOURNAL=delete prevents QGIS from using WAL, which modifies geopackages even if they are just read
@@ -217,6 +223,7 @@ jobs:
           fi
           docker exec -t qgis bash -c "export DISPLAY=:1.0; export PYTHONPATH=/usr/share/qgis/python/plugins/:$PYTHONPATH; python3 -m pytest -v -s -ra /tests_directory/svir/test/integration/"
       - name: 📖 Make documentation
+        if: ${{ !inputs.integration_only }}
         run: |
           set -x
           docker exec qgis sh -c "export DISPLAY=:1.0; apt-get -o Acquire::Retries=2 -o Acquire::http::Timeout=60 update --allow-releaseinfo-change; DEBIAN_FRONTEND=noninteractive apt-get -o Acquire::Retries=2 -o Acquire::http::Timeout=60 install -y --no-install-recommends make latexmk texlive-latex-extra tex-gyre python3-matplotlib python3-sphinx python3-sphinx-rtd-theme dvipng"
