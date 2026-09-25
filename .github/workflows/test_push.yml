@@ -1,5 +1,21 @@
 name: PR unit and integration tests
+permissions:
+  contents: read
 on:
+  workflow_call:
+    inputs:
+      engine_repository:
+        description: Engine repository containing the pull request
+        required: true
+        type: string
+      engine_ref:
+        description: Engine pull request head SHA
+        required: true
+        type: string
+      irmt_ref:
+        description: IRMT branch to test
+        required: true
+        type: string
   workflow_dispatch:
     inputs:
       debug_enabled:
@@ -35,6 +51,17 @@ jobs:
       GITHUB_DEF_BR: master
     steps:
       - uses: actions/checkout@v6
+        with:
+          repository: ${{ inputs.engine_ref != '' && 'gem/oq-irmt-qgis' || github.repository }}
+          ref: ${{ inputs.engine_ref != '' && inputs.irmt_ref || github.ref }}
+          persist-credentials: false
+      - uses: actions/checkout@v6
+        if: ${{ inputs.engine_ref != '' }}
+        with:
+          repository: ${{ inputs.engine_repository }}
+          ref: ${{ inputs.engine_ref }}
+          path: oq-engine
+          persist-credentials: false
       - name: 🐍 Set up Python
         uses: actions/setup-python@v7
         with:
@@ -58,7 +85,10 @@ jobs:
           chmod +x ./startX.sh
       - name: ⏳ Clone/install engine and restore oqdata and docker container
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ inputs.engine_ref == '' && github.token || '' }}
+          ENGINE_PR_REF: ${{ inputs.engine_ref }}
+          ENGINE_PR_REPOSITORY: ${{ inputs.engine_repository }}
+          IRMT_TEST_REF: ${{ inputs.irmt_ref }}
         run: |
           PY_VER=${{ matrix.PYTHON_VERSION }}
           echo "Python version to use: $PY_VER"
@@ -66,16 +96,22 @@ jobs:
           python$PY_VER --version
           # GITHUB_HEAD_REF is only set for pull requests. For push and manual
           # runs, GITHUB_REF_NAME is the branch on which the workflow runs.
-          IRMT_BR="${GITHUB_HEAD_REF:-${GITHUB_REF_NAME:-$GITHUB_DEF_BR}}"
-          echo "Repository branch: $IRMT_BR"
-          ENGINE_BR=$IRMT_BR
-          if [ -z "$(git ls-remote --heads https://github.com/gem/oq-engine.git "refs/heads/${ENGINE_BR}" | head -n 1)" ]; then
-              ENGINE_BR='master'
+          IRMT_BR="${IRMT_TEST_REF:-${GITHUB_HEAD_REF:-${GITHUB_REF_NAME:-$GITHUB_DEF_BR}}}"
+          echo "IRMT repository branch: $IRMT_BR"
+          if [[ -n "$ENGINE_PR_REF" ]]; then
+            ENGINE_BR=$ENGINE_PR_REF
+            echo "Installing engine PR $ENGINE_PR_REPOSITORY@$ENGINE_BR"
+            (cd oq-engine && python install.py devel)
+          else
+            ENGINE_BR=$IRMT_BR
+            if [ -z "$(git ls-remote --heads https://github.com/gem/oq-engine.git "refs/heads/${ENGINE_BR}" | head -n 1)" ]; then
+                ENGINE_BR='master'
+            fi
+            curl -O https://raw.githubusercontent.com/gem/oq-engine/${ENGINE_BR}/install.py
+            ls -lrt install.py
+            echo "Engine branch: ${ENGINE_BR}"
+            python$PY_VER install.py user --version=${ENGINE_BR}
           fi
-          curl -O https://raw.githubusercontent.com/gem/oq-engine/${ENGINE_BR}/install.py
-          ls -lrt install.py
-          echo "Engine branch: ${ENGINE_BR}"
-          python$PY_VER install.py user --version=${ENGINE_BR}
           export PIP_DEFAULT_TIMEOUT=100
           source $HOME/openquake/bin/activate
           oq reset -y
@@ -155,19 +191,27 @@ jobs:
       - name: ⨕ Run Integration test
         env:
           OQ_APPLICATION_MODE: ${{ matrix.ENGINE_APPLICATION_MODE }}
+          ENGINE_PR_REF: ${{ inputs.engine_ref }}
+          ENGINE_PR_REPOSITORY: ${{ inputs.engine_repository }}
+          IRMT_TEST_REF: ${{ inputs.irmt_ref }}
         run: |
           set -x
           # GITHUB_HEAD_REF is only set for pull requests. For push and manual
           # runs, GITHUB_REF_NAME is the branch on which the workflow runs.
-          IRMT_BR="${GITHUB_HEAD_REF:-${GITHUB_REF_NAME:-$GITHUB_DEF_BR}}"
-          echo "Repository branch: $IRMT_BR"
-          # NOTE: we need to clone the engine inside the qgis docker in order to have demos folders available
-          ENGINE_BR=$IRMT_BR
-          if [ -z "$(git ls-remote --heads https://github.com/gem/oq-engine.git "refs/heads/${ENGINE_BR}" | head -n 1)" ]; then
-              ENGINE_BR='master'
+          IRMT_BR="${IRMT_TEST_REF:-${GITHUB_HEAD_REF:-${GITHUB_REF_NAME:-$GITHUB_DEF_BR}}}"
+          echo "IRMT repository branch: $IRMT_BR"
+          # NOTE: the engine source tree is needed to find demos and run a calculation.
+          if [[ -n "$ENGINE_PR_REF" ]]; then
+            docker cp "$GITHUB_WORKSPACE/oq-engine" qgis:/tmp/oq-engine
+            docker exec qgis sh -c 'mv /tmp/oq-engine "$(pwd)/oq-engine"'
+            echo "Using oq-engine/$ENGINE_PR_REPOSITORY@$ENGINE_PR_REF"
+          else
+            ENGINE_BR=$IRMT_BR
+            if [ -z "$(git ls-remote --heads https://github.com/gem/oq-engine.git "refs/heads/${ENGINE_BR}" | head -n 1)" ]; then
+                ENGINE_BR='master'
+            fi
+            docker exec qgis sh -c "export DISPLAY=:1.0; git clone -q -b $ENGINE_BR --depth=1 https://github.com/gem/oq-engine.git && echo 'Running against oq-engine/$ENGINE_BR'"
           fi
-          # NOTE: cloning the engine is needed to find the demos directory, therefore being able to test running a calculation
-          docker exec qgis sh -c "export DISPLAY=:1.0; git clone -q -b $ENGINE_BR --depth=1 https://github.com/gem/oq-engine.git && echo 'Running against oq-engine/$GITHUB_BR'"
           docker exec -t qgis bash -c "export DISPLAY=:1.0; export PYTHONPATH=/usr/share/qgis/python/plugins/:$PYTHONPATH; python3 -m pytest -v -s -ra /tests_directory/svir/test/integration/"
       - name: 📖 Make documentation
         run: |
