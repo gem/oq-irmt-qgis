@@ -59,9 +59,15 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
+          # These expressions select between two run modes (GitHub Actions uses `condition && value || fallback` here):
+          # - Engine-PR run: engine_ref is set, so test gem/oq-irmt-qgis at irmt_ref.
+          #   Example: engine_ref=abc123 and irmt_ref=engine-3.26 checks out this plugin's engine-3.26 branch.
+          # - Normal PR/push/manual run: engine_ref is empty, so use the triggering repository and ref.
           repository: ${{ inputs.engine_ref != '' && 'gem/oq-irmt-qgis' || github.repository }}
           ref: ${{ inputs.engine_ref != '' && inputs.irmt_ref || github.ref }}
           persist-credentials: false
+      # engine_ref is non-empty only for the reusable engine-PR run. In that case,
+      # also check out the engine PR itself (the first checkout is the IRMT plugin).
       - uses: actions/checkout@v6
         if: ${{ inputs.engine_ref != '' }}
         with:
@@ -92,6 +98,8 @@ jobs:
           chmod +x ./startX.sh
       - name: ⏳ Clone/install engine and restore oqdata and docker container
         env:
+          # The normal install script uses GITHUB_TOKEN to fetch the engine. For an engine-PR run,
+          # the engine source is already checked out above, so leave the token empty rather than expose it to PR code.
           GITHUB_TOKEN: ${{ inputs.engine_ref == '' && github.token || '' }}
           ENGINE_PR_REF: ${{ inputs.engine_ref }}
           ENGINE_PR_REPOSITORY: ${{ inputs.engine_repository }}
@@ -194,6 +202,8 @@ jobs:
       - name: 🔍 Show docker startup log
         run: docker logs qgis
       - name: ℧ Run unit test
+        # integration_only defaults to false, so the regular suite runs this step. When true,
+        # skip unit tests and docs but still run the integration test below.
         if: ${{ !inputs.integration_only }}
         run: |
           set -x
@@ -225,6 +235,7 @@ jobs:
           fi
           docker exec -t qgis bash -c "export DISPLAY=:1.0; export PYTHONPATH=/usr/share/qgis/python/plugins/:$PYTHONPATH; python3 -m pytest -v -s -ra /tests_directory/svir/test/integration/"
       - name: 📖 Make documentation
+        # Match the unit-test condition: documentation is built in the full suite and skipped in integration-only runs.
         if: ${{ !inputs.integration_only }}
         run: |
           set -x
