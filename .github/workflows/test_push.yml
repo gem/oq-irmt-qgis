@@ -114,8 +114,13 @@ jobs:
           echo "Python version to use: $PY_VER"
           python3 --version
           python$PY_VER --version
-          # GITHUB_HEAD_REF is only set for pull requests. For push and manual
-          # runs, GITHUB_REF_NAME is the branch on which the workflow runs.
+          # Select the IRMT branch in priority order. Bash's `:-` uses the next value
+          # when the value before it is unset or empty:
+          # 1. IRMT_TEST_REF: branch explicitly requested by a reusable-workflow caller.
+          # 2. GITHUB_HEAD_REF: source branch for a pull request.
+          # 3. GITHUB_REF_NAME: branch for a push or manual run.
+          # 4. GITHUB_DEF_BR: final fallback (master) if none of the above is available.
+          # Example: engine-PR caller with IRMT_TEST_REF=engine-3.26 selects engine-3.26.
           IRMT_BR="${IRMT_TEST_REF:-${GITHUB_HEAD_REF:-${GITHUB_REF_NAME:-$GITHUB_DEF_BR}}}"
           echo "IRMT repository branch: $IRMT_BR"
           if [[ -n "$ENGINE_PR_REF" ]]; then
@@ -222,8 +227,11 @@ jobs:
           IRMT_TEST_REF: ${{ inputs.irmt_ref }}
         run: |
           set -x
-          # GITHUB_HEAD_REF is only set for pull requests. For push and manual
-          # runs, GITHUB_REF_NAME is the branch on which the workflow runs.
+          # Use the same IRMT-branch priority as the install step above. Bash's `:-`
+          # falls through when a value is unset or empty: explicit IRMT_TEST_REF first,
+          # then the PR source branch (GITHUB_HEAD_REF), the push/manual branch
+          # (GITHUB_REF_NAME), and finally GITHUB_DEF_BR (master). This keeps the
+          # integration-test environment aligned with the branch selected for checkout.
           IRMT_BR="${IRMT_TEST_REF:-${GITHUB_HEAD_REF:-${GITHUB_REF_NAME:-$GITHUB_DEF_BR}}}"
           echo "IRMT repository branch: $IRMT_BR"
           # NOTE: the engine source tree is needed to find demos and run a calculation.
