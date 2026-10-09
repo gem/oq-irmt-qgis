@@ -65,6 +65,9 @@ jobs:
           # - Normal PR/push/manual run: engine_ref is empty, so use the triggering repository and ref.
           repository: ${{ inputs.engine_ref != '' && 'gem/oq-irmt-qgis' || github.repository }}
           ref: ${{ inputs.engine_ref != '' && inputs.irmt_ref || github.ref }}
+          # actions/checkout can use its token to fetch this repository, but this setting prevents
+          # it from saving that token in the checkout's Git config. Later test commands therefore
+          # cannot use this checkout's credentials for authenticated Git operations.
           persist-credentials: false
       # engine_ref is non-empty only for the reusable engine-PR run. In that case,
       # also check out the engine PR itself (the first checkout is the IRMT plugin).
@@ -74,6 +77,8 @@ jobs:
           repository: ${{ inputs.engine_repository }}
           ref: ${{ inputs.engine_ref }}
           path: oq-engine
+          # Apply the same protection to the engine PR checkout: don't save the checkout token
+          # in its Git config, so later commands running against this source can't use it either.
           persist-credentials: false
       - name: 🐍 Set up Python
         uses: actions/setup-python@v7
