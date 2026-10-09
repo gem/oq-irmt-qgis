@@ -30,7 +30,9 @@ on:
         default: false
   pull_request:
     branches:
-      - '**'
+      - engine-3.23  # FIXME: keep aligned with OQ LTS
+      - engine-3.26  # FIXME: keep aligned with OQ latest
+      - master
   schedule:
     - cron: "0 1 * * *"
 
