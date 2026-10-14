@@ -21,6 +21,11 @@ on:
         required: false
         type: boolean
         default: false
+      python_versions:
+        description: JSON array of Python versions to test
+        required: false
+        type: string
+        default: '["3.11", "3.12", "3.13"]'
   workflow_dispatch:
     inputs:
       debug_enabled:
@@ -51,7 +56,7 @@ jobs:
         # QGIS_DOCKER_VERSION: ['qgis/qgis:3.44.7']
         QGIS_DOCKER_VERSION: ['qgis/qgis:ltr']
         # NOTE: qgis uses its own python, but we want to check if there are problems interfacing with the engine while it uses different python versions
-        PYTHON_VERSION: ['3.11', '3.12', '3.13']
+        PYTHON_VERSION: ${{ fromJSON(inputs.python_versions || '["3.11", "3.12", "3.13"]') }}
         ENGINE_APPLICATION_MODE: ['PUBLIC', 'RESTRICTED']
     runs-on: ${{ matrix.os }}
     env:
