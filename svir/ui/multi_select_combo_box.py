@@ -250,7 +250,9 @@ class MultiSelectComboBox(QComboBox):
         pass
 
     def eventFilter(self, obj, event):
-        if self.mono:
+        # NOTE: this can be called by QComboBox.__init__ before self.mono is
+        # set, in which case we fall back to the default behavior
+        if getattr(self, 'mono', True):
             return super().eventFilter(obj, event)
         # this is handled by ComplexLineEdit
         return False
