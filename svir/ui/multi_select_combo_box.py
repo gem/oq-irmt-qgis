@@ -16,8 +16,11 @@ class MultiSelectComboBox(QComboBox):
 
     def __init__(self, parent, mono=False):
 
-        super().__init__(parent)
+        # NOTE: self.mono must be set before calling the parent constructor,
+        # because QComboBox.__init__ can trigger overridden methods (e.g.
+        # eventFilter, hidePopup) that read it
         self.mono = mono
+        super().__init__(parent)
         if self.mono:
             return
 
@@ -250,9 +253,7 @@ class MultiSelectComboBox(QComboBox):
         pass
 
     def eventFilter(self, obj, event):
-        # NOTE: this can be called by QComboBox.__init__ before self.mono is
-        # set, in which case we fall back to the default behavior
-        if getattr(self, 'mono', True):
+        if self.mono:
             return super().eventFilter(obj, event)
         # this is handled by ComplexLineEdit
         return False
