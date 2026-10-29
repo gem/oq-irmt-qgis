@@ -13,14 +13,20 @@ class MultiSelectComboBox(QComboBox):
     RESERVED_IDXS_COUNT = 2
     selection_changed = pyqtSignal()
     item_was_clicked = pyqtSignal(str, bool)
+    # NOTE: class-level fallback for self.mono. When Python's cyclic garbage
+    # collector clears this wrapper (sip's tp_clear empties the instance
+    # __dict__), the underlying C++ widget can still be alive and receive
+    # calls to overridden virtual methods (e.g. eventFilter, while the parent
+    # window is being torn down). Without this fallback, reading self.mono
+    # would raise AttributeError, and PyQt would abort the whole process.
+    # Falling back to True delegates everything to the plain QComboBox, that
+    # does not depend on any instance attribute.
+    mono = True
 
     def __init__(self, parent, mono=False):
 
-        # NOTE: self.mono must be set before calling the parent constructor,
-        # because QComboBox.__init__ can trigger overridden methods (e.g.
-        # eventFilter, hidePopup) that read it
-        self.mono = mono
         super().__init__(parent)
+        self.mono = mono
         if self.mono:
             return
 
@@ -49,8 +55,9 @@ class MultiSelectComboBox(QComboBox):
 
     def itemClicked(self, idx):
         if self.mono:
+            # NOTE: QComboBox has no itemClicked method to delegate to
             self.item_was_clicked.emit(self.currentText(), True)
-            return super().itemClicked(idx)
+            return
         if idx not in [self.SEARCH_BAR_IDX, self.SELECT_ALL_IDX]:
             checkbox = self.mlist.itemWidget(self.mlist.item(idx))
             checkbox.setChecked(not checkbox.isChecked())
