@@ -149,6 +149,10 @@ jobs:
           oq reset -y
           # defining OQ_APPLICATION_MODE in the job env instead currently causes problems in the oq-engine installation
           export OQ_APPLICATION_MODE="${{ matrix.ENGINE_APPLICATION_MODE }}"
+          # In RESTRICTED mode the WebUI only accepts requests for its allowed
+          # host names; the QGIS container reaches it at 172.17.0.1
+          # (engines that do not use OQ_ALLOWED_HOSTS ignore it)
+          export OQ_ALLOWED_HOSTS=172.17.0.1,localhost,127.0.0.1
 
           if [ "$OQ_APPLICATION_MODE" = "RESTRICTED" ]; then
             echo "Creating email templates"
@@ -186,7 +190,7 @@ jobs:
             cat webui.log
             sleep 5
           done
-          curl http://172.17.0.1:8800/v1/engine_version
+          curl http://172.17.0.1:8800/v1/authentication/status
           #
           DOCKER_HOST=`ip -4 addr show docker0 | grep -Po 'inet \K[\d.]+'`
           ENGINE_HOST=`echo http://$DOCKER_HOST:8800`

@@ -209,42 +209,40 @@ class SettingsDialog(QDialog, FORM_CLASS):
         hostname, username, password = (profile['hostname'],
                                         profile['username'],
                                         profile['password'])
-        # First check the connection independently of authentication.  The
-        # engine version endpoint is public and therefore remains a reliable
-        # way to verify that this is an Engine server and that it is reachable.
+        # Determine the authentication mode explicitly.  The status endpoint
+        # is public, so it works before a session is authenticated and it also
+        # verifies that the server is reachable.
         try:
-            get_engine_version(hostname, session)
+            authentication_required = get_authentication_status(
+                hostname, session)
         except Exception as exc:
             err_msg = "Unable to connect"
             log_msg(err_msg, level='C', message_bar=self.message_bar,
                     exception=exc)
             return
 
-        # Determine the authentication mode explicitly.  The status endpoint
-        # is public, so this also works before a session is authenticated.
+        if authentication_required:
+            try:
+                login_func(hostname, username, password, session)
+            except Exception as exc:
+                err_msg = ("Unable to connect (see Log Message Panel for"
+                           " details)")
+                log_msg(err_msg, level='C', message_bar=self.message_bar,
+                        exception=exc)
+                return
+
+        # The engine version endpoint requires authentication when the engine
+        # is in lockdown mode, so it can be called only after logging in.
         try:
-            authentication_required = get_authentication_status(
-                hostname, session)
+            get_engine_version(hostname, session)
         except Exception as exc:
-            err_msg = "Unable to determine the authentication status"
+            err_msg = "Unable to retrieve the engine version"
             log_msg(err_msg, level='C', message_bar=self.message_bar,
                     exception=exc)
             return
 
-        if not authentication_required:
-            msg = 'Able to connect'
-            log_msg(msg, level='S', message_bar=self.message_bar, duration=3)
-            return
-
-        try:
-            login_func(hostname, username, password, session)
-        except Exception as exc:
-            err_msg = "Unable to connect (see Log Message Panel for details)"
-            log_msg(err_msg, level='C', message_bar=self.message_bar,
-                    exception=exc)
-        else:
-            msg = 'Able to connect'
-            log_msg(msg, level='S', message_bar=self.message_bar, duration=3)
+        msg = 'Able to connect'
+        log_msg(msg, level='S', message_bar=self.message_bar, duration=3)
 
     @pyqtSlot()
     def on_eng_new_btn_clicked(self):
