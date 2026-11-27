@@ -3,6 +3,8 @@
 .idea/*
 svir/.coverage
 svir/.noseids
+# QGIS settings written by the tests
+.qgis-settings/
 svir/.ropeproject/*
 svir/build/
 svir/help/build/*

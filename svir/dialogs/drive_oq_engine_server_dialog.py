@@ -50,7 +50,6 @@ from qgis.PyQt.QtGui import QColor, QBrush, QRegExpValidator
 from qgis.gui import QgsMessageBar
 from qgis.core import QgsTask, QgsApplication
 
-from requests import Session
 from requests.exceptions import (ConnectionError,
                                  InvalidSchema,
                                  MissingSchema,
@@ -74,11 +73,15 @@ from svir.utilities.utils import (WaitCursorManager,
                                   ask_for_download_destination_folder,
                                   get_ui_class,
                                   SvNetworkError,
+                                  CsrfVerificationError,
                                   get_irmt_version,
                                   get_credentials,
                                   get_authentication_status,
                                   ServerError,
                                   RedirectionError,
+                                  EngineSession,
+                                  CSRF_FAILURE_MSG,
+                                  is_csrf_failure,
                                   )
 from svir.dialogs.load_ruptures_as_layer_dialog import (
     LoadRupturesAsLayerDialog)
@@ -278,7 +281,7 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             log_msg(msg, level='W', message_bar=self.message_bar)
 
     def login(self):
-        self.session = Session()
+        self.session = EngineSession()
         if not self.forced_hostname:
             self.hostname, self.username, self.password = get_credentials()
         # Determine the authentication mode explicitly.  The status endpoint
@@ -654,6 +657,10 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 self.pointed_calc_id = None
                 self.clear_output_list()
             self.refresh_calc_list()
+        elif is_csrf_failure(resp):
+            msg = 'Unable to %s calculation %s. %s' % (
+                method, calc_id, CSRF_FAILURE_MSG)
+            log_msg(msg, level='C', message_bar=self.message_bar)
         else:
             msg = 'Unable to %s calculation %s: %s' % (method, calc_id, resp)
             log_msg(msg, level='C', message_bar=self.message_bar)
@@ -767,6 +774,9 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
             self.refresh_calc_list()
             self.update_output_list(self.pointed_calc_id)
             return resp_dict
+        elif is_csrf_failure(resp):
+            msg = 'Unable to run the calculation. %s' % CSRF_FAILURE_MSG
+            log_msg(msg, level='C', message_bar=self.message_bar)
         else:
             log_msg(resp.text, level='C', message_bar=self.message_bar)
 
@@ -778,6 +788,11 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 on_same_fs_url, data=data, timeout=20, stream=True)
         except HANDLED_EXCEPTIONS as exc:
             self._handle_exception(exc)
+            return False
+        if is_csrf_failure(resp):
+            msg = ('Unable to check if the plugin and the engine share the'
+                   ' same filesystem. %s' % CSRF_FAILURE_MSG)
+            log_msg(msg, level='C', message_bar=self.iface.messageBar())
             return False
         try:
             result = json.loads(resp.text)['success']
@@ -1194,6 +1209,8 @@ class DriveOqEngineServerDialog(QDialog, FORM_CLASS):
                 err_msg += (
                     ' (please make sure the OpenQuake Engine server (WebUI)'
                     ' is running)')
+            elif isinstance(exc, CsrfVerificationError):
+                pass  # the message is already explicit
             elif isinstance(exc, (SvNetworkError, ServerError)):
                 err_msg += (
                     ' (please make sure the username and password are'

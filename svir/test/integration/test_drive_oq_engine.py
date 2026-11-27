@@ -44,6 +44,9 @@ from svir.test.utilities import assert_and_emit
 from svir.dialogs.drive_oq_engine_server_dialog import OUTPUT_TYPE_LOADERS
 from svir.dialogs.show_full_report_dialog import ShowFullReportDialog
 from svir.dialogs.load_inputs_dialog import LoadInputsDialog
+from svir.utilities.utils import EngineSession
+from requests import Request
+from urllib.parse import urlsplit
 
 
 LONG_LOADING_TIME = 10  # seconds
@@ -530,3 +533,30 @@ def test_run_calculation(irmt_plugin, qgis_app):
     # Teardown
     irmt_plugin.drive_oq_engine_server_dlg.remove_calc(risk_calc_id)
     irmt_plugin.drive_oq_engine_server_dlg.remove_calc(hazard_calc_id)
+
+
+def test_unsafe_requests_carry_csrf_headers(irmt_plugin):
+    """
+    After logging in (or after checking the authentication status, in PUBLIC
+    mode), unsafe requests must carry the Referer header and, if the engine
+    set the CSRF cookie, the X-CSRFToken header with its current value.
+    Engines that do not set the cookie get the requests without the token.
+    """
+    dlg = irmt_plugin.drive_oq_engine_server_dlg
+    assert dlg.is_logged_in
+    assert isinstance(dlg.session, EngineSession)
+    url = '%s/v1/calc/run' % dlg.hostname
+    token = dlg.session.get_csrf_token(url)
+    print('\tCSRF cookie set by the engine: %s' % (token is not None),
+          file=sys.stderr)
+    prep = dlg.session.prepare_request(Request('POST', url))
+    if token is None:
+        assert 'X-CSRFToken' not in prep.headers
+    else:
+        assert prep.headers['X-CSRFToken'] == token
+    host = urlsplit(dlg.hostname)
+    assert prep.headers['Referer'] == '%s://%s/' % (host.scheme, host.netloc)
+    # safe requests are left unchanged
+    prep = dlg.session.prepare_request(Request('GET', url))
+    assert 'X-CSRFToken' not in prep.headers
+    assert 'Referer' not in prep.headers
