@@ -32,7 +32,6 @@ from qgis.core import (
     QgsGraduatedSymbolRenderer, QgsProject, Qgis, QgsApplication)
 from qgis.gui import QgsMessageBar
 
-from requests import Session
 from svir.dialogs.connection_profile_dialog import ConnectionProfileDialog
 from svir.utilities.utils import (
                                   get_irmt_version,
@@ -41,6 +40,8 @@ from svir.utilities.utils import (
                                   engine_login,
                                   get_engine_version,
                                   get_authentication_status,
+                                  CsrfVerificationError,
+                                  EngineSession,
                                   log_msg,
                                   WaitCursorManager,
                                   )
@@ -205,7 +206,7 @@ class SettingsDialog(QDialog, FORM_CLASS):
         profiles = json.loads(mySettings.value(
             'irmt/engine_profiles', default_profiles))
         profile = profiles[profile_name]
-        session = Session()
+        session = EngineSession()
         hostname, username, password = (profile['hostname'],
                                         profile['username'],
                                         profile['password'])
@@ -238,6 +239,9 @@ class SettingsDialog(QDialog, FORM_CLASS):
 
         try:
             login_func(hostname, username, password, session)
+        except CsrfVerificationError as exc:
+            log_msg(str(exc), level='C', message_bar=self.message_bar,
+                    exception=exc)
         except Exception as exc:
             err_msg = "Unable to connect (see Log Message Panel for details)"
             log_msg(err_msg, level='C', message_bar=self.message_bar,

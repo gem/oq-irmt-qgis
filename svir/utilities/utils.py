@@ -37,6 +37,8 @@ from datetime import datetime
 from copy import deepcopy
 from time import time
 from pprint import pformat
+from urllib.parse import urlsplit
+from requests import Request, Session
 from qgis.core import (
                        QgsFields,
                        QgsFeature,
@@ -532,6 +534,65 @@ def toggle_select_features_widget(title, text, button_text, layer,
     return widget
 
 
+CSRF_FAILURE_MSG = (
+    'CSRF verification failed: the OpenQuake Engine requires a CSRF token;'
+    ' please update the plugin or report the problem')
+
+
+class EngineSession(Session):
+    """
+    Session used to talk to the OpenQuake Engine WebUI, that can protect
+    its views with Django's CSRF checks. Unsafe requests (POST, PUT, PATCH,
+    DELETE) get the header X-CSRFToken, set to the value of the csrftoken
+    cookie sent with the request (if the engine set it; older engines do
+    not), and the header Referer, set to the base url of the engine: over
+    HTTPS, Django requires either an Origin or a Referer of the same site.
+    The Referer is checked only over HTTPS, while an Origin is checked also
+    over HTTP, where it can fail behind proxies that change the host seen by
+    the engine (e.g. dropping a non-default port).
+    The token is read at each request, because Django rotates it at login.
+    """
+
+    def prepare_request(self, request):
+        prep = super().prepare_request(request)
+        if prep.method.upper() in ('POST', 'PUT', 'PATCH', 'DELETE'):
+            token = _get_csrf_token(prep)
+            if token and 'X-CSRFToken' not in prep.headers:
+                prep.headers['X-CSRFToken'] = token
+            if 'Referer' not in prep.headers:
+                prep.headers['Referer'] = _get_origin(prep.url) + '/'
+        return prep
+
+    def get_csrf_token(self, url):
+        """Return the CSRF token that would be sent to the url, or None"""
+        return _get_csrf_token(self.prepare_request(Request('GET', url)))
+
+
+def _get_csrf_token(prepared_request):
+    # the cookies selected by the session for this specific url
+    for chunk in prepared_request.headers.get('Cookie', '').split(';'):
+        name, _, value = chunk.strip().partition('=')
+        if name == 'csrftoken' and value:
+            return value
+    return None
+
+
+def _get_origin(url):
+    # scheme://host[:port], without the default port, as the host seen by
+    # Django
+    parts = urlsplit(url)
+    netloc = parts.netloc.rpartition('@')[2].lower()
+    default_port = {'http': ':80', 'https': ':443'}.get(parts.scheme)
+    if default_port and netloc.endswith(default_port):
+        netloc = netloc[:-len(default_port)]
+    return '%s://%s' % (parts.scheme, netloc)
+
+
+def is_csrf_failure(resp):
+    """Return True if the response is a 403 due to the CSRF checks"""
+    return resp.status_code == 403 and 'csrf' in resp.text.lower()
+
+
 def engine_login(host, username, password, session):
     """
     Logs in a session to a engine server
@@ -543,10 +604,37 @@ def engine_login(host, username, password, session):
     :param password: The password
     :type password: str
     :param session: The session to be autenticated
-    :type session: Session
+    :type session: EngineSession
     """
+    # The login view is protected against CSRF in recent engines: make sure
+    # the CSRF cookie is in the session's cookie jar before posting (it is
+    # set by a GET of the authentication status). Older engines do not set
+    # the cookie at all, and the login is posted without the token.
+    ensure_csrf_cookie(host, session)
     login_url = host + '/accounts/ajax_login/'
     _login(login_url, username, password, session)
+
+
+def ensure_csrf_cookie(host, session):
+    """
+    If the session has no CSRF cookie for the engine yet, perform a GET of
+    the authentication status, that makes recent engines set it
+
+    :param host: The host url
+    :param session: The session that will be used for subsequent POSTs
+    """
+    status_url = host + '/v1/authentication/status'
+    if session.get_csrf_token(status_url) is not None:
+        return
+    try:
+        # FIXME: enable the user to set verify=True
+        session.get(status_url, timeout=10, verify=False,
+                    allow_redirects=False)
+    except Exception:
+        # Errors will surface with the following request
+        log_msg('Unable to retrieve %s: %s' % (
+                    status_url, traceback.format_exc()),
+                level='W', print_to_stderr=True)
 
 
 def _login(login_url, username, password, session):
@@ -561,6 +649,9 @@ def _login(login_url, username, password, session):
     except Exception:
         msg = "Unable to login. %s" % traceback.format_exc()
         raise SvNetworkError(msg)
+    if is_csrf_failure(session_resp):
+        raise CsrfVerificationError(
+            'Unable to login. %s' % CSRF_FAILURE_MSG)
     if session_resp.status_code != 200:  # 200 means successful:OK
         error_message = ('Unable to login: %s' %
                          session_resp.text)
@@ -709,6 +800,13 @@ class WaitCursorManager(object):
 
 class SvNetworkError(Exception):
     pass
+
+
+class CsrfVerificationError(SvNetworkError):
+    """
+    Raised when the engine rejects a request because of a failure of the
+    CSRF verification
+    """
 
 
 class UserAbortedNotification(Exception):
